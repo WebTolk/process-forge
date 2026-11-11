@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ACTIVE_ROOTS = ["docs", "examples", "packages", "templates", "schemas", "processes", "prompts", ".pf/process-forge.yaml"]
+ACTIVE_ROOTS = ["docs", "examples", "packages", "templates", "schemas", "processes", "prompts"]
 ALLOW = {"docs/concepts/process-directory-layout.md", "docs/ru/concepts/process-directory-layout.md", "tools/smoke_no_removed_process_refs.py"}
 
 

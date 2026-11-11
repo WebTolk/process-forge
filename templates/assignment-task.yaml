@@ -32,6 +32,7 @@ non_overlap:
   rule: Do not edit files owned by active parallel tasks.
 required_outputs:
   - id: changed_files
+    path: artifacts/changed-files.md
     type: list
     required: true
 expected_report:

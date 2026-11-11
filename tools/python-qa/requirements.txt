@@ -1,0 +1,8 @@
+# Shared development tools only; not ProcessForge Runtime dependencies.
+ruff==0.17.1
+pytest==9.1.1
+pytest-cov==7.1.0
+coverage==7.16.2
+mypy==2.4.0
+bandit==1.9.4
+pip-audit==2.10.1

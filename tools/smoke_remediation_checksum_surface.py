@@ -21,6 +21,8 @@ EXPECTED_ROOT_PATHS = {
     ".processforge-releaseignore",
     "AGENTS.md",
     "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.ru.md",
     "LICENSE",
     "NOTICE",
     "QUICKSTART.md",
@@ -72,12 +74,10 @@ def inventory_paths(inventory: str) -> list[str]:
 def build_fixture(root: Path, *, root_agents: bool) -> None:
     for relative_path in sorted(EXPECTED_ROOT_PATHS - {"AGENTS.md"}):
         write(root / relative_path, f"fixture for {relative_path}\n")
-    write(root / ".pf" / "AGENTS.md", "canonical agent contract\n")
     if root_agents:
-        write(root / "AGENTS.md", "archive root agent contract\n")
-    write(root / ".pf" / "process-forge.yaml", "schema_version: 1\n")
-    write(root / ".pf" / "hooks.yaml", "schema_version: 1\n")
+        write(root / "AGENTS.md", "Follow CONTRIBUTING.md for repository changes.\n")
     write(root / "docs" / "guide.md", "guide\n")
+    write(root / "examples" / "project" / ".pf" / "process-forge.yaml", "schema_version: 1\n")
     write(root / "packs" / "official" / "fixture.yaml", "id: fixture\n")
     write(root / "checksums" / "processforge.sha256", "self-referential\n")
     write(root / "tools" / "__pycache__" / "ignored.pyc", "ignored\n")
@@ -98,6 +98,8 @@ def validate_layout(validator: ModuleType, fixture: Path, *, root_agents: bool) 
         fail("generated cache file unexpectedly entered checksum inventory")
     if "packs/official/fixture.yaml" not in paths:
         fail("official pack file missing from checksum inventory")
+    if "examples/project/.pf/process-forge.yaml" not in paths:
+        fail("consumer project example missing from checksum inventory")
     if paths != sorted(paths):
         fail("checksum inventory paths are not deterministic")
     if len(paths) != len(set(paths)):
@@ -109,9 +111,23 @@ def validate_layout(validator: ModuleType, fixture: Path, *, root_agents: bool) 
             fail("AGENTS.md checksum does not cover the explicit source root file")
     elif "AGENTS.md" in paths:
         fail("hidden instructions were incorrectly aliased to the missing source root")
-    hidden_line = next(line for line in inventory.splitlines() if line.endswith("  .pf/AGENTS.md"))
-    if not hidden_line.startswith(validator.sha256(fixture / ".pf/AGENTS.md")):
-        fail("hidden instructions must retain their own checksum entry")
+
+
+def validate_private_project_exclusion(validator: ModuleType, release: ModuleType, fixture: Path) -> None:
+    build_fixture(fixture, root_agents=True)
+    policy = release
+    before_inventory = validator.build_inventory(fixture)
+    before_sources = policy.release_source_files(fixture)
+    for name in ("AGENTS.md", "process-forge.yaml", "hooks.yaml", "processes/custom/private.yaml"):
+        write(fixture / ".pf" / name, "private local state\n")
+        if not policy.release_path_is_forbidden(f".pf/{name}"):
+            fail(f"root private project path is allowed in releases: .pf/{name}")
+    if validator.build_inventory(fixture) != before_inventory:
+        fail("local project state changed the public checksum inventory")
+    if policy.release_source_files(fixture) != before_sources:
+        fail("local project state changed release source selection")
+    if policy.release_path_is_forbidden("examples/project/.pf/process-forge.yaml"):
+        fail("consumer project example was treated as private repository state")
 
 
 def validate_stale_detection(validator: ModuleType, fixture: Path) -> None:
@@ -186,10 +202,11 @@ def main() -> int:
         temp_root = Path(temp_dir)
         validate_layout(validator, temp_root / "source-layout", root_agents=False)
         validate_layout(validator, temp_root / "archive-layout", root_agents=True)
+        validate_private_project_exclusion(validator, release, temp_root / "private-project")
         validate_stale_detection(validator, temp_root / "stale-detection")
         validate_line_ending_canonicalization(validator, release, temp_root / "line-endings")
 
-    print("PASS: shipped checksum surface covers explicit root files, public directories, and stale-file detection.")
+    print("PASS: shipped checksum surface covers contributor files, consumer examples, private-state exclusion, and stale-file detection.")
     return 0
 
 

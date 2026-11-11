@@ -1,1 +1,0 @@
-PASS: work transition uses pinned process

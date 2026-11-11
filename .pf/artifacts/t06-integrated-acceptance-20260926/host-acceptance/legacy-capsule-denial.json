@@ -1,8 +1,0 @@
-{
-  "content": [
-    {
-      "type": "text",
-      "text": "{\"kind\": \"pf.work.resolve\", \"reason\": \"legacy_contract_incomplete\", \"remediation\": \"create_successor_work\", \"schema_version\": 1, \"scope\": \"work_context\", \"status\": \"blocked\"}"
-    }
-  ]
-}

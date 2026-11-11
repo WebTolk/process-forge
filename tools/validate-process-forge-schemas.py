@@ -14,6 +14,9 @@ from typing import Any
 DEFAULT_ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.ru.md",
     "README.md",
     "README.ru.md",
     "QUICKSTART.md",
@@ -23,9 +26,6 @@ REQUIRED_FILES = [
     "NOTICE",
     "VERSION",
     "requirements.txt",
-    ".pf/AGENTS.md",
-    ".pf/process-forge.yaml",
-    ".pf/hooks.yaml",
     "checksums/processforge.sha256",
     "docs/concepts/file-first-processes.md",
     "docs/concepts/workplace-layer.md",
@@ -828,10 +828,10 @@ def validate_json_schemas(root: Path) -> None:
 
 
 def validate_yaml_like_files(root: Path) -> None:
-    manifest = read_text(root / ".pf" / "process-forge.yaml")
+    manifest = read_text(root / "templates" / "process-forge.yaml")
     for key in ("schema_version", "process_forge", "project", "paths", "policies"):
         if not has_yaml_key(manifest, key):
-            fail(f".pf/process-forge.yaml missing {key}")
+            fail(f"templates/process-forge.yaml missing {key}")
 
     process_count = 0
     for path in process_definition_files(root):
@@ -851,8 +851,19 @@ def validate_yaml_like_files(root: Path) -> None:
 
 
 def validate_yaml_schema_files(root: Path) -> None:
+    # Validate shipped consumer inputs, never the maintainer's private project state.
+    manifest_template = root / "templates" / "process-forge.yaml"
     mappings: list[tuple[Path, str]] = [
-        (root / ".pf" / "process-forge.yaml", "process-forge-manifest.schema.json"),
+        (manifest_template, "process-forge-manifest.schema.json"),
+        (root / "templates" / "run.yaml", "run.schema.json"),
+        (root / "templates" / "assignment-task.yaml", "assignment.schema.json"),
+        (root / "templates" / "context-index-template.yaml", "context-index.schema.json"),
+        (root / "templates" / "resolved-rules-template.yaml", "resolved-rules.schema.json"),
+        (root / "templates" / "project-context.snapshot.yaml", "project-context-snapshot.schema.json"),
+        (root / "templates" / "execution-context-package-template.yaml", "execution-context-package.schema.json"),
+        (root / "templates" / "context-capsule-template.yaml", "context-capsule.schema.json"),
+        (root / "templates" / "session-metadata-template.yaml", "session-metadata.schema.json"),
+        (root / "templates" / "hooks-template.yaml", "hooks.schema.json"),
     ]
     if (root / "templates" / "process.yaml").is_file():
         mappings.append((root / "templates" / "process.yaml", "process-definition.schema.json"))
@@ -910,8 +921,6 @@ def validate_yaml_schema_files(root: Path) -> None:
         (path, "project-classifier-registry.schema.json")
         for path in sorted((root / "examples" / "domain-packs").glob("*/project-classifiers/registry-entry.yaml"))
     )
-    mappings.extend((path, "run.schema.json") for path in sorted((root / ".pf" / "runs").glob("*/run.yaml")))
-    mappings.extend((path, "assignment.schema.json") for path in sorted((root / ".pf" / "assignments").glob("*.yaml")))
     if (root / "updates" / "processforge-update-index.yaml").is_file():
         mappings.append((root / "updates" / "processforge-update-index.yaml", "processforge-update-index.schema.json"))
     if (root / "templates" / "registries" / "distributions.yaml").is_file():
@@ -953,7 +962,7 @@ def validate_yaml_schema_files(root: Path) -> None:
     if (root / "templates" / "project-overrides.yaml").is_file():
         mappings.append((root / "templates" / "project-overrides.yaml", "project-overrides.schema.json"))
 
-    for context_root in [root / "contexts", root / ".pf" / "contexts"]:
+    for context_root in [root / "contexts"]:
         if (context_root / "context-index.yaml").is_file():
             mappings.append((context_root / "context-index.yaml", "context-index.schema.json"))
         if (context_root / "resolved-rules.yaml").is_file():
@@ -963,7 +972,7 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.extend((path, "execution-context-package.schema.json") for path in sorted(context_root.rglob("*.ecp.yaml")))
         mappings.extend((path, "context-capsule.schema.json") for path in sorted(context_root.rglob("*.capsule.yaml")))
 
-    for session_root in [root / "runtime" / "sessions", root / ".pf" / "runtime" / "sessions"]:
+    for session_root in [root / "runtime" / "sessions"]:
         if session_root.is_dir():
             mappings.extend((path, "session-metadata.schema.json") for path in sorted(session_root.glob("*.yaml")))
 
@@ -972,66 +981,36 @@ def validate_yaml_schema_files(root: Path) -> None:
     for path in [root / "configuration.yaml", root / "templates" / "workplace-configuration.yaml"]:
         if path.is_file():
             mappings.append((path, "workplace-configuration.schema.json"))
-    if (root / ".pf" / "configuration.yaml").is_file():
-        mappings.append((root / ".pf" / "configuration.yaml", "project-configuration.schema.json"))
-    if (root / ".pf" / "hooks.yaml").is_file():
-        mappings.append((root / ".pf" / "hooks.yaml", "hooks.schema.json"))
-    if (root / ".pf" / "process-routes.yaml").is_file():
-        mappings.append((root / ".pf" / "process-routes.yaml", "process-route-map.schema.json"))
-    for path in sorted((root / ".pf" / "continuations").glob("*.yaml")):
-        mappings.append((path, "continuation-capsule.schema.json"))
-    for path in sorted((root / ".pf" / "handoffs").glob("*/handoff.yaml")):
-        mappings.append((path, "process-handoff.schema.json"))
-    for path in sorted((root / ".pf" / "handoffs").glob("*/input-manifest.yaml")):
-        mappings.append((path, "handoff-input-manifest.schema.json"))
-    for path in sorted((root / ".pf" / "handoffs").glob("*/return-package.yaml")):
-        mappings.append((path, "handoff-return-package.schema.json"))
 
     for path, schema_name in mappings:
         data = load_yaml(path)
+        if path == manifest_template and isinstance(data, dict):
+            project = data.get("project")
+            if isinstance(project, dict) and project.get("id") == "<project-id>":
+                # Instantiate the declared ID placeholder without changing other fields.
+                project["id"] = "example-project"
         schema = load_schema(root, schema_name)
         validate_against_schema(data, schema, path.relative_to(root).as_posix())
 
 
-def validate_ndjson_events(root: Path) -> None:
-    journal = root / ".pf" / "runtime" / "events" / "events.sqlite3"
-    if journal.is_file():
-        sys.path.insert(0, str(root / "src"))
-        from processforge_core.process_event_journal import ProcessEventJournal
-        schema = load_schema(root, "event-envelope.schema.json")
-        for sequence, event, error in ProcessEventJournal().records(journal):
-            if error:
-                raise SystemExit(f"FAIL: event record {sequence}: {error}")
-            validate_against_schema(event, schema, f"{journal.relative_to(root).as_posix()}:{sequence}")
-    checks = [
-        (".pf/runtime/telemetry", "session-telemetry-event.schema.json"),
-        (".pf/runtime/chat/transcripts", "chat-message.schema.json"),
+def validate_json_templates(root: Path) -> None:
+    mappings = [
+        ("processforge-event-template.json", "event-envelope.schema.json"),
+        ("session-telemetry-event-template.json", "session-telemetry-event.schema.json"),
     ]
-    for rel_path, schema_name in checks:
-        path = root / rel_path
+    for template_name, schema_name in mappings:
+        path = root / "templates" / template_name
         schema = load_schema(root, schema_name)
-        if path.is_file():
-            files = [path]
-        elif path.is_dir():
-            files = sorted(path.glob("*.ndjson"))
-        else:
-            files = []
-        for ndjson in files:
-            for line_number, line in enumerate(ndjson.read_text(encoding="utf-8-sig").splitlines(), start=1):
-                if not line.strip():
-                    continue
-                try:
-                    data = json.loads(line)
-                except json.JSONDecodeError as exc:
-                    fail(f"{ndjson.relative_to(root)}:{line_number} invalid NDJSON: {exc}")
-                validate_against_schema(data, schema, f"{ndjson.relative_to(root).as_posix()}:{line_number}")
+        try:
+            data = json.loads(read_text(path))
+        except json.JSONDecodeError as exc:
+            fail(f"{path.relative_to(root)} is invalid JSON: {exc}")
+        validate_against_schema(data, schema, path.relative_to(root).as_posix())
 
 
 def validate_runtime_json_payloads(root: Path) -> None:
     mappings = [
         (root / "templates" / "runtime" / "update", "installed-update-sites.schema.json"),
-        (root / ".pf" / "runtime" / "hooks" / "results", "hook-result.schema.json"),
-        (root / ".pf" / "runtime" / "hooks" / "outbox" / "wtaicc", "wtaicc-outbox-payload.schema.json"),
     ]
     for folder, schema_name in mappings:
         if not folder.is_dir():
@@ -1054,7 +1033,7 @@ def main() -> int:
     validate_json_schemas(root)
     validate_yaml_like_files(root)
     validate_yaml_schema_files(root)
-    validate_ndjson_events(root)
+    validate_json_templates(root)
     validate_runtime_json_payloads(root)
     print("PASS: ProcessForge structure and JSON Schema validation passed.")
     return 0

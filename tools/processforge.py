@@ -6312,8 +6312,7 @@ def command_first_run(args: argparse.Namespace) -> int:
 
 
 RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
-RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "NOTICE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
-RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
+RELEASE_ROOT_FILES = ["AGENTS.md", "CONTRIBUTING.md", "CONTRIBUTING.ru.md", "README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "NOTICE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
 RELEASE_REQUIRED_PATHS = [
     "README.md",
     "README.ru.md",
@@ -6324,11 +6323,10 @@ RELEASE_REQUIRED_PATHS = [
     "NOTICE",
     "requirements.txt",
     "AGENTS.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.ru.md",
     ".gitignore",
     ".processforge-releaseignore",
-    ".pf/AGENTS.md",
-    ".pf/process-forge.yaml",
-    ".pf/hooks.yaml",
     "checksums/processforge.sha256",
     "bin/pf.py",
     "bin/pf",
@@ -6359,16 +6357,7 @@ RELEASE_FORBIDDEN_DIR_PARTS = {
     ".ruff_cache",
     "private-notes",
 }
-RELEASE_FORBIDDEN_PF_PREFIXES = (
-    ".pf/runtime/",
-    ".pf/artifacts/",
-    ".pf/reviews/",
-    ".pf/handoffs/",
-    ".pf/runs/",
-    ".pf/contexts/",
-    ".pf/assignments/",
-    ".pf/dogfooding/",
-)
+RELEASE_FORBIDDEN_PF_PREFIXES = (".pf/",)
 RELEASE_FORBIDDEN_SUFFIXES = {".pyc", ".pyo", ".ps1", ".zip"}
 RELEASE_GENERATED_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 RELEASE_GENERATED_SUFFIXES = {".pyc", ".pyo"}
@@ -6410,13 +6399,6 @@ def release_ignore_match(rel_path: str, patterns: list[str]) -> bool:
 def release_source_files(root: Path) -> list[tuple[str, Path]]:
     files: list[tuple[str, Path]] = []
     for name in RELEASE_ROOT_FILES:
-        path = root / name
-        if path.is_file():
-            files.append((name, path))
-    root_agents = root / "AGENTS.md"
-    if root_agents.is_file():
-        files.append(("AGENTS.md", root_agents))
-    for name in RELEASE_PF_PUBLIC_FILES:
         path = root / name
         if path.is_file():
             files.append((name, path))
@@ -6570,8 +6552,8 @@ def release_required_path_exists(root: Path, archive_path: str) -> bool:
 
 
 def release_agent_entry_checks(root: Path) -> list[Check]:
-    """Verify explicit source projections; packaging never generates instructions."""
-    from processforge_core.agent_entry.contract import EntryError, block_span, load_contract
+    """Validate shipped project-entry templates independently of repository policy."""
+    from processforge_core.agent_entry.contract import EntryError, load_contract
 
     try:
         contract = load_contract(root)
@@ -6581,25 +6563,7 @@ def release_agent_entry_checks(root: Path) -> list[Check]:
             "The versioned contract source, metadata and derived template must agree.",
             "restore the reviewed contract source and derived template before packaging",
         )]
-    checks: list[Check] = []
-    for name in ("AGENTS.md", ".pf/AGENTS.md"):
-        try:
-            raw = release_file_content(root / name)
-            span = block_span(raw, contract)
-            if span is None:
-                raise EntryError("entry_contract_missing")
-            if raw[span[0]:span[1]] != contract.raw:
-                raise EntryError("entry_contract_outdated")
-        except (EntryError, OSError) as exc:
-            reason = exc.reason if isinstance(exc, EntryError) else "entry_projection_unavailable"
-            checks.append(check_with_hint(
-                "FAIL", f"release agent entry invalid: {name}: {reason}",
-                "Root and hidden source projections must contain the current startup contract; hidden files are not root aliases.",
-                "prepare and review explicit current entry projections in the source checkout before packaging",
-            ))
-        else:
-            checks.append(check("PASS", f"release agent entry current: {name}: {contract.version} sha256:{contract.sha256}"))
-    return checks
+    return [check("PASS", f"release project entry templates current: {contract.version} sha256:{contract.sha256}")]
 
 
 def release_checks(root: Path) -> list[Check]:

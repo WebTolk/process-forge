@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "description": "Shared contributor defaults. The agent reads this profile and records the selected values in local project.collaboration; PF does not import it automatically.",
+  "project": {
+    "collaboration": {
+      "task_source": "local_pf",
+      "repository_url": "https://github.com/WebTolk/process-forge",
+      "integration_branch_url": "https://github.com/WebTolk/process-forge/tree/dev",
+      "target_version": "1.3.0"
+    }
+  }
+}

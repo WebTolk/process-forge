@@ -21,10 +21,12 @@ ProcessForge — файловая среда для создания, верси
 драйверы выполнения и платформенные контракты подключаются через
 версионируемые файлы.
 
-Этот README написан для человека. ИИ-агенты должны использовать командный
-справочник в
-[docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md);
-там перечислены только команды и механики, подтверждённые текущей кодовой базой.
+Для разработки самого ProcessForge прочитайте [CONTRIBUTING.ru.md](CONTRIBUTING.ru.md)
+и [AGENTS.md](AGENTS.md), затем создайте рабочую ветку от `origin/dev` до
+инициализации локального PF. Используйте [две схемы работы с задачами](docs/ru/contributors/task-collaboration.md)
+и [подготовку устройства](docs/ru/contributors/agent-setup.md). Инструкции доступны
+в `main`; этот перенос не означает выпуск Runtime 1.3.0.
+Команды для потребительских проектов приведены в [справочнике](docs/ru/getting-started/agent-prompts.md).
 
 ![Схема рабочего места ProcessForge](docs/assets/processforge-architecture.svg)
 

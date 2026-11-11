@@ -1,53 +1,67 @@
-<!-- PF:ENTRY:BEGIN contract=1.1.1 -->
-## ProcessForge startup contract
+# Working on ProcessForge
 
-This project is governed by ProcessForge (PF). This section is the startup
-contract; `.pf/` holds state and further instructions. It grants no file,
-tool, resource, process or infrastructure permissions by itself.
+These are mandatory repository instructions for every coding agent. Read
+[CONTRIBUTING.md](CONTRIBUTING.md) before changing files; the Russian edition is
+[CONTRIBUTING.ru.md](CONTRIBUTING.ru.md). Apply this workflow across sessions and
+devices without asking the user to repeat it.
 
-1. Locate this project's `.pf/process-forge.yaml` and read it. Call `pf.context`
-   for this project root. If MCP is unavailable, use the existing project PF
-   CLI and current `.pf/contexts/project-context.snapshot.yaml`; check freshness
-   with `project-context-check`. Do not install or start tools to obtain context.
-2. Before substantive work, require a valid, current context with no blocking
-   readiness or policy result. Missing, stale, broken, conflicting or ambiguous
-   context means stop the dependent work and report the exact blocker and
-   required operator action. Historical reports do not override current state.
-3. For continuation, discover candidates through `pf.continuation.status` or
-   read the named continuation. Select exact run/assignment/context ids, create
-   a continuation with explicit apply if needed, then `pf.continuation.resume`.
-   Missing or ambiguous selection must not create Work. Without a bound session,
-   pass returned selectors to every Work call. Use `pf.work.start` for new work.
-   Follow PF's returned identity; never choose the first or newest assignment.
-   If `process_choice_required`, select only an offered process and call again
-   with `process_id`; do not infer a choice from a default among alternatives.
-   If the objective cannot disambiguate the choice, ask the user.
-4. Read `pf.work.state`, its selected assignment and immutable context capsule.
-   Verify matching project/run/assignment/context identity, validity, current
-   stage, allowed actions, read/write scope and obligations before acting.
-   Empty grants grant nothing. A denied action or required unavailable resource
-   blocks dependent work; do not broaden scope or rebuild the capsule yourself.
-5. Use `pf.search`/`pf.resolve` for authorized project navigation. For Work
-   resources use `pf.work.search`/`pf.work.resolve` with the exact returned run,
-   assignment and context ids. Resolve before opening PF-managed resource roots;
-   load only the authorized instructions, knowledge and templates needed now.
-6. Satisfy the current stage, record artifacts/evidence and call
-   `pf.work.transition` with outcome and evidence. The pinned process selects
-   stages: never supply `next_stage` or edit lifecycle state manually. Repeat
-   state/work/transition until PF returns `action: run_completed`. Use equivalent
-   existing CLI operations when MCP is unavailable; do not invent commands.
-7. Respect one writer per scope. Keep approved artifacts, process versions and
-   capsules immutable. Use a governed handoff for scope/context changes. Keep
-   arbitrary agent scratch only under this project's `.pf/tmp/`; remove it unless
-   retained as evidence. Durable artifacts keep their established locations;
-   atomic replacement staging stays beside its destination. Age alone never
-   authorizes deletion.
-   Never put private paths, credentials or machine details in public outputs.
-8. Ordinary work must not install, start, restart or repair PF Runtime, MCP,
-   host hooks or Agent Ledger. Report infrastructure blockers to the operator.
-   File-only work does not require these services. Completion handoffs are
-   advisory and do not authorize infrastructure or external-session actions.
+For a new device, follow [contributor agent setup](docs/contributors/agent-setup.md)
+([Russian](docs/ru/contributors/agent-setup.md)) for the shared knowledge profile,
+verified package installation, Python QA and MCP configuration. Use the pinned
+packages in `docs/contributors/knowledge-packages.json`; load their indexes first
+and only the documents relevant to the task. PF-specific contracts remain in the
+current source revision. A clone supplies shared instructions; initialize your
+own ignored `.pf` state before substantive governed work.
 
-Specialized work begins only after PF resolves its valid context and obligations.
-This text defines conduct; technical access enforcement belongs to the host/PF.
-<!-- PF:ENTRY:END -->
+- Use local PF for substantive development: resolve a valid project context,
+  create or resume the exact Work, read its assignment/capsule and obligations,
+  and follow its stages through verified completion. Initial reading, environment
+  setup and repair of the startup instructions may precede a Work. Use the
+  installed CLI if MCP is unavailable; start only services required by the chosen
+  process. Do not reconstruct another developer's private history.
+- Follow [task collaboration](docs/contributors/task-collaboration.md)
+  ([Russian](docs/ru/contributors/task-collaboration.md)). The shared default in
+  `docs/contributors/collaboration-profile.json` is `local_pf`: local PF owns task
+  accounting and GitHub mirrors substantial tasks/results. An issue is not a
+  prerequisite in this mode. In explicitly selected `github` mode, read or create
+  the issue before starting the corresponding Work; GitHub owns the shared task.
+- Read supplemental `project.collaboration` and Work `collaboration` fields from
+  the selected local manifest/assignment, even if the compact PF response omits
+  them. They hold the repository/integration branch and issue/working branch/PR
+  URLs. Several Work may reference one issue. Links do not change the task source,
+  widen a capsule's permissions or authorize closing an unfinished shared task.
+
+- GitHub is the primary place for code review and accepted source delivery.
+  Task authority follows the selected collaboration mode.
+  `origin/dev` is the integration branch; GitVerse mirrors accepted source.
+- Work on a task, feature, or developer branch. Long-lived developer branches
+  are allowed and must be synchronized with `origin/dev` regularly. Keep each
+  pull request understandable as a coherent change.
+- The required delivery route is: working branch -> relevant checks -> commit
+  -> push -> GitHub pull request targeting `dev` -> review/checks -> merge into
+  `dev`. Do not commit or push task changes directly to `dev` or `main`.
+  An instruction to implement a task includes this normal delivery route unless
+  the user sets a narrower boundary. Honor repository permissions and required
+  reviews; report the exact blocker if delivery cannot finish.
+- Inspect Git state first. Preserve unrelated dirty/staged changes. Give parallel
+  writers separate checkouts and non-overlapping ownership. Stage explicit paths
+  and inspect the complete staged diff before committing.
+- The root project `.pf/` is private local state and is never tracked or packaged.
+  A fresh clone must be bootstrappable without pre-existing `.pf` history. Create
+  your own local state from shared instructions and preserve it on subsequent
+  runs. Product templates and isolated consumer fixtures remain supported.
+- Use the shipped Python QA configuration and applicable repository checks.
+  Preserve public contracts during refactoring. Test changed executable behavior
+  on real Windows and Linux where applicable; an unavailable or skipped required
+  scenario is not a pass. CI Linux runners are acceptable; WSL is not required.
+- Report tested commands, exact revision, results and remaining limits. Keep
+  useful prior failures alongside corrected runs. Starting a reviewer or receiving
+  a successful tool exit does not itself prove semantic acceptance.
+- After a permitted merge, mirror the resulting `dev` commit to `gitverse` and
+  read both remote refs back. Use existing token credentials without putting them
+  in URLs, command arguments, logs or committed files. Do not force-push shared
+  branches. Publish issue summaries according to the selected task mode and
+  authorized scope; no automatic issue synchronizer is assumed.
+
+More specific `AGENTS.md` files refine source organization and validation; they
+do not replace this contribution workflow. User instructions take precedence.
