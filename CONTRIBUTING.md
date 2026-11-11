@@ -86,6 +86,11 @@ Promotion to `main`, tags and release artifacts follow the separate
 
 ## Setup and validation
 
+For complete new-device preparation, use the [contributor agent setup guide](docs/contributors/agent-setup.md).
+It defines the shared, independently released Python knowledge packages, initial
+installation with pinned hashes, toolchains, MCP connections and readiness checks.
+The [Russian guide](docs/ru/contributors/agent-setup.md) covers the same setup.
+
 Use Python 3.11+ and an isolated environment with `requirements.txt`. Development
 tools belong in a separate QA environment or an existing registered toolchain;
 they are not runtime dependencies. The [Python QA bundle](tools/python-qa/README.md)
