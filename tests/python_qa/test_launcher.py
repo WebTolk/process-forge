@@ -158,7 +158,9 @@ class LauncherTests(unittest.TestCase):
             self.project, "typecheck", ("src",), python=sys.executable
         )
         offset = plan.command.index("--python-executable")
-        self.assertEqual(Path(plan.command[offset + 1]), Path(sys.executable).absolute())
+        self.assertEqual(
+            Path(plan.command[offset + 1]), Path(sys.executable).absolute()
+        )
 
     def test_explicit_mypy_interpreter_is_not_overridden(self):
         arguments = ("--python-executable", "chosen-python", "src")
