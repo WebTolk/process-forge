@@ -1466,6 +1466,7 @@ def _snapshot_origin(
     for relative in (
         "tools/processforge.py",
         "tools/prepared_executor.py",
+        "tools/codex_exec_worker.py",
         "src/processforge_core/__init__.py",
     ):
         path = str(root / relative)
