@@ -754,6 +754,130 @@ def test_stale_cleanup_uses_same_store_and_preserves_details(
     assert path.stat().st_size <= SERVICE_STATE_MAX_BYTES
 
 
+@pytest.mark.parametrize("entry", ["get", "post-event", "post-shutdown"])
+@pytest.mark.parametrize("header", ["missing", "wrong-token", "wrong-scheme"])
+@pytest.mark.parametrize("denied", [False, True])
+def test_rejected_authorization_fences_diagnostics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    entry: str,
+    header: str,
+    denied: bool,
+) -> None:
+    import pf_native_control as native
+
+    runtime = service.RuntimeProcess(tmp_path, SimpleNamespace(), interval=1)
+    attempts: list[float | None] = []
+    held = 0
+
+    class Lease:
+        def __enter__(self) -> None:
+            nonlocal held
+            if denied:
+                raise native.NativeControlError()
+            held += 1
+
+        def __exit__(self, *_exception: Any) -> None:
+            nonlocal held
+            held -= 1
+
+    class Control:
+        def operation(self, *, deadline: float | None = None) -> Lease:
+            attempts.append(deadline)
+            return Lease()
+
+    class UnreadBody(io.BytesIO):
+        def read(self, *_args: Any, **_kwargs: Any) -> bytes:
+            raise AssertionError("rejected authorization read request body")
+
+    append = service.append_operator_log
+
+    def observed_append(*args: Any, **kwargs: Any) -> None:
+        assert held > 0, "auth diagnostic must hold native admission through its write"
+        append(*args, **kwargs)
+
+    monkeypatch.setattr(service, "append_operator_log", observed_append)
+    handler: Any = object.__new__(runtime.make_handler())
+    handler.path = {
+        "get": "/status",
+        "post-event": "/event",
+        "post-shutdown": "/shutdown",
+    }[entry]
+    handler.headers = HTTPMessage()
+    if header != "missing":
+        handler.headers["Authorization"] = (
+            "Bearer fixture-wrong-token"
+            if header == "wrong-token"
+            else "Basic " + runtime.token
+        )
+    handler.headers["Content-Length"] = "2"
+    handler.rfile = UnreadBody(b"{}")
+    replies: list[tuple[int, dict[str, Any]]] = []
+    handler.send_json = lambda status, payload: replies.append((status, payload))
+    before = _status_files(tmp_path)
+    paths = sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+    control_port: Any = Control()
+    with monkeypatch.context() as admission:
+        admission.setattr(
+            native, "_ENTRY", native.NativeEntry(tmp_path, None, None, control_port)
+        )
+        (handler.do_GET if entry == "get" else handler.do_POST)()
+    assert held == 0 and attempts
+    assert runtime.active_requests == 0
+    assert not runtime.shutdown_check
+    assert runtime.stop_event.is_set() is denied
+    if denied:
+        assert replies == [(409, {"error": "runtime_busy_or_activity_unknown"})]
+        assert _status_files(tmp_path) == before
+        assert (
+            sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+            == paths
+        )
+    else:
+        assert replies == [(401, {"error": "unauthorized"})]
+        log = service.operator_log_path(tmp_path)
+        rows = [
+            json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(rows) == 1 and rows[0]["event"] == "auth.failed"
+        assert rows[0]["path"] == handler.path
+        after = _status_files(tmp_path)
+        del after[log.relative_to(tmp_path).as_posix()]
+        assert after == before
+
+
+def test_valid_authorization_keeps_fast_path_without_native_prelease(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import pf_native_control as native
+
+    runtime = service.RuntimeProcess(tmp_path, SimpleNamespace(), interval=1)
+    attempts: list[float | None] = []
+
+    class RefusedControl:
+        def operation(self, *, deadline: float | None = None) -> Any:
+            attempts.append(deadline)
+            raise native.NativeControlError()
+
+    def unexpected(*_args: Any, **_kwargs: Any) -> Any:
+        pytest.fail("valid authorization wrote a rejection diagnostic")
+
+    handler: Any = object.__new__(runtime.make_handler())
+    handler.headers = HTTPMessage()
+    handler.headers["Authorization"] = "Bearer " + runtime.token
+    before = _status_files(tmp_path)
+    monkeypatch.setattr(service, "append_operator_log", unexpected)
+    control_port: Any = RefusedControl()
+    with monkeypatch.context() as admission:
+        admission.setattr(
+            native, "_ENTRY", native.NativeEntry(tmp_path, None, None, control_port)
+        )
+        assert handler.authorize() is True
+    assert not attempts  # Keep the guarded shutdown lease budget untouched.
+    assert _status_files(tmp_path) == before
+    assert not runtime.stop_event.is_set()
+
+
 def _runtime_post(
     runtime: service.RuntimeProcess, path: str, payload: dict[str, Any]
 ) -> tuple[int, dict[str, Any]]:
