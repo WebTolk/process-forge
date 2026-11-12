@@ -13,7 +13,7 @@ import sys
 import threading
 import time
 from datetime import datetime, timedelta, timezone
-from http.client import HTTPMessage
+from http.client import HTTPMessage, parse_headers
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -755,7 +755,9 @@ def test_stale_cleanup_uses_same_store_and_preserves_details(
 
 
 @pytest.mark.parametrize("entry", ["get", "post-event", "post-shutdown"])
-@pytest.mark.parametrize("header", ["missing", "wrong-token", "wrong-scheme"])
+@pytest.mark.parametrize(
+    "header", ["missing", "wrong-token", "wrong-scheme", "non-ascii"]
+)
 @pytest.mark.parametrize("denied", [False, True])
 def test_rejected_authorization_fences_diagnostics(
     tmp_path: Path,
@@ -804,7 +806,12 @@ def test_rejected_authorization_fences_diagnostics(
         "post-shutdown": "/shutdown",
     }[entry]
     handler.headers = HTTPMessage()
-    if header != "missing":
+    if header == "non-ascii":
+        handler.headers = parse_headers(
+            io.BytesIO(b"Authorization: Bearer \xe9\r\n\r\n")
+        )
+        assert not handler.headers["Authorization"].isascii()
+    elif header != "missing":
         handler.headers["Authorization"] = (
             "Bearer fixture-wrong-token"
             if header == "wrong-token"
