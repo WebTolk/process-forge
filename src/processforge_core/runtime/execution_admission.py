@@ -15,6 +15,7 @@ import uuid
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -240,7 +241,16 @@ def registry_file_lock(
             os.close(guard_fd)
 
 
-_HELD_GATES: ContextVar[tuple[tuple[int, int, Path], ...]] = ContextVar(
+@dataclass
+class _GateLease:
+    key: tuple[int, int, Path]
+    active: bool = True
+
+    def is_current(self) -> bool:
+        return self.active and self.key[:2] == (os.getpid(), threading.get_ident())
+
+
+_HELD_GATES: ContextVar[tuple[_GateLease, ...]] = ContextVar(
     "execution_admission_gates", default=()
 )
 
@@ -256,7 +266,7 @@ _EMITTING_FAILURE = threading.local()
 
 def _flush_admission_failure() -> None:
     # Defer nested project failures until the workplace gate also unwinds.
-    if _HELD_GATES.get():
+    if any(lease.is_current() for lease in _HELD_GATES.get()):
         return
     error = _PENDING_FAILURE.get()
     _PENDING_FAILURE.set(None)
@@ -306,8 +316,8 @@ class ExecutionAdmission:
             if timeout <= 0:
                 raise ExecutionError("execution_activity_unknown")
         key = (os.getpid(), threading.get_ident(), path.absolute())
-        held = _HELD_GATES.get()
-        if key in held:
+        held = tuple(lease for lease in _HELD_GATES.get() if lease.is_current())
+        if any(lease.key == key for lease in held):
             yield
             return
         operation_error: BaseException | None = None
@@ -318,7 +328,8 @@ class ExecutionAdmission:
             ):
                 if deadline is not None and time.monotonic() >= deadline:
                     raise ExecutionError("execution_activity_unknown")
-                token = _HELD_GATES.set((*held, key))
+                lease = _GateLease(key)
+                token = _HELD_GATES.set((*held, lease))
                 try:
                     yield
                 except BaseException as exc:
@@ -328,6 +339,8 @@ class ExecutionAdmission:
                     operation_error = exc
                     raise
                 finally:
+                    # Copies borrow the same lease; invalidate every copy on exit.
+                    lease.active = False
                     _HELD_GATES.reset(token)
                     phase = "release"
         except (OSError, TimeoutError, SystemExit) as exc:
@@ -460,8 +473,9 @@ class ExecutionAdmission:
                 ProjectMetadataReader(project_root).flow_root()
                 / "runtime/execution-admission"
             )
+        held = {lease.key for lease in _HELD_GATES.get() if lease.is_current()}
         return bool(paths) and all(
-            (os.getpid(), threading.get_ident(), path.absolute()) in _HELD_GATES.get()
+            (os.getpid(), threading.get_ident(), path.absolute()) in held
             for path in paths
         )
 

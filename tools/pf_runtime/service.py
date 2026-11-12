@@ -1531,6 +1531,9 @@ class RuntimeProcess:
             self.stop_event.set()
             raise  # No diagnostic/save after an epoch refusal.
         except BaseException as exc:
+            if not acquired:
+                # A rejected contender must preserve the accepted owner records.
+                raise
             with operation_lease():
                 with self.state_lock:
                     self.state["status"] = "failed"

@@ -177,3 +177,106 @@ jobs:
           name: cleanup-results-${{ matrix.os }}
           path: cleanup-results.xml
           if-no-files-found: ignore
+
+
+  runtime-recovery:
+    name: Runtime recovery (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Qualify Runtime state and recovery in file-only fixtures
+        shell: python
+        run: |
+          import os
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd()
+          scratch = root / ".pf" / "tmp" / "runtime-recovery"
+          paths = [str(root / name) for name in (".", "src", "tools", "tests")]
+          os.environ["PYTHONPATH"] = os.pathsep.join(paths)
+          sys.path[:0] = paths
+          for name in ("W3_FIXTURE_ROOT", "PF_TEST_SCRATCH_ROOT", "PF_PRIVATE_PROCESS_TEST_ROOT",
+                       "PF_W4_TEST_ROOT", "PF_RELEASE_REPORT_TEST_ROOT", "TMPDIR", "TEMP", "TMP", "W52_TMP"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              os.environ[name] = str(directory)
+          os.environ["W52_LABEL"] = "runtime-recovery"
+          os.environ["W55_OBSERVATIONS"] = str(scratch / "native-metadata-observations.json")
+
+          """Run maintained assertions and ownership regressions in file-only fixtures."""
+          from pathlib import Path
+          from unittest.mock import patch
+          import json
+          import subprocess
+          import sys
+
+          import pytest
+          import processforge as core
+          import process_execution_smoke_support as support
+
+          calls=[]
+          original_cli=support.cli
+
+          def fixture_cli(*args):
+              if args[0]=="project-onboard":
+                  args=(*args,"--coordination-mode","simple")
+              return original_cli(*args)
+
+          def file_only_start(workplace,name,arguments):
+              assert name=="pf.work.start",name
+              assert set(arguments)=={"project_root","objective"},arguments
+              calls.append(name)
+              return core.process_execution_service(Path(arguments["project_root"]),str(workplace)).start(objective=arguments["objective"])
+
+          def observe(event,arguments):
+              if event!="subprocess.Popen":return
+              command=arguments[1]
+              parts=command if isinstance(command,(tuple,list)) else [command]
+              normalized=[str(p).replace(chr(92),"/").lower() for p in parts]
+              if any("/pf_runtime/mcp_server.py" in p or "/pf_runtime/service.py" in p or Path(p).name in {"codex","codex.exe","claude","claude.exe"} for p in normalized):
+                  raise AssertionError("file_only_profile_forbids_service_or_model_launch")
+
+          sys.addaudithook(observe)
+          selection=[
+              "tests/runtime/test_service_state.py",
+              "tests/runtime/test_scheduler_admission.py",
+              "tests/runtime/test_schedule.py",
+              "tests/executions/test_admission.py",
+              "tests/runtime_monitor/test_uptime.py",
+              "tests/core_properties/test_adapters.py",
+              "tests/work/test_immutable_publication.py",
+              "tests/work/test_start_reliability.py",
+              "tests/execution_migration/test_storage_admission.py",
+              "tests/maintenance_service/test_journals.py",
+              "tests/maintenance_scan/test_journal_scan.py",
+              "tests/native_metadata/test_native_metadata_staging.py",
+          ]
+          with patch.object(support,"call_mcp",file_only_start),patch.object(support,"cli",fixture_cli):
+              result=pytest.main(["-q","-ra","--capture=sys","-p","no:cacheprovider","--basetemp="+str(scratch/"pytest"),"--junitxml=runtime-recovery-results.xml",*selection])
+              if result:raise SystemExit(result)
+              import smoke_work_completion_recovery as completion
+              completion.main()
+          subprocess.run([sys.executable,"-B","tools/smoke_process_event_concurrency.py"],check=True)
+          print("FILE_ONLY_PROFILE "+json.dumps({"direct_core_start_calls":len(calls),"bounded_publication_refusal_checked":True,"stdio_mcp_qualified":False,"production_runtime_qualified":False}),flush=True)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: runtime-recovery-results-${{ matrix.os }}
+          path: runtime-recovery-results.xml
+          if-no-files-found: ignore

@@ -415,7 +415,10 @@ def test_concurrent_status_reads_do_not_mix_generations(tmp_path: Path) -> None:
     state = snapshot(tmp_path, 250)
     state["generation"] = 0
     store.write(path, state)
+    accepted = state
+    published = {0}
     stop = threading.Event()
+    observed_new = threading.Event()
     failures: list[BaseException] = []
     reads: list[int] = []
 
@@ -429,6 +432,8 @@ def test_concurrent_status_reads_do_not_mix_generations(tmp_path: Path) -> None:
                 number = observed["generation"]
                 assert observed["updated_at"] == f"2026-11-09T12:00:{number:02d}Z"
                 reads.append(number)
+                if number:
+                    observed_new.set()
         except BaseException as error:
             failures.append(error)
 
@@ -436,16 +441,66 @@ def test_concurrent_status_reads_do_not_mix_generations(tmp_path: Path) -> None:
     reader.start()
     try:
         for i in range(1, 20):
-            store.write(
-                path,
-                {**state, "generation": i, "updated_at": f"2026-11-09T12:00:{i:02d}Z"},
-            )
+            candidate = {
+                **state,
+                "generation": i,
+                "updated_at": f"2026-11-09T12:00:{i:02d}Z",
+            }
+            before_control = path.read_bytes()
+            try:
+                store.write(path, candidate)
+            except OSError as error:
+                if sys.platform != "win32" or getattr(error, "winerror", None) not in {
+                    5,
+                    32,
+                    33,
+                }:
+                    raise
+                # Bounded sharing refusal must preserve the accepted generation.
+                assert path.read_bytes() == before_control
+                assert store.read(path) == accepted
+            else:
+                accepted = candidate
+                published.add(i)
+        observed_new.wait(timeout=5)
     finally:
         stop.set()
         reader.join(timeout=10)
     assert not reader.is_alive()
     assert not failures
-    assert reads
+    assert len(published) > 1
+    assert observed_new.is_set()
+    assert reads and set(reads).issubset(published)
+    assert store.read(path) == accepted
+
+
+def test_native_open_control_handle_preserves_snapshot_and_releases(
+    tmp_path: Path,
+) -> None:
+    path = service.service_path(tmp_path)
+    store = RuntimeServiceStateStore()
+    initial = {**snapshot(tmp_path, 10), "generation": 0}
+    updated = {
+        **initial,
+        "generation": 1,
+        "updated_at": "2026-11-09T12:00:01Z",
+    }
+    store.write(path, initial)
+    before = path.read_bytes()
+    with path.open("rb") as reader:
+        if sys.platform == "win32":
+            with pytest.raises(OSError) as caught:
+                store.write(path, updated)
+            assert getattr(caught.value, "winerror", None) in {5, 32, 33}
+            assert path.read_bytes() == before
+            assert store.read(path) == initial
+        else:
+            store.write(path, updated)
+            assert store.read(path) == updated
+        # A real open descriptor keeps its original complete snapshot.
+        assert reader.read() == before
+    store.write(path, updated)
+    assert store.read(path) == updated
 
 
 def test_monitor_uses_compact_control_without_diagnostics(tmp_path: Path) -> None:
