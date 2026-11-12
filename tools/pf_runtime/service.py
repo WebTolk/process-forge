@@ -1879,25 +1879,23 @@ def add_runtime_truth(
 
 
 def status_payload(workplace_root: Path, core: Any) -> dict[str, Any]:
-    active, state = active_service(workplace_root, core)
-    if not active and state:
-        state = restore_service_state(workplace_root, state)
-        if state.get("status") == "stopped":
-            state["health"] = "stopped"
-            return add_runtime_truth(state, core, running=False)
-        state["status"] = "stale"
-        state["health"] = "stale"
-        return add_runtime_truth(state, core, running=False)
-    if not active:
+    inspection = inspect_lifecycle(workplace_root, core)
+    state = inspection["state"]
+    kind = inspection["kind"]
+    if kind != "ready":
+        state = (
+            restore_service_state(workplace_root, state)
+            if state
+            else {"schema_version": 1, "workplace_root": str(workplace_root)}
+        )
+        state["status"] = kind
+        if "state_details_error" not in state:
+            state["health"] = "stopped" if kind == "not_running" else kind
+        # A conflicting or unknown owner cannot establish a current instance.
         return add_runtime_truth(
-            {
-                "schema_version": 1,
-                "status": "not_running",
-                "health": "stopped",
-                "workplace_root": str(workplace_root),
-            },
+            state,
             core,
-            running=False,
+            running=bool(inspection["matching"] and inspection["pid_running"]),
         )
     token = load_token(workplace_root)
     endpoint = str(state.get("endpoint") or "")
