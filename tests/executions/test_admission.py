@@ -144,6 +144,139 @@ def test_registry_timeout_retains_safe_phase_and_original_context(
     assert caught.value.__cause__ is None and caught.value.__suppress_context__
 
 
+def _refuse_registry_owner_cleanup(
+    monkeypatch: pytest.MonkeyPatch, gate: Path
+) -> PermissionError:
+    owner = gate.with_name(f".{gate.name}.lock")
+    original = Path.unlink
+    failure = PermissionError(errno.EACCES, "fixture owner cleanup refusal")
+
+    def refused(path: Path, *args: Any, **kwargs: Any) -> None:
+        if path == owner:
+            raise failure
+        original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", refused)
+    return failure
+
+
+def _assert_retained_owner_has_released_os_guard(gate: Path) -> None:
+    owner = gate.with_name(f".{gate.name}.lock")
+    guard = gate.with_name(f".{gate.name}.lock.guard")
+    before = owner.read_bytes()
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            "import os,sys; "
+            "from processforge_core.runtime.execution_admission import _registry_lock_try_os_lock; "
+            "fd=os.open(sys.argv[1],os.O_RDWR); "
+            "assert _registry_lock_try_os_lock(fd); os.close(fd)",
+            str(guard),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    # A released OS guard does not authorize reaping a retained live owner.
+    with pytest.raises(SystemExit) as caught:
+        with admission_module.registry_file_lock(
+            gate, timeout_seconds=0.01, stale_after_seconds=0
+        ):
+            pytest.fail("cleanup failure admitted a competing owner")
+    assert caught.value.__dict__["registry_lock_phase"] == "owner"
+    assert owner.read_bytes() == before
+
+
+@pytest.mark.parametrize("entry", ["core", "cli"])
+@pytest.mark.parametrize("phase", ["publication", "body"])
+@pytest.mark.parametrize("kind", [OSError, RuntimeError, KeyboardInterrupt, SystemExit])
+def test_registry_owner_cleanup_preserves_primary_error(
+    isolated_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    entry: str,
+    phase: str,
+    kind: type[BaseException],
+) -> None:
+    gate = isolated_path / "registry.json"
+    lock = (
+        real_registry_lock() if entry == "cli" else admission_module.registry_file_lock
+    )
+    primary = kind("fixture primary operation failure")
+    _refuse_registry_owner_cleanup(monkeypatch, gate)
+    entered = False
+
+    def failed_fsync(_fd: int) -> None:
+        raise primary
+
+    if phase == "publication":
+        monkeypatch.setattr(admission_module.os, "fsync", failed_fsync)
+    with pytest.raises(kind) as caught:
+        with lock(gate):
+            entered = True
+            raise primary
+    assert caught.value is primary
+    assert entered == (phase == "body")
+    assert "registry_lock_owner_cleanup_failed:PermissionError" in primary.__notes__
+    _assert_retained_owner_has_released_os_guard(gate)
+
+
+@pytest.mark.parametrize("entry", ["core", "cli"])
+@pytest.mark.parametrize("outer_error", [False, True])
+def test_registry_owner_cleanup_failure_after_success_is_visible(
+    isolated_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    entry: str,
+    outer_error: bool,
+) -> None:
+    gate = isolated_path / "registry.json"
+    lock = (
+        real_registry_lock() if entry == "cli" else admission_module.registry_file_lock
+    )
+    cleanup = _refuse_registry_owner_cleanup(monkeypatch, gate)
+    entered = False
+
+    def successful_body() -> None:
+        nonlocal entered
+        with lock(gate):
+            entered = True
+
+    with pytest.raises(PermissionError) as caught:
+        if outer_error:
+            try:
+                raise RuntimeError("unrelated already handled error")
+            except RuntimeError:
+                successful_body()
+        else:
+            successful_body()
+    assert caught.value is cleanup
+    assert entered
+    _assert_retained_owner_has_released_os_guard(gate)
+
+
+@pytest.mark.parametrize("kind", [OSError, RuntimeError, KeyboardInterrupt, SystemExit])
+def test_admission_owner_cleanup_preserves_operation_and_releases_gates(
+    isolated_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    kind: type[BaseException],
+) -> None:
+    gate = isolated_path / ".pf/runtime/execution-admission"
+    primary = kind("fixture admitted operation failure")
+    _refuse_registry_owner_cleanup(monkeypatch, gate)
+    admission = ExecutionAdmission()
+    with pytest.raises(kind) as caught:
+        with admission.start(isolated_path, None):
+            assert admission.held(isolated_path, None)
+            raise primary
+    assert caught.value is primary
+    assert "registry_lock_owner_cleanup_failed:PermissionError" in primary.__notes__
+    assert not admission.held(isolated_path, None)
+    _assert_retained_owner_has_released_os_guard(gate)
+
+
 def test_deadline_failure_and_exception_release(isolated_path: Path) -> None:
     events: list[str] = []
 
