@@ -86,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     # A new fixture per gate keeps --only independent of order or earlier smokes.
     with tempfile.TemporaryDirectory(prefix="pf-release-consumer-") as temporary:
-        base = Path(temporary)
+        base = Path(temporary).resolve()
         env = {
             key: value
             for key, value in os.environ.items()

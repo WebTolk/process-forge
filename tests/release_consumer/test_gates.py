@@ -67,7 +67,7 @@ class PublicReleaseGates(unittest.TestCase):
     def setUpClass(cls):
         cls.temporary = tempfile.TemporaryDirectory(prefix="pf-release-gates-")
         cls.addClassCleanup(cls.temporary.cleanup)
-        cls.base = Path(cls.temporary.name)
+        cls.base = Path(cls.temporary.name).resolve()
         cls.source = cls.base / "source"
         cls.source.mkdir()
         cls.env = {
