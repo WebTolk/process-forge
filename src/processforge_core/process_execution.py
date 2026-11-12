@@ -1025,14 +1025,10 @@ class ProcessExecutionService:
                         assignment_id=assignment["id"],
                         stage_id=stage_id,
                     )
-                selected_outcome = next(
-                    (
-                        item
-                        for item in completion_outcomes
-                        if str(item.get("id")) == outcome
-                    ),
-                    {},
-                )
+                # Match the dictionary lookup used below when IDs repeat.
+                selected_outcome = {
+                    str(item.get("id")): item for item in completion_outcomes
+                }.get(outcome, {})
                 if str(selected_outcome.get("next_stage") or ""):
                     return self._blocked(
                         "not_terminal_outcome",

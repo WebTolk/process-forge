@@ -14,7 +14,12 @@ from process_execution_smoke_support import PROCESS, stage_evidence
 from smoke_garage_mode_not_promoted_by_session import cli
 
 
-def make_work(root: Path, *, final_retry: bool = False):
+def make_work(
+    root: Path,
+    *,
+    final_retry: bool = False,
+    verify_outcomes: list[dict[str, str]] | None = None,
+):
     workplace, project = root / "workplace", root / "project"
     cli("workplace-init", "--workplace", str(workplace), "--apply")
     cli(
@@ -35,6 +40,8 @@ def make_work(root: Path, *, final_retry: bool = False):
             {"id": "completed", "next_stage": ""},
             {"id": "retry", "next_stage": "prepare"},
         ]
+    if verify_outcomes is not None:
+        process["stages"][-1]["outcomes"] = copy.deepcopy(verify_outcomes)
     path = project / "processes/custom/declarative-smoke.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(process, sort_keys=False), encoding="utf-8")
@@ -152,6 +159,35 @@ def test_complete_does_not_use_nonterminal_outcome(tmp_path: Path) -> None:
     ordinary = service.transition(**selection, outcome="retry", evidence=evidence)
     assert ordinary["action"] == "stage_transitioned", ordinary
     assert ordinary["stage"]["id"] == "prepare"
+
+
+@pytest.mark.parametrize("terminal_first", [True, False])
+def test_complete_uses_effective_duplicate_outcome(
+    tmp_path: Path, terminal_first: bool
+) -> None:
+    terminal = {"id": "completed", "next_stage": ""}
+    retry = {"id": "completed", "next_stage": "prepare"}
+    outcomes = [terminal, retry] if terminal_first else [retry, terminal]
+    service, selection, project, _workplace = make_work(
+        tmp_path, verify_outcomes=outcomes
+    )
+    final_stage(service, selection)
+    evidence = stage_evidence("report", "verify-ready")
+    before = saved_work(project)
+    result = service.complete(
+        **selection, evidence=evidence, notes="effective duplicate outcome"
+    )
+    if terminal_first:
+        assert result["action"] == "blocked", result
+        assert "not_terminal_outcome" in reason_codes(result)
+        assert saved_work(project) == before
+        ordinary = service.transition(
+            **selection, outcome="completed", evidence=evidence
+        )
+        assert ordinary["action"] == "stage_transitioned", ordinary
+        assert ordinary["stage"]["id"] == "prepare"
+    else:
+        assert result["action"] == "run_completed", result
 
 
 def test_complete_rechecks_stage_inside_run_lock(
