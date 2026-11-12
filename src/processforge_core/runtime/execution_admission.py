@@ -178,6 +178,18 @@ def registry_file_lock(
         "token": uuid.uuid4().hex,
     }
     acquired = False
+    primary_error: BaseException | None = None
+
+    def remove_owner(primary: BaseException | None = None) -> None:
+        try:
+            lock_path.unlink(missing_ok=True)
+        except OSError as cleanup_error:
+            if primary is None:
+                raise
+            BaseException.add_note(
+                primary,
+                f"registry_lock_owner_cleanup_failed:{type(cleanup_error).__name__}",
+            )
 
     def wait_for_owner(phase: str) -> None:
         if time.monotonic() >= deadline:
@@ -227,16 +239,19 @@ def registry_file_lock(
                     handle.write("\n")
                     handle.flush()
                     os.fsync(handle.fileno())
-            except BaseException:
-                lock_path.unlink(missing_ok=True)
+            except BaseException as publication_error:
+                remove_owner(publication_error)
                 raise
             acquired = True
             break
         yield
+    except BaseException as error:
+        primary_error = error
+        raise
     finally:
         try:
             if acquired and _registry_lock_read_owner(lock_path) == owner:
-                lock_path.unlink(missing_ok=True)
+                remove_owner(primary_error)
         finally:
             os.close(guard_fd)
 
