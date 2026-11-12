@@ -99,7 +99,10 @@ def _database(
         connection.execute("PRAGMA busy_timeout = 10000")
         actual_id = connection.execute("PRAGMA application_id").fetchone()[0]
         version = connection.execute("PRAGMA user_version").fetchone()[0]
-        if version == 0 and actual_id == 0 and writable:
+        # These reads can straddle another initializer's commit. Either zero
+        # requires the existing serialized recheck; only both zero below
+        # authorize initialization of an empty store.
+        if writable and (version == 0 or actual_id == 0):
             with transaction(connection):
                 actual_id = connection.execute("PRAGMA application_id").fetchone()[0]
                 version = connection.execute("PRAGMA user_version").fetchone()[0]
