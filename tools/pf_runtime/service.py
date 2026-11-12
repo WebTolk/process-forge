@@ -153,9 +153,17 @@ def load_token(workplace_root: Path) -> str:
     token = str(payload.get("token") or "")
     if token:
         return token
-    token = secrets.token_urlsafe(32)
-    write_json_atomic(token_path(workplace_root), {"schema_version": 1, "token": token})
-    return token
+    # Cold constructors can race before singleton admission. Recheck under the
+    # existing workplace mutex so a rejected contender cannot replace the winner.
+    with singleton_critical_section(workplace_root):
+        payload = read_json(token_path(workplace_root))
+        token = str(payload.get("token") or "")
+        if not token:
+            token = secrets.token_urlsafe(32)
+            write_json_atomic(
+                token_path(workplace_root), {"schema_version": 1, "token": token}
+            )
+        return token
 
 
 def token_hash(token: str) -> str:
