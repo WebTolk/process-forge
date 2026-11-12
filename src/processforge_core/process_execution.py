@@ -941,6 +941,7 @@ class ProcessExecutionService:
         assignment_id: str = "",
         session_id: str = "",
         context_id: str = "",
+        _completion_only: bool = False,
     ) -> dict[str, Any]:
         try:
             selected = self._select_work(
@@ -1007,6 +1008,39 @@ class ProcessExecutionService:
                     pin_status=pin_status,
                 )
             stage_id = str(assignment.get("stage") or "")
+            if _completion_only:
+                try:
+                    completion_outcomes = normalized_outcomes(process, stage_id)
+                except ValueError:
+                    return self._blocked(
+                        "invalid_process_definition", stage_id=stage_id
+                    )
+                if not any(
+                    not str(item.get("next_stage") or "")
+                    for item in completion_outcomes
+                ):
+                    return self._blocked(
+                        "not_final_stage",
+                        run_id=run["id"],
+                        assignment_id=assignment["id"],
+                        stage_id=stage_id,
+                    )
+                selected_outcome = next(
+                    (
+                        item
+                        for item in completion_outcomes
+                        if str(item.get("id")) == outcome
+                    ),
+                    {},
+                )
+                if str(selected_outcome.get("next_stage") or ""):
+                    return self._blocked(
+                        "not_terminal_outcome",
+                        run_id=run["id"],
+                        assignment_id=assignment["id"],
+                        stage_id=stage_id,
+                        outcome=outcome,
+                    )
             normalized_evidence, evidence_blockers = self._normalize_evidence(evidence)
             if evidence_blockers:
                 return self._transition_rejected(
@@ -1948,6 +1982,9 @@ class ProcessExecutionService:
             **extra,
         }
 
+    def _complete_transition(self, **parameters: Any) -> dict[str, Any]:
+        return self.transition(**parameters, _completion_only=True)
+
     def _completion_request_service(self) -> WorkCompletionRequestService:
         from .composition import build_work_completion_request_service
 
@@ -1960,5 +1997,5 @@ class ProcessExecutionService:
             run_blockers=lambda: self._run_completion_blockers,
             intent_reader=lambda: self._load_completion_intent,
             completion_readiness=lambda: self.can_complete,
-            transition=lambda: self.transition,
+            transition=lambda: self._complete_transition,
         )
