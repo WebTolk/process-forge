@@ -79,6 +79,21 @@ jobs:
         run: python -m unittest discover -s tests/release_consumer -v
       - name: Check package rollback metadata
         run: python -m unittest discover -s tests/update_metadata -v
+      - name: Check concurrent journal initialization and refusal
+        run: python -m unittest discover -s tests/sqlite_storage -v
+      - name: Check six journal producers and dispatch recovery
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          scratch = Path(os.environ['PF_TEST_SCRATCH_ROOT']).resolve() / 'journal-concurrency'
+          scratch.mkdir(parents=True, exist_ok=True)
+          environment = dict(os.environ, TMPDIR=str(scratch), TEMP=str(scratch), TMP=str(scratch))
+          subprocess.run([sys.executable, '-B', 'tools/smoke_process_event_concurrency.py'],
+                         env=environment, check=True)
       - name: Check shared Python QA bundle
         env:
           PF_PYTHON_QA_TEST_ROOT: ${{ runner.temp }}/python-qa-tests
