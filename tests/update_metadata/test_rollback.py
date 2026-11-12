@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import copy
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -292,6 +293,55 @@ class RollbackMetadata(unittest.TestCase):
         self.assertEqual(
             yaml.safe_load(registry.read_text())["subjects"][0]["version"], "1.1.0"
         )
+        self.rollback(workplace, candidate)
+        self.assertEqual(payload.read_bytes(), old_payload)
+        self.assertEqual(
+            yaml.safe_load(registry.read_text())["subjects"][0], before["subjects"][0]
+        )
+
+    def test_prior_absent_payload_and_record_return_to_absence(self):
+        for tool in (False, True):
+            with self.subTest(tool=tool):
+                workplace, registry, candidate, payload, before = self.fixture(
+                    "no-payload" + str(tool), tool
+                )
+                install_path = payload if tool else payload.parent
+                self.assertTrue(install_path.is_relative_to(workplace))
+                if tool:
+                    install_path.unlink()
+                else:
+                    shutil.rmtree(install_path)
+                before["subjects"].pop(0)
+                registry.write_text(yaml.safe_dump(before), encoding="utf8")
+                self.apply(workplace, candidate)
+                self.assertTrue(install_path.exists())
+                self.rollback(workplace, candidate)
+                self.assertFalse(install_path.exists())
+                self.assertEqual(
+                    yaml.safe_load(registry.read_text())["subjects"], before["subjects"]
+                )
+                self.rollback(workplace, candidate)
+                self.assertFalse(install_path.exists())
+
+    def test_payload_restore_failure_preserves_metadata_until_retry(self):
+        workplace, registry, candidate, payload, before = self.fixture(
+            "copy-failure", True
+        )
+        old_payload = payload.read_bytes()
+        self.apply(workplace, candidate)
+        new_payload = payload.read_bytes()
+        applied = registry.read_bytes()
+        with mock.patch.object(
+            cli.shutil, "copy2", side_effect=OSError("injected payload restore failure")
+        ):
+            self.assertEqual(
+                cli.command_update_rollback(
+                    argparse.Namespace(workplace=str(workplace), candidate=candidate)
+                ),
+                1,
+            )
+        self.assertEqual(registry.read_bytes(), applied)
+        self.assertEqual(payload.read_bytes(), new_payload)
         self.rollback(workplace, candidate)
         self.assertEqual(payload.read_bytes(), old_payload)
         self.assertEqual(
