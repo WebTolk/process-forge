@@ -1296,8 +1296,9 @@ class RuntimeProcess:
                     return
                 counted = self.path != "/shutdown"
                 with runtime.state_lock:
-                    if runtime.state.get("status") == "stopping" or (
-                        counted and runtime.shutdown_check
+                    if counted and (
+                        runtime.state.get("status") == "stopping"
+                        or runtime.shutdown_check
                     ):
                         self.send_json(503, {"error": "runtime_stopping"})
                         return
@@ -1459,22 +1460,24 @@ class RuntimeProcess:
                     raise
                 except Exception as exc:  # noqa: BLE001 - return structured local IPC errors.
                     if isinstance(exc, PermissionError):
+                        with operation_lease():
+                            append_operator_log(
+                                runtime.workplace_root,
+                                runtime.core,
+                                "request.forbidden",
+                                path=self.path,
+                                error=str(exc),
+                            )
+                        self.send_json(403, {"error": str(exc)})
+                        return
+                    with operation_lease():
                         append_operator_log(
                             runtime.workplace_root,
                             runtime.core,
-                            "request.forbidden",
+                            "request.error",
                             path=self.path,
                             error=str(exc),
                         )
-                        self.send_json(403, {"error": str(exc)})
-                        return
-                    append_operator_log(
-                        runtime.workplace_root,
-                        runtime.core,
-                        "request.error",
-                        path=self.path,
-                        error=str(exc),
-                    )
                     self.send_json(400, {"error": str(exc)})
 
         return Handler

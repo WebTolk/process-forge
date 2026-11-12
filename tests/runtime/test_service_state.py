@@ -5,12 +5,14 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import io
 import json
 import os
 import subprocess
 import sys
 import threading
 from datetime import datetime, timedelta, timezone
+from http.client import HTTPMessage
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -535,6 +537,237 @@ def test_stale_cleanup_uses_same_store_and_preserves_details(
     assert restored["last_scheduler_result"] == state["last_scheduler_result"]
     assert restored["project_errors"] == state["project_errors"]
     assert path.stat().st_size <= SERVICE_STATE_MAX_BYTES
+
+
+def _runtime_post(
+    runtime: service.RuntimeProcess, path: str, payload: dict[str, Any]
+) -> tuple[int, dict[str, Any]]:
+    handler: Any = object.__new__(runtime.make_handler())
+    body = json.dumps(payload).encode("utf-8")
+    handler.path = path
+    handler.headers = HTTPMessage()
+    handler.headers["Authorization"] = "Bearer " + runtime.token
+    handler.headers["Content-Length"] = str(len(body))
+    handler.rfile = io.BytesIO(body)
+    replies: list[tuple[int, dict[str, Any]]] = []
+    handler.send_json = lambda status, response: replies.append((status, response))
+    handler.do_POST()
+    assert len(replies) == 1
+    return replies[0]
+
+
+def _runtime_after_shutdown_publication_failure(
+    root: Path, monkeypatch: pytest.MonkeyPatch, phase: str
+) -> service.RuntimeProcess:
+    runtime = object.__new__(service.RuntimeProcess)
+    runtime.workplace_root = root
+    runtime.core = SimpleNamespace()
+    runtime.state = snapshot(root, 250)
+    runtime.instance_id = runtime.state["instance_id"]
+    runtime.token = "fixture-token"
+    runtime.state_lock = threading.RLock()
+    runtime.active_requests = 0
+    runtime.scheduler_active = False
+    runtime.shutdown_check = False
+    runtime.stop_event = threading.Event()
+    runtime.httpd = None
+    service.write_json_atomic(
+        service.lock_path(root),
+        {"pid": os.getpid(), "instance_id": runtime.instance_id},
+    )
+    service.write_json_atomic(
+        root / "runtime/pf-runtime-host/state.json", {"projects": [], "sessions": {}}
+    )
+    runtime.save()
+    path = service.service_path(root)
+    before = copy.deepcopy(runtime.state)
+    accepted_control = path.read_bytes()
+    accepted_slot = active_slot(path)
+    accepted_details = accepted_slot.read_bytes()
+    replace = RuntimeServiceStateWriter._replace
+    faults: list[str] = []
+    failure = OSError("injected shutdown publication failure")
+
+    def fail(staging: Path, destination: Path) -> None:
+        if (phase == "details" and destination.name.startswith("service-details.")) or (
+            phase == "control-before" and destination == path
+        ):
+            faults.append(destination.name)
+            raise failure
+        replace(staging, destination)
+        if phase == "control-after" and destination == path:
+            faults.append(destination.name)
+            raise failure
+
+    with monkeypatch.context() as fault:
+        fault.setattr(RuntimeServiceStateWriter, "_replace", staticmethod(fail))
+        assert _runtime_post(
+            runtime,
+            "/shutdown",
+            {"require_idle": True, "expected_instance_id": runtime.instance_id},
+        ) == (409, {"error": "runtime_busy_or_activity_unknown"})
+    assert len(faults) == 1
+    assert runtime.state["status"] == "stopping"
+    assert not runtime.stop_event.is_set()
+    assert not runtime.shutdown_check
+    assert runtime.active_requests == 0
+    assert accepted_slot.read_bytes() == accepted_details
+    observed = RuntimeServiceStateStore().read(path)
+    if phase == "control-after":
+        assert observed == runtime.state
+        assert observed["status"] == "stopping"
+    else:
+        assert path.read_bytes() == accepted_control
+        assert observed == before
+    return runtime
+
+
+@pytest.mark.parametrize("phase", ["details", "control-before", "control-after"])
+def test_failed_shutdown_publication_can_retry_through_http_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str
+) -> None:
+    runtime = _runtime_after_shutdown_publication_failure(tmp_path, monkeypatch, phase)
+    accepted = _status_files(tmp_path)
+    assert _runtime_post(runtime, "/event", {}) == (503, {"error": "runtime_stopping"})
+    assert _status_files(tmp_path) == accepted
+    assert runtime.active_requests == 0
+    assert not runtime.stop_event.is_set()
+    assert _runtime_post(
+        runtime,
+        "/shutdown",
+        {"require_idle": True, "expected_instance_id": runtime.instance_id},
+    ) == (200, {"status": "stopping"})
+    assert runtime.stop_event.is_set()
+    assert not runtime.shutdown_check
+    assert runtime.active_requests == 0
+    assert (
+        RuntimeServiceStateStore().read(service.service_path(tmp_path)) == runtime.state
+    )
+
+
+@pytest.mark.parametrize("phase", ["details", "control-before", "control-after"])
+@pytest.mark.parametrize(
+    "refusal",
+    [
+        "active_requests",
+        "scheduler_active",
+        "shutdown_check",
+        "wrong-instance",
+        "changed-lock",
+    ],
+)
+def test_shutdown_retry_revalidates_owner_and_busy_guards(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, phase: str, refusal: str
+) -> None:
+    runtime = _runtime_after_shutdown_publication_failure(tmp_path, monkeypatch, phase)
+    payload = {"require_idle": True, "expected_instance_id": runtime.instance_id}
+    if refusal == "wrong-instance":
+        payload["expected_instance_id"] = "another-instance"
+    elif refusal == "changed-lock":
+        service.write_json_atomic(
+            service.lock_path(tmp_path),
+            {"pid": os.getpid(), "instance_id": "another-instance"},
+        )
+    else:
+        setattr(runtime, refusal, 1 if refusal == "active_requests" else True)
+    before = _status_files(tmp_path)
+    flags = (runtime.active_requests, runtime.scheduler_active, runtime.shutdown_check)
+    error = (
+        "owner_changed"
+        if refusal in {"wrong-instance", "changed-lock"}
+        else "runtime_busy_or_activity_unknown"
+    )
+    assert _runtime_post(runtime, "/shutdown", payload) == (409, {"error": error})
+    assert not runtime.stop_event.is_set()
+    assert _status_files(tmp_path) == before
+    assert (
+        runtime.active_requests,
+        runtime.scheduler_active,
+        runtime.shutdown_check,
+    ) == flags
+
+
+@pytest.mark.parametrize("phase", ["details", "control-before", "control-after"])
+@pytest.mark.parametrize("malformed", ["json", "length", "short", "permission"])
+@pytest.mark.parametrize("denied", [False, True])
+def test_malformed_shutdown_retry_fences_error_diagnostics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    phase: str,
+    malformed: str,
+    denied: bool,
+) -> None:
+    import pf_native_control as native
+
+    runtime = _runtime_after_shutdown_publication_failure(tmp_path, monkeypatch, phase)
+    assert service.operation_lease is native.operation_lease
+    attempts: list[float | None] = []
+
+    class Admission:
+        def __enter__(self) -> None:
+            if denied:
+                raise native.NativeControlError()
+
+        def __exit__(self, *_exception: Any) -> None:
+            pass
+
+    class Control:
+        def operation(self, *, deadline: float | None = None) -> Admission:
+            attempts.append(deadline)
+            return Admission()
+
+    class UnavailableBody(io.BytesIO):
+        def read(self, *_args: Any, **_kwargs: Any) -> bytes:
+            raise PermissionError("fixture body read denied")
+
+    handler: Any = object.__new__(runtime.make_handler())
+    handler.path = "/shutdown"
+    body = b"{" if malformed == "json" else b"{}"
+    handler.rfile = (
+        UnavailableBody(body) if malformed == "permission" else io.BytesIO(body)
+    )
+    handler.headers = HTTPMessage()
+    handler.headers["Authorization"] = "Bearer " + runtime.token
+    handler.headers["Content-Length"] = (
+        "invalid" if malformed == "length" else str(len(body) + (malformed == "short"))
+    )
+    replies: list[tuple[int, dict[str, Any]]] = []
+    handler.send_json = lambda status, payload: replies.append((status, payload))
+    before = _status_files(tmp_path)
+    paths = sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+    control_port: Any = Control()
+    with monkeypatch.context() as admission:
+        admission.setattr(
+            native, "_ENTRY", native.NativeEntry(tmp_path, None, None, control_port)
+        )
+        handler.do_POST()
+    assert len(replies) == 1
+    assert runtime.active_requests == 0
+    assert not runtime.shutdown_check
+    assert (
+        runtime.stop_event.is_set() is denied
+    )  # Existing in-memory retired-entry stop.
+    if denied:
+        assert replies == [(409, {"error": "runtime_busy_or_activity_unknown"})]
+        assert attempts == [None]
+        assert _status_files(tmp_path) == before
+        assert (
+            sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+            == paths
+        )
+    else:
+        assert replies[0][0] == (403 if malformed == "permission" else 400)
+        log = service.operator_log_path(tmp_path)
+        entries = [
+            json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(entries) == 1
+        assert entries[0]["event"] == (
+            "request.forbidden" if malformed == "permission" else "request.error"
+        )
+        after = _status_files(tmp_path)
+        del after[log.relative_to(tmp_path).as_posix()]
+        assert after == before
 
 
 def test_actual_guarded_shutdown_publishes_compact_stopping(tmp_path: Path) -> None:
