@@ -1296,8 +1296,9 @@ class RuntimeProcess:
                     return
                 counted = self.path != "/shutdown"
                 with runtime.state_lock:
-                    if runtime.state.get("status") == "stopping" or (
-                        counted and runtime.shutdown_check
+                    if counted and (
+                        runtime.state.get("status") == "stopping"
+                        or runtime.shutdown_check
                     ):
                         self.send_json(503, {"error": "runtime_stopping"})
                         return
