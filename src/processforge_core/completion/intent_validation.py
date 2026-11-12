@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -174,6 +175,131 @@ class CompletionIntentValidationService:
             )
         ):
             return "journal event metadata is invalid"
+        if transition is None:
+            return self._validate_terminal(
+                intent, run, assignment, final_run, final_assignment
+            )
+        return None
+
+    def _validate_terminal(
+        self,
+        intent: dict[str, Any],
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        final_run: dict[str, Any],
+        final_assignment: dict[str, Any],
+    ) -> str | None:
+        from ..process_execution import (
+            ACTIVE_ASSIGNMENT_STATUSES,
+            ACTIVE_RUN_STATUSES,
+            normalized_outcomes,
+        )
+
+        stage_id = final_assignment.get("stage")
+        completed_at = intent.get("completed_at")
+        history = final_assignment.get("stage_history")
+        if (
+            not isinstance(stage_id, str)
+            or not stage_id
+            or not isinstance(completed_at, str)
+            or not completed_at
+            or not isinstance(history, list)
+            or not history
+        ):
+            return "journal terminal history is invalid"
+        entry = history[-1]
+        if (
+            not isinstance(entry, dict)
+            or entry.get("stage_id") != stage_id
+            or entry.get("status") != "completed"
+            or entry.get("next_stage_id") != ""
+            or entry.get("completed_at") != completed_at
+            or final_assignment.get("stage_status") != "completed"
+            or final_assignment.get("updated_at") != completed_at
+            or final_run.get("updated_at") != completed_at
+        ):
+            return "journal terminal payload is invalid"
+        outcome = entry.get("outcome")
+        if not isinstance(outcome, str) or not outcome:
+            return "journal terminal outcome is invalid"
+        process, pin_status = self.effective_process(final_run)
+        try:
+            allowed = (
+                normalized_outcomes(process, stage_id) if pin_status == "pinned" else []
+            )
+        except ValueError:
+            return "journal terminal process is invalid"
+        outcomes = {str(item.get("id")): item for item in allowed}
+        if outcome not in outcomes or str(outcomes[outcome].get("next_stage") or ""):
+            return "journal terminal outcome is not allowed by pinned process"
+        current_history = assignment.get("stage_history") or []
+        before_assignment = (
+            assignment.get("stage") == stage_id
+            and str(assignment.get("status") or "") in ACTIVE_ASSIGNMENT_STATUSES
+            and assignment.get("stage_status") == "in_progress"
+            and current_history == history[:-1]
+        )
+        if not before_assignment and assignment != final_assignment:
+            return "journal terminal assignment does not match selected history"
+        if str(run.get("status") or "") in ACTIVE_RUN_STATUSES:
+            tasks = run.get("tasks")
+            matching = (
+                [
+                    task
+                    for task in tasks
+                    if isinstance(task, dict) and task.get("id") == assignment.get("id")
+                ]
+                if isinstance(tasks, list)
+                else []
+            )
+            if (
+                len(matching) != 1
+                or str(matching[0].get("status") or "")
+                not in ACTIVE_ASSIGNMENT_STATUSES
+            ):
+                return "journal terminal task does not match selected work"
+        elif run != final_run:
+            return "journal terminal run does not match selected work"
+        intent_seed = ":".join(
+            [
+                str(run.get("id") or ""),
+                str(assignment.get("id") or ""),
+                completed_at,
+                outcome,
+            ]
+        )
+        intent_id = (
+            "completion-" + hashlib.sha256(intent_seed.encode("utf-8")).hexdigest()[:32]
+        )
+        if intent.get("intent_id") != intent_id:
+            return "journal terminal identity is invalid"
+        expected = []
+        for event_type in [
+            "process.stage.completed",
+            "process.stage.transitioned",
+            "task.completed",
+            "assignment.completed",
+            "run.completed",
+            "run.summary.created",
+        ]:
+            event_id = (
+                "evt_"
+                + hashlib.sha256(
+                    (intent_id + ":" + event_type).encode("utf-8")
+                ).hexdigest()[:32]
+            )
+            expected.append(
+                {
+                    "event_type": event_type,
+                    "event_id": event_id,
+                    "stage_id": stage_id,
+                    "previous_stage_id": stage_id,
+                    "next_stage_id": "",
+                    "outcome": outcome,
+                }
+            )
+        if intent["final"].get("events") != expected:
+            return "journal terminal event metadata is invalid"
         return None
 
     def _validate_transition(
