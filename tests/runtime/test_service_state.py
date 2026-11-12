@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import copy
 import hashlib
 import json
@@ -305,7 +306,16 @@ def test_public_offline_status_keeps_all_diagnostics(
     state["health"] = "stopped"
     path = service.service_path(tmp_path)
     RuntimeServiceStateStore().write(path, state)
-    monkeypatch.setattr(service, "active_service", lambda *_: (False, control(path)))
+    monkeypatch.setattr(
+        service,
+        "inspect_lifecycle",
+        lambda *_: {
+            "kind": "stopped",
+            "state": control(path),
+            "matching": False,
+            "pid_running": False,
+        },
+    )
     monkeypatch.setattr(
         service, "add_runtime_truth", lambda payload, _core, **_: payload
     )
@@ -318,7 +328,16 @@ def test_public_status_ipc_failure_preserves_saved_details(
     state = snapshot(tmp_path)
     path = service.service_path(tmp_path)
     RuntimeServiceStateStore().write(path, state)
-    monkeypatch.setattr(service, "active_service", lambda *_: (True, control(path)))
+    monkeypatch.setattr(
+        service,
+        "inspect_lifecycle",
+        lambda *_: {
+            "kind": "ready",
+            "state": control(path),
+            "matching": True,
+            "pid_running": True,
+        },
+    )
     monkeypatch.setattr(service, "load_token", lambda *_: "fixture-token")
     monkeypatch.setattr(
         service,
@@ -334,6 +353,164 @@ def test_public_status_ipc_failure_preserves_saved_details(
         "last_status_error": {"error": "fixture-unavailable"},
     }
     assert service.status_payload(tmp_path, SimpleNamespace()) == expected
+
+
+def _status_files(root: Path) -> dict[str, bytes]:
+    return {
+        p.relative_to(root).as_posix(): p.read_bytes()
+        for p in root.rglob("*")
+        if p.is_file()
+    }
+
+
+def _status_command_result(
+    root: Path, entry: str, capsys: pytest.CaptureFixture[str]
+) -> tuple[int, dict[str, Any]]:
+    if entry == "api":
+        core = SimpleNamespace(resolve_workplace_root=lambda _: root)
+        code = service.command_status(
+            argparse.Namespace(workplace="fixture", json=True), core
+        )
+        return code, json.loads(capsys.readouterr().out)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            str(Path(__file__).resolve().parents[2] / "tools/processforge.py"),
+            "runtime",
+            "status",
+            "--workplace",
+            str(root),
+            "--json",
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert not result.stderr, result.stderr
+    return result.returncode, json.loads(result.stdout)
+
+
+@pytest.mark.parametrize("entry", ["api", "cli"])
+@pytest.mark.parametrize("bad_details", [False, True])
+@pytest.mark.parametrize(
+    "stored_status", ["starting", "stopping", "failed", "ready", "running"]
+)
+def test_public_status_preserves_matching_live_lifecycle(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    stored_status: str,
+    bad_details: bool,
+    entry: str,
+) -> None:
+    state = snapshot(tmp_path, 250)
+    state.update(status=stored_status, health=stored_status, endpoint="")
+    path = service.service_path(tmp_path)
+    RuntimeServiceStateStore().write(path, state)
+    service.write_json_atomic(
+        service.lock_path(tmp_path),
+        {"pid": os.getpid(), "instance_id": state["instance_id"]},
+    )
+    if bad_details:
+        active_slot(path).write_bytes(b"unavailable diagnostic body")
+    expected = "failed" if stored_status in {"ready", "running"} else stored_status
+    observed = service.inspect_lifecycle(tmp_path, SimpleNamespace())
+    assert observed["kind"] == expected
+    assert observed["matching"] and observed["pid_running"]
+    inspection = service.inspect_lifecycle
+    calls = 0
+
+    def counted(root: Path, core: Any) -> dict[str, Any]:
+        nonlocal calls
+        calls += 1
+        return inspection(root, core)
+
+    monkeypatch.setattr(service, "inspect_lifecycle", counted)
+    before = _status_files(tmp_path)
+    code, payload = _status_command_result(tmp_path, entry, capsys)
+    assert calls == (1 if entry == "api" else 0)
+    assert payload["status"] == expected
+    health = "degraded" if bad_details else expected
+    assert payload["health"] == health
+    assert payload["runtime"] == {"status": expected, "health": health, "running": True}
+    assert code == (1 if expected == "failed" else 0)
+    assert payload["pid"] == os.getpid()
+    assert payload["instance_id"] == state["instance_id"]
+    assert payload["last_runtime_instance"]["status"] == "current"
+    if bad_details:
+        assert payload["state_details_error"] == "runtime_state_details_unavailable"
+        assert "project_errors" not in payload
+        assert "last_scheduler_result" not in payload
+    else:
+        assert payload["project_errors"] == state["project_errors"]
+        assert payload["last_scheduler_result"] == state["last_scheduler_result"]
+    assert _status_files(tmp_path) == before
+    assert not service.token_path(tmp_path).exists()
+
+
+@pytest.mark.parametrize("entry", ["api", "cli"])
+@pytest.mark.parametrize(
+    "fixture",
+    ["stopped", "stale", "empty", "missing-lock", "mismatched-lock", "unknown-lock"],
+)
+def test_public_status_keeps_offline_and_unqualified_owner_conservative(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    fixture: str,
+    entry: str,
+) -> None:
+    state: dict[str, Any] = {}
+    if fixture not in {"empty", "unknown-lock"}:
+        state = snapshot(tmp_path, 250)
+        state["endpoint"] = ""
+        if fixture != "missing-lock":
+            state["pid"] = int(
+                subprocess.check_output(
+                    [sys.executable, "-B", "-c", "import os;print(os.getpid())"],
+                    timeout=10,
+                )
+            )
+        state["status"] = "stopped" if fixture == "stopped" else "failed"
+        state["health"] = state["status"]
+        RuntimeServiceStateStore().write(service.service_path(tmp_path), state)
+    if fixture in {"stale", "mismatched-lock"}:
+        lock = {
+            "pid": os.getpid() if fixture == "mismatched-lock" else state["pid"],
+            "instance_id": "other-instance"
+            if fixture == "mismatched-lock"
+            else state["instance_id"],
+        }
+        service.write_json_atomic(service.lock_path(tmp_path), lock)
+    elif fixture == "unknown-lock":
+        service.write_json_atomic(service.lock_path(tmp_path), {"unknown_owner": True})
+    expected = {
+        "stopped": "stopped",
+        "stale": "stale",
+        "empty": "not_running",
+        "missing-lock": "orphaned",
+        "mismatched-lock": "orphaned",
+        "unknown-lock": "orphaned",
+    }[fixture]
+    assert service.inspect_lifecycle(tmp_path, SimpleNamespace())["kind"] == expected
+    before = _status_files(tmp_path)
+    code, payload = _status_command_result(tmp_path, entry, capsys)
+    assert payload["status"] == expected
+    health = "stopped" if expected == "not_running" else expected
+    assert payload["runtime"] == {
+        "status": expected,
+        "health": health,
+        "running": False,
+    }
+    assert code == 0  # Existing failed-only exit policy; orphaned grants no authority.
+    if state:
+        assert payload["pid"] == state["pid"]
+        assert payload["instance_id"] == state["instance_id"]
+        assert payload["project_errors"] == state["project_errors"]
+        assert payload["last_runtime_instance"]["status"] == "historical"
+    assert _status_files(tmp_path) == before
+    assert not service.token_path(tmp_path).exists()
 
 
 def test_stale_cleanup_uses_same_store_and_preserves_details(
