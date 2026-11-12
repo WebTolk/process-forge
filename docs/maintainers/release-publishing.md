@@ -2,6 +2,12 @@
 
 This is the maintainer contract for a public ProcessForge release.
 
+The public `release-test` project gates `events-validate` and `doctor-project`
+each onboard a fresh isolated consumer with its own Workplace and event/chat
+records. They do not require or initialize project state in the distribution
+root. Each can run independently with `--no-clean --only <gate>`; `--list`
+only lists commands. Distribution checks still target the source/archive root.
+
 1. Prepare a clean release source candidate and finish product documentation.
 2. Run source schema, cleanliness, checksum, and full release tests.
 3. Create and push the final source commit.
