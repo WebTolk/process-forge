@@ -786,3 +786,428 @@ def test_first_start_registration_refuses_without_replacing_coverage(
             pytest.fail("unproven observation coverage admitted start")
     assert cache.read_bytes() == before
     assert not ExecutionAdmission.held(project, workplace)
+
+
+_ADMISSION_HOLDER = """
+import sys
+from pathlib import Path
+from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+project = Path(sys.argv[1])
+workplace = Path(sys.argv[2]) if sys.argv[2] else None
+with ExecutionAdmission().start(project, workplace):
+    Path(sys.argv[3]).write_text("held", encoding="ascii")
+    sys.stdin.readline()
+"""
+
+_SINGLETON_HOLDER = """
+import os
+import sys
+from pathlib import Path
+import processforge as core
+from pf_runtime import service
+
+workplace = Path(sys.argv[1])
+owner = "fixture-owner"
+service.acquire_singleton(workplace, core, owner)
+try:
+    service.load_token(workplace)
+    state = {"instance_id": owner, "pid": os.getpid(), "status": "ready"}
+    service.save_service_state(workplace, core, state)
+    service.save_service_state(workplace, core, state)
+    Path(sys.argv[2]).write_text("held", encoding="ascii")
+    sys.stdin.readline()
+finally:
+    service.release_singleton(workplace, owner, core)
+"""
+
+
+@contextmanager
+def fixture_guard_holder(
+    script: str, arguments: list[str], ready: Path
+) -> Iterator[None]:
+    """Hold actual native guards in an independent, explicitly owned process."""
+    import os
+
+    assert not ready.exists()
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = os.pathsep.join(
+        [
+            str(_CLI.parents[1] / "src"),
+            str(_CLI.parent),
+            environment.get("PYTHONPATH", ""),
+        ]
+    )
+    child = subprocess.Popen(
+        [sys.executable, "-B", "-c", script, *arguments, str(ready)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        env=environment,
+    )
+    try:
+        deadline = time.monotonic() + 15
+        while (
+            not ready.exists() and child.poll() is None and time.monotonic() < deadline
+        ):
+            time.sleep(0.01)
+        assert ready.exists(), "fixture process did not acquire its native guard"
+        yield
+    finally:
+        try:
+            stdout, stderr = child.communicate("\n", timeout=10)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.communicate()
+            raise
+        assert child.returncode == 0, stdout + stderr
+
+
+@pytest.mark.parametrize("enrolled", [False, True])
+@pytest.mark.parametrize("exceptional", [False, True])
+def test_released_copied_context_contends_with_independent_process(
+    isolated_path: Path, enrolled: bool, exceptional: bool
+) -> None:
+    from contextvars import copy_context
+
+    project = isolated_path / "project"
+    workplace = isolated_path / "workplace" if enrolled else None
+    admission = ExecutionAdmission()
+    failure = RuntimeError("operation failed")
+    copies = []
+    try:
+        with admission.start(project, workplace):
+            copies = [copy_context(), copy_context()]
+            if exceptional:
+                raise failure
+    except RuntimeError as error:
+        assert exceptional and error is failure
+    assert len(copies) == 2
+    with fixture_guard_holder(
+        _ADMISSION_HOLDER,
+        [str(project), str(workplace) if workplace is not None else ""],
+        isolated_path / "admission-held",
+    ):
+        # The same live owner must refuse fresh and formerly owned contexts.
+        for copied in [copy_context(), *copies]:
+            entered = []
+
+            def attempt() -> None:
+                with admission.start(
+                    project, workplace, deadline=time.monotonic() + 0.1
+                ):
+                    entered.append(True)
+
+            with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
+                copied.run(attempt)
+            assert not entered
+            assert not copied.run(admission.held, project, workplace)
+    for copied in copies:
+
+        def reacquire() -> None:
+            with admission.start(project, workplace):
+                assert admission.held(project, workplace)
+
+        copied.run(reacquire)
+        assert not copied.run(admission.held, project, workplace)
+
+
+@pytest.mark.parametrize("enrolled", [False, True])
+def test_live_context_copy_reenters_but_cannot_lend_to_another_thread(
+    isolated_path: Path, enrolled: bool
+) -> None:
+    import threading
+    from contextvars import copy_context
+
+    project = isolated_path / "project"
+    workplace = isolated_path / "workplace" if enrolled else None
+    admission = ExecutionAdmission()
+    observed: list[object] = []
+    with admission.start(project, workplace):
+        live = copy_context()
+
+        def nested() -> None:
+            with admission.maintenance(project, workplace):
+                assert admission.held(project, workplace)
+
+        live.run(nested)
+
+        def other_thread() -> None:
+            observed.append(admission.held(project, workplace))
+            try:
+                with admission.start(
+                    project, workplace, deadline=time.monotonic() + 0.1
+                ):
+                    observed.append("entered")
+            except ExecutionError as error:
+                observed.append(str(error))
+
+        thread = threading.Thread(target=live.run, args=(other_thread,))
+        thread.start()
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+        assert observed == [False, "execution_activity_unknown"]
+        assert admission.held(project, workplace)
+    assert not live.run(admission.held, project, workplace)
+
+
+def test_expired_context_does_not_suppress_admission_failure_diagnostic(
+    isolated_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from contextvars import copy_context
+
+    admission = ExecutionAdmission()
+    with admission.start(isolated_path, None):
+        copied = copy_context()
+    events: list[str] = []
+
+    def emitted(_level: str, event: str, *_args: object, **_kwargs: object) -> None:
+        events.append(event)
+
+    monkeypatch.setattr(admission_module.diagnostics, "emit", emitted)
+    gate = isolated_path / ".pf/runtime/execution-admission"
+
+    def refused() -> None:
+        with admission.start(isolated_path, None, deadline=time.monotonic() + 0.05):
+            pytest.fail("expired context bypassed a real competing guard")
+
+    with admission_module.registry_file_lock(gate):
+        with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
+            copied.run(refused)
+    assert events == ["runtime.admission.failed"]
+    assert not copied.run(admission.held, isolated_path, None)
+
+
+@pytest.mark.parametrize(
+    "entry", ["status", "init", "tick", "derived", "cli-status", "cli-init", "cli-tick"]
+)
+def test_host_routing_collision_preserves_worker_and_shutdown_coverage(
+    first_start_project: tuple[ModuleType, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    entry: str,
+) -> None:
+    import argparse
+    import json
+
+    from pf_runtime import host
+
+    from processforge_core.common.yaml_io import write_yaml_file
+    from processforge_core.runtime import metrics
+
+    core, project, workplace = first_start_project
+    runtime, _service = native_runtime_fixture(workplace)
+    runtime.core = core
+    cache = host.state_path(workplace)
+    cache.unlink()
+    with core._worker_start_admission(project):
+        core._core_common_json_io.json_write(
+            project / ".pf/runtime/agent-runs/run/task/status.json",
+            {"status": "running"},
+        )
+    state = json.loads(cache.read_bytes())
+    state["sessions"] = {"kept": {"cache_only": True}}
+    host.write_json(cache, state)
+    before = cache.read_bytes()
+    assert metrics.shutdown_workers(workplace, core)["counts"]["running"] == 1
+    other = project.parent / "same-id"
+    write_yaml_file(other / ".pf/process-forge.yaml", {"project": {"id": "project"}})
+    write_yaml_file(
+        other / ".pf/process-forge.local.yaml",
+        {"workplace": {"manifest": str(workplace / "workplace.yaml")}},
+    )
+    seen = []
+    original = host.remember_project
+
+    def remember(state: dict[str, Any], handle: dict[str, Any]) -> None:
+        seen.append(handle["project_root"])
+        original(state, handle)
+
+    monkeypatch.setattr(host, "remember_project", remember)
+    if entry.startswith("cli-"):
+        args = [
+            sys.executable,
+            str(_CLI),
+            "runtime-host",
+            entry.removeprefix("cli-"),
+            "--workplace",
+            str(workplace),
+            "--project-root",
+            str(other),
+        ]
+        result = subprocess.run(
+            args, capture_output=True, text=True, encoding="utf-8", timeout=30
+        )
+        assert result.returncode != 0, result.stdout
+        assert "execution_activity_unknown" in result.stdout + result.stderr
+    else:
+        with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
+            if entry == "status":
+                host.status_payload(workplace, [other], core)
+            elif entry == "init":
+                host.command_init(
+                    argparse.Namespace(
+                        workplace=str(workplace), project_root=[str(other)]
+                    ),
+                    core,
+                )
+            elif entry == "tick":
+                host.tick_payload(
+                    workplace, [other], core, projection=False, presence=False
+                )
+            else:
+                host._ingest_derived_event(
+                    {"event_type": "fixture.observed", "event_id": "collision-event"},
+                    workplace,
+                    core,
+                    project_ref=str(other),
+                )
+        assert seen == [str(other)]
+    assert cache.read_bytes() == before
+    assert metrics.shutdown_workers(workplace, core)["counts"]["running"] == 1
+    assert runtime.active_worker_count(runtime.known_project_roots()) == 1
+    assert (
+        runtime.request_shutdown(guarded=True, expected_instance_id=runtime.instance_id)
+        == "runtime_busy_or_activity_unknown"
+    )
+    assert cache.read_bytes() == before
+
+
+def test_same_root_host_refresh_preserves_sessions_and_is_idempotent(
+    first_start_project: tuple[ModuleType, Path, Path],
+) -> None:
+    from pf_runtime import host
+
+    core, project, workplace = first_start_project
+    with core._worker_start_admission(project):
+        pass
+    state = host.load_state(workplace)
+    state["sessions"] = {"kept": {"cache_only": True}}
+    host.write_json(host.state_path(workplace), state)
+    first = host.status_payload(workplace, [project], core)
+    second = host.status_payload(workplace, [project], core)
+    assert first["projects"] == second["projects"]
+    assert len(first["projects"]) == 1
+    assert first["sessions"] == second["sessions"] == state["sessions"]
+
+
+@pytest.mark.parametrize("old_root", [None, "", 42])
+def test_same_id_with_unknown_recorded_root_is_not_silently_repaired(
+    isolated_path: Path, old_root: object
+) -> None:
+    from pf_runtime import host
+
+    state = {
+        "projects": [{"project_id": "same", "project_root": old_root}],
+        "sessions": {"kept": {}},
+    }
+    before = repr(state)
+    with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
+        host.remember_project(
+            state, {"project_id": "same", "project_root": str(isolated_path)}
+        )
+    assert repr(state) == before
+
+
+@pytest.mark.parametrize("entry", ["api", "cli"])
+def test_refused_singleton_preserves_independent_owner_snapshot(
+    first_start_project: tuple[ModuleType, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    entry: str,
+) -> None:
+    from pf_runtime import service
+
+    core, _project, workplace = first_start_project
+    runtime, _module = native_runtime_fixture(workplace)
+    runtime.core = core
+    runtime.instance_id = "contender"
+    runtime.state.update(instance_id=runtime.instance_id)
+    service.lock_path(workplace).unlink()
+    with fixture_guard_holder(
+        _SINGLETON_HOLDER, [str(workplace)], workplace / "singleton-held"
+    ):
+        control = service.service_path(workplace)
+        paths = [
+            control,
+            control.with_name("service-details.0.json"),
+            control.with_name("service-details.1.json"),
+            service.lock_path(workplace),
+            service.token_path(workplace),
+        ]
+        before = {path: path.read_bytes() for path in paths}
+
+        def forbidden_server(*_args: object, **_kwargs: object) -> None:
+            pytest.fail("refused singleton contender reached HTTP-server creation")
+
+        monkeypatch.setattr(service, "ThreadingHTTPServer", forbidden_server)
+        if entry == "api":
+            refused: list[SystemExit] = []
+            acquire = service.acquire_singleton
+
+            def observed_acquire(*args: Any, **kwargs: Any) -> int:
+                try:
+                    return acquire(*args, **kwargs)
+                except SystemExit as error:
+                    refused.append(error)
+                    raise
+
+            monkeypatch.setattr(service, "acquire_singleton", observed_acquire)
+            with pytest.raises(
+                SystemExit, match="PF Runtime already owns workplace"
+            ) as caught:
+                runtime.serve(0)
+            assert len(refused) == 1
+            assert caught.value is refused[0]
+        else:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(_CLI),
+                    "runtime",
+                    "serve",
+                    "--workplace",
+                    str(workplace),
+                    "--port",
+                    "0",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=30,
+            )
+            assert result.returncode != 0, result.stdout
+            assert "PF Runtime already owns workplace" in result.stdout + result.stderr
+        assert {path: path.read_bytes() for path in paths} == before
+        assert (
+            service.restore_service_state(workplace, service.read_json(control))[
+                "instance_id"
+            ]
+            == "fixture-owner"
+        )
+
+
+def test_acquired_singleton_still_publishes_failure_and_releases_its_lock(
+    first_start_project: tuple[ModuleType, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from pf_runtime import service
+
+    core, _project, workplace = first_start_project
+    runtime, _module = native_runtime_fixture(workplace)
+    runtime.core = core
+    runtime.token = "fixture-token"
+    service.lock_path(workplace).unlink()
+    failure = OSError("fixture bind refusal")
+
+    def refused_server(*_args: object, **_kwargs: object) -> None:
+        raise failure
+
+    monkeypatch.setattr(service, "ThreadingHTTPServer", refused_server)
+    with pytest.raises(OSError) as caught:
+        runtime.serve(0)
+    assert caught.value is failure
+    control = service.read_json(service.service_path(workplace))
+    assert control["status"] == "failed"
+    assert control["instance_id"] == runtime.instance_id
+    assert not service.lock_path(workplace).exists()

@@ -821,6 +821,19 @@ def registration_admission(
 
 
 def remember_project(state: dict[str, Any], handle: dict[str, Any]) -> None:
+    from processforge_core.executions.model import ExecutionError
+
+    for item in state.get("projects", []):
+        if (
+            isinstance(item, dict)
+            and item.get("project_id") == handle["project_id"]
+            and (
+                not isinstance(item.get("project_root"), str)
+                or not item["project_root"]
+                or Path(item["project_root"]) != Path(handle["project_root"])
+            )
+        ):
+            raise ExecutionError("execution_activity_unknown")
     projects = [
         item
         for item in state.get("projects", [])
