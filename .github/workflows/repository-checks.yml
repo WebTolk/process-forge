@@ -77,6 +77,8 @@ jobs:
         run: python -m unittest discover -s tests/contributor_setup -v
       - name: Check public release consumer gates on source and archive
         run: python -m unittest discover -s tests/release_consumer -v
+      - name: Check package rollback metadata
+        run: python -m unittest discover -s tests/update_metadata -v
       - name: Check shared Python QA bundle
         env:
           PF_PYTHON_QA_TEST_ROOT: ${{ runner.temp }}/python-qa-tests
