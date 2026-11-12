@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -188,16 +189,111 @@ def test_doctor_compares_active_instance_to_live_disk(
     monkeypatch.setattr(a.service, "active_service", lambda *args: (active, state))
     monkeypatch.setattr(a.service, "status_payload", lambda *args: {"health": "ready"})
     checks = []
+
+    def print_checks(values):
+        checks.extend(values)
+        return 0
+
     core = SimpleNamespace(
         resolve_workplace_root=lambda value: a.workplace,
         check=lambda status, message: (status, message),
-        print_checks=lambda values: checks.extend(values) or 0,
+        print_checks=print_checks,
     )
     a.factory.reset_mock()
     assert a.service.command_doctor(argparse.Namespace(workplace="fixture"), core) == 0
     a.factory.assert_called_once_with()
     assert (expected, "runtime core version compatible") in checks
     assert ("PASS", "runtime protocol version compatible") in checks
+
+
+@pytest.mark.parametrize("protocol", ["matching", "incompatible", "missing"])
+@pytest.mark.parametrize("bad_details", [False, True])
+def test_doctor_checks_protocol_from_actual_compact_publication(
+    adapters: Any,
+    monkeypatch: pytest.MonkeyPatch,
+    protocol: str,
+    bad_details: bool,
+) -> None:
+    from processforge_core.agents.registry import AgentWorkplaceRegistry
+    from processforge_core.runtime_service_state import (
+        SERVICE_STATE_MAX_BYTES,
+        RuntimeServiceStateStore,
+    )
+
+    a = adapters
+    state = a.service.base_state(a.workplace, object(), status="ready")
+    state["project_errors"] = {"fixture": "diagnostic Данные " * 10000}
+    if protocol == "incompatible":
+        state["protocol_version"] = "unsupported-fixture-protocol"
+    elif protocol == "missing":
+        state.pop("protocol_version")
+    a.service.save_service_state(a.workplace, object(), state)
+    path = a.service.service_path(a.workplace)
+    store = RuntimeServiceStateStore()
+    assert store.read(path) == state
+    assert path.stat().st_size <= SERVICE_STATE_MAX_BYTES
+    header = a.service.read_json(path)
+    slot = header["_runtime_state_details"]["slot"]
+    details = path.with_name(f"service-details.{slot}.json")
+    assert details.stat().st_size > SERVICE_STATE_MAX_BYTES
+    if bad_details:
+        details.write_bytes(b"unavailable diagnostic body")
+        with pytest.raises(ValueError, match="runtime_state_details_"):
+            store.read(path)
+    a.service.write_json_atomic(
+        a.service.token_path(a.workplace), {"token": "fixture-token"}
+    )
+    AgentWorkplaceRegistry().workplace_agent_ledger_path(a.workplace).parent.mkdir(
+        parents=True, exist_ok=True
+    )
+    # Readiness and HTTP status are fixture ports; the saved record is real.
+    monkeypatch.setattr(
+        a.service, "active_service", lambda *_: (True, a.service.read_json(path))
+    )
+    monkeypatch.setattr(a.service, "status_payload", lambda *_: {"health": "ready"})
+    checks: list[tuple[str, str]] = []
+
+    def print_checks(values: list[tuple[str, str]]) -> int:
+        checks.extend(values)
+        return int(any(status == "FAIL" for status, _ in values))
+
+    core = SimpleNamespace(
+        resolve_workplace_root=lambda _: a.workplace,
+        check=lambda status, message: (status, message),
+        print_checks=print_checks,
+    )
+    before = {p.name: p.read_bytes() for p in path.parent.iterdir() if p.is_file()}
+    result = a.service.command_doctor(argparse.Namespace(workplace="fixture"), core)
+    expected = "PASS" if protocol == "matching" else "FAIL"
+    assert [
+        row for row in checks if row[1] == "runtime protocol version compatible"
+    ] == [(expected, "runtime protocol version compatible")]
+    assert result == (0 if protocol == "matching" else 1)
+    assert before == {
+        p.name: p.read_bytes() for p in path.parent.iterdir() if p.is_file()
+    }
+    if protocol == "missing":
+        assert "protocol_version" not in header
+    else:
+        assert header["protocol_version"] == state["protocol_version"]
+
+
+def test_oversized_protocol_control_refuses_before_any_write(adapters: Any) -> None:
+    from processforge_core.runtime_service_state import (
+        SERVICE_STATE_MAX_BYTES,
+        RuntimeServiceStateStore,
+    )
+
+    a = adapters
+    state = a.service.base_state(a.workplace, object(), status="ready")
+    path = a.service.service_path(a.workplace)
+    store = RuntimeServiceStateStore()
+    store.write(path, state)
+    before = {p.name: p.read_bytes() for p in path.parent.iterdir()}
+    with pytest.raises(ValueError, match="runtime_state_control_too_large"):
+        store.write(path, {**state, "protocol_version": "x" * SERVICE_STATE_MAX_BYTES})
+    assert {p.name: p.read_bytes() for p in path.parent.iterdir()} == before
+    assert store.read(path) == state
 
 
 def test_real_monitor_collects_loaded_cli_version(

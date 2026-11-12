@@ -20,6 +20,7 @@ _CONTROL_FIELDS = frozenset(
     {
         "schema_version",
         "runtime_version",
+        "protocol_version",
         "processforge_core_version",
         "core_identity",
         "instance_id",
