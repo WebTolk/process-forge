@@ -75,6 +75,8 @@ jobs:
               subprocess.run([sys.executable, 'tools/' + script], check=True)
       - name: Check contributor installation boundaries
         run: python -m unittest discover -s tests/contributor_setup -v
+      - name: Check public release consumer gates on source and archive
+        run: python -m unittest discover -s tests/release_consumer -v
       - name: Check shared Python QA bundle
         env:
           PF_PYTHON_QA_TEST_ROOT: ${{ runner.temp }}/python-qa-tests

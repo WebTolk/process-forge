@@ -2300,23 +2300,21 @@ class ReleaseCommandPlanBuilder:
                 "events-validate",
                 [
                     sys.executable,
-                    str(root / "tools" / "processforge.py"),
+                    str(root / "tools" / "smoke_release_project_validators.py"),
+                    "--check",
                     "events-validate",
-                    "--project-root",
-                    str(root),
                 ],
-                60,
+                300,
             ),
             ReleaseCommand(
                 "doctor-project",
                 [
                     sys.executable,
-                    str(root / "tools" / "processforge.py"),
+                    str(root / "tools" / "smoke_release_project_validators.py"),
+                    "--check",
                     "doctor-project",
-                    "--project-root",
-                    str(root),
                 ],
-                60,
+                300,
             ),
         ]
         if clean_first:
