@@ -1242,9 +1242,18 @@ class RuntimeProcess:
                 header = self.headers.get("Authorization", "")
                 if hmac.compare_digest(header, f"Bearer {runtime.token}"):
                     return True
-                append_operator_log(
-                    runtime.workplace_root, runtime.core, "auth.failed", path=self.path
-                )
+                try:
+                    with operation_lease():
+                        append_operator_log(
+                            runtime.workplace_root,
+                            runtime.core,
+                            "auth.failed",
+                            path=self.path,
+                        )
+                except NativeControlError:
+                    runtime._stop_stale()
+                    self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
+                    return False
                 self.send_json(401, {"error": "unauthorized"})
                 return False
 
