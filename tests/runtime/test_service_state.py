@@ -11,6 +11,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 from datetime import datetime, timedelta, timezone
 from http.client import HTTPMessage
 from pathlib import Path
@@ -363,6 +364,220 @@ def _status_files(root: Path) -> dict[str, bytes]:
         for p in root.rglob("*")
         if p.is_file()
     }
+
+
+@pytest.mark.parametrize("mode", ["constructors", "loaders"])
+def test_cold_runtime_token_callers_preserve_one_credential(
+    tmp_path: Path, mode: str
+) -> None:
+    code = """
+import json,os,sys
+from pathlib import Path
+from http.client import HTTPMessage
+from types import SimpleNamespace
+from pf_runtime import service
+root,role,mode=Path(sys.argv[1]),sys.argv[2],sys.argv[3]
+service.secrets.token_urlsafe=lambda _: "fixture-"+role
+original=service.read_json
+paused=False
+if role != "owner":
+    def read(path):
+        global paused
+        payload=original(path)
+        if path == service.token_path(root) and not paused:
+            assert not payload
+            paused=True
+            (root/(role+".waiting")).write_text("ready",encoding="utf-8")
+            assert sys.stdin.readline().strip() == "go"
+        return payload
+    service.read_json=read
+if mode == "loaders":
+    print(json.dumps({"token":service.load_token(root)}),flush=True)
+else:
+    runtime=service.RuntimeProcess(root,SimpleNamespace(),interval=1)
+    assert runtime.httpd is None and runtime.scheduler_thread is None
+    if role == "owner":
+        service.acquire_singleton(root,runtime.core,runtime.instance_id)
+        try:
+            runtime.state["token_hash"]=service.token_hash(runtime.token)
+            runtime.save()
+            (root/"owner.waiting").write_text(json.dumps({"instance_id":runtime.instance_id,"pid":os.getpid()}),encoding="utf-8")
+            assert sys.stdin.readline().strip() == "go"
+            disk=original(service.token_path(root))["token"]
+            handler=object.__new__(runtime.make_handler())
+            handler.path="/status"
+            handler.headers=HTTPMessage()
+            handler.headers["Authorization"]="Bearer "+disk
+            handler.send_json=lambda *_: None
+            print(json.dumps({"token":runtime.token,"disk":disk,"authorized":handler.authorize()}),flush=True)
+        finally:
+            service.release_singleton(root,runtime.instance_id,runtime.core)
+    else:
+        try:
+            service.acquire_singleton(root,runtime.core,runtime.instance_id)
+        except SystemExit as exc:
+            assert "already owns workplace" in str(exc)
+            print(json.dumps({"token":runtime.token,"refused":True}),flush=True)
+        else:
+            service.release_singleton(root,runtime.instance_id,runtime.core)
+            raise AssertionError("contender acquired live workplace")
+"""
+    children: list[subprocess.Popen[str]] = []
+
+    def start(role: str) -> subprocess.Popen[str]:
+        child = subprocess.Popen(
+            [sys.executable, "-B", "-c", code, str(tmp_path), role, mode],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+        children.append(child)
+        deadline = time.monotonic() + 30
+        marker = tmp_path / (role + ".waiting")
+        while not marker.exists():
+            assert child.poll() is None, child.communicate(timeout=5)
+            assert time.monotonic() < deadline, "child did not reach cold-read barrier"
+            time.sleep(0.01)
+        return child
+
+    def release(child: subprocess.Popen[str]) -> None:
+        assert child.stdin is not None
+        child.stdin.write("go\n")
+        child.stdin.flush()
+
+    def finish(child: subprocess.Popen[str]) -> dict[str, Any]:
+        stdout, stderr = child.communicate(timeout=30)
+        assert child.returncode == 0, (stdout, stderr)
+        assert not stderr, stderr
+        return json.loads(stdout)
+
+    try:
+        delayed = start("delayed")
+        other = start("owner" if mode == "constructors" else "other")
+        if mode == "constructors":
+            before = _status_files(service.runtime_root(tmp_path))
+            release(delayed)
+            result = finish(delayed)
+            assert result["refused"]
+            assert other.poll() is None
+            after = _status_files(service.runtime_root(tmp_path))
+            assert {k: v for k, v in after.items() if k != "token.json"} == {
+                k: v for k, v in before.items() if k != "token.json"
+            }
+            identity = control(tmp_path / "owner.waiting")
+            status = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(Path(__file__).resolve().parents[2] / "tools/processforge.py"),
+                    "runtime",
+                    "status",
+                    "--workplace",
+                    str(tmp_path),
+                    "--json",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=30,
+            )
+            assert status.returncode == 0, status.stderr
+            payload = json.loads(status.stdout)
+            assert payload["status"] == "starting"
+            assert payload["instance_id"] == identity["instance_id"]
+            assert payload["pid"] == identity["pid"]
+            assert _status_files(service.runtime_root(tmp_path)) == after
+            release(other)
+            owner = finish(other)
+            assert owner["token"] == result["token"] == owner["disk"]
+            assert owner["authorized"] is True
+        else:
+            release(delayed)
+            release(other)
+            left, right = finish(delayed), finish(other)
+            assert (
+                left["token"]
+                == right["token"]
+                == control(service.token_path(tmp_path))["token"]
+            )
+    finally:
+        for child in children:
+            if child.poll() is None:
+                child.terminate()
+                child.communicate(timeout=10)
+
+
+def test_existing_runtime_token_avoids_guard_and_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = service.token_path(tmp_path)
+    service.write_json_atomic(path, {"schema_version": 1, "token": "fixture-existing"})
+    before = _status_files(tmp_path)
+
+    def unexpected(*_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("existing credential must use read-only fast path")
+
+    monkeypatch.setattr(service, "singleton_critical_section", unexpected)
+    monkeypatch.setattr(service, "write_json_atomic", unexpected)
+    monkeypatch.setattr(service.secrets, "token_urlsafe", unexpected)
+    assert service.load_token(tmp_path) == "fixture-existing"
+    assert _status_files(tmp_path) == before
+
+
+def test_runtime_token_publication_failure_releases_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(*_args: Any, **_kwargs: Any) -> None:
+        raise PermissionError("fixture token publication refusal")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(service, "write_json_atomic", refuse)
+        with pytest.raises(PermissionError, match="fixture token publication refusal"):
+            service.load_token(tmp_path)
+    assert not service.token_path(tmp_path).exists()
+    # A separate interpreter must acquire the actual OS mutex after the failure.
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            "from pathlib import Path; from pf_runtime import service; "
+            "from types import SimpleNamespace; import sys; "
+            "runtime=service.RuntimeProcess(Path(sys.argv[1]),SimpleNamespace(),interval=1); "
+            "assert runtime.token and runtime.httpd is None",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (
+        service.load_token(tmp_path) == control(service.token_path(tmp_path))["token"]
+    )
+
+
+def test_runtime_token_guard_refusal_does_not_publish(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from contextlib import contextmanager
+
+    @contextmanager
+    def refuse(*_args: Any):
+        raise PermissionError("fixture token guard refusal")
+        yield
+
+    def unexpected(*_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("guard refusal must precede credential generation")
+
+    monkeypatch.setattr(service, "singleton_critical_section", refuse)
+    monkeypatch.setattr(service.secrets, "token_urlsafe", unexpected)
+    with pytest.raises(PermissionError, match="fixture token guard refusal"):
+        service.load_token(tmp_path)
+    assert not list(tmp_path.iterdir())
 
 
 def _status_command_result(
