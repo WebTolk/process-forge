@@ -1240,7 +1240,9 @@ class RuntimeProcess:
 
             def authorize(self) -> bool:
                 header = self.headers.get("Authorization", "")
-                if hmac.compare_digest(header, f"Bearer {runtime.token}"):
+                if header.isascii() and hmac.compare_digest(
+                    header, f"Bearer {runtime.token}"
+                ):
                     return True
                 try:
                     with operation_lease():
