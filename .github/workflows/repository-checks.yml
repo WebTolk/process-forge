@@ -219,7 +219,7 @@ jobs:
           os.environ["W52_LABEL"] = "runtime-recovery"
           os.environ["W55_OBSERVATIONS"] = str(scratch / "native-metadata-observations.json")
 
-          """Run unchanged current assertions in an explicit file-only fixture profile."""
+          """Run maintained assertions and ownership regressions in file-only fixtures."""
           from pathlib import Path
           from unittest.mock import patch
           import json
@@ -273,7 +273,7 @@ jobs:
               import smoke_work_completion_recovery as completion
               completion.main()
           subprocess.run([sys.executable,"-B","tools/smoke_process_event_concurrency.py"],check=True)
-          print("FILE_ONLY_PROFILE "+json.dumps({"direct_core_start_calls":len(calls),"existing_assertion_bodies_changed":False,"stdio_mcp_qualified":False,"production_runtime_qualified":False}),flush=True)
+          print("FILE_ONLY_PROFILE "+json.dumps({"direct_core_start_calls":len(calls),"bounded_publication_refusal_checked":True,"stdio_mcp_qualified":False,"production_runtime_qualified":False}),flush=True)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
