@@ -31,6 +31,7 @@ e243f8ebb693a69301a207fec94208eb2595c2f3e4ab26b86d445d5147f25695  docs/audits/pf
 1d168db23ff2216518db4d1bfa4a8ff83e7029800fd870fa03f490f557de5857  docs/audits/pf-audit-followups-20261014.md
 94f1e12928964dd83d1c35eb5915d45627f29dea46776044f3dccdfeaaf2dd71  docs/audits/pf-development-throughput-evolve-20261015.json
 248b7f5d89d62d9c96b9ad65924cb684620759355c9a45def553e830caca1242  docs/audits/pf-development-throughput-evolve-20261015.md
+c4b458853132235bee4ddf97ea2cbc83203577e45c4c17306f81c13de538df8f  docs/audits/pf130-t03-cleanup-20261112.md
 cc2fbf65c4f160d45c88e8e4c6d4e0439d03470919c67cf46070a63721f7711e  docs/audits/pf130-t04-windows-recovery-20261109.md
 7ce605318261b3a13c397b5d6e3ef8425657517289c0e866993e30db468de713  docs/audits/prepared-resource-yaml-latency-20261015.md
 cf8acbed9bae8ce56df0179fd1e653c1a818f7de70adca14e48efe1fcd5dcaa2  docs/audits/process-event-journal-latency-20261016.md
@@ -238,6 +239,7 @@ a6a1b58bd1fc737284de57764f5d6d1c4e725f88768d4c63099d19b38171c4ed  docs/ru/audits
 e5ab721e662c054485afbc14afd7662127f4ff00d531ca5db790f07d8646bba7  docs/ru/audits/journal-error-row-replay-20261016.md
 804e92734ed1f3bcd966ab69458f22ad29cea485a70064c7de305fdad71fc508  docs/ru/audits/journal-multiproject-index-20261016.md
 b277e0ea8c7108f05d66f82235f8045d5d40592c3e48d2047288118374d55c4c  docs/ru/audits/mcp-diagnostic-root-20261016.md
+f60d04821e5d2bccfada287e7e23f7ce0775290d4f5218f087782114394c1657  docs/ru/audits/pf130-t03-cleanup-20261112.md
 2df25ac12e37c5553ea468a64c9b202c4336e686776a22421b53eb8b86a9b3ec  docs/ru/audits/prepared-resource-yaml-latency-20261015.md
 9761c40c823debfbf72f8516f57ceaaf4bf68d382f5635742b5a157c1e6f19a8  docs/ru/audits/process-event-journal-latency-20261016.md
 03b6bc51ac30d69a6a4144f3f0a4e9c225373ac3e6fa0898c2576fce0ff9ec32  docs/ru/audits/runtime-operation-scope-20261016.md
