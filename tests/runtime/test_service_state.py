@@ -687,6 +687,89 @@ def test_shutdown_retry_revalidates_owner_and_busy_guards(
     ) == flags
 
 
+@pytest.mark.parametrize("phase", ["details", "control-before", "control-after"])
+@pytest.mark.parametrize("malformed", ["json", "length", "short", "permission"])
+@pytest.mark.parametrize("denied", [False, True])
+def test_malformed_shutdown_retry_fences_error_diagnostics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    phase: str,
+    malformed: str,
+    denied: bool,
+) -> None:
+    import pf_native_control as native
+
+    runtime = _runtime_after_shutdown_publication_failure(tmp_path, monkeypatch, phase)
+    assert service.operation_lease is native.operation_lease
+    attempts: list[float | None] = []
+
+    class Admission:
+        def __enter__(self) -> None:
+            if denied:
+                raise native.NativeControlError()
+
+        def __exit__(self, *_exception: Any) -> None:
+            pass
+
+    class Control:
+        def operation(self, *, deadline: float | None = None) -> Admission:
+            attempts.append(deadline)
+            return Admission()
+
+    class UnavailableBody(io.BytesIO):
+        def read(self, *_args: Any, **_kwargs: Any) -> bytes:
+            raise PermissionError("fixture body read denied")
+
+    handler: Any = object.__new__(runtime.make_handler())
+    handler.path = "/shutdown"
+    body = b"{" if malformed == "json" else b"{}"
+    handler.rfile = (
+        UnavailableBody(body) if malformed == "permission" else io.BytesIO(body)
+    )
+    handler.headers = HTTPMessage()
+    handler.headers["Authorization"] = "Bearer " + runtime.token
+    handler.headers["Content-Length"] = (
+        "invalid" if malformed == "length" else str(len(body) + (malformed == "short"))
+    )
+    replies: list[tuple[int, dict[str, Any]]] = []
+    handler.send_json = lambda status, payload: replies.append((status, payload))
+    before = _status_files(tmp_path)
+    paths = sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+    control_port: Any = Control()
+    with monkeypatch.context() as admission:
+        admission.setattr(
+            native, "_ENTRY", native.NativeEntry(tmp_path, None, None, control_port)
+        )
+        handler.do_POST()
+    assert len(replies) == 1
+    assert runtime.active_requests == 0
+    assert not runtime.shutdown_check
+    assert (
+        runtime.stop_event.is_set() is denied
+    )  # Existing in-memory retired-entry stop.
+    if denied:
+        assert replies == [(409, {"error": "runtime_busy_or_activity_unknown"})]
+        assert attempts == [None]
+        assert _status_files(tmp_path) == before
+        assert (
+            sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+            == paths
+        )
+    else:
+        assert replies[0][0] == (403 if malformed == "permission" else 400)
+        log = service.operator_log_path(tmp_path)
+        entries = [
+            json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(entries) == 1
+        assert entries[0]["event"] == (
+            "request.forbidden" if malformed == "permission" else "request.error"
+        )
+        after = _status_files(tmp_path)
+        del after[log.relative_to(tmp_path).as_posix()]
+        assert after == before
+
+
 def test_actual_guarded_shutdown_publishes_compact_stopping(tmp_path: Path) -> None:
     runtime = object.__new__(service.RuntimeProcess)
     runtime.workplace_root = tmp_path

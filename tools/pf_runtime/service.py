@@ -1460,22 +1460,24 @@ class RuntimeProcess:
                     raise
                 except Exception as exc:  # noqa: BLE001 - return structured local IPC errors.
                     if isinstance(exc, PermissionError):
+                        with operation_lease():
+                            append_operator_log(
+                                runtime.workplace_root,
+                                runtime.core,
+                                "request.forbidden",
+                                path=self.path,
+                                error=str(exc),
+                            )
+                        self.send_json(403, {"error": str(exc)})
+                        return
+                    with operation_lease():
                         append_operator_log(
                             runtime.workplace_root,
                             runtime.core,
-                            "request.forbidden",
+                            "request.error",
                             path=self.path,
                             error=str(exc),
                         )
-                        self.send_json(403, {"error": str(exc)})
-                        return
-                    append_operator_log(
-                        runtime.workplace_root,
-                        runtime.core,
-                        "request.error",
-                        path=self.path,
-                        error=str(exc),
-                    )
                     self.send_json(400, {"error": str(exc)})
 
         return Handler
