@@ -15857,31 +15857,20 @@ def command_update_verify(args: argparse.Namespace) -> int:
     return 0
 
 
-def update_installed_subject_version(workplace_root: Path, candidate: dict[str, Any], install_path: Path | None = None) -> None:
-    path = _update_document_reader.installed_registry(workplace_root)
-    data = _update_document_reader.yaml(path)
-    if not data:
-        data = {"schema_version": 1, "subjects": []}
-    subjects = data.get("subjects")
-    if not isinstance(subjects, list):
-        subjects = []
-        data["subjects"] = subjects
-    candidate_subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
-    found = False
-    for subject in subjects:
-        if not isinstance(subject, dict):
-            continue
-        if subject.get("type") == candidate_subject.get("type") and subject.get("id") == candidate_subject.get("id"):
-            subject["version"] = candidate.get("available_version")
-            subject["updated_at"] = _core_common_clock.now_utc()
-            if install_path:
-                subject["install_path"] = rel(install_path, workplace_root)
-            found = True
-    if not found:
-        subjects.append({"type": candidate_subject.get("type"), "id": candidate_subject.get("id"), "scope": candidate_subject.get("scope") or "global", "version": candidate.get("available_version"), "installed_at": _core_common_clock.now_utc(), "install_path": rel(install_path, workplace_root) if install_path else None})
-    data["updated_at"] = _core_common_clock.now_utc()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(dump_yaml(data), encoding="utf-8")
+def update_installed_subject_version(
+    workplace_root: Path,
+    candidate: dict[str, Any],
+    install_path: Path | None = None,
+) -> None:
+    from processforge_core.maintenance.update_metadata import update_version
+
+    registry = _update_document_reader.installed_registry(workplace_root)
+    with registry_file_lock(registry, stale_after_seconds=0):
+        update_version(
+            registry,
+            candidate,
+            rel(install_path, workplace_root) if install_path else None,
+        )
 
 
 SNAPSHOT_IMPACTING_UPDATE_SUBJECT_TYPES = {
@@ -15938,48 +15927,115 @@ def command_update_apply(args: argparse.Namespace) -> int:
         print("FAIL: update apply requires --confirm")
         return 1
     workplace_root = update_workplace_root(args.workplace)
+    try:
+        if args.dry_run:
+            return _command_update_apply_locked(args, workplace_root)
+        with registry_file_lock(
+            _update_document_reader.installed_registry(workplace_root),
+            stale_after_seconds=0,
+        ):
+            return _command_update_apply_locked(args, workplace_root)
+    except (ValueError, OSError) as error:
+        print(f"FAIL: package update: {error}")
+        return 1
+
+
+def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path) -> int:
+    from processforge_core.maintenance.update_metadata import SubjectMetadataBackup
+
     candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     record = _update_document_reader.staged_record(workplace_root, args.candidate)
     if not candidate or not record:
         print(f"FAIL: staged candidate not found: {args.candidate}")
         return 1
-    verify_status = command_update_verify(argparse.Namespace(workplace=args.workplace, candidate=args.candidate))
+    verify_status = command_update_verify(
+        argparse.Namespace(workplace=args.workplace, candidate=args.candidate)
+    )
     if verify_status != 0:
         return verify_status
-    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    subject = (
+        candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    )
     subject_type = str(subject.get("type") or "")
-    policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
-    if policy.get("mode") == "custom_command_requires_confirmation" and not args.allow_custom_command:
-        print("FAIL: custom command update policy requires explicit --allow-custom-command and is not executed by default")
+    policy = (
+        candidate.get("update_policy")
+        if isinstance(candidate.get("update_policy"), dict)
+        else {}
+    )
+    if (
+        policy.get("mode") == "custom_command_requires_confirmation"
+        and not args.allow_custom_command
+    ):
+        print(
+            "FAIL: custom command update policy requires explicit --allow-custom-command and is not executed by default"
+        )
         return 1
-    artifact_info = record.get("artifact") if isinstance(record.get("artifact"), dict) else {}
-    artifact_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(artifact_info.get("path") or "")))
-    backup_dir = _update_document_reader.runtime_root(workplace_root) / "backups" / args.candidate
-    apply_dir = _update_document_reader.runtime_root(workplace_root) / "applied" / args.candidate
-    if args.dry_run:
-        print(f"DRY_RUN: would apply {args.candidate}")
-        return 0
-    if backup_dir.exists():
-        shutil.rmtree(backup_dir)
-    backup_dir.mkdir(parents=True, exist_ok=True)
-    if policy.get("mode") == "replace_file" or subject_type in {"tool_definition", "tool_package", "tool"}:
-        paths = policy.get("executable_paths") if isinstance(policy.get("executable_paths"), list) else []
+    artifact_info = (
+        record.get("artifact") if isinstance(record.get("artifact"), dict) else {}
+    )
+    artifact_path = path_resolution_to_path(
+        workplace_path_resolution(workplace_root, str(artifact_info.get("path") or ""))
+    )
+    backup_dir = (
+        _update_document_reader.runtime_root(workplace_root)
+        / "backups"
+        / args.candidate
+    )
+    apply_dir = (
+        _update_document_reader.runtime_root(workplace_root)
+        / "applied"
+        / args.candidate
+    )
+    file_mode = policy.get("mode") == "replace_file" or subject_type in {
+        "tool_definition",
+        "tool_package",
+        "tool",
+    }
+    if file_mode:
+        paths = (
+            policy.get("executable_paths")
+            if isinstance(policy.get("executable_paths"), list)
+            else []
+        )
         if not paths:
             print("FAIL: tool update requires update_policy.executable_paths")
             return 1
-        destination = path_resolution_to_path(workplace_path_resolution(workplace_root, str(paths[0])))
-        if destination.exists():
-            backup_target = backup_dir / "previous-file"
-            backup_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(destination, backup_target)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(artifact_path, destination)
-        install_path = destination
+        install_path = path_resolution_to_path(
+            workplace_path_resolution(workplace_root, str(paths[0]))
+        )
     else:
         install_path = _update_registry_reader.install_path(workplace_root, candidate)
+    if args.dry_run:
+        print(f"DRY_RUN: would apply {args.candidate}")
+        return 0
+    registry = _update_document_reader.installed_registry(workplace_root)
+    metadata_path = backup_dir / "installed-subject.yaml"
+    if backup_dir.exists():
+        previous = SubjectMetadataBackup.load(
+            registry, metadata_path, candidate, install_path
+        )
+        if previous.data["phase"] != "rolled_back":
+            print("FAIL: package backup requires rollback before reapply")
+            return 1
+        shutil.rmtree(backup_dir)
+    metadata = SubjectMetadataBackup.capture(
+        registry,
+        metadata_path,
+        candidate,
+        install_path,
+        rel(install_path, workplace_root),
+    )
+    if file_mode:
         if install_path.exists():
-            backup_target = backup_dir / "previous"
-            shutil.copytree(install_path, backup_target)
+            shutil.copy2(install_path, backup_dir / "previous-file")
+        metadata.phase("backup_ready")
+        install_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(artifact_path, install_path)
+    else:
+        if install_path.exists():
+            shutil.copytree(install_path, backup_dir / "previous")
+        metadata.phase("backup_ready")
+        if install_path.exists():
             shutil.rmtree(install_path)
         install_path.parent.mkdir(parents=True, exist_ok=True)
         if artifact_path.suffix.lower() == ".zip":
@@ -15987,61 +16043,152 @@ def command_update_apply(args: argparse.Namespace) -> int:
         else:
             install_path.mkdir(parents=True, exist_ok=True)
             shutil.copy2(artifact_path, install_path / artifact_path.name)
-    update_installed_subject_version(workplace_root, candidate, install_path)
+    metadata.publish()
     apply_dir.mkdir(parents=True, exist_ok=True)
-    apply_record = {"schema_version": 1, "candidate_id": args.candidate, "applied_at": _core_common_clock.now_utc(), "status": "applied", "subject": subject, "installed_version": candidate.get("available_version"), "install_path": rel(install_path, workplace_root), "backup_path": rel(backup_dir, workplace_root), "post_update_doctor": candidate.get("post_update_doctor", [])}
-    (apply_dir / "apply-record.yaml").write_text(dump_yaml(apply_record), encoding="utf-8")
-    marked = mark_impacted_project_contexts_after_update(workplace_root, candidate, reason="update-applied")
+    apply_record = {
+        "schema_version": 1,
+        "candidate_id": args.candidate,
+        "applied_at": _core_common_clock.now_utc(),
+        "status": "applied",
+        "subject": subject,
+        "installed_version": candidate.get("available_version"),
+        "install_path": rel(install_path, workplace_root),
+        "backup_path": rel(backup_dir, workplace_root),
+        "post_update_doctor": candidate.get("post_update_doctor", []),
+    }
+    (apply_dir / "apply-record.yaml").write_text(
+        dump_yaml(apply_record), encoding="utf-8"
+    )
+    marked = mark_impacted_project_contexts_after_update(
+        workplace_root, candidate, reason="update-applied"
+    )
     print(f"APPLIED: {args.candidate}")
     print(f"INSTALL_PATH: {rel(install_path, workplace_root)}")
     print(f"BACKUP: {rel(backup_dir, workplace_root)}")
     if marked:
-        print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
-    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="update-apply"))
+        print(
+            "SNAPSHOTS_MARKED_STALE: "
+            + ", ".join(rel(path, workplace_root) for path in marked)
+        )
+    print_search_index_maintenance_summary(
+        defer_search_index_maintenance(workplace_root, reason="update-apply")
+    )
     return 0
 
 
 def command_update_rollback(args: argparse.Namespace) -> int:
     workplace_root = update_workplace_root(args.workplace)
+    try:
+        with registry_file_lock(
+            _update_document_reader.installed_registry(workplace_root),
+            stale_after_seconds=0,
+        ):
+            return _command_update_rollback_locked(args, workplace_root)
+    except (ValueError, OSError) as error:
+        print(f"FAIL: package rollback: {error}")
+        return 1
+
+
+def _command_update_rollback_locked(
+    args: argparse.Namespace, workplace_root: Path
+) -> int:
+    from processforge_core.maintenance.update_metadata import SubjectMetadataBackup
+
     candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     if not candidate:
         print(f"FAIL: candidate not found: {args.candidate}")
         return 1
-    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
-    policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
-    backup_dir = _update_document_reader.runtime_root(workplace_root) / "backups" / args.candidate
-    if policy.get("mode") == "replace_file" or subject.get("type") in {"tool_definition", "tool_package", "tool"}:
-        paths = policy.get("executable_paths") if isinstance(policy.get("executable_paths"), list) else []
+    subject = (
+        candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    )
+    policy = (
+        candidate.get("update_policy")
+        if isinstance(candidate.get("update_policy"), dict)
+        else {}
+    )
+    backup_dir = (
+        _update_document_reader.runtime_root(workplace_root)
+        / "backups"
+        / args.candidate
+    )
+    file_mode = policy.get("mode") == "replace_file" or subject.get("type") in {
+        "tool_definition",
+        "tool_package",
+        "tool",
+    }
+    if file_mode:
+        paths = (
+            policy.get("executable_paths")
+            if isinstance(policy.get("executable_paths"), list)
+            else []
+        )
         if not paths:
             print("FAIL: tool rollback requires update_policy.executable_paths")
             return 1
-        destination = path_resolution_to_path(workplace_path_resolution(workplace_root, str(paths[0])))
-        backup_file = backup_dir / "previous-file"
-        if not backup_file.is_file():
-            print(f"FAIL: backup not found: {backup_file}")
-            return 1
-        shutil.copy2(backup_file, destination)
-        restore_path = destination
+        restore_path = path_resolution_to_path(
+            workplace_path_resolution(workplace_root, str(paths[0]))
+        )
+        backup = backup_dir / "previous-file"
     else:
-        install_path = _update_registry_reader.install_path(workplace_root, candidate)
-        backup_tree = backup_dir / "previous"
-        if not backup_tree.is_dir():
-            print(f"FAIL: backup not found: {backup_tree}")
-            return 1
-        if install_path.exists():
-            shutil.rmtree(install_path)
-        shutil.copytree(backup_tree, install_path)
-        restore_path = install_path
-    record = {"schema_version": 1, "candidate_id": args.candidate, "rolled_back_at": _core_common_clock.now_utc(), "status": "rolled_back", "restore_path": rel(restore_path, workplace_root)}
-    rollback_dir = _update_document_reader.runtime_root(workplace_root) / "rollbacks" / args.candidate
+        restore_path = _update_registry_reader.install_path(workplace_root, candidate)
+        backup = backup_dir / "previous"
+    metadata = SubjectMetadataBackup.load(
+        _update_document_reader.installed_registry(workplace_root),
+        backup_dir / "installed-subject.yaml",
+        candidate,
+        restore_path,
+    )
+    if metadata.data["phase"] == "prepared":
+        print("FAIL: payload backup is incomplete; preserve it for explicit recovery")
+        return 1
+    if metadata.data["phase"] != "rolled_back":
+        if metadata.data["payload_existed"]:
+            if (file_mode and not backup.is_file()) or (
+                not file_mode and not backup.is_dir()
+            ):
+                print(f"FAIL: backup not found: {backup}")
+                return 1
+            if file_mode:
+                shutil.copy2(backup, restore_path)
+            else:
+                if restore_path.exists():
+                    shutil.rmtree(restore_path)
+                shutil.copytree(backup, restore_path)
+        elif restore_path.exists():
+            if file_mode:
+                restore_path.unlink()
+            else:
+                shutil.rmtree(restore_path)
+        metadata.restore()
+    record = {
+        "schema_version": 1,
+        "candidate_id": args.candidate,
+        "rolled_back_at": _core_common_clock.now_utc(),
+        "status": "rolled_back",
+        "restore_path": rel(restore_path, workplace_root),
+    }
+    rollback_dir = (
+        _update_document_reader.runtime_root(workplace_root)
+        / "rollbacks"
+        / args.candidate
+    )
     rollback_dir.mkdir(parents=True, exist_ok=True)
-    (rollback_dir / "rollback-record.yaml").write_text(dump_yaml(record), encoding="utf-8")
-    marked = mark_impacted_project_contexts_after_update(workplace_root, candidate, reason="update-rollback")
+    (rollback_dir / "rollback-record.yaml").write_text(
+        dump_yaml(record), encoding="utf-8"
+    )
+    marked = mark_impacted_project_contexts_after_update(
+        workplace_root, candidate, reason="update-rollback"
+    )
     print(f"ROLLED_BACK: {args.candidate}")
     print(f"RESTORE_PATH: {rel(restore_path, workplace_root)}")
     if marked:
-        print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
-    print_search_index_maintenance_summary(defer_search_index_maintenance(workplace_root, reason="update-rollback"))
+        print(
+            "SNAPSHOTS_MARKED_STALE: "
+            + ", ".join(rel(path, workplace_root) for path in marked)
+        )
+    print_search_index_maintenance_summary(
+        defer_search_index_maintenance(workplace_root, reason="update-rollback")
+    )
     return 0
 
 
