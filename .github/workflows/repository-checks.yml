@@ -264,6 +264,7 @@ jobs:
               "tests/work/test_start_reliability.py",
               "tests/work/test_complete_admission.py",
               "tests/work/test_completion_intent_validation.py",
+              "tests/sqlite_storage/test_safety.py",
               "tests/execution_migration/test_storage_admission.py",
               "tests/maintenance_service/test_journals.py",
               "tests/maintenance_scan/test_journal_scan.py",
