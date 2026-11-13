@@ -323,19 +323,37 @@ def test_nested_parent_traversal_evidence_is_rejected(harness: Harness) -> None:
     assert result["error"]["code"] == "execution_evidence_unsafe"
 
 
-def test_isolated_import_performs_no_filesystem_or_connection_io() -> None:
+def test_first_maintenance_import_after_native_entry_has_no_io() -> None:
     program = """
-import pathlib, sqlite3
+import pathlib, sqlite3, sys
+from contextlib import ExitStack
 from unittest.mock import patch
-with patch.object(pathlib.Path, 'open', side_effect=AssertionError('open')), \\
-     patch.object(pathlib.Path, 'stat', side_effect=AssertionError('stat')), \\
-     patch.object(pathlib.Path, 'mkdir', side_effect=AssertionError('mkdir')), \\
-     patch.object(sqlite3, 'connect', side_effect=AssertionError('connect')):
+targets = ('processforge_core.maintenance.execution_migration',
+           'pf_cli.commands.journal_maintenance')
+guards = ExitStack()
+armed = []
+def after_entry(frame, event, value):
+    if (event == 'return' and frame.f_code.co_name == 'bootstrap_entry'
+            and frame.f_globals.get('__name__') == 'pf_native_control'):
+        assert not any(name in sys.modules for name in targets), 'already imported'
+        sys.setprofile(None)
+        for method in ('open', 'stat', 'mkdir'):
+            guards.enter_context(patch.object(
+                pathlib.Path, method, side_effect=AssertionError(method)))
+        guards.enter_context(patch.object(
+            sqlite3, 'connect', side_effect=AssertionError('connect')))
+        armed.append(True)
+sys.setprofile(after_entry)
+try:
     from processforge_core.maintenance.execution_migration import EXECUTION_MIGRATION_SCHEMA
     from pf_cli.commands.journal_maintenance import JournalMaintenanceCommand
+    assert armed == [True], 'real native entry was not observed'
     JournalMaintenanceCommand()
     assert EXECUTION_MIGRATION_SCHEMA.namespace == 'execution_migration'
-print('cold')
+finally:
+    sys.setprofile(None)
+    guards.close()
+print('cold-after-native-entry')
 """
     result = subprocess.run(
         [sys.executable, "-B", "-c", program],
@@ -344,7 +362,7 @@ print('cold')
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "cold"
+    assert result.stdout.strip() == "cold-after-native-entry"
 
 
 @pytest.mark.parametrize(

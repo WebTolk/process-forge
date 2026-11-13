@@ -322,6 +322,11 @@ jobs:
               directory = scratch / name.lower()
               directory.mkdir(parents=True, exist_ok=True)
               environment[name] = str(directory)
+          environment["W332_SOURCE"] = str(root)
+          if os.name == "nt":
+              runtime = scratch / "fixture-runtime"
+              subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(runtime)], check=True)
+              environment["NATIVE_FIXTURE_PYTHON"] = str(runtime / "Scripts" / "python.exe")
           subprocess.run([
               sys.executable, "-B", "-m", "pytest", "-q", "-ra", "--capture=sys",
               "-p", "no:cacheprovider", "--basetemp=" + str(scratch / "pytest"),

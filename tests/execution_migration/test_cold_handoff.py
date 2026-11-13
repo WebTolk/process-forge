@@ -277,6 +277,7 @@ def test_delay_and_sleep_resume_refuse() -> None:
             retirement(sample(1000000), after, policy())
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows boot observation")
 def test_real_same_boot_negative() -> None:
     windows = Windows()
     before, after = windows.sample(), windows.sample()
@@ -287,6 +288,7 @@ def test_real_same_boot_negative() -> None:
         retirement(before, after, trusted_test_profile)
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows token/SDDL access check")
 def test_actual_accesscheck_and_child_file_denial(tmp_path: Path) -> None:
     windows = Windows()
     file = tmp_path / "payload.py"
@@ -326,6 +328,7 @@ def test_actual_accesscheck_and_child_file_denial(tmp_path: Path) -> None:
         assert file.read_bytes() == b"THIS IS NOT EXECUTED"
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows persistent SDDL denial")
 def test_gate_persists_after_child_exit(tmp_path: Path) -> None:
     windows = Windows()
     file = tmp_path / "payload"
@@ -531,6 +534,16 @@ def test_distinct_cold_adoption_and_independent_bound_attach(controller: Any) ->
             controller.installed(authority, root=root, frozen=frozen)
             publication = p.accept_publication(root, trusted_leaf=built.payload[p.LEAF])
             entry = p.NativeEntry(root, publication, None, None)
+            if os.name != "nt":
+                # This cold provider requires Windows publication read handles.
+                # POSIX must refuse before adoption, not fabricate a bound state.
+                with pytest.raises(p.NativeControlError):
+                    ColdEnrollmentProducer.from_cold_provider(
+                        authority, entry, selection=selection
+                    )
+                assert not (root / "runtime/managed-ingress/baseline.json").exists()
+                assert not (root / "runtime/native-control/epoch").exists()
+                return
             producer, adopted = ColdEnrollmentProducer.from_cold_provider(
                 authority, entry, selection=selection
             )
@@ -655,6 +668,16 @@ def test_cold_pending_fault_refuses_then_exact_seam_resume(
         with controller.resume() as authority:
             entry = frozen.copy(authority, root, controller.directory / "backup")
             monkeypatch.setattr(p, "_atomic", fail_epoch)
+            if os.name != "nt":
+                # The Windows-only provider refuses before an adoption journal
+                # exists; this branch does not claim a successful POSIX resume.
+                with pytest.raises(p.NativeControlError):
+                    ColdEnrollmentProducer.from_cold_provider(
+                        authority, entry, selection=selection
+                    )
+                assert not (root / "runtime/managed-ingress/baseline.json").exists()
+                assert not (root / "runtime/native-control/epoch").exists()
+                return
             with pytest.raises(OSError):
                 ColdEnrollmentProducer.from_cold_provider(
                     authority, entry, selection=selection
@@ -853,6 +876,8 @@ def native_fixture(tmp_path: Path, monkeypatch: Any) -> Any:
     No Work lifecycle is started. All issuer records are isolated file fixtures.
     The tiny closure is deliberately synthetic, not host/runtime qualification.
     """
+    if os.name != "nt":
+        pytest.skip("Windows maintenance redirector and material-handle fixture")
     import pf_native_maintenance as h
     import processforge as core
 
@@ -1715,7 +1740,7 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
     real_spawn = native.spawn_owned
 
     @contextlib.contextmanager
-    def gate(project_root):
+    def gate(project_root, *, deadline=None, _defer_registration=False):
         nonlocal inside
         assert (
             scans.get("_stream_material", 0) > 0 and scans.get("_zip_preflight", 0) > 0
@@ -1744,7 +1769,9 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
             (root / ".pf/runs/fixture-run/cancellation-other.yaml").write_text(
                 "new intent", encoding="utf-8"
             )
-        with real_gate(project_root):
+        with real_gate(
+            project_root, deadline=deadline, _defer_registration=_defer_registration
+        ):
             before = time.monotonic()
             inside = True
             try:
