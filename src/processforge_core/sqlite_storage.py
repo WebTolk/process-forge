@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import sqlite3
-from contextlib import contextmanager
+import time
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator
 
@@ -58,6 +59,52 @@ def set_metadata(connection: sqlite3.Connection, key: str, value: str) -> None:
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
         (key, value),
     )
+
+
+def _enable_wal(connection: sqlite3.Connection) -> None:
+    """Retry only WAL activation; SQLite can bypass its busy handler here."""
+    with closing(connection.execute("PRAGMA journal_mode")) as cursor:
+        if cursor.fetchone()[0].lower() == "wal":
+            return
+    with closing(connection.execute("PRAGMA busy_timeout")) as cursor:
+        timeout = int(cursor.fetchone()[0])
+    deadline = time.monotonic() + timeout / 1000
+    remaining = timeout / 1000
+    failure: BaseException | None = None
+    try:
+        while True:
+            with closing(
+                connection.execute(f"PRAGMA busy_timeout = {int(remaining * 1000)}")
+            ):
+                pass
+            try:
+                # Closing even a failed statement releases its promotion locks.
+                with closing(connection.cursor()) as cursor:
+                    mode = cursor.execute("PRAGMA journal_mode = WAL").fetchone()[0]
+                if str(mode).lower() != "wal":
+                    raise JournalError("journal_wal_unavailable")
+                return
+            except sqlite3.OperationalError as error:
+                if getattr(error, "sqlite_errorcode", 0) & 0xFF != sqlite3.SQLITE_BUSY:
+                    raise
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise
+                time.sleep(min(0.005, remaining))
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise
+    except BaseException as error:
+        failure = error
+        raise
+    finally:
+        try:
+            with closing(connection.execute(f"PRAGMA busy_timeout = {timeout}")):
+                pass
+        except sqlite3.Error as restore_error:
+            if failure is None:
+                raise
+            failure.add_note(f"journal_busy_timeout_restore_failed: {restore_error}")
 
 
 @contextmanager
@@ -156,8 +203,7 @@ def _database(
                     "journal_migration_required: run tools/migrate-hook-journals.py"
                 )
         if writable:
-            if connection.execute("PRAGMA journal_mode").fetchone()[0].lower() != "wal":
-                connection.execute("PRAGMA journal_mode = WAL")
+            _enable_wal(connection)
             connection.execute("PRAGMA synchronous = FULL")
         yield connection
     except sqlite3.Error as exc:
