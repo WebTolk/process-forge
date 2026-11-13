@@ -15,6 +15,7 @@ from ..common.request_scope import safe_load
 from ..project.metadata import ProjectMetadataReader
 from ..work.context import fingerprint
 from .input import (
+    _collection_outputs,
     bounded_read,
     digest,
     encoded,
@@ -408,13 +409,7 @@ class CapturedAttemptReader:
             != fingerprint(contract["assignment_intent"])
         ):
             return None
-        report = inputs["outputs"]["expected_report"]["artifact"]
-        if not isinstance(receipt.get("outputs"), list) or not any(
-            item.get("path") == report
-            and item.get("status") == "present"
-            and isinstance(item.get("checksum"), str)
-            and item["checksum"].startswith("sha256:")
-            for item in receipt["outputs"]
-        ):
+        if fingerprint(inputs.get("outputs")) != fingerprint(contract["outputs"]):
             return None
+        _collection_outputs(inputs["outputs"], receipt.get("outputs"))
         return CapturedAttempt(attempt=attempt, receipt_id=receipt_id)
