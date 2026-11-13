@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +14,7 @@ from ..common.request_scope import safe_load
 from ..project.metadata import ProjectMetadataReader
 from ..work.context import fingerprint
 from .input import (
+    _collection_json,
     _collection_outputs,
     bounded_read,
     digest,
@@ -109,13 +109,14 @@ def _prepared_attempt(
     reference = state.get("prepared_input")
     if (
         not isinstance(reference, dict)
+        or set(reference) != {"path", "checksum"}
         or reference.get("path") != directory + "/prepared-input.json"
     ):
         return None
     raw = bounded_read(private_file(project, reference["path"]))
     if digest(raw) != reference.get("checksum"):
         return None
-    prepared = json.loads(raw)
+    prepared = _collection_json(raw)
     identity, inputs = prepared.get("identity"), prepared.get("input")
     if (
         type(prepared.get("schema_version")) is not int
@@ -228,7 +229,7 @@ class CollectionRecoveryStore:
             if metadata is None:
                 return None
             path, expected = metadata
-            observed = json.loads(bounded_read(path, 32 * 1024))
+            observed = _collection_json(bounded_read(path, 32 * 1024))
             reason = observed.get("reason")
             if not isinstance(reason, str) or reason not in _STABLE_REFUSALS:
                 return None
@@ -347,15 +348,17 @@ class CapturedAttemptReader:
             return None
         attempt, directory = location
         task_id = task["id"]
-        completion = json.loads(
+        completion = _collection_json(
             bounded_read(private_file(project, directory + "/collection-complete.json"))
         )
-        receipt = json.loads(
+        receipt = _collection_json(
             bounded_read(private_file(project, directory + "/collection-receipt.json"))
         )
         receipt_id = receipt.get("receipt_id")
         if (
-            type(receipt.get("schema_version")) is not int
+            set(receipt)
+            != {"schema_version", "identity", "prepared_input", "outputs", "receipt_id"}
+            or type(receipt.get("schema_version")) is not int
             or receipt["schema_version"] != 1
             or type(completion.get("schema_version")) is not int
             or not isinstance(receipt_id, str)
@@ -381,7 +384,9 @@ class CapturedAttemptReader:
         capsule_raw = bounded_read(local_file(project, relative))
         capsule_pin = inputs["capsule"]
         if (
-            capsule_pin.get("path") != relative
+            set(capsule_pin)
+            != {"path", "checksum", "contract_checksum", "intent_checksum"}
+            or capsule_pin.get("path") != relative
             or capsule_pin.get("checksum") != digest(capsule_raw)
             or state.get("capsule_path") != relative
         ):
@@ -409,7 +414,10 @@ class CapturedAttemptReader:
             != fingerprint(contract["assignment_intent"])
         ):
             return None
-        if fingerprint(inputs.get("outputs")) != fingerprint(contract["outputs"]):
+        if any(
+            fingerprint(inputs.get(key)) != fingerprint(contract[key])
+            for key in ("identity", "process", "snapshot", "scope", "outputs")
+        ):
             return None
         _collection_outputs(inputs["outputs"], receipt.get("outputs"))
         return CapturedAttempt(attempt=attempt, receipt_id=receipt_id)
