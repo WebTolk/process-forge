@@ -29,9 +29,19 @@ def transaction(connection: sqlite3.Connection) -> Iterator[sqlite3.Connection]:
     try:
         yield connection
         connection.execute("COMMIT")
-    except BaseException:
-        if connection.in_transaction:
-            connection.execute("ROLLBACK")
+    except BaseException as primary:
+        try:
+            if connection.in_transaction:
+                connection.execute("ROLLBACK")
+        except BaseException as rollback_error:
+            try:
+                BaseException.add_note(
+                    primary,
+                    f"journal_rollback_failed: {type(rollback_error).__name__}; "
+                    "transaction_outcome_unknown",
+                )
+            except BaseException:
+                pass
         raise
 
 
@@ -108,7 +118,7 @@ def _database(
                 version = connection.execute("PRAGMA user_version").fetchone()[0]
                 if actual_id == 0 and version == 0:
                     if connection.execute(
-                        "SELECT 1 FROM sqlite_master WHERE type = 'table' LIMIT 1"
+                        "SELECT 1 FROM sqlite_master LIMIT 1"
                     ).fetchone():
                         raise JournalError("journal_schema_unrecognized")
                     connection.execute(
