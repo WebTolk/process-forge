@@ -9455,17 +9455,43 @@ def _worker_phase_snapshot(
         if isinstance(relative, str):
             selected.append(local_file(project_root, relative))
     attempts = paths["root"] / "attempts"
-    if attempts.exists():
-        for directory in attempts.iterdir():
-            for name in (
-                INTENT, APPLIED, *SIDECARS.values(), "prepared-input.json", "configuration.snapshot.json",
-                "native-tree.json", "process.json", "exit.json", "scratch-resource.json", "scratch-release.json",
-                "scratch-cleanup.json", "scratch-preparation-failure.json",
-                "retry-publication-old-prompt.bin", "retry-publication-old-workspace-access.bin",
-                *("retry-previous-" + key + ".json" for key in OBSERVATIONS),
-            ):
-                path = private_file(project_root, rel(directory / name, project_root))
-                selected.append(path)
+    directories: Iterator[Path] | tuple[Path, ...]
+    if _execution_storage(project_root).repository is None:
+        directories = attempts.iterdir() if attempts.exists() else ()
+    elif not state:
+        directories = ()
+    else:
+        from processforge_core.executions.model import ExecutionError
+
+        attempt = state.get("attempt")
+        if type(attempt) is not int or attempt < 1:
+            raise ExecutionError("execution_identity_conflict")
+        try:
+            # Validate the exact private head path before interpreting absence.
+            # SQL owns the head; archived directories are not publication inputs.
+            directory = private_file(
+                project_root,
+                rel(attempts / str(attempt) / "prepared-input.json", project_root),
+            ).parent
+            info = directory.lstat()
+        except FileNotFoundError:
+            directories = ()
+        except (OSError, ValueError) as error:
+            raise ExecutionError("execution_identity_conflict") from error
+        else:
+            if not stat.S_ISDIR(info.st_mode):
+                raise ExecutionError("execution_identity_conflict")
+            directories = (directory,)
+    for directory in directories:
+        for name in (
+            INTENT, APPLIED, *SIDECARS.values(), "prepared-input.json", "configuration.snapshot.json",
+            "native-tree.json", "process.json", "exit.json", "scratch-resource.json", "scratch-release.json",
+            "scratch-cleanup.json", "scratch-preparation-failure.json",
+            "retry-publication-old-prompt.bin", "retry-publication-old-workspace-access.bin",
+            *("retry-previous-" + key + ".json" for key in OBSERVATIONS),
+        ):
+            path = private_file(project_root, rel(directory / name, project_root))
+            selected.append(path)
     return {path: _observation_bytes(path) for path in selected}
 
 

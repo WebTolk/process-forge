@@ -1527,3 +1527,219 @@ def test_actual_managed_scratch_prepare_child_enduse_retry_collection(
     assert attempt.with_name("scratch-release.json").is_file()
     receipt = json.loads(attempt.with_name("scratch-cleanup.json").read_bytes())
     assert receipt["result"] == "deleted" and receipt["deleted_files"] == 1
+
+
+def _phase_history_guard(root, monkeypatch):
+    """Forbid unrelated attempt I/O without replacing SQL or lifecycle behavior."""
+    import processforge as core
+
+    attempts = core._work_paths.worker_run(root, "run", "task")["root"] / "attempts"
+    archived = attempts / "90" / "prepared-input.json"
+    archived.parent.mkdir(parents=True, exist_ok=True)
+    archived.write_bytes(b"retained archive")
+    original_iterdir, original_read = Path.iterdir, core._observation_bytes
+
+    def inventory(path):
+        assert path != attempts, "SQL phase enumerated historical attempts"
+        return original_iterdir(path)
+
+    def read(path):
+        assert not path.is_relative_to(archived.parent), "unselected history read"
+        return original_read(path)
+
+    monkeypatch.setattr(Path, "iterdir", inventory)
+    monkeypatch.setattr(core, "_observation_bytes", read)
+    return archived
+
+
+@pytest.mark.parametrize("explicit_prepare", [False, True])
+def test_sql_phase_public_cycle_ignores_archived_attempts(
+    sql_cli_fixture, monkeypatch, explicit_prepare
+):
+    import processforge as core
+
+    root, repository, args, _driver = sql_cli_fixture
+    _phase_history_guard(root, monkeypatch)
+    if explicit_prepare:
+        assert core.command_worker_run_prepare(args) == 0
+    assert core.command_worker_run_start(args) == 0
+    finished = repository.load_latest("run", "task")
+    assert finished.key.attempt == 1 and finished.outcome == "completed"
+    assert core.command_worker_run_collect(args) == 0
+    assert repository.load_latest("run", "task").collection == "collected"
+    assert core.command_worker_run_prepare(args) == 0
+    prepared = repository.load_latest("run", "task")
+    assert prepared.key.attempt == 2 and prepared.phase == "prepared"
+    assert json.loads(prepared.payload_json)["status"] == "ready"
+
+
+def test_sql_phase_prepare_skipped_keeps_real_owned_child(sql_cli_fixture, monkeypatch):
+    import time
+
+    import processforge as core
+
+    from processforge_core.common.yaml_io import write_yaml_file
+
+    root, repository, args, driver_path = sql_cli_fixture
+    driver = core.load_yaml_document(driver_path)
+    driver["command"]["args"] = [
+        "-c",
+        "import os,pathlib,time; "
+        "root=pathlib.Path(os.environ['PF_PROJECT_ROOT']); "
+        "time.sleep(30); "
+        "(root/'.pf/artifacts').mkdir(parents=True,exist_ok=True); "
+        "(root/'.pf/artifacts/report.md').write_text('child result')",
+    ]
+    write_yaml_file(driver_path, driver)
+    _phase_history_guard(root, monkeypatch)
+    args.detach = True
+    try:
+        assert core.command_worker_run_start(args) == 0
+        deadline = time.monotonic() + 10
+        while repository.load_latest("run", "task").phase != "running":
+            assert time.monotonic() < deadline, "child ownership was not published"
+            assert core.command_worker_run_status(args) == 0
+            time.sleep(0.01)
+        before = repository.load_latest("run", "task")
+        assert before.key.attempt == 1 and before.launch_token is not None
+        assert core.command_worker_run_prepare(args) == 0
+        after = repository.load_latest("run", "task")
+        assert after.key == before.key and after.launch_token == before.launch_token
+        assert len(repository.current().records) == 1
+    finally:
+        assert core.command_worker_run_stop(args) == 0
+
+
+@pytest.mark.parametrize(
+    "selected", ["assignment", "capsule", "command", "prepared", "receipt"]
+)
+def test_sql_phase_current_file_conflict_still_refuses(sql_cli_fixture, selected):
+    import processforge as core
+
+    root, _repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    state = core.load_agent_run_state(root, "run", "task")
+    prepared = root / state["prepared_input"]["path"]
+    paths = {
+        "assignment": core._work_paths.assignment_document(root, "task"),
+        "capsule": core.assignment_capsule_path(root, "task"),
+        "command": core._work_paths.worker_run(root, "run", "task")["command"],
+        "prepared": prepared,
+        "receipt": prepared.with_name("native-tree.json"),
+    }
+    expected = core._worker_phase_snapshot(root, "run", "task")
+    changed = paths[selected]
+    assert changed in expected
+    changed.write_bytes((expected[changed] or b"") + b"\nchanged")
+    with pytest.raises(ExecutionError, match="execution_identity_conflict"):
+        with core._worker_phase_commit(root, "run", "task", expected, state):
+            pytest.fail("changed current input reached publication")
+
+
+def test_sql_phase_archive_change_does_not_veto_current_publication(
+    sql_cli_fixture, monkeypatch
+):
+    import processforge as core
+
+    root, _repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    archived = _phase_history_guard(root, monkeypatch)
+    expected = core._worker_phase_snapshot(root, "run", "task")
+    state = core.load_agent_run_state(root, "run", "task")
+    archived.write_bytes(b"changed unrelated history")
+    with core._worker_phase_commit(root, "run", "task", expected, state):
+        pass
+
+
+def test_sql_phase_empty_head_ignores_status_projection(sql_cli_fixture, monkeypatch):
+    import processforge as core
+
+    root, repository, _args, _driver = sql_cli_fixture
+    _phase_history_guard(root, monkeypatch)
+    paths = core._work_paths.worker_run(root, "run", "task")
+    paths["status"].write_text('{"attempt":90,"status":"running"}', encoding="utf-8")
+    assert repository.load_latest("run", "task") is None
+    expected = core._worker_phase_snapshot(root, "run", "task")
+    assert not any(
+        "90" in path.relative_to(paths["root"]).parts
+        for path in expected
+        if path.is_relative_to(paths["root"])
+    )
+
+
+def test_sql_phase_existing_new_directory_refuses_without_ready_or_spawn(
+    sql_cli_fixture,
+):
+    import processforge as core
+
+    root, repository, args, _driver = sql_cli_fixture
+    paths = core._work_paths.worker_run(root, "run", "task")
+    (paths["root"] / "attempts" / "1").mkdir(parents=True)
+    assert core.command_worker_run_prepare(args) == 1
+    record = repository.load_latest("run", "task")
+    assert record.key.attempt == 1 and record.phase == "prepared"
+    assert json.loads(record.payload_json)["status"] == "planned"
+    assert record.launch_token is None and repository.current().records == ()
+
+
+@pytest.mark.parametrize("kind", ["file", "redirect"])
+def test_sql_phase_invalid_current_directory_refuses(sql_cli_fixture, kind):
+    import subprocess
+
+    import processforge as core
+
+    root, _repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    directory = (
+        root / core.load_agent_run_state(root, "run", "task")["prepared_input"]["path"]
+    ).parent
+    retained = directory.with_name("retained-head")
+    directory.rename(retained)
+    if kind == "file":
+        directory.write_bytes(b"not a directory")
+    elif os.name == "nt":
+        subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(directory), str(retained)],
+            check=True,
+            capture_output=True,
+        )
+    else:
+        directory.symlink_to(retained, target_is_directory=True)
+    with pytest.raises((ExecutionError, ValueError, OSError)):
+        core._worker_phase_snapshot(root, "run", "task")
+
+
+def test_sql_phase_broken_binding_never_reads_history(sql_cli_fixture, monkeypatch):
+    import processforge as core
+
+    root, _repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    _phase_history_guard(root, monkeypatch)
+    binding = root / ".pf/data/execution-storage.json"
+    value = json.loads(binding.read_bytes())
+    value["store_id"] = "f" * 32
+    binding.write_text(json.dumps(value), encoding="utf-8")
+    assert core.command_worker_run_prepare(args) == 1
+
+
+def test_legacy_phase_retains_archived_file_conflict(sql_cli_fixture, monkeypatch):
+    import processforge as core
+
+    from processforge_core.executions.composition import ExecutionStorage
+
+    root, _repository, args, _driver = sql_cli_fixture
+    assert core.command_worker_run_prepare(args) == 0
+    attempts = core._work_paths.worker_run(root, "run", "task")["root"] / "attempts"
+    archived = attempts / "90" / "prepared-input.json"
+    archived.parent.mkdir()
+    archived.write_bytes(b"legacy archive")
+    monkeypatch.setattr(
+        core, "_execution_storage", lambda *a, **k: ExecutionStorage("legacy")
+    )
+    state = core.load_agent_run_state(root, "run", "task")
+    expected = core._worker_phase_snapshot(root, "run", "task")
+    assert expected[archived] == b"legacy archive"
+    archived.write_bytes(b"changed legacy authority")
+    with pytest.raises(ExecutionError, match="execution_identity_conflict"):
+        with core._worker_phase_commit(root, "run", "task", expected, state):
+            pytest.fail("legacy history change reached publication")
