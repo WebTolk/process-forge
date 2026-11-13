@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import json
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -75,6 +77,160 @@ def assert_recovery_observed(f, monkeypatch):
     assert Path(added.pop()).name.startswith("collect-block-")
     assert store.record(f["task"], f["state"], run_id="run", error=error)
     assert files(f["project"]) == after
+
+
+@contextmanager
+def guarded_history(f, monkeypatch):
+    outputs = {f["report"], f["report"].with_name("optional.md")}
+    original = {name: getattr(Path, name) for name in ("open", "stat", "lstat")}
+
+    def guard(name):
+        def guarded(path, *args, **kwargs):
+            assert path not in outputs, "historical metadata inspected output body"
+            return original[name](path, *args, **kwargs)
+
+        return guarded
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("historical metadata attempted current source/output acceptance")
+
+    with monkeypatch.context() as patch:
+        for name in original:
+            patch.setattr(Path, name, guard(name))
+        for name in ("semantic_input", "output_records", "collection_receipt"):
+            patch.setattr(prepared, name, forbidden)
+        yield
+
+
+def assert_metadata_miss(f, monkeypatch, *, recovery_expected=True):
+    before = files(f["project"])
+    task, state = copy.deepcopy(f["task"]), copy.deepcopy(f["state"])
+    error = current_refusal(f, monkeypatch)
+    reader = CapturedAttemptReader(f["project"])
+    store = CollectionRecoveryStore(f["project"])
+    with guarded_history(f, monkeypatch):
+        assert reader.read(f["task"], f["state"], run_id="run") is None
+        assert (
+            store.record(f["task"], f["state"], run_id="run", error=error)
+            is recovery_expected
+        )
+        observed = store.read(f["task"], f["state"], run_id="run")
+        if recovery_expected:
+            assert observed is not None and observed.reason == "prepared_input_changed"
+            assert store.record(f["task"], f["state"], run_id="run", error=error)
+        else:
+            assert observed is None
+    after = files(f["project"])
+    assert f["task"] == task and f["state"] == state
+    assert all(after[name] == raw for name, raw in before.items())
+    if recovery_expected:
+        added = set(after) - set(before)
+        assert len(added) == 1 and Path(added.pop()).name.startswith("collect-block-")
+    else:
+        assert before == after
+
+
+def duplicate_key(raw, key, first):
+    needle = json.dumps(key).encode() + b":"
+    replacement = needle + b" " + json.dumps(first).encode() + b", " + needle
+    changed = raw.replace(needle, replacement, 1)
+    assert changed != raw and json.loads(changed) == json.loads(raw)
+    return changed
+
+
+@pytest.mark.parametrize(
+    ("target", "key", "first"),
+    [
+        ("receipt_path", "outputs", []),
+        ("receipt_path", "schema_version", 2),
+        ("receipt_path", "identity", {}),
+        ("receipt_path", "receipt_id", "sha256:bad"),
+        ("completion_path", "schema_version", 2),
+        ("completion_path", "receipt_id", "sha256:bad"),
+        ("receipt_path", "checksum", "sha256:"),
+    ],
+)
+def test_duplicate_capture_keys_preserve_original_ids_but_require_recovery(
+    captured, monkeypatch, target, key, first
+):
+    f = captured
+    original_id = f["receipt"]["receipt_id"]
+    path = f[target]
+    path.write_bytes(duplicate_key(path.read_bytes(), key, first))
+    assert json.loads(f["receipt_path"].read_bytes())["receipt_id"] == original_id
+    assert json.loads(f["completion_path"].read_bytes())["receipt_id"] == original_id
+    with pytest.raises(ValueError, match="^accepted_collection_invalid$"):
+        verify(f)
+    assert_metadata_miss(f, monkeypatch)
+
+
+def test_unknown_receipt_fields_do_not_suppress_refusal(captured, monkeypatch):
+    f = captured
+    receipt = copy.deepcopy(f["receipt"])
+    receipt["unexpected"] = True
+    rewrite_receipt(f, receipt)
+    with pytest.raises(ValueError, match="^accepted_collection_receipt_invalid$"):
+        verify(f)
+    assert_metadata_miss(f, monkeypatch)
+
+
+@pytest.mark.parametrize("field", ["process", "snapshot", "scope", "capsule"])
+def test_rehashed_immutable_binding_changes_require_recovery(
+    captured, monkeypatch, field
+):
+    f = captured
+    f["document"]["input"][field]["unexpected"] = True
+    rewrite_prepared(f)
+    with pytest.raises(ValueError, match="^prepared_input_context_mismatch$"):
+        verify(f)
+    assert_metadata_miss(f, monkeypatch)
+
+
+@pytest.mark.parametrize("syntax", ["duplicate", "nonfinite"])
+def test_ambiguous_prepared_identity_cannot_create_recovery_authority(
+    captured, monkeypatch, syntax
+):
+    f = captured
+    raw = f["path"].read_bytes()
+    if syntax == "duplicate":
+        changed = duplicate_key(raw, "schema_version", 2)
+    else:
+        changed = raw.rstrip()[:-1] + b', "unexpected": NaN}\n'
+    f["path"].write_bytes(changed)
+    f["state"]["prepared_input"]["checksum"] = prepared.digest(changed)
+    f["receipt"]["prepared_input"] = copy.deepcopy(f["state"]["prepared_input"])
+    rewrite_receipt(f, f["receipt"])
+    with pytest.raises(ValueError, match="^accepted_collection_invalid$"):
+        verify(f)
+    # A malformed identity proof is unknown, not authority to create an observation.
+    assert_metadata_miss(f, monkeypatch, recovery_expected=False)
+
+
+def test_extra_prepared_reference_keys_do_not_create_recovery_authority(
+    captured, monkeypatch
+):
+    f = captured
+    f["state"]["prepared_input"]["unexpected"] = True
+    f["receipt"]["prepared_input"] = copy.deepcopy(f["state"]["prepared_input"])
+    rewrite_receipt(f, f["receipt"])
+    with pytest.raises(ValueError, match="^prepared_input_reference_mismatch$"):
+        verify(f)
+    assert_metadata_miss(f, monkeypatch, recovery_expected=False)
+
+
+def test_ambiguous_recovery_marker_is_not_read_or_overwritten(captured, monkeypatch):
+    f = captured
+    f["completion_path"].unlink()
+    assert_metadata_miss(f, monkeypatch)
+    (marker,) = f["path"].parent.glob("collect-block-*.json")
+    marker.write_bytes(duplicate_key(marker.read_bytes(), "fingerprint", "sha256:bad"))
+    before = files(f["project"])
+    error = current_refusal(f, monkeypatch)
+    store = CollectionRecoveryStore(f["project"])
+    with guarded_history(f, monkeypatch):
+        assert store.read(f["task"], f["state"], run_id="run") is None
+        assert not store.record(f["task"], f["state"], run_id="run", error=error)
+    assert files(f["project"]) == before
 
 
 @pytest.mark.parametrize(
