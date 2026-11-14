@@ -283,10 +283,12 @@ class ExistingHelperTests(unittest.TestCase):
             if isinstance(node, ast.Assert) and "st_reparse_tag" in ast.unparse(node)
         )
         expression = compile(ast.Expression(body=assertion.test), relative, "eval")
+        # This is a metadata model of Windows, including on a POSIX test host.
+        windows_stat = SimpleNamespace(IO_REPARSE_TAG_MOUNT_POINT=0xA0000003)
         for tag, expected in ((0xA0000003, True), (0xA000000C, False)):
             junction = SimpleNamespace(
                 lstat=lambda: SimpleNamespace(st_reparse_tag=tag)
             )
             self.assertEqual(
-                eval(expression, {"junction": junction, "stat": stat}), expected
+                eval(expression, {"junction": junction, "stat": windows_stat}), expected
             )
