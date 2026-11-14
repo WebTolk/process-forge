@@ -74,7 +74,8 @@ jobs:
           # Only new consumer/cgroup fixtures are created. No PF service or
           # deployed installation is initialized, stopped or updated.
           subprocess.run([
-              'sudo', '-E', sys.executable, '-B', '-m', 'pytest', '-q',
+              'sudo', '-E', 'env', 'PYTHONPATH=' + environment['PYTHONPATH'],
+              sys.executable, '-B', '-m', 'pytest', '-q',
               '-p', 'no:cacheprovider', '-k', 'not nonlinux',
               '--junitxml=controlled-cohort-results.xml',
               'tests/native_control/test_linux_cold_cohort.py',
