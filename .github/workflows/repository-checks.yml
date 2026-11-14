@@ -177,6 +177,9 @@ jobs:
               'tests/execution_migration/test_native_control.py::test_stable_mcp_connection_survives_real_managed_core_update',
               'tests/native_control/test_exclusive_identity.py::test_shared_lease_cannot_supply_exclusive_identity',
               'tests/native_control/test_exclusive_identity.py::test_exclusive_identity_comes_from_live_locked_object',
+              'tests/native_control/test_exclusive_identity.py::test_retained_outer_identity_survives_private_nested_gate',
+              'tests/native_control/test_exclusive_identity.py::test_expired_context_cannot_borrow_successor_lease_after_exception',
+              'tests/native_control/test_exclusive_identity.py::test_copied_context_in_other_thread_cannot_borrow_live_exclusive_lease',
               'tests/native_control/test_linux_cold_cohort.py::test_nonlinux_host_never_enters_cohort_provisioning',
           ], env=environment, check=True)
 

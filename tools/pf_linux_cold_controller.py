@@ -73,7 +73,10 @@ def _identity(path: Path) -> tuple[int, int]:
 
 
 def _protected(path: Path) -> None:
-    _require(path.is_absolute(), "cohort_directory")
+    _require(
+        path.is_absolute() and path.anchor == "/" and ".." not in path.parts,
+        "cohort_directory",
+    )
     for item in (path, *path.parents):
         _identity(item)
         mode = item.lstat().st_mode
@@ -125,16 +128,25 @@ def _atomic(path: Path, value: dict[str, Any]) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def _read(path: Path) -> dict[str, Any]:
-    _protected(path.parent)
+def _private_file(path: Path) -> None:
     info = path.lstat()
     _require(
         stat.S_ISREG(info.st_mode)
         and info.st_nlink == 1
         and info.st_uid == info.st_gid == 0
         and stat.S_IMODE(info.st_mode) == 0o600,
-        "cohort_state",
+        "cohort_private_file",
     )
+    _require(
+        not {"system.posix_acl_access", "system.posix_acl_default"}
+        & set(getattr(os, "listxattr")(path, follow_symlinks=False)),
+        "cohort_private_file_acl",
+    )
+
+
+def _read(path: Path) -> dict[str, Any]:
+    _protected(path.parent)
+    _private_file(path)
     value = native._read(path, _PACKET_LIMIT)
     _require(isinstance(value, dict), "cohort_state")
     return value
@@ -144,6 +156,8 @@ def _held(control: native.NativeControl) -> dict[str, Any]:
     _platform()
     _protected(control.guard.parent)
     _protected(control.epoch_path.parent)
+    _private_file(control.guard)
+    _private_file(control.epoch_path)
     try:
         return native._exclusive_lease_identity(control)
     except (native.NativeControlError, OSError, UnicodeError):
@@ -662,15 +676,20 @@ class ControlledCohort:
             "stderr": error,
         }
 
-    def retire(self, *, deadline: float) -> None:
-        """Close creators, freeze/kill the exact whole tree; retain unknown facts."""
+    def close_and_freeze(self, *, deadline: float) -> None:
+        """Close genesis and suspend its exact tree before a filesystem fence.
+
+        Suspension does not establish journal drain, process absence or fence
+        completeness. Recovery retains the same closed generation and gate.
+        """
         self._current()
         _require(
             type(deadline) in {int, float} and 0 < deadline - time.monotonic() < 3600,
             "cohort_deadline",
         )
-        self.state["phase"] = "closed"
-        self._save()
+        if self.state["phase"] != "retired":
+            self.state["phase"] = "closed"
+            self._save()
         if self.connection is not None:
             self.connection.close()
             self.connection = None
@@ -678,6 +697,13 @@ class ControlledCohort:
         while not self.events()["frozen"]:
             _require(time.monotonic() < deadline, "cohort_freeze_unknown")
             time.sleep(min(0.01, max(0, deadline - time.monotonic())))
+        if self.state["phase"] != "retired":
+            self.state["phase"] = "frozen"
+            self._save()
+
+    def retire(self, *, deadline: float) -> None:
+        """Freeze/kill the exact whole tree; retain unknown mutation facts."""
+        self.close_and_freeze(deadline=deadline)
         self._file("cgroup.kill", write="1")
         while self.events()["populated"]:
             _require(time.monotonic() < deadline, "cohort_retirement_unknown")
@@ -698,3 +724,472 @@ class ControlledCohort:
 
     def __del__(self) -> None:
         self.close()
+
+
+# This is a baseline restriction primitive, not a cold-provider/adoption proof.
+# Later copy and release owners must publish their own exact evolving plans.
+_FENCE_FORMAT = "linux-frozen-tree-fence-v1"
+_BYTE_LOCK_PATHS = frozenset(
+    {
+        "runtime/managed-ingress/ingress.guard",
+        "runtime/native-control/installation.guard",
+    }
+)
+
+
+def _mount_id(descriptor: int) -> int:
+    raw = Path(f"/proc/self/fdinfo/{descriptor}").read_text(encoding="ascii")
+    rows = [line.split()[1] for line in raw.splitlines() if line.startswith("mnt_id:")]
+    _require(len(rows) == 1 and rows[0].isdecimal(), "fence_mount")
+    return int(rows[0])
+
+
+def _open_object(name: str, *, parent: int) -> int:
+    before = os.stat(name, dir_fd=parent, follow_symlinks=False)
+    _require(
+        stat.S_ISREG(before.st_mode) or stat.S_ISDIR(before.st_mode),
+        "fence_object_type",
+    )
+    descriptor = os.open(
+        name,
+        os.O_RDONLY | getattr(os, "O_NOFOLLOW") | getattr(os, "O_NONBLOCK"),
+        dir_fd=parent,
+    )
+    after = os.fstat(descriptor)
+    if (before.st_dev, before.st_ino, stat.S_IFMT(before.st_mode)) != (
+        after.st_dev,
+        after.st_ino,
+        stat.S_IFMT(after.st_mode),
+    ):
+        os.close(descriptor)
+        raise Refused("fence_object_changed")
+    return descriptor
+
+
+def _root_fd(path: Path) -> int:
+    _require(
+        path.is_absolute()
+        and path.anchor == "/"
+        and path != Path("/")
+        and ".." not in path.parts,
+        "fence_root",
+    )
+    descriptor = os.open("/", os.O_RDONLY | getattr(os, "O_DIRECTORY"))
+    try:
+        for name in path.parts[1:]:
+            info = os.fstat(descriptor)
+            _require(
+                stat.S_ISDIR(info.st_mode)
+                and info.st_uid == info.st_gid == 0
+                and (not info.st_mode & 0o022 or bool(info.st_mode & stat.S_ISVTX))
+                and not {"system.posix_acl_access", "system.posix_acl_default"}
+                & set(getattr(os, "listxattr")(descriptor)),
+                "fence_ancestor",
+            )
+            child = _open_object(name, parent=descriptor)
+            os.close(descriptor)
+            descriptor = child
+        _require(stat.S_ISDIR(os.fstat(descriptor).st_mode), "fence_root")
+        result, descriptor = descriptor, -1
+        return result
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+
+
+def _object_fact(descriptor: int) -> dict[str, Any]:
+    info = os.fstat(descriptor)
+    kind = "directory" if stat.S_ISDIR(info.st_mode) else "file"
+    _require(
+        (kind == "directory" or stat.S_ISREG(info.st_mode))
+        and (kind != "file" or info.st_nlink == 1),
+        "fence_object_type",
+    )
+    _require(
+        not {
+            "system.posix_acl_access",
+            "system.posix_acl_default",
+            "security.capability",
+        }
+        & set(getattr(os, "listxattr")(descriptor)),
+        "fence_object_acl",
+    )
+    return {
+        "identity": [info.st_dev, info.st_ino, _mount_id(descriptor), info.st_nlink],
+        "kind": kind,
+        "rights": [info.st_uid, info.st_gid, stat.S_IMODE(info.st_mode)],
+    }
+
+
+class FrozenTreeFence:
+    """Forward-only baseline DAC restriction of an exact suspended generation.
+
+    This supplies no issuer attestation, N-actor completeness, domain readiness,
+    adoption, publication or release authority. The independent owner must first
+    reconcile every prior maintenance actor and keep all creators closed. There
+    is deliberately no old-rights restore method or automatic boot recovery.
+    """
+
+    def __init__(
+        self, directory: Path, cohort: ControlledCohort, state: dict[str, Any]
+    ) -> None:
+        self.directory, self.cohort, self.state = directory, cohort, state
+        self._current()
+
+    @staticmethod
+    def _binding(cohort: ControlledCohort) -> dict[str, Any]:
+        return {
+            key: cohort.state[key]
+            for key in (
+                "platform",
+                "gate",
+                "token",
+                "role",
+                "uid",
+                "gid",
+                "profile",
+                "group",
+                "group_identity",
+                "broker",
+                "creator",
+            )
+        }
+
+    @staticmethod
+    def _scan(
+        roots: list[dict[str, Any]],
+        *,
+        forbidden: set[tuple[int, int]] | None = None,
+    ) -> list[dict[str, Any]]:
+        result: list[dict[str, Any]] = []
+        identities: set[tuple[int, int]] = set()
+
+        def walk(descriptor: int, index: int, relative: str, mount: int) -> None:
+            info = os.fstat(descriptor)
+            identity = (info.st_dev, info.st_ino)
+            _require(
+                forbidden is None or identity not in forbidden,
+                "fence_private_alias",
+            )
+            fact = _object_fact(descriptor)
+            _require(
+                fact["identity"][2] == mount and identity not in identities,
+                "fence_mount_or_alias",
+            )
+            identities.add(identity)
+            result.append({"root": index, "relative": relative, **fact})
+            if fact["kind"] == "directory":
+                for name in sorted(os.listdir(descriptor)):
+                    child = _open_object(name, parent=descriptor)
+                    try:
+                        walk(
+                            child,
+                            index,
+                            name if relative == "." else relative + "/" + name,
+                            mount,
+                        )
+                    finally:
+                        os.close(child)
+
+        for index, root in enumerate(roots):
+            descriptor = _root_fd(Path(root["path"]))
+            try:
+                walk(descriptor, index, ".", _mount_id(descriptor))
+            finally:
+                os.close(descriptor)
+        return result
+
+    @classmethod
+    def _management_identities(
+        cls, directory: Path, cohort: ControlledCohort
+    ) -> set[tuple[int, int]]:
+        """Exclude management objects physically, including sole bind aliases.
+
+        Checking the target root before descending also rejects an alias of a
+        private ancestor without enumerating its unrelated contents. Targets
+        and control roots remain distinct even when their mount IDs differ.
+        """
+        paths = {
+            directory,
+            cohort.directory,
+            cohort.control.guard.parent,
+            cohort.control.epoch_path.parent,
+        }
+        selected = [
+            path
+            for path in paths
+            if not any(parent in paths for parent in path.parents)
+        ]
+        identities: set[tuple[int, int]] = set()
+        for path in selected:
+            _protected(path)
+            for ancestor in (path, *path.parents):
+                info = ancestor.lstat()
+                identities.add((info.st_dev, info.st_ino))
+        for row in cls._scan([{"path": str(path)} for path in selected]):
+            identities.add(tuple(row["identity"][:2]))
+        # The kernel control namespace is also outside replacement roots. Its
+        # write-only files need stat, not read-open, for physical exclusion.
+        for ancestor in (cohort.group, *cohort.group.parents):
+            info = ancestor.lstat()
+            identities.add((info.st_dev, info.st_ino))
+
+        def kernel_objects(descriptor: int) -> None:
+            info = os.fstat(descriptor)
+            identities.add((info.st_dev, info.st_ino))
+            for name in os.listdir(descriptor):
+                item = os.stat(name, dir_fd=descriptor, follow_symlinks=False)
+                _require(
+                    stat.S_ISDIR(item.st_mode) or stat.S_ISREG(item.st_mode),
+                    "fence_private_kernel_object",
+                )
+                identities.add((item.st_dev, item.st_ino))
+                if stat.S_ISDIR(item.st_mode):
+                    child = os.open(
+                        name,
+                        os.O_RDONLY
+                        | getattr(os, "O_DIRECTORY")
+                        | getattr(os, "O_NOFOLLOW"),
+                        dir_fd=descriptor,
+                    )
+                    try:
+                        actual = os.fstat(child)
+                        _require(
+                            (actual.st_dev, actual.st_ino)
+                            == (item.st_dev, item.st_ino),
+                            "fence_private_kernel_object",
+                        )
+                        kernel_objects(child)
+                    finally:
+                        os.close(child)
+
+        kernel_objects(cohort.group_fd)
+        return identities
+
+    @classmethod
+    def plan(
+        cls,
+        directory: Path,
+        cohort: ControlledCohort,
+        *,
+        roots: Mapping[Path, str],
+        maintenance_uid: int,
+        maintenance_gid: int,
+        byte_locks: tuple[Path, ...] = (),
+        executables: tuple[Path, ...] = (),
+    ) -> FrozenTreeFence:
+        """Freeze exact before/intermediate/after images before any DAC write."""
+        cohort._current()
+        _protected(directory)
+        _require(
+            cohort.state["role"] in {"legacy", "successor"}
+            and cohort.state["broker"] is not None
+            and cohort.state["phase"] in {"frozen", "retired"}
+            and cohort.events()["frozen"] == 1,
+            "fence_generation_not_frozen",
+        )
+        _require(
+            type(maintenance_uid) is int
+            and type(maintenance_gid) is int
+            and 0 < maintenance_uid < 2**32 - 1
+            and 0 < maintenance_gid < 2**32 - 1
+            and maintenance_uid != cohort.state["uid"]
+            and maintenance_gid != cohort.state["gid"],
+            "fence_credentials",
+        )
+        selected = [{"path": str(path), "kind": kind} for path, kind in roots.items()]
+        _require(bool(selected), "fence_roots")
+        paths = [Path(row["path"]) for row in selected]
+        protected = (
+            directory,
+            cohort.directory,
+            cohort.control.guard.parent,
+            cohort.control.epoch_path.parent,
+        )
+        _require(
+            all(
+                path.is_absolute()
+                and path.anchor == "/"
+                and path != Path("/")
+                and ".." not in path.parts
+                and selected[index]["kind"] in {"core", "data"}
+                and all(
+                    path != private
+                    and path not in private.parents
+                    and private not in path.parents
+                    for private in protected
+                )
+                and all(
+                    path != other
+                    and path not in other.parents
+                    and other not in path.parents
+                    for other in paths[index + 1 :]
+                )
+                for index, path in enumerate(paths)
+            ),
+            "fence_roots",
+        )
+        _require(
+            len(byte_locks) == len(set(byte_locks))
+            and len(executables) == len(set(executables))
+            and not set(byte_locks) & set(executables),
+            "fence_role_map",
+        )
+        rows = cls._scan(
+            selected, forbidden=cls._management_identities(directory, cohort)
+        )
+        seen_locks: set[Path] = set()
+        seen_executables: set[Path] = set()
+        for row in rows:
+            root = selected[row["root"]]
+            path = Path(root["path"]) / row["relative"]
+            before = row.pop("rights")
+            _require(
+                before[0] in {0, cohort.state["uid"]}
+                and before[1] in {0, cohort.state["gid"]}
+                and not before[2] & 0o7002
+                and (not before[2] & 0o020 or before[1] == cohort.state["gid"]),
+                "fence_before_rights",
+            )
+            if root["kind"] == "core":
+                owner, group = 0, maintenance_gid
+                mode = 0o750 if row["kind"] == "directory" else 0o640
+                if path in byte_locks:
+                    _require(
+                        row["kind"] == "file" and row["relative"] in _BYTE_LOCK_PATHS,
+                        "fence_role_map",
+                    )
+                    mode = 0o660
+                    seen_locks.add(path)
+                if path in executables:
+                    _require(row["kind"] == "file", "fence_role_map")
+                    mode = 0o750
+                    seen_executables.add(path)
+            else:
+                owner, group = maintenance_uid, maintenance_gid
+                mode = 0o700 if row["kind"] == "directory" else 0o600
+            after = [owner, group, mode]
+            row.update(
+                before=before,
+                after=after,
+                allowed=[before, [before[0], before[1], 0], [owner, group, 0], after],
+            )
+        _require(
+            seen_locks == set(byte_locks) and seen_executables == set(executables),
+            "fence_role_map",
+        )
+        plan = {
+            "format": _FENCE_FORMAT,
+            "transaction": uuid4().hex,
+            "binding": cls._binding(cohort),
+            "roots": selected,
+            "rows": rows,
+            "maintenance": [maintenance_uid, maintenance_gid],
+        }
+        state = {"plan": plan, "sha256": _sha(_canonical(plan)), "complete": False}
+        path = directory / "fence.json"
+        _require(not path.exists(), "fence_already_planned")
+        _atomic(path, state)
+        return cls(directory, cohort, state)
+
+    @classmethod
+    def reopen(cls, directory: Path, cohort: ControlledCohort) -> FrozenTreeFence:
+        return cls(directory, cohort, _read(directory / "fence.json"))
+
+    def _current(self) -> None:
+        self.cohort._current()
+        _protected(self.directory)
+        plan = self.state["plan"]
+        _require(
+            _read(self.directory / "fence.json") == self.state
+            and plan["format"] == _FENCE_FORMAT
+            and _sha(_canonical(plan)) == self.state["sha256"]
+            and plan["binding"] == self._binding(self.cohort)
+            and self.cohort.state["phase"] in {"frozen", "retired"}
+            and self.cohort.events()["frozen"] == 1
+            and (
+                self.cohort.state["phase"] != "retired"
+                or self.cohort.events()["populated"] == 0
+            ),
+            "fence_state_changed",
+        )
+
+    def _validate(self, *, complete: bool) -> None:
+        self._current()
+        rows = self.state["plan"]["rows"]
+        observed = self._scan(
+            self.state["plan"]["roots"],
+            forbidden=self._management_identities(self.directory, self.cohort),
+        )
+        _require(len(rows) == len(observed), "fence_membership_changed")
+        for expected, actual in zip(rows, observed, strict=True):
+            _require(
+                all(
+                    expected[key] == actual[key]
+                    for key in ("root", "relative", "identity", "kind")
+                )
+                and (
+                    actual["rights"] == expected["after"]
+                    if complete
+                    else actual["rights"] in expected["allowed"]
+                ),
+                "fence_object_changed",
+            )
+
+    def _descriptor(self, row: dict[str, Any]) -> int:
+        root = self.state["plan"]["roots"][row["root"]]
+        descriptor = _root_fd(Path(root["path"]))
+        try:
+            if row["relative"] != ".":
+                for name in Path(row["relative"]).parts:
+                    child = _open_object(name, parent=descriptor)
+                    os.close(descriptor)
+                    descriptor = child
+            fact = _object_fact(descriptor)
+            _require(
+                fact["identity"] == row["identity"]
+                and fact["kind"] == row["kind"]
+                and fact["rights"] in row["allowed"],
+                "fence_object_changed",
+            )
+            result, descriptor = descriptor, -1
+            return result
+        finally:
+            if descriptor >= 0:
+                os.close(descriptor)
+
+    def apply(
+        self, *, checkpoint: Callable[[int, str], None] = lambda _row, _stage: None
+    ) -> None:
+        """Resume only this frozen plan's exact images; never undo inhibition."""
+        self._validate(complete=self.state["complete"])
+        if self.state["complete"]:
+            return
+        for index, row in enumerate(self.state["plan"]["rows"]):
+            descriptor = self._descriptor(row)
+            try:
+                if _object_fact(descriptor)["rights"] == row["after"]:
+                    continue
+                getattr(os, "fchmod")(descriptor, 0)
+                os.fsync(descriptor)
+                checkpoint(index, "zero")
+                getattr(os, "fchown")(descriptor, row["after"][0], row["after"][1])
+                os.fsync(descriptor)
+                checkpoint(index, "owner")
+                getattr(os, "fchmod")(descriptor, row["after"][2])
+                os.fsync(descriptor)
+                checkpoint(index, "final")
+                _require(
+                    _object_fact(descriptor)["rights"] == row["after"],
+                    "fence_object_changed",
+                )
+            finally:
+                os.close(descriptor)
+        self._validate(complete=True)
+        self.state["complete"] = True
+        _atomic(self.directory / "fence.json", self.state)
+
+    def verify(self) -> None:
+        """Verify an already complete baseline; no content/adoption claim."""
+        _require(self.state["complete"] is True, "fence_incomplete")
+        self._validate(complete=True)
