@@ -90,18 +90,23 @@ class WireClient:
         self.process.stdin.flush()
 
     def exchange(
-        self, method: str, params: dict[str, Any] | None = None
+        self,
+        method: str,
+        params: dict[str, Any] | None = None,
+        *,
+        request_id: str | None = None,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         self.counter += 1
+        identifier = self.counter if request_id is None else request_id
         request = {
             "jsonrpc": "2.0",
-            "id": self.counter,
+            "id": identifier,
             "method": method,
             "params": params or {},
         }
         assert self.process.stdin is not None
         started = time.monotonic()
-        self.process.stdin.write(json.dumps(request, ensure_ascii=False) + "\n")
+        self.process.stdin.write(json.dumps(request, ensure_ascii=True) + "\n")
         self.process.stdin.flush()
         notices = []
         while True:
@@ -109,11 +114,11 @@ class WireClient:
             if raw is None:
                 raise AssertionError("MCP entry exited: " + "".join(self.stderr))
             response = json.loads(raw)
-            self.transcript.append({"request_id": self.counter, "stdout": raw})
+            self.transcript.append({"request_id": identifier, "stdout": raw})
             if "id" not in response:
                 notices.append(response)
                 continue
-            if response["id"] != self.counter:
+            if response["id"] != identifier:
                 raise AssertionError("uncorrelated or duplicate response")
             self.transcript.append(
                 {"method": method, "elapsed_seconds": time.monotonic() - started}
@@ -359,6 +364,39 @@ class StdioBridgeTest(unittest.TestCase):
                     "resources/read", {"uri": IDENTITY_URI}
                 )
                 self.assertIn("contents", restored["result"])
+
+    def test_surrogate_ids_keep_transport_and_backend_usable(self) -> None:
+        self.client.exchange("initialize")
+        entry = self.source / "tools/pf_runtime/mcp_server.py"
+        original = entry.read_bytes()
+        pid = self.client.process.pid
+        for identifier in ("\ud800", "\udfff"):
+            with self.subTest(identifier=ascii(identifier)):
+                ping, _ = self.client.exchange("ping", request_id=identifier)
+                self.assertEqual(ping["id"], identifier)
+                self.assertEqual(ping["result"], {})
+                identity, _ = self.client.exchange(
+                    "resources/read", {"uri": IDENTITY_URI}, request_id=identifier
+                )
+                self.assertEqual(identity["id"], identifier)
+                self.assertIn("contents", identity["result"])
+                entry.write_text("raise SystemExit(31)\n", encoding="utf-8")
+                failed, _ = self.client.exchange(
+                    "tools/call",
+                    {"name": "pf.work.start", "arguments": {"objective": "fixture"}},
+                    request_id=identifier,
+                )
+                self.assertEqual(failed["id"], identifier)
+                self.assertTrue(failed["result"]["isError"])
+                ping, _ = self.client.exchange("ping")
+                self.assertEqual(ping["result"], {})
+                entry.write_bytes(original)
+                restored, _ = self.client.exchange(
+                    "resources/read", {"uri": IDENTITY_URI}
+                )
+                self.assertIn("contents", restored["result"])
+                self.assertEqual(self.client.process.pid, pid)
+                self.assertIsNone(self.client.process.poll())
 
     def test_unicode_response_and_opaque_stderr(self) -> None:
         # Wait for the real transport parent before replacing only its backend.

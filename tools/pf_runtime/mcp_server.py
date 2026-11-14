@@ -1493,7 +1493,7 @@ def main() -> int:
                 else None
             )
         if response is not None:
-            print(json.dumps(response, ensure_ascii=False), flush=True)
+            print(json.dumps(response, ensure_ascii=True), flush=True)
     return 0
 
 

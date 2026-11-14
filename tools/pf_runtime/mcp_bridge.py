@@ -251,7 +251,7 @@ def main() -> int:
         handled, response = _ping(request)
         if handled:
             if response is not None:
-                print(json.dumps(response, ensure_ascii=False), flush=True)
+                print(json.dumps(response, ensure_ascii=True), flush=True)
             continue
         try:
             messages = state.observe(
@@ -264,5 +264,5 @@ def main() -> int:
             response = _unavailable(request)
             messages = [] if response is None else [response]
         for message in messages:
-            print(json.dumps(message, ensure_ascii=False), flush=True)
+            print(json.dumps(message, ensure_ascii=True), flush=True)
     return 0
