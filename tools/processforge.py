@@ -9337,8 +9337,19 @@ class _WorkerLifecycleLease:
     active: bool = True
 
 
+@dataclass
+class _LegacyStartRetryProof:
+    lease: _WorkerLifecycleLease
+    workplace_root: Path | None
+    active: bool = True
+
+
 _WORKER_LIFECYCLE_GATES: ContextVar[tuple[_WorkerLifecycleLease, ...]] = ContextVar(
     "worker_lifecycle_gates", default=()
+)
+
+_LEGACY_START_RETRY_PROOF: ContextVar[_LegacyStartRetryProof | None] = ContextVar(
+    "legacy_start_retry_proof", default=None
 )
 
 
@@ -9935,7 +9946,8 @@ def _observation_bytes(path: Path) -> bytes | None:
 
 
 def _commit_legacy_observation(project_root: Path, task: dict[str, Any]) -> None:
-    _retry_refuse_pending(project_root, task["run_id"], task["id"])
+    if not _legacy_start_retry_proven(project_root, task):
+        _retry_refuse_pending(project_root, task["run_id"], task["id"])
     observation = _LEGACY_OBSERVATION.get()
     if observation is None:
         return
@@ -12232,14 +12244,19 @@ def _worker_start_admission(
     *,
     deadline: float | None = None,
     _defer_registration: bool = False,
+    _nonblocking: bool = False,
 ) -> Iterator[Path | None]:
     from processforge_core.runtime.execution_admission import ExecutionAdmission
 
     manifest = _ProjectMetadataReader(project_root).workplace_manifest()
     workplace = manifest.parent if manifest else None
-    with ExecutionAdmission(registry_file_lock).start(
-        project_root, workplace, deadline=deadline
-    ):
+
+    def acquire(path: Path, **options: Any) -> contextlib.AbstractContextManager[Any]:
+        if _nonblocking:
+            options["timeout_seconds"] = 0.0
+        return registry_file_lock(path, **options)
+
+    with ExecutionAdmission(acquire).start(project_root, workplace, deadline=deadline):
         if not _defer_registration:
             _register_worker_start(project_root, workplace)
         yield workplace
@@ -12602,6 +12619,116 @@ def _sql_worker_run_start(
         return 0 if payload["status"] == "completed" else 1
 
 
+@contextlib.contextmanager
+def _legacy_start_admission(
+    project_root: Path,
+    task: dict[str, Any],
+    driver_ref: str | None,
+    material: contextlib.ExitStack,
+) -> Iterator[Any]:
+    """Keep legacy retry proof current without scanning under workplace admission.
+
+    Fixed native starts retain their task lock from proof through reservation.
+    They only TRY the outer gates while retaining that lock: contention releases
+    all task/material handles before rebuilding the proof. No outer gate waits
+    for a task owner. The caller releases both gates before waiting for its child.
+    """
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared.resources import (
+        NativeStartFailure,
+        native_start_preflight,
+    )
+
+    run_id, task_id = task["run_id"], task["id"]
+    if not task.get("parameters", {}).get("native_maintenance_job"):
+        with _worker_commit_locks(project_root, run_id, task_id, start=True):
+            yield None
+        return
+
+    deadline: float | None = None
+    while True:
+        with contextlib.ExitStack() as candidate, contextlib.ExitStack() as gates:
+            remaining = 30.0 if deadline is None else deadline - time.monotonic()
+            if remaining <= 0:
+                raise ExecutionError("execution_activity_unknown")
+            gates.enter_context(
+                worker_run_lifecycle_lock(
+                    project_root, run_id, task_id, timeout_seconds=remaining
+                )
+            )
+            key = _worker_lifecycle_key(project_root, run_id, task_id)
+            lease = next(
+                (
+                    lease
+                    for lease in _WORKER_LIFECYCLE_GATES.get()
+                    if lease.active and lease.key == key
+                ),
+                None,
+            )
+            if lease is None:
+                raise ExecutionError("execution_activity_unknown")
+            _retry_refuse_pending(project_root, run_id, task_id)
+            preflight = candidate.enter_context(
+                native_start_preflight(
+                    project_root, task, sys.modules[__name__], driver_ref
+                )
+            )
+            if preflight is None or (
+                preflight.task["run_id"],
+                preflight.task["id"],
+            ) != (
+                run_id,
+                task_id,
+            ):
+                raise NativeStartFailure("native_preflight_attempt")
+            if deadline is None:
+                deadline = time.monotonic() + 30.0
+            try:
+                workplace = gates.enter_context(
+                    _worker_start_admission(
+                        project_root,
+                        deadline=deadline,
+                        _defer_registration=True,
+                        _nonblocking=True,
+                    )
+                )
+            except ExecutionError as error:
+                if getattr(error, "admission_reason", None) != "contention_timeout":
+                    raise
+            else:
+                _register_worker_start(project_root, workplace)
+                material.enter_context(candidate.pop_all())
+                proof = _LegacyStartRetryProof(lease, workplace)
+                token = _LEGACY_START_RETRY_PROOF.set(proof)
+                try:
+                    yield preflight
+                finally:
+                    proof.active = False
+                    _LEGACY_START_RETRY_PROOF.reset(token)
+                return
+        # Retry outside every lock and input handle, within the original budget.
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ExecutionError("execution_activity_unknown")
+        time.sleep(min(0.1, remaining))
+
+
+def _legacy_start_retry_proven(project_root: Path, task: dict[str, Any]) -> bool:
+    """Reuse only this live task/exclusion lifetime, never a saved proof flag."""
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    proof = _LEGACY_START_RETRY_PROOF.get()
+    return (
+        type(proof) is _LegacyStartRetryProof
+        and proof.active
+        and proof.lease.active
+        and proof.lease.key
+        == _worker_lifecycle_key(project_root, task["run_id"], task["id"])
+        and any(lease is proof.lease for lease in _WORKER_LIFECYCLE_GATES.get())
+        and ExecutionAdmission.held(project_root, proof.workplace_root)
+    )
+
+
 def _legacy_worker_run_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
@@ -12611,21 +12738,20 @@ def _legacy_worker_run_start(args: argparse.Namespace) -> int:
     _retry_refuse_pending(project_root, run_id, task_id)
     detach = bool(getattr(args, "detach", False))
     proc: subprocess.Popen[bytes] | None = None
-    from processforge_core.prepared.resources import native_start_preflight
-
-    with native_start_preflight(
-        project_root, task, sys.modules[__name__], getattr(args, "driver", None)
-    ) as preflight:
-        if preflight is not None and bool(getattr(args, "detach", False)):
-            print("FAIL: native_synchronous_start_required")
-            return 1
-        with _worker_commit_locks(project_root, run_id, task_id, start=True):
+    with contextlib.ExitStack() as material:
+        with _legacy_start_admission(
+            project_root, task, getattr(args, "driver", None), material
+        ) as preflight:
+            if preflight is not None and detach:
+                print("FAIL: native_synchronous_start_required")
+                return 1
             task = (
                 preflight.task
                 if preflight is not None
                 else _worker_assignment_service.load(project_root, task_id)
             )
-            _retry_refuse_pending(project_root, run_id, task_id)
+            if preflight is None:
+                _retry_refuse_pending(project_root, run_id, task_id)
             if preflight is None and any(
                 not intent.with_suffix(".applied.json").is_file()
                 for intent in (locate_flow_root(project_root) / "runs" / run_id).glob(

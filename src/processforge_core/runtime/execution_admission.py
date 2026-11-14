@@ -305,7 +305,9 @@ def _flush_admission_failure() -> None:
 class ExecutionAdmission:
     """Reuse the host's permanent-guard registry lock without importing tools.
 
-    Gate order is workplace, project, existing task lock, SQL transaction.
+    Blocking gate order is workplace, project, existing task lock, SQL transaction.
+    A retained task proof may only try outer gates without waiting; contention
+    must release the task and proof before retrying acquisition.
     The caller verifies enrollment, readiness, instance and stopping fence inside
     the gate; these locks themselves grant no routing or launch permission.
     Shutdown holds the workplace gate while the caller validates instance/routing,

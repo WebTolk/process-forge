@@ -1715,7 +1715,9 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
     real_spawn = native.spawn_owned
 
     @contextlib.contextmanager
-    def gate(project_root, *, deadline=None, _defer_registration=False):
+    def gate(
+        project_root, *, deadline=None, _defer_registration=False, _nonblocking=False
+    ):
         nonlocal inside
         assert (
             scans.get("_stream_material", 0) > 0 and scans.get("_zip_preflight", 0) > 0
@@ -1748,6 +1750,7 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
             project_root,
             deadline=deadline,
             _defer_registration=_defer_registration,
+            _nonblocking=_nonblocking,
         ) as selected_workplace:
             before = time.monotonic()
             inside = True
@@ -1787,9 +1790,14 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
         operations.append("reserved-before-spawn")
         process = real_spawn(*a, **kw)
         actual_wait = process.wait
+        wait_count = 0
 
         def wait(*wa, **wk):
+            nonlocal wait_count
             assert not inside
+            if wait_count == 0:
+                assert not core._WORKER_LIFECYCLE_GATES.get()
+            wait_count += 1
             # Parent retains input handles through actual child consumption.
             for name in protected:
                 if name == paths["command"].relative_to(root).as_posix():
