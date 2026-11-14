@@ -45,7 +45,10 @@ def test_cli_mcp_and_action_catalogue_consume_loaded_owner(
         "result": {
             "protocolVersion": "2024-11-05",
             "serverInfo": {"name": "processforge", "version": original.version},
-            "capabilities": {"tools": {}},
+            "capabilities": {
+                "tools": {"listChanged": True},
+                "resources": {"listChanged": True, "subscribe": True},
+            },
         },
     }
     a.factory.reset_mock()

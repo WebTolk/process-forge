@@ -81,6 +81,17 @@ jobs:
         run: python -m unittest discover -s tests/update_metadata -v
       - name: Check concurrent journal initialization and refusal
         run: python -m unittest discover -s tests/sqlite_storage -v
+      - name: Check stable MCP connection across Core replacement and failure
+        shell: python
+        run: |
+          import subprocess
+          import sys
+
+          subprocess.run([sys.executable, '-B', '-m', 'unittest', 'discover',
+                          '-s', 'tests/mcp_bridge', '-v'], check=True)
+          for script in ('smoke_mcp_jsonrpc_validation.py',
+                         'smoke_mcp_stdio_unicode.py', 'smoke_mcp_codex_contract.py'):
+              subprocess.run([sys.executable, '-B', 'tools/' + script], check=True)
       - name: Check six journal producers and dispatch recovery
         shell: python
         run: |
@@ -128,6 +139,43 @@ jobs:
           assert (project / 'AGENTS.md').read_bytes().startswith(shared_entry), 'Onboarding replaced shared instructions'
           run('bin/pf.py', 'doctor-project', '--project-root', project)
           run('bin/pf.py', 'project-context-check', '--project-root', project)
+
+  managed-mcp:
+    name: Managed MCP update (windows-latest)
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Qualify live MCP connection and native managed update
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import platform
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / '.pf' / 'tmp' / 'managed-mcp'
+          scratch.mkdir(parents=True, exist_ok=True)
+          environment = dict(os.environ)
+          environment['PYTHONPATH'] = os.pathsep.join(str(root / name) for name in ('src', 'tools', 'tests'))
+          environment['W3_FIXTURE_ROOT'] = str(scratch)
+          print(platform.platform(), sys.version, flush=True)
+          subprocess.run([
+              sys.executable, '-m', 'pytest', '-q', '-ra', '-p', 'no:cacheprovider',
+              'tests/execution_migration/test_native_control.py::test_mcp_request_holds_real_lease_and_idle_releases',
+              'tests/execution_migration/test_native_control.py::test_stable_mcp_connection_survives_real_managed_core_update',
+          ], env=environment, check=True)
 
   cleanup:
     name: Cleanup (${{ matrix.os }})
