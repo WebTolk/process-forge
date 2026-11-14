@@ -324,9 +324,14 @@ def test_nested_parent_traversal_evidence_is_rejected(harness: Harness) -> None:
 
 
 def test_isolated_import_performs_no_filesystem_or_connection_io() -> None:
+    # The package entry captures the qualified native publication before Core
+    # business imports. Test the cold domain boundary after that required entry.
     program = """
-import pathlib, sqlite3
+import pathlib, sqlite3, sys
 from unittest.mock import patch
+import processforge_core
+assert 'processforge_core.maintenance.execution_migration' not in sys.modules
+assert 'pf_cli.commands.journal_maintenance' not in sys.modules
 with patch.object(pathlib.Path, 'open', side_effect=AssertionError('open')), \\
      patch.object(pathlib.Path, 'stat', side_effect=AssertionError('stat')), \\
      patch.object(pathlib.Path, 'mkdir', side_effect=AssertionError('mkdir')), \\
