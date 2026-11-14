@@ -930,6 +930,7 @@ class NativeControl:
 
         @contextmanager
         def held() -> Iterator[NativeControl]:
+            lock_pid = os.getpid()
             # A live shared scope cannot be upgraded or silently replaced.
             if _CONTROL_LEASE.get() is not None:
                 raise NativeControlError()
@@ -944,6 +945,7 @@ class NativeControl:
             token = None
             life = None
             life_token = None
+            exclusive_token = None
             try:
                 if sys.platform == "win32":
                     import msvcrt
@@ -995,6 +997,8 @@ class NativeControl:
                     import fcntl
 
                     while True:
+                        if os.getpid() != lock_pid:
+                            raise NativeControlError()
                         try:
                             fcntl.flock(
                                 stream.fileno(),
@@ -1007,6 +1011,8 @@ class NativeControl:
                                 raise NativeControlError()
                             time.sleep(min(0.005, max(0, stop - time.monotonic())))
                 locked = True
+                if os.getpid() != lock_pid:
+                    raise NativeControlError()
                 with self.epoch_path.open("rb") as epoch:
                     raw = epoch.read(257)
                 if (
@@ -1017,16 +1023,22 @@ class NativeControl:
                     raise NativeControlError()
                 if not exclusive:
                     _validate_shared_head(self)
+                if os.getpid() != lock_pid:
+                    raise NativeControlError()
                 token = _CONTROL_LEASE.set(self)
                 guard_info = os.fstat(stream.fileno())
                 life = _OperationLifetime(
-                    os.getpid(),
+                    lock_pid,
                     threading.get_ident(),
                     exclusive=exclusive,
                     guard_fd=stream.fileno(),
                     guard_identity=(guard_info.st_dev, guard_info.st_ino),
                 )
                 life_token = _OPERATION_LIFETIME.set(life)
+                if exclusive:
+                    exclusive_token = _EXCLUSIVE_LIFETIMES.set(
+                        (*_EXCLUSIVE_LIFETIMES.get(), (self, life))
+                    )
                 yield self
             except (
                 OSError,
@@ -1038,11 +1050,15 @@ class NativeControl:
             finally:
                 if life is not None:
                     life.active = False
+                if exclusive_token is not None:
+                    _EXCLUSIVE_LIFETIMES.reset(exclusive_token)
                 if life_token is not None:
                     _OPERATION_LIFETIME.reset(life_token)
                 if token is not None:
                     _CONTROL_LEASE.reset(token)
-                if locked:
+                # POSIX fork inherits the same open-file description. A child
+                # may close its duplicate, but LOCK_UN would unlock its parent.
+                if locked and lock_pid == os.getpid():
                     if sys.platform == "win32":
                         kernel.UnlockFileEx(handle, 0, 1, 0, ctypes.byref(overlapped))
                     else:
@@ -1070,6 +1086,13 @@ class _OperationLifetime:
 _OPERATION_LIFETIME: ContextVar[_OperationLifetime | None] = ContextVar(
     "pf_native_operation_lifetime", default=None
 )
+
+# Private producer/publication scopes can temporarily replace the current
+# operation while the independent outer OS lock is still held. Retain only
+# lifetimes minted by the actual exclusive lock path, never caller identities.
+_EXCLUSIVE_LIFETIMES: ContextVar[
+    tuple[tuple[NativeControl, _OperationLifetime], ...]
+] = ContextVar("pf_native_exclusive_lifetimes", default=())
 
 
 # PF:PUBLICATION:BEGIN
@@ -3512,10 +3535,19 @@ def _exclusive_lease_identity(control: NativeControl) -> dict[str, Any]:
     operation leases cannot authorize controller mutation. A replaced guard or
     epoch cannot silently become the lock namespace of an existing cohort.
     """
-    life = _OPERATION_LIFETIME.get()
+    life = next(
+        (
+            life
+            for owner, life in reversed(_EXCLUSIVE_LIFETIMES.get())
+            if owner is control
+        ),
+        None,
+    )
     if (
-        not _native_life_held(control)
-        or life is None
+        life is None
+        or not life.active
+        or life.pid != os.getpid()
+        or life.thread_id != threading.get_ident()
         or not life.exclusive
         or life.guard_fd is None
     ):
