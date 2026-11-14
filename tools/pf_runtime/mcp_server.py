@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import codecs
+import hashlib
 import importlib.util
 import json
 import math
@@ -43,6 +44,13 @@ else:
 
 if not __package__:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+if __name__ == "__main__" and "--backend-request" not in sys.argv[1:]:
+    # The transport is imported only after trusted native publication capture.
+    # It never executes this process's captured business Core after an update.
+    from pf_runtime.mcp_bridge import main as _bridge_main
+
+    raise SystemExit(_bridge_main())
 
 if TYPE_CHECKING:
     from pf_runtime.action_tools import (
@@ -145,6 +153,13 @@ def runtime_bootstrap() -> Any:
             spec.loader.exec_module(module)
         _RUNTIME_BOOTSTRAP = module.bootstrap_runtime(__file__)
     return _RUNTIME_BOOTSTRAP
+
+
+class _DeferredRuntime:
+    """Load business Core only after protocol validation needs its services."""
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(runtime_bootstrap(), name)
 
 
 def tool_result(
@@ -998,7 +1013,12 @@ def rpc_error(request_id: Any, code: int, message: str) -> dict[str, Any]:
 
 
 def respond(
-    request: Any, workplace: Path, session_id: str, runtime: Any
+    request: Any,
+    workplace: Path,
+    session_id: str,
+    runtime: Any,
+    *,
+    backend_metadata: bool = False,
 ) -> dict[str, Any] | None:
     """Hold a lease only while processing this request, never during stdio idle."""
     from contextlib import ExitStack
@@ -1010,7 +1030,17 @@ def respond(
             entry = current_entry()
             if entry is not None:
                 operation.enter_context(entry.operation())
-            return _respond_in_operation(request, workplace, session_id, runtime)
+            response = _respond_in_operation(request, workplace, session_id, runtime)
+            if (
+                backend_metadata
+                and response is not None
+                and isinstance(response.get("result"), dict)
+            ):
+                # Capture loaded identity/catalogue while this native lease is live.
+                response["result"].setdefault("_meta", {})["processforge/backend"] = (
+                    _backend_metadata(runtime)
+                )
+            return response
     except NativeControlError as error:
         if not isinstance(request, dict) or "id" not in request:
             return None
@@ -1029,10 +1059,26 @@ def respond(
 def _respond_in_operation(
     request: Any, workplace: Path, session_id: str, runtime: Any
 ) -> dict[str, Any] | None:
+    src_root = str(Path(__file__).resolve().parents[2] / "src")
+    if src_root not in sys.path:
+        sys.path.insert(0, src_root)
+    valid, rejected = _validate_request(request)
+    if not valid:
+        return rejected
     if isinstance(request, dict):
         params = request.get("params")
         method = request.get("method")
-        if method in ("initialize", "tools/list", "notifications/initialized") or (
+        if method in (
+            "initialize",
+            "ping",
+            "tools/list",
+            "notifications/initialized",
+            "resources/list",
+            "resources/templates/list",
+            "resources/read",
+            "resources/subscribe",
+            "resources/unsubscribe",
+        ) or (
             method == "tools/call"
             and isinstance(params, dict)
             and (
@@ -1050,9 +1096,6 @@ def _respond_in_operation(
             # The dispatcher still validates schemas, sessions and apply; the
             # initializer owns durable events after its entry preflight passes.
             return _respond(request, workplace, session_id, runtime)
-    src_root = str(Path(__file__).resolve().parents[2] / "src")
-    if src_root not in sys.path:
-        sys.path.insert(0, src_root)
     from processforge_core import diagnostics
 
     arguments = {}
@@ -1117,6 +1160,15 @@ def _respond_in_operation(
 def _respond(
     request: Any, workplace: Path, session_id: str, runtime: Any
 ) -> dict[str, Any] | None:
+    valid, rejected = _validate_request(request)
+    if not valid:
+        return rejected
+    response = respond_valid(request, workplace, session_id, runtime)
+    return None if "id" not in request else response
+
+
+def _validate_request(request: Any) -> tuple[bool, dict[str, Any] | None]:
+    """Reject malformed protocol before optional diagnostics or Core dispatch."""
     request_id = request.get("id") if isinstance(request, dict) else None
     valid_id = (
         request_id is None
@@ -1132,7 +1184,9 @@ def _respond(
         or not isinstance(request.get("method"), str)
         or not valid_id
     ):
-        return rpc_error(request_id if valid_id else None, -32600, "invalid request")
+        return False, rpc_error(
+            request_id if valid_id else None, -32600, "invalid request"
+        )
     notification = "id" not in request
     method = request["method"]
     params = request.get("params", {})
@@ -1160,7 +1214,38 @@ def _respond(
             params_valid = schema_accepts(
                 params.get("arguments", {}), tool_schema(name)
             )
-    elif params_valid and method in {"initialize", "tools/list"}:
+    elif params_valid and method == "ping":
+        params_valid = schema_accepts(
+            params,
+            {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {"_meta": {"type": "object"}},
+            },
+        )
+    elif params_valid and method in {
+        "resources/read",
+        "resources/subscribe",
+        "resources/unsubscribe",
+    }:
+        params_valid = schema_accepts(
+            params,
+            {
+                "type": "object",
+                "required": ["uri"],
+                "additionalProperties": False,
+                "properties": {
+                    "uri": {"type": "string", "minLength": 1},
+                    "_meta": {"type": "object"},
+                },
+            },
+        )
+    elif params_valid and method in {
+        "initialize",
+        "tools/list",
+        "resources/list",
+        "resources/templates/list",
+    }:
         params_valid = schema_accepts(
             params,
             {
@@ -1181,9 +1266,72 @@ def _respond(
             },
         )
     if not params_valid:
-        return None if notification else rpc_error(request_id, -32602, "invalid params")
-    response = respond_valid(request, workplace, session_id, runtime)
-    return None if notification else response
+        return False, (
+            None if notification else rpc_error(request_id, -32602, "invalid params")
+        )
+    return True, None
+
+
+CORE_IDENTITY_URI = "pf://core/identity"
+
+
+def _catalog_tools() -> list[dict[str, Any]]:
+    return [
+        {
+            "name": name,
+            "description": description,
+            "inputSchema": tool_schema(name),
+            "annotations": tool_annotations(name),
+        }
+        for name, description in TOOLS.items()
+    ]
+
+
+def _catalog_resources() -> list[dict[str, str]]:
+    return [
+        {
+            "uri": CORE_IDENTITY_URI,
+            "name": "core-identity",
+            "description": "Portable metadata of the executing Core; not payload integrity proof.",
+            "mimeType": "application/json",
+        }
+    ]
+
+
+def _loaded_identity(runtime: Any) -> dict[str, str]:
+    loaded = runtime.properties.loaded
+    return {
+        name: str(getattr(loaded, name, "unknown"))
+        for name in (
+            "version",
+            "build_id",
+            "source_commit",
+            "source_kind",
+            "status",
+            "reason",
+        )
+    }
+
+
+def _fingerprint(value: Any) -> str:
+    return (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+    )
+
+
+def _backend_metadata(runtime: Any) -> dict[str, Any]:
+    return {
+        "contract_version": 1,
+        "core": _loaded_identity(runtime),
+        "tools_revision": _fingerprint(_catalog_tools()),
+        "resources_revision": _fingerprint(_catalog_resources()),
+        "resource_versions": {
+            CORE_IDENTITY_URI: _fingerprint(_loaded_identity(runtime))
+        },
+    }
 
 
 def respond_valid(
@@ -1191,6 +1339,8 @@ def respond_valid(
 ) -> dict[str, Any] | None:
     method = str(request.get("method") or "")
     request_id = request.get("id")
+    if method == "ping":
+        return {"jsonrpc": "2.0", "id": request_id, "result": {}}
     if method == "notifications/initialized":
         return {"jsonrpc": "2.0", "id": request_id, "result": {}}
     if method == "initialize":
@@ -1203,20 +1353,45 @@ def respond_valid(
                     "name": "processforge",
                     "version": runtime.properties.loaded.version,
                 },
-                "capabilities": {"tools": {}},
+                "capabilities": {
+                    "tools": {"listChanged": True},
+                    "resources": {"listChanged": True, "subscribe": True},
+                },
             },
         }
     if method == "tools/list":
-        tools = [
-            {
-                "name": name,
-                "description": description,
-                "inputSchema": tool_schema(name),
-                "annotations": tool_annotations(name),
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": {"tools": _catalog_tools()},
+        }
+    if method == "resources/list":
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": {"resources": _catalog_resources()},
+        }
+    if method == "resources/templates/list":
+        return {"jsonrpc": "2.0", "id": request_id, "result": {"resourceTemplates": []}}
+    if method in {"resources/read", "resources/subscribe", "resources/unsubscribe"}:
+        if request["params"]["uri"] != CORE_IDENTITY_URI:
+            return rpc_error(request_id, -32002, "resource not found")
+        result = {}
+        if method == "resources/read":
+            result = {
+                "contents": [
+                    {
+                        "uri": CORE_IDENTITY_URI,
+                        "mimeType": "application/json",
+                        "text": json.dumps(
+                            _loaded_identity(runtime),
+                            ensure_ascii=False,
+                            sort_keys=True,
+                        ),
+                    }
+                ]
             }
-            for name, description in TOOLS.items()
-        ]
-        return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}
+        return {"jsonrpc": "2.0", "id": request_id, "result": result}
     if method == "tools/call":
         params = request.get("params")
         if not isinstance(params, dict):
@@ -1284,11 +1459,18 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workplace", required=True)
     parser.add_argument("--session", default=os.environ.get("PF_MCP_SESSION_ID", ""))
+    parser.add_argument(
+        "--backend-request", action="store_true", help=argparse.SUPPRESS
+    )
     args = parser.parse_args()
     _configure_stdio_utf8()
-    runtime = runtime_bootstrap()
-    core = runtime.core
-    workplace = core.resolve_workplace_root(args.workplace)
+    src_root = str(Path(__file__).resolve().parents[2] / "src")
+    if src_root not in sys.path:
+        sys.path.insert(0, src_root)
+    runtime = _DeferredRuntime()
+    # The explicit workplace resolver is exactly expanduser().resolve(). Avoid
+    # importing business Core merely to normalize a path or reject bad protocol.
+    workplace = Path(args.workplace).expanduser().resolve()
     for line in sys.stdin:
         if not line.strip():
             continue
@@ -1298,7 +1480,12 @@ def main() -> int:
             print(json.dumps(rpc_error(None, -32700, "parse error")), flush=True)
             continue
         try:
-            response = respond(request, workplace, args.session, runtime)
+            if args.backend_request:
+                response = respond(
+                    request, workplace, args.session, runtime, backend_metadata=True
+                )
+            else:
+                response = respond(request, workplace, args.session, runtime)
         except Exception:
             response = (
                 rpc_error(request.get("id"), -32603, "internal error")

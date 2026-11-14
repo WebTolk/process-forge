@@ -2472,3 +2472,66 @@ def test_registered_inspect_real_managed_scope(native_root: Path, drift: bool) -
         == (["unknown"] if drift else ["proven", "unknown"])
     )
     assert first["unchanged"] and second["unchanged"]
+
+
+def test_stable_mcp_connection_survives_real_managed_core_update(
+    native_root: Path,
+) -> None:
+    from mcp_bridge.test_stdio_bridge import IDENTITY_URI, WireClient
+
+    root, _ = _adopted_fixture_install(native_root / "target")
+    _adopted_run(_ADOPTED_MANAGER, root)
+    workplace = root / "runtime/fixture/mcp-workplace"
+    workplace.mkdir()
+    (workplace / "workplace.yaml").write_text(
+        "schema_version: 1\nid: managed-mcp-fixture\n", encoding="utf-8"
+    )
+    client = WireClient(root, workplace)
+    try:
+        initial, _ = client.exchange("initialize")
+        assert initial["result"]["serverInfo"]["version"] == "1.3.0-alpha6"
+        client.exchange("resources/subscribe", {"uri": IDENTITY_URI})
+        pid = client.process.pid
+        before = json.loads(
+            (root / "runtime/managed-ingress/baseline.json").read_text()
+        )
+
+        successor = _adopted_publication("1.3.0-alpha7")
+        archive = root / "runtime/mcp-successor.zip"
+        with zipfile.ZipFile(archive, "w") as bundle:
+            for name, raw in {
+                **successor.payload,
+                p.MANIFEST: successor.manifest,
+            }.items():
+                bundle.writestr(name, raw)
+        management, _ = _adopted_fixture_install(native_root / "management")
+        command = [
+            sys.executable,
+            "-B",
+            str(management / "bin/pf.py"),
+            "core-update",
+            "apply",
+            "--core-root",
+            str(root),
+            "--archive",
+            str(archive),
+            "--confirm",
+        ]
+        applied = subprocess.run(command, capture_output=True, text=True, timeout=240)
+        assert applied.returncode == 0, applied.stdout + applied.stderr
+        assert json.loads(applied.stdout)["status"] == "applied"
+        after = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
+        assert before["adoption"] != after["adoption"]
+        assert after["phase"] == "bound"
+
+        current, notices = client.exchange("resources/read", {"uri": IDENTITY_URI})
+        identity = json.loads(current["result"]["contents"][0]["text"])
+        assert identity["version"] == "1.3.0-alpha7"
+        assert client.process.pid == pid and client.process.poll() is None
+        assert any(
+            notice.get("method") == "notifications/resources/updated"
+            and notice.get("params", {}).get("uri") == IDENTITY_URI
+            for notice in notices
+        )
+    finally:
+        client.close()
