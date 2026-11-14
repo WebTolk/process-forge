@@ -1018,7 +1018,14 @@ class NativeControl:
                 if not exclusive:
                     _validate_shared_head(self)
                 token = _CONTROL_LEASE.set(self)
-                life = _OperationLifetime(os.getpid(), threading.get_ident())
+                guard_info = os.fstat(stream.fileno())
+                life = _OperationLifetime(
+                    os.getpid(),
+                    threading.get_ident(),
+                    exclusive=exclusive,
+                    guard_fd=stream.fileno(),
+                    guard_identity=(guard_info.st_dev, guard_info.st_ino),
+                )
                 life_token = _OPERATION_LIFETIME.set(life)
                 yield self
             except (
@@ -1055,6 +1062,9 @@ class _OperationLifetime:
     pid: int
     thread_id: int
     active: bool = True
+    exclusive: bool = False
+    guard_fd: int | None = None
+    guard_identity: tuple[int, int] | None = None
 
 
 _OPERATION_LIFETIME: ContextVar[_OperationLifetime | None] = ContextVar(
@@ -3493,6 +3503,57 @@ def _native_life_held(control: NativeControl | None) -> bool:
         and life.pid == os.getpid()
         and life.thread_id == threading.get_ident()
     )
+
+
+def _exclusive_lease_identity(control: NativeControl) -> dict[str, Any]:
+    """Bind a live exclusive owner to its actually locked physical object.
+
+    This is not publication, deployment or domain readiness authority. Shared
+    operation leases cannot authorize controller mutation. A replaced guard or
+    epoch cannot silently become the lock namespace of an existing cohort.
+    """
+    life = _OPERATION_LIFETIME.get()
+    if (
+        not _native_life_held(control)
+        or life is None
+        or not life.exclusive
+        or life.guard_fd is None
+    ):
+        raise NativeControlError()
+    held = os.fstat(life.guard_fd)
+    current = control.guard.lstat()
+    if (
+        (held.st_dev, held.st_ino) != life.guard_identity
+        or (current.st_dev, current.st_ino) != life.guard_identity
+        or not stat.S_ISREG(held.st_mode)
+        or not stat.S_ISREG(current.st_mode)
+        or held.st_nlink != 1
+        or current.st_nlink != 1
+        or getattr(current, "st_file_attributes", 0) & 0x400
+    ):
+        raise NativeControlError()
+    with control.epoch_path.open("rb") as epoch:
+        raw = epoch.read(257)
+        epoch_info = os.fstat(epoch.fileno())
+    epoch_current = control.epoch_path.lstat()
+    if (
+        not stat.S_ISREG(epoch_info.st_mode)
+        or not stat.S_ISREG(epoch_current.st_mode)
+        or epoch_info.st_nlink != 1
+        or epoch_current.st_nlink != 1
+        or (epoch_info.st_dev, epoch_info.st_ino)
+        != (epoch_current.st_dev, epoch_current.st_ino)
+        or getattr(epoch_current, "st_file_attributes", 0) & 0x400
+        or raw != control.accepted_epoch.encode("ascii")
+    ):
+        raise NativeControlError()
+    return {
+        "guard_path": str(control.guard.absolute()),
+        "guard_identity": [held.st_dev, held.st_ino],
+        "epoch_path": str(control.epoch_path.absolute()),
+        "epoch_identity": [epoch_info.st_dev, epoch_info.st_ino],
+        "accepted_epoch": control.accepted_epoch,
+    }
 
 
 class NativeUpdateError(Exception):

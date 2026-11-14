@@ -1715,7 +1715,7 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
     real_spawn = native.spawn_owned
 
     @contextlib.contextmanager
-    def gate(project_root):
+    def gate(project_root, *, deadline=None, _defer_registration=False):
         nonlocal inside
         assert (
             scans.get("_stream_material", 0) > 0 and scans.get("_zip_preflight", 0) > 0
@@ -1744,7 +1744,11 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
             (root / ".pf/runs/fixture-run/cancellation-other.yaml").write_text(
                 "new intent", encoding="utf-8"
             )
-        with real_gate(project_root):
+        with real_gate(
+            project_root,
+            deadline=deadline,
+            _defer_registration=_defer_registration,
+        ) as selected_workplace:
             before = time.monotonic()
             inside = True
             try:
@@ -1766,7 +1770,7 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
                     pass
                 else:
                     raise AssertionError("mutated command admitted")
-                yield
+                yield selected_workplace
             finally:
                 inside = False
                 timings.append(time.monotonic() - before)
