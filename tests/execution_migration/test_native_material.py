@@ -353,6 +353,7 @@ def test_create_once_exact_reuse_and_partial_refusal(
     assert "material" not in prepared.get("native_launch", {}).get("maintenance", {})
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows material sharing handles")
 def test_actual_windows_handles_block_writer_rename_and_parent_swap(
     tmp_path: Path,
 ) -> None:
