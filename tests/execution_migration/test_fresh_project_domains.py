@@ -646,3 +646,40 @@ def test_initializer_storage_failures_keep_pending_identity(
     final_pin = _slot(project / ".pf", target)
     assert final_pin is not None
     assert final_pin["store_id"] == pin["store_id"]
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("state", []),
+        ("domains", 9),
+        ("project_id", 9),
+        ("workplace", {}),
+        ("root_identity", [True, True]),
+    ],
+)
+@pytest.mark.parametrize("entry", ["initializer", "ordinary"])
+def test_malformed_receipt_fields_refuse_with_typed_error(project, field, value, entry):
+    initialize(project)
+    host = host_for(project)
+    target = target_for(host, "raw")
+    receipt_path = project / ".pf" / fresh.RECEIPT
+    document = fresh._receipt(project)
+    document[field] = value
+    receipt_path.write_text(json.dumps(document), encoding="utf-8")
+
+    def snapshot():
+        return {
+            p.relative_to(project): p.read_bytes()
+            for p in project.rglob("*")
+            if p.is_file()
+        }
+
+    before = snapshot()
+    with pytest.raises(MaintenanceError, match="storage_fresh_receipt_invalid"):
+        if entry == "initializer":
+            initialize(project)
+        else:
+            with adapter_identity_access(target.target, host, writable=True):
+                pytest.fail("malformed receipt admitted")
+    assert snapshot() == before

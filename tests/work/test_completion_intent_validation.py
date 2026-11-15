@@ -16,10 +16,12 @@ from process_execution_smoke_support import stage_evidence
 from work.test_complete_admission import final_stage, make_work
 
 from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import build_configuration_provider
 from processforge_core.process_execution import (
     ProcessExecutionService,
     canonical_fingerprint,
 )
+from processforge_core.project.configuration_inputs import configuration_operation
 from processforge_core.work.consistency import RunTaskInputReader
 
 
@@ -113,7 +115,11 @@ def pending_completion(
 def events(case: PendingCompletion) -> list[dict[str, Any]]:
     runtime = RunTaskInputReader().event_runtime_paths(case.project)[0]
     assert runtime.resolve().is_relative_to(case.project.resolve())
-    rows = list(core.iter_process_events(runtime))
+    provider = build_configuration_provider(
+        project_root=case.project, workplace_root=case.workplace
+    )
+    with configuration_operation(case.project, case.workplace, configuration=provider):
+        rows = list(core.iter_process_events(runtime))
     assert all(error is None for _sequence, _event, error in rows), rows
     return [event for _sequence, event, _error in rows]
 

@@ -2803,6 +2803,7 @@ def _project_bootstrap_preflight(
 ) -> None:
     """Validate current and effective bootstrap facts without authoring them."""
     from processforge_core.composition import build_storage_migration_host
+    from processforge_core.configuration import ConfigurationProvider
     from processforge_core.maintenance.contracts import MaintenanceError
     from processforge_core.maintenance.fresh_project import _domain, _receipt
     from processforge_core.maintenance.storage_migration import _safe
@@ -2895,8 +2896,6 @@ def _project_bootstrap_preflight(
     if snapshot.errors:
         raise MaintenanceError("storage_configuration_invalid")
     if not unbound:
-        from processforge_core.configuration import ConfigurationProvider
-
         host = build_storage_migration_host(
             project_root=project,
             workplace_root=workplace,
@@ -2913,44 +2912,71 @@ def _project_bootstrap_preflight(
         for target in targets:
             _domain(document, target)
 
-        from processforge_core.executions.composition import (
-            _execution_profile,
-            _fresh_initialization,
-            select_execution_storage,
-        )
-        from processforge_core.maintenance.execution_migration import _read
+    from processforge_core.executions.composition import (
+        _contained,
+        _execution_profile,
+        _fresh_initialization,
+        select_execution_storage,
+    )
+    from processforge_core.maintenance.execution_migration import _read
+    from processforge_core.maintenance.storage_migration import _uuid
 
-        initializer = _fresh_initialization(flow)
-        if initializer is None:
-            if document["state"] == "ready":
-                raise MaintenanceError("execution_storage_not_ready")
-        else:
-            profile, relative, _timeout = _execution_profile(snapshot.config.database)
-            binding = initializer["binding"]
-            if (
-                not isinstance(binding, dict)
-                or (
-                    binding.get("project_id"),
-                    binding.get("profile_id"),
-                    binding.get("target_relative_path"),
-                )
-                != (proposed_owner, profile, relative)
-                or _read(_safe(flow / "data/execution-storage.json")) != binding
-            ):
-                raise MaintenanceError("execution_storage_not_ready")
-        if document["state"] == "ready" or (
-            initializer is not None and initializer["state"] == "ready"
+    # Main publication checks also apply before the receipt has domain identities.
+    profile, relative, _timeout = _execution_profile(snapshot.config.database)
+    target_path = _contained(flow, relative)
+    binding_path = _contained(flow, "data/execution-storage.json")
+    initializer = _fresh_initialization(flow)
+    if initializer is None:
+        # Without a marker, the initializer requires both publication slots empty.
+        if (
+            document["state"] == "ready"
+            or binding_path.exists()
+            or target_path.exists()
         ):
-            selected_storage = select_execution_storage(
-                project,
-                workplace,
-                configuration=ConfigurationProvider.pinned(snapshot.config),
+            raise MaintenanceError("execution_storage_not_ready")
+    else:
+        binding = initializer["binding"]
+        if (
+            not isinstance(binding, dict)
+            or set(binding)
+            != {
+                "schema_version",
+                "project_id",
+                "store_id",
+                "profile_id",
+                "target_relative_path",
+            }
+            or type(binding["schema_version"]) is not int
+            or (
+                binding["schema_version"],
+                binding["project_id"],
+                binding["profile_id"],
+                binding["target_relative_path"],
             )
-            if (
-                selected_storage.repository is None
-                or not selected_storage.repository.readiness().ready
-            ):
+            != (1, proposed_owner, profile, relative)
+        ):
+            raise MaintenanceError("execution_storage_not_ready")
+        _uuid(binding["store_id"])
+        if binding_path.exists():
+            if _read(binding_path) != binding:
                 raise MaintenanceError("execution_storage_not_ready")
+        elif document["state"] != "pending" or initializer["state"] != "pending":
+            raise MaintenanceError("execution_storage_not_ready")
+        # A pending marker precedes binding publication. Explicit recovery owns
+        # publishing that exact planned binding; preflight must remain read-only.
+    if document["state"] == "ready" or (
+        initializer is not None and initializer["state"] == "ready"
+    ):
+        selected_storage = select_execution_storage(
+            project,
+            workplace,
+            configuration=ConfigurationProvider.pinned(snapshot.config),
+        )
+        if (
+            selected_storage.repository is None
+            or not selected_storage.repository.readiness().ready
+        ):
+            raise MaintenanceError("execution_storage_not_ready")
 
 
 def execute_project_initialization(

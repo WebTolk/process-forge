@@ -174,7 +174,9 @@ class PublicationCase:
 
     def event_ids(self):
         path = self.recorder.inputs.event_runtime_paths(self.root)[0]
-        with self.recorder.journal.connection(path) as connection:
+        with self.recorder.journal.connection(
+            path, storage_host=self.recorder.journal.storage_host
+        ) as connection:
             return [
                 row[0]
                 for row in connection.execute(
@@ -516,10 +518,11 @@ def automatic_legacy_case(case):
     return case, host, target
 
 
-def test_publication_prepares_its_actual_journal_without_historical_parity(
+def test_publication_refuses_unmigrated_journal_without_historical_parity(
     automatic_legacy_case, monkeypatch
 ):
     from processforge_core.maintenance import storage_migration as migration
+    from processforge_core.maintenance.contracts import MaintenanceError
 
     case, host, _target = automatic_legacy_case
     calls = []
@@ -535,9 +538,14 @@ def test_publication_prepares_its_actual_journal_without_historical_parity(
         "_parity",
         lambda *_: pytest.fail("ordinary event publication scanned history"),
     )
-    assert case.start()["action"] == "created_new"
+    with pytest.raises(MaintenanceError, match="storage_activity_unknown"):
+        case.start()
     assert calls == [False]
-    assert len(case.event_ids()) == 5004
+    assert len(case.event_ids()) == 5000
+    assert not case.run_path.exists()
+    assert not case.assignment_path.exists()
+    assert not case.capsule.exists()
+    assert not intent_path(case.run_path).exists()
     assert not any(case.state_admission)
 
 
@@ -752,8 +760,18 @@ def test_sql_reservation_wait_does_not_hold_workplace_admission(
     automatic_legacy_case, monkeypatch
 ):
     from processforge_core.database import SQLiteDriver
+    from processforge_core.maintenance.contracts import MigrationSafety
+    from processforge_core.maintenance.storage_migration import run_storage_migration
 
     case, _host, target = automatic_legacy_case
+    # Establish a qualified store before testing ordinary SQL contention.
+    # This fixture proves engine ordering, not deployed native retirement.
+    with patch.object(
+        _host.service,
+        "safety",
+        return_value=MigrationSafety("proven", "fixture-generation", ("engine",)),
+    ):
+        assert run_storage_migration(_host, operation="apply")["status"] == "ready"
     competing = sqlite3.connect(target.target, isolation_level=None)
     waiting = threading.Event()
     result, errors = [], []

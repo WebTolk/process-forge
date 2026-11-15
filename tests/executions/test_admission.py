@@ -1174,6 +1174,20 @@ def test_host_routing_collision_preserves_worker_and_shutdown_coverage(
         )
         assert result.returncode != 0, result.stdout
         assert "execution_activity_unknown" in result.stdout + result.stderr
+    elif entry == "derived":
+        from processforge_core.maintenance.contracts import MaintenanceError
+
+        # The duplicate project's unqualified journal now refuses even before
+        # host registration. Existing routing and worker coverage must survive.
+        with pytest.raises(MaintenanceError, match="^storage_activity_unknown$"):
+            host._ingest_derived_event(
+                {"event_type": "fixture.observed", "event_id": "collision-event"},
+                workplace,
+                core,
+                project_ref=str(other),
+            )
+        assert seen == []
+        assert not list((other / ".pf").rglob("*.sqlite3"))
     else:
         with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
             if entry == "status":
@@ -1188,13 +1202,6 @@ def test_host_routing_collision_preserves_worker_and_shutdown_coverage(
             elif entry == "tick":
                 host.tick_payload(
                     workplace, [other], core, projection=False, presence=False
-                )
-            else:
-                host._ingest_derived_event(
-                    {"event_type": "fixture.observed", "event_id": "collision-event"},
-                    workplace,
-                    core,
-                    project_ref=str(other),
                 )
         assert seen == [str(other)]
     assert cache.read_bytes() == before

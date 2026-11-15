@@ -101,8 +101,25 @@ def _receipt(project: Path) -> dict[str, Any] | None:
         }
         or type(value["schema_version"]) is not int
         or value["schema_version"] != 1
+        or not isinstance(value["state"], str)
         or value["state"] not in {"pending", "ready"}
+        or not isinstance(value["root_identity"], list)
+        or any(type(item) is not int for item in value["root_identity"])
         or value["root_identity"] != _physical(flow)
+    ):
+        raise MaintenanceError("storage_fresh_receipt_invalid")
+    if value["domains"] is None:
+        if (
+            value["state"] != "pending"
+            or value["project_id"] is not None
+            or value["workplace"] is not None
+        ):
+            raise MaintenanceError("storage_fresh_receipt_invalid")
+    elif (
+        not isinstance(value["domains"], list)
+        or not isinstance(value["project_id"], str)
+        or not value["project_id"].strip()
+        or not isinstance(value["workplace"], str)
     ):
         raise MaintenanceError("storage_fresh_receipt_invalid")
     _uuid(value["creation_id"])

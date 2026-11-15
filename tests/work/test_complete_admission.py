@@ -83,11 +83,20 @@ def make_work(
 
 
 def saved_work(project: Path) -> dict[str, bytes]:
-    return {
-        path.relative_to(project).as_posix(): path.read_bytes()
-        for path in (project / ".pf").rglob("*")
-        if path.is_file() and not path.name.endswith((".lock", ".guard"))
-    }
+    result = {}
+    main = project / ".pf/data/pf.sqlite3"
+    for path in (project / ".pf").rglob("*"):
+        if not path.is_file() or path.name.endswith((".lock", ".guard")):
+            continue
+        # Read-only main readiness may create shared-memory read marks and an
+        # empty WAL. Preserve all database bytes and every nonempty WAL.
+        if path == Path(str(main) + "-shm"):
+            continue
+        raw = path.read_bytes()
+        if path == Path(str(main) + "-wal") and not raw:
+            continue
+        result[path.relative_to(project).as_posix()] = raw
+    return result
 
 
 def final_stage(service: Any, selection: dict[str, str]) -> None:

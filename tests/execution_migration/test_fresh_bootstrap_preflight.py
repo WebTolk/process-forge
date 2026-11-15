@@ -13,8 +13,11 @@ import pytest
 
 from processforge_core.configuration import ConfigurationProvider, PFConfig
 from processforge_core.database import SchemaManager
+from processforge_core.executions import composition as execution
 from processforge_core.executions.composition import select_execution_storage
+from processforge_core.executions.model import ExecutionError
 from processforge_core.maintenance import fresh_project as fresh
+from processforge_core.maintenance import journal_scan
 from processforge_core.maintenance.contracts import MaintenanceError
 from processforge_core.project.metadata import ProjectMetadataReader
 
@@ -290,4 +293,207 @@ def test_main_storage_conflict_refuses_before_authoring(tmp_path, cli, state, fa
     before = bytes_before(root)
     with pytest.raises((MaintenanceError, ExecutionError)):
         cli.execute_project_initialization(request, files_for(root))
+    assert bytes_before(root) == before
+
+
+@pytest.fixture(params=[False, True], ids=["default-profile", "custom-profile"])
+def main_configuration(request, monkeypatch):
+    from processforge_core.configuration.database import DatabaseConfig, DatabaseProfile
+
+    config = PFConfig()
+    if request.param:
+        config = PFConfig(
+            database=DatabaseConfig(
+                profiles={
+                    "chosen_main": DatabaseProfile(
+                        "project", "sqlite", "data/custom-main.sqlite3"
+                    )
+                },
+                defaults={"project_main": "chosen_main"},
+            )
+        )
+    selected = ConfigurationProvider.pinned(config)
+    monkeypatch.setitem(globals(), "provider", lambda: selected)
+    return selected
+
+
+def interrupt_main(root, boundary):
+    """Interrupt actual publication calls without manufacturing recovery records."""
+    from processforge_core.maintenance import execution_migration
+
+    make_project(root, state="authored")
+    real_exclusive = journal_scan._exclusive_bytes
+    real_initialize = SchemaManager.initialize
+    real_atomic = execution_migration._atomic
+
+    def publish(path, content):
+        if path.name == {
+            "before_marker": "execution-initialization.json",
+            "before_binding": "execution-storage.json",
+        }.get(boundary):
+            raise RuntimeError("publication interrupted")
+        return real_exclusive(path, content)
+
+    def initialize(manager, *args, **kwargs):
+        if boundary == "before_schema":
+            raise RuntimeError("publication interrupted")
+        result = real_initialize(manager, *args, **kwargs)
+        if boundary == "after_schema":
+            raise RuntimeError("publication interrupted")
+        return result
+
+    def atomic(path, document):
+        if path.name == "execution-initialization.json" and boundary == "before_ready":
+            raise RuntimeError("publication interrupted")
+        result = real_atomic(path, document)
+        if path.name == "execution-initialization.json" and boundary == "after_ready":
+            raise RuntimeError("publication interrupted")
+        return result
+
+    with (
+        patch.object(journal_scan, "_exclusive_bytes", publish),
+        patch.object(SchemaManager, "initialize", initialize),
+        patch.object(execution_migration, "_atomic", atomic),
+        pytest.raises(RuntimeError, match="publication interrupted"),
+    ):
+        fresh.initialize_project_storage(root, None, configuration=provider())
+
+
+def changed_nonidentity_files(root):
+    files = files_for(root)
+    files[root / ".pf/process-forge.yaml"] += "  description: replacement metadata\n"
+    return files
+
+
+@pytest.mark.parametrize("state", ["unbound", "domains_bound"])
+@pytest.mark.parametrize("stray", ["binding", "target", "both"])
+def test_no_marker_stray_storage_preserves_all_bytes(
+    tmp_path, cli, main_configuration, state, stray
+):
+    root = tmp_path / "project"
+    if state == "unbound":
+        make_project(root, state="authored")
+    else:
+        interrupt_main(root, "before_marker")
+    assert execution._fresh_initialization(root / ".pf") is None
+    profile, relative, _timeout = execution._execution_profile(
+        main_configuration.current().database
+    )
+    binding = root / ".pf/data/execution-storage.json"
+    binding.parent.mkdir(parents=True, exist_ok=True)
+    if stray in {"binding", "both"}:
+        binding.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "project_id": "foreign-owner",
+                    "store_id": "a" * 32,
+                    "profile_id": profile,
+                    "target_relative_path": relative,
+                }
+            )
+        )
+    if stray in {"target", "both"}:
+        (root / ".pf" / relative).write_bytes(b"pre-existing target bytes")
+    before = bytes_before(root)
+    with pytest.raises((MaintenanceError, ExecutionError)):
+        cli.execute_project_initialization(
+            request_for(cli, root), changed_nonidentity_files(root)
+        )
+    assert bytes_before(root) == before
+
+
+@pytest.mark.parametrize(
+    "boundary",
+    [
+        "before_marker",
+        "before_binding",
+        "before_schema",
+        "after_schema",
+        "before_ready",
+        "after_ready",
+    ],
+)
+def test_main_publication_boundary_recovers_exact_plan(
+    tmp_path, cli, main_configuration, boundary
+):
+    root = tmp_path / "project"
+    interrupt_main(root, boundary)
+    receipt = fresh._receipt(root)
+    assert receipt is not None
+    marker = execution._fresh_initialization(root / ".pf")
+    before = bytes_before(root)
+    files = changed_nonidentity_files(root)
+    cli._project_bootstrap_preflight(request_for(cli, root), files)
+    # Ready SQL inspection may create WAL/SHM sidecars; existing bytes stay intact.
+    after_preflight = bytes_before(root)
+    assert {path: after_preflight[path] for path in before} == before
+    with pytest.raises(RuntimeError, match="ready before first event"):
+        cli.execute_project_initialization(request_for(cli, root), files)
+    after = fresh._receipt(root)
+    assert after is not None
+    assert after["state"] == "ready"
+    assert after["creation_id"] == receipt["creation_id"]
+    assert after["domains"] == receipt["domains"]
+    binding = json.loads((root / ".pf/data/execution-storage.json").read_bytes())
+    if marker is not None:
+        assert binding == marker["binding"]
+    profile, relative, _timeout = execution._execution_profile(
+        main_configuration.current().database
+    )
+    assert binding["profile_id"] == profile
+    assert binding["target_relative_path"] == relative
+    assert execution._fresh_initialization(root / ".pf") == {
+        "schema_version": 1,
+        "state": "ready",
+        "binding": binding,
+    }
+    assert select_execution_storage(root, configuration=main_configuration).repository
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "ready_marker_missing_binding",
+        "ready_receipt_missing_binding",
+        "mismatching_binding",
+        "foreign_owner",
+        "foreign_profile",
+        "foreign_target",
+        "invalid_uuid",
+        "extra_binding_key",
+    ],
+)
+def test_marker_conflicts_preserve_nonidentity_and_entry_bytes(
+    tmp_path, cli, main_configuration, fault
+):
+    root = tmp_path / "project"
+    interrupt_main(root, "before_binding")
+    marker_path = root / ".pf/maintenance/execution-initialization.json"
+    marker = json.loads(marker_path.read_bytes())
+    if fault == "ready_marker_missing_binding":
+        marker["state"] = "ready"
+    elif fault == "ready_receipt_missing_binding":
+        receipt_path = root / ".pf" / fresh.RECEIPT
+        receipt = json.loads(receipt_path.read_bytes())
+        receipt["state"] = "ready"
+        receipt_path.write_text(json.dumps(receipt))
+    elif fault == "mismatching_binding":
+        binding = {**marker["binding"], "store_id": "b" * 32}
+        (root / ".pf/data/execution-storage.json").write_text(json.dumps(binding))
+    else:
+        field, value = {
+            "foreign_owner": ("project_id", "foreign-owner"),
+            "foreign_profile": ("profile_id", "foreign-profile"),
+            "foreign_target": ("target_relative_path", "data/foreign.sqlite3"),
+            "invalid_uuid": ("store_id", "invalid"),
+            "extra_binding_key": ("unknown", "extra"),
+        }[fault]
+        marker["binding"][field] = value
+    marker_path.write_text(json.dumps(marker))
+    before = bytes_before(root)
+    with pytest.raises((MaintenanceError, ExecutionError)):
+        cli.execute_project_initialization(
+            request_for(cli, root), changed_nonidentity_files(root)
+        )
     assert bytes_before(root) == before
