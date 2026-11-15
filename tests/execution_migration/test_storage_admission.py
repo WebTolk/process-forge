@@ -111,7 +111,7 @@ def seed_history(storage: StorageHarness) -> None:
 
 
 @pytest.mark.parametrize("state", ["unknown", "active"])
-def test_ordinary_large_legacy_write_defers_before_any_history_scan(
+def test_ordinary_large_legacy_write_refuses_before_any_history_scan(
     storage: StorageHarness, monkeypatch: pytest.MonkeyPatch, state: Any
 ) -> None:
     seed_history(storage)
@@ -125,8 +125,11 @@ def test_ordinary_large_legacy_write_defers_before_any_history_scan(
         storage.context, storage.service, _automatic=True
     )
     journal = ProcessEventJournal(storage_host=host)
-    assert journal.append(storage.target.target, {"event_id": "ordinary-new-event"})
-    assert journal.contains(storage.target.target, "ordinary-new-event")
+    before = storage.target.target.read_bytes()
+    with pytest.raises(MaintenanceError, match="storage_activity_unknown"):
+        journal.append(storage.target.target, {"event_id": "ordinary-new-event"})
+    assert not journal.contains(storage.target.target, "ordinary-new-event")
+    assert storage.target.target.read_bytes() == before
     assert not storage.slot
     assert not (storage.owner / "maintenance/storage-migrations").exists()
 

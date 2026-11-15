@@ -42,7 +42,8 @@ jobs:
           scratch = root / '.pf' / 'tmp' / 'storage-recovery'
           environment = dict(os.environ)
           environment['PYTHONPATH'] = os.pathsep.join(str(root / name) for name in ('src', 'tools', 'tests'))
-          for name in ('PF_W4_TEST_ROOT', 'W3_FIXTURE_ROOT', 'TMPDIR', 'TEMP', 'TMP'):
+          for name in ('PF_W4_TEST_ROOT', 'W3_FIXTURE_ROOT', 'PF_TEST_SCRATCH_ROOT',
+                       'TMPDIR', 'TEMP', 'TMP', 'LOCALAPPDATA', 'XDG_CONFIG_HOME'):
               directory = scratch / name.lower()
               directory.mkdir(parents=True, exist_ok=True)
               environment[name] = str(directory)
@@ -51,6 +52,13 @@ jobs:
               'tests/execution_migration/test_storage_uuid.py',
               'tests/execution_migration/test_automatic.py',
               'tests/execution_migration/test_storage_admission.py',
+              'tests/execution_migration/test_physical_storage_paths.py',
+              'tests/execution_migration/test_fresh_native_sql.py',
+               'tests/execution_migration/test_fresh_project_domains.py',
+               'tests/execution_migration/test_fresh_bootstrap_preflight.py',
+               'tests/project_initialization',
+              'tests/execution_migration/test_required_write_readiness.py',
+              'tests/executions/test_configuration_access.py',
               'tests/execution_migration/test_compatibility.py',
               'tests/database', 'tests/maintenance_backup', 'tests/maintenance_scan',
               'tests/maintenance_service', 'tests/maintenance_cli',
@@ -66,7 +74,8 @@ jobs:
           report = root / 'storage-recovery-results.xml'
           result = subprocess.run([
               sys.executable, '-B', '-m', 'pytest', '-q', '-ra',
-              '-p', 'no:cacheprovider', '--junitxml=' + str(report), *selection,
+              '-p', 'no:cacheprovider', '--basetemp=' + str(scratch / 'pytest'),
+              '--junitxml=' + str(report), *selection,
           ], env=environment, check=False, timeout=900)
           if report.exists():
               skipped = [case.get('name') for case in ET.parse(report).iter('testcase')

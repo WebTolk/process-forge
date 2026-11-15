@@ -630,7 +630,55 @@ def build_storage_migration_host(
     # Driver resolution also remains lazy with respect to the supplied provider.
     # The closed default is SQLite; the resolved full snapshot is bound when
     # context is first requested, before any service operation connects.
-    service = StorageMigrationService(
+    class FreshAwareStorageService(StorageMigrationService):
+        def _execution(
+            self,
+            context: StorageMigrationContext,
+            target: StoreTarget,
+            deadline: float | None,
+        ) -> dict[str, Any]:
+            from .maintenance.fresh_project import (
+                _receipt,
+                initialize_project_storage,
+            )
+
+            if _allow_fresh_repair and context.project_root is not None:
+                receipt = _receipt(context.project_root)
+                if receipt is not None and receipt["state"] == "pending":
+                    initialize_project_storage(
+                        context.project_root,
+                        context.workplace_root,
+                        configuration=configuration,
+                    )
+            return super()._execution(context, target, deadline)
+
+        def _target(
+            self,
+            context: StorageMigrationContext,
+            target: StoreTarget,
+            descriptor: dict[str, Any],
+            deadline: float | None,
+        ) -> dict[str, Any]:
+            from .maintenance.fresh_project import identity_access, owns_target
+            from .maintenance.storage_migration import _slot, storage_owner_root
+
+            # Fresh receipts are distinct from immutable migration plans.
+            # Resume a pinned lazy initializer; leave unused stores absent.
+            root = storage_owner_root(context, target)
+            slot = _slot(root, target)
+            if (
+                target.scope == "project"
+                and slot is not None
+                and slot["state"] == "pending"
+            ):
+                host = StorageMigrationHost(context, self)
+                if owns_target(host, target):
+                    with identity_access(host, target):
+                        pass
+                    return {"state": "ready"}
+            return super()._target(context, target, descriptor, deadline)
+
+    service = FreshAwareStorageService(
         backup=SQLiteBackupService(driver=SQLiteDriver()),
         admission=admission,
         registry_lock=registry_file_lock,

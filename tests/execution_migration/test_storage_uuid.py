@@ -8,7 +8,7 @@ import sqlite3
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Literal
 from unittest.mock import patch
@@ -173,6 +173,127 @@ class StorageHarness:
 @pytest.fixture
 def storage() -> StorageHarness:
     return StorageHarness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex)
+
+
+@pytest.mark.parametrize("kind", ["events", "raw", "accounting", "search"])
+@pytest.mark.parametrize("existing", [False, True])
+@pytest.mark.parametrize("automatic", [False, True])
+def test_governed_adapter_requires_qualified_identity(kind, existing, automatic):
+    from processforge_core.sqlite_storage import adapter_identity_access
+
+    harness = StorageHarness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex, kind)
+    harness.state = "unknown"
+    if existing:
+        harness.create()
+    path = harness.target.target
+    before = path.read_bytes() if existing else None
+    host = migration.StorageMigrationHost(
+        harness.context, harness.service, _automatic=automatic
+    )
+    code = (
+        "storage_migration_required"
+        if existing and not automatic
+        else "storage_activity_unknown"
+    )
+    with pytest.raises(MaintenanceError, match=code):
+        with adapter_identity_access(path, host, writable=True):
+            pytest.fail("unqualified governed write was admitted")
+    assert (path.read_bytes() if path.exists() else None) == before
+    assert not harness.slot
+    with adapter_identity_access(path, host) as identity:
+        assert identity is None
+
+
+@pytest.mark.parametrize("kind", ["events", "raw"])
+@pytest.mark.parametrize("existing", [False, True])
+@pytest.mark.parametrize("automatic", [False, True])
+def test_governed_journal_writes_after_qualified_creation_or_migration(
+    kind, existing, automatic
+):
+    from processforge_core.process_event_journal import ProcessEventJournal
+    from processforge_core.raw_hook_journal import RawHookJournal
+
+    harness = StorageHarness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex, kind)
+    if existing:
+        harness.create()
+        if not automatic:
+            assert (
+                migration.run_storage_migration(
+                    migration.StorageMigrationHost(harness.context, harness.service),
+                    operation="apply",
+                )["status"]
+                == "ready"
+            )
+    host = migration.StorageMigrationHost(
+        harness.context, harness.service, _automatic=automatic
+    )
+    journal = ProcessEventJournal if kind == "events" else RawHookJournal
+    with journal.connection(
+        harness.target.target, storage_host=host, writable=True
+    ) as connection:
+        identifier = connection.execute(
+            "SELECT store_id FROM pf_store_meta"
+        ).fetchone()[0]
+        connection.execute(
+            "INSERT INTO journal_metadata VALUES (?, ?)", ("ordinary-write", "accepted")
+        )
+    assert harness.slot["state"] == "ready"
+    assert harness.slot["store_id"] == identifier
+    assert harness.service.resume(harness.context)["status"] == "ready"
+    with journal.connection(harness.target.target, storage_host=host) as connection:
+        assert (
+            connection.execute(
+                "SELECT value FROM journal_metadata WHERE key = ?", ("ordinary-write",)
+            ).fetchone()[0]
+            == "accepted"
+        )
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_migrating_flag_does_not_authorize_unqualified_governed_write(
+    storage, existing
+):
+    from processforge_core.process_event_journal import ProcessEventJournal
+
+    if existing:
+        storage.create()
+    storage.state = "unknown"
+    host = migration.StorageMigrationHost(storage.context, storage.service)
+    before = storage.target.target.read_bytes() if existing else None
+    with pytest.raises(
+        MaintenanceError, match="storage_(migration_required|activity_unknown)"
+    ):
+        with ProcessEventJournal.connection(
+            storage.target.target, writable=True, migrating=True, storage_host=host
+        ):
+            pytest.fail("migration flag bypassed identity admission")
+    assert (storage.target.target.read_bytes() if existing else None) == before
+    assert storage.target.target.exists() == existing
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_unqualified_workplace_adapter_refuses_writes_but_preserves_reads(
+    storage, existing
+):
+    from processforge_core.sqlite_storage import adapter_identity_access
+
+    path = storage.workplace / "runtime/agent-events/hooks.sqlite3"
+    if existing:
+        create_legacy(path, "raw")
+    context = replace(
+        storage.context,
+        targets=(),
+        workplace_root=storage.workplace,
+        unqualified_targets=(("raw", path),),
+    )
+    host = migration.StorageMigrationHost(context, storage.service)
+    before = path.read_bytes() if existing else None
+    with pytest.raises(MaintenanceError, match="owner_identity_required"):
+        with adapter_identity_access(path, host, writable=True):
+            pytest.fail("ownerless write was admitted")
+    with adapter_identity_access(path, host) as identity:
+        assert identity is None
+    assert (path.read_bytes() if path.exists() else None) == before
 
 
 @pytest.mark.parametrize("kind", ["events", "raw", "accounting", "search"])

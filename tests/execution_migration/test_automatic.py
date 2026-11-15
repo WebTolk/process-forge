@@ -88,11 +88,12 @@ def test_actual_host_inspect_and_legacy_reads_create_no_guard(
     assert set(storage.project.rglob("*")) == before
 
 
-def test_actual_host_selected_profile_alias_and_unknown_initializer(
+def test_actual_host_selected_profile_alias_refuses_unknown_initializer(
     storage: StorageHarness,
 ) -> None:
     from processforge_core.composition import build_storage_migration_host
     from processforge_core.configuration.database import DatabaseConfig, DatabaseProfile
+    from processforge_core.maintenance.contracts import MaintenanceError
     from processforge_core.process_event_journal import ProcessEventJournal
 
     config = PFConfig(
@@ -127,11 +128,13 @@ def test_actual_host_selected_profile_alias_and_unknown_initializer(
         )["profile_id"]
         == "archive"
     )
-    # Unsupported/unsealed hosts retain the original absent-store initializer.
+    # A selected profile does not authorize an unqualified host to create a store.
     event_path = storage.flow / "runtime/events/events.sqlite3"
     journal = ProcessEventJournal(storage_host=host)
-    journal.append(event_path, {"event_id": "old-supported"}, record=True)
-    assert journal.count(event_path) == 1
+    with pytest.raises(MaintenanceError, match="storage_activity_unknown"):
+        journal.append(event_path, {"event_id": "must-not-write"}, record=True)
+    assert journal.count(event_path) == 0
+    assert not event_path.exists()
     assert not (storage.flow / "data/storage-identities.json").exists()
 
 

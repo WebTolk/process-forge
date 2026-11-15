@@ -7,6 +7,28 @@ Repository, service, OS observation, migration and adapter composition are separ
 layers. This document defines their authority boundary; the DTO slice alone does
 not enable SQL routing or prove integrated runtime acceptance.
 
+## Semantic versioning and required migration
+
+Development strictly follows [Semantic Versioning 2.0.0](https://semver.org/) and
+the [lasting contributor rules](../../CONTRIBUTING.md#storage-readiness-and-mandatory-migration).
+Compatibility concerns the published contracts experienced by users and their
+agents: supported workflows, public interfaces, integrations, and data/identity
+guarantees. Incompatible public changes require MAJOR, compatible functionality
+MINOR, and compatible bug fixes PATCH. The policy is not tied to a fixed release.
+Unreleased intermediate implementations and tests do not add public contracts.
+
+A small supported project migration does not itself require MAJOR. Internal
+storage formats may change through an explicit migration using the provided tools
+while preserving those user-facing contracts without reworking integrations.
+Document and verify migration and recovery. A migration tool does not make a
+broken public contract compatible.
+
+New projects initialize current journals/stores directly. Existing projects must
+complete the applicable qualified migration before ordinary writes resume.
+Preserve released data and identity guarantees; do not keep an ordinary
+legacy-write fallback to avoid migration. Missing readiness or safety evidence
+means refusal, not a successful upgrade.
+
 ## Identity and validation
 
 `ExecutionKey(project_id, run_id, task_id, attempt)` identifies an existing
@@ -170,22 +192,26 @@ first-write uses the same coordinator for standalone/file-only operation.
 Installation success alone does not establish project readiness. Pure
 status/config/doctor/guard reads do not initiate migration or scans.
 
-Before any pending pin/binding, recognized unbound legacy projects retain their
-existing route. Active or unknown ownership defers migration with diagnostics;
-existing supported start/stop/collect behavior and active attempt IDs/receipts
-remain intact. Retry occurs after terminal reconciliation/collection or on the
-next mutating use, after lifecycle/target locks and SQL sessions are released.
-There is no scheduler, polling loop, live takeover or automatic kill. A missing
-explicit stable project/owner identity, ambiguous source or unknown old writer
-cannot be turned into a safe window by configuration or an opt-in flag.
+New projects initialize current SQL storage. Existing projects must complete
+qualified migration before ordinary Work or worker writes. Read-only selection
+and explicit recovery may inspect recognized legacy storage, but a deferred,
+failed or indeterminate migration does not authorize an ordinary write or a new
+attempt. Active or unknown ownership blocks that write with diagnostics; existing
+IDs, receipts and source bytes are retained. The first-write boundary requires a
+ready migration result and then reselects the actual SQL repository before
+continuing. Retry occurs only after the blocking condition is resolved and
+lifecycle/target locks and SQL sessions are released. There is no scheduler,
+polling loop, live takeover or automatic kill. A missing explicit stable
+project/owner identity, ambiguous source or unknown old writer cannot be turned
+into a safe window by configuration or an opt-in flag.
 
 Proven safety is host evidence bound to the exact authorized project/store,
 target and generation: quiescence, no pre-spawn gap or live owned tree, stable
 sources and qualified exclusion of old writers. It is revalidated under admission
 at freeze, resume and immediately before cutover. An empty registry, current
 version, terminal string, elapsed TTL, PID probe or `offline_confirmed` alone is
-not proof. Missing, stale, changed or unavailable proof prevents migration/cutover;
-before pending the recognized legacy route above remains. Old binaries
+not proof. Missing, stale, changed or unavailable proof prevents migration/cutover
+and keeps ordinary writes blocked, including before pending publication. Old binaries
 cannot be technically fenced by markers they do not understand; they must be
 excluded by actual ownership/maintenance evidence, and are unsupported writers
 after SQL cutover.
@@ -229,31 +255,32 @@ execution inspection/import/resume interfaces support diagnosis and controlled
 repair; they are not ordinary user migration prerequisites. See
 [SQLite journal maintenance](sqlite-journal-maintenance.md).
 
-Only successful explicit initialization creating a new flow root may choose the
-fresh SQL route. Existing roots, including forced initialization, are not fresh
-by inference. Fresh binding/DB publication is recoverable rather than atomic
-across files and SQL; a pending publication failure requires explicit repair.
+Only successful exclusive creation of a new flow root with qualified native
+process-tree ownership may establish fresh project authority. The host records
+that creation in `maintenance/project-initialization.json`, bound to the physical
+root, project owner, selected workplace and planned domain UUIDs. Existing roots,
+including forced initialization, do not become fresh by inference.
 
-The host now composes `build_storage_migration_host` without reading configuration,
+Under admission, initialization publishes the main execution binding and domain
+identity pins before creating their databases. Main SQL and the events journal
+are ready before the first ordinary onboarding event. Project raw and standalone
+search stores retain planned UUIDs and initialize lazily on first use. Fresh
+project authority never authorizes adoption or creation of workplace stores.
+
+Publication across files and SQL is recoverable, not one atomic transaction.
+Recovery validates the same receipt, owner, physical root, routing and native
+capability, then reuses recorded UUIDs and pending state. A ready but missing or
+foreign store is refused without recreation or reminting. Pending reads do not
+repair storage. The legacy main-initializer path without a project-creation
+receipt still requires its existing qualified migration safety generation; a
+fresh-project receipt does not establish old-writer retirement.
+
+The host composes `build_storage_migration_host` without reading configuration,
 connecting, taking gates or minting UUIDs. Its first operation resolves the exact
 selected roots, stable owner IDs and main profile alias. An unqualified legacy
 target defers before constructing its execution engine; a pending/bound target
 cannot use that legacy route. Workplace stores without a stable owner produce
 an explicit per-target diagnostic rather than a directory-derived identity.
-
-Fresh initialization probes real suspended process creation and retained Windows
-Job attachment from a qualified captured publication. SQLite configuration alone
-does not select SQL execution. New-flow creation and initialization hold admission;
-the exact binding precedes DDL. The private initialization marker permits explicit
-repair with the same UUID/profile after interruption. Existing roots and forced
-initialization do not acquire fresh authority.
-
-The durable fresh-initialization marker closes legacy routing as soon as its
-pending state is published, including interruption before the binding exists.
-Reads report the pending route without repairing it. A safe ordinary mutation
-or native resume can repair only the marker's exact owner, UUID and profile under
-admission, qualified native capability and stable safety generation. Ready
-publication revalidates safety; no alternate target or UUID is selected.
 
 A genuinely adopted installation retains its original retirement commitment,
 filesystem binding, successor generation and committed native epoch. Subsequent

@@ -1,7 +1,7 @@
-"""Real source CLI initialization and preparation without launching a worker.
+"""Qualified fresh CLI initialization and preparation without launching a model.
 
-This covers source/file-only admission. It does not qualify an enrolled native
-execution backend or model execution.
+Sealed fixture publications qualify fresh journals; they do not establish
+retirement of old workplace writers. Unsealed source initialization refuses safely.
 """
 
 from __future__ import annotations
@@ -17,19 +17,25 @@ import pytest
 SOURCE = Path(__file__).resolve().parents[2]
 CLI = SOURCE / "tools/processforge.py"
 RAW_PROBE = """
-import json, sys
+import importlib.util, json, sqlite3, sys
+from contextlib import closing
 from pathlib import Path
+cli, project, workplace = map(Path, sys.argv[1:])
+spec = importlib.util.spec_from_file_location('raw_fixture_cli', cli)
+assert spec and spec.loader
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
 from pf_runtime.raw_ingress_kernel import NativeAgentEvent, RawIngressKernel
 from processforge_core import build_configuration_provider
 from processforge_core.executions.composition import select_execution_storage
-project, workplace = map(Path, sys.argv[1:])
 configuration = build_configuration_provider(project_root=project, workplace_root=workplace)
 route = select_execution_storage(project, workplace, configuration=configuration)
-if route.repository is not None:
-    assert route.repository.readiness().ready
+assert route.repository is not None
+assert route.repository.readiness().ready
 kernel = RawIngressKernel(workplace, flow_root=project / '.pf', configuration=configuration)
 receipt = kernel.ingest(NativeAgentEvent('generic', 'integration', 'reply', {'first': True}, source_project_ref=str(project)))
-with kernel.storage.connection(kernel.database) as connection:
+with closing(sqlite3.connect(kernel.database.resolve().as_uri() + '?mode=ro', uri=True)) as connection:
     assert connection.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
 print(json.dumps({'accepted': receipt.accepted, 'execution_sql_selected': route.repository is not None}))
 """
@@ -89,11 +95,14 @@ def successful(root: Path, label: str, *arguments: str) -> str:
 def test_initialized_project_first_raw_and_worker_preparation(
     tmp_path: Path, history_owner: str
 ) -> None:
+    from execution_migration.test_fresh_native_sql import publish
+
+    cli = publish(tmp_path)
     workplace, project = tmp_path / "workplace", tmp_path / "project"
     successful(
         tmp_path,
         "workplace",
-        str(CLI),
+        str(cli),
         "workplace-init",
         "--workplace",
         str(workplace),
@@ -111,7 +120,7 @@ def test_initialized_project_first_raw_and_worker_preparation(
     initialized = successful(
         tmp_path,
         "init",
-        str(CLI),
+        str(cli),
         "project-init",
         "--project-root",
         str(project),
@@ -125,7 +134,7 @@ def test_initialized_project_first_raw_and_worker_preparation(
     )
     assert "status: complete" in initialized
     assert "status: pass" in initialized
-    raw = run(tmp_path, "raw", "-c", RAW_PROBE, str(project), str(workplace))
+    raw = run(tmp_path, "raw", "-c", RAW_PROBE, str(cli), str(project), str(workplace))
     assert legacy.read_bytes() == before
     database = project / ".pf/runtime/agent-events/hooks.sqlite3"
     if history_owner == "own":
@@ -135,7 +144,10 @@ def test_initialized_project_first_raw_and_worker_preparation(
         assert not database.exists()
         return
     assert raw.returncode == 0, raw.stderr
-    assert json.loads(raw.stdout)["accepted"] is True
+    assert json.loads(raw.stdout) == {
+        "accepted": True,
+        "execution_sql_selected": True,
+    }
     assert database.is_file()
     scope = tmp_path / "scope.json"
     scope.write_text(
@@ -162,7 +174,7 @@ def test_initialized_project_first_raw_and_worker_preparation(
         successful(
             tmp_path,
             "work-start",
-            str(CLI),
+            str(cli),
             "work-start",
             "--project-root",
             str(project),
@@ -179,7 +191,7 @@ def test_initialized_project_first_raw_and_worker_preparation(
     prepared = successful(
         tmp_path,
         "prepare",
-        str(CLI),
+        str(cli),
         "worker-run",
         "prepare",
         "--project-root",
@@ -210,3 +222,39 @@ def test_initialized_project_first_raw_and_worker_preparation(
     assert status.get("pid") is None
     assert status.get("started_at") is None
     assert legacy.read_bytes() == before
+
+
+def test_unsealed_source_init_refuses_without_traceback_or_flow_root(
+    tmp_path: Path,
+) -> None:
+    workplace, project = tmp_path / "workplace", tmp_path / "project"
+    successful(
+        tmp_path,
+        "workplace",
+        str(CLI),
+        "workplace-init",
+        "--workplace",
+        str(workplace),
+        "--profile",
+        "software-development",
+        "--apply",
+    )
+    result = run(
+        tmp_path,
+        "unsealed-init",
+        str(CLI),
+        "project-init",
+        "--project-root",
+        str(project),
+        "--workplace",
+        str(workplace),
+        "--type",
+        "generic",
+        "--process",
+        "software-feature-development",
+        "--apply",
+    )
+    assert result.returncode == 1
+    assert result.stdout == "FAIL: storage_fresh_capability_required\n"
+    assert result.stderr == ""
+    assert not (project / ".pf").exists()
