@@ -102,12 +102,25 @@ Reasoning effort is selected separately. Valid values are `minimal`, `low`,
 passes it to Codex as `-c model_reasoning_effort="<value>"`. When the value is
 empty, no reasoning config argument is added.
 
-Workspace access is resolved privately at runtime. Public assignments and
-capsules may contain resource ids or `path_ref` values, but private absolute
+Access to knowledge resources, templates and tools is resolved privately at
+runtime. Public assignments and capsules may contain resource ids or `path_ref`
+values, but private absolute
 paths remain in private runtime files such as `workspace-access.json` and the
 attempt's prepared manifest. The legacy direct wrapper can read workspace
 access and use `--add-dir`; a prepared launch does not grant broad directories
 from that file. Metadata-only grants never authorize resource body reads.
+
+Actual MCP connections and tool approvals belong to each coding agent's own
+configuration. PF's `workspace_access.mcp` declarations are advisory metadata;
+they neither grant host-tool access nor control connection availability.
+Preparation retains the normalized immutable declarations in
+`input.resources.requested.mcp` and leaves `input.resources.grants.mcp` empty.
+It does not resolve or pin MCP connections, check their revocation or probe
+availability, and changes no agent configuration file or running MCP server.
+Knowledge, template and tool resource checks, capsule and required-source
+validation, and file/action scope and filesystem checks remain in force.
+This compatibility behavior does not remove MCP fields or catalogs; that is
+separate future work.
 
 Prepare and start one Codex shell-agent directly:
 
