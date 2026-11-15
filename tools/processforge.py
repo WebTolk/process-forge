@@ -12651,11 +12651,16 @@ def _legacy_start_admission(
             remaining = 30.0 if deadline is None else deadline - time.monotonic()
             if remaining <= 0:
                 raise ExecutionError("execution_activity_unknown")
-            gates.enter_context(
-                worker_run_lifecycle_lock(
-                    project_root, run_id, task_id, timeout_seconds=remaining
+            try:
+                gates.enter_context(
+                    worker_run_lifecycle_lock(
+                        project_root, run_id, task_id, timeout_seconds=remaining
+                    )
                 )
-            )
+            except SystemExit as error:
+                if getattr(error, "registry_lock_reason", None) != "contention_timeout":
+                    raise
+                raise ExecutionError("execution_activity_unknown") from None
             key = _worker_lifecycle_key(project_root, run_id, task_id)
             lease = next(
                 (

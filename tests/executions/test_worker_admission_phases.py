@@ -497,3 +497,113 @@ def test_native_retry_proof_cannot_escape_its_exact_live_locks(
             copied.run(core._commit_legacy_observation, root, task)
             assert len(discoveries) == before + 1
             assert not copied.run(core._legacy_start_retry_proven, root, task)
+
+
+def test_native_start_task_contention_returns_normalized_refusal(
+    legacy_manual: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A real competing task owner must not leak a lock path through SystemExit."""
+    import time
+    from contextlib import ExitStack
+
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.prepared import resources
+
+    root, _args, _paths, original_task, _state = legacy_manual
+    task = dict(original_task, parameters={"native_maintenance_job": {"fixture": True}})
+    ready, proceed = root / "task-owner-ready", root / "task-owner-proceed"
+    original_lock = core.worker_run_lifecycle_lock
+    budgets: list[float] = []
+
+    @contextmanager
+    def bounded_lock(*args: Any, **kwargs: Any) -> Iterator[Any]:
+        budgets.append(kwargs["timeout_seconds"])
+        kwargs["timeout_seconds"] = min(kwargs["timeout_seconds"], 0.05)
+        with original_lock(*args, **kwargs) as lease:
+            yield lease
+
+    @contextmanager
+    def forbidden_material(*_args: Any, **_kwargs: Any) -> Iterator[Any]:
+        pytest.fail("material validation started before obtaining the task lock")
+        yield
+
+    monkeypatch.setattr(core, "worker_run_lifecycle_lock", bounded_lock)
+    monkeypatch.setattr(resources, "native_start_preflight", forbidden_material)
+    candidate = Path(__file__).resolve().parents[2]
+    environment = dict(os.environ)
+    environment["PYTHONPATH"] = os.pathsep.join(
+        [str(candidate / "src"), str(candidate / "tools")]
+    )
+    owner = subprocess.Popen(
+        [
+            sys.executable,
+            "-B",
+            "-c",
+            """
+import sys,time
+from pathlib import Path
+import processforge as core
+root,ready,proceed=map(Path,sys.argv[1:])
+with core.worker_run_lifecycle_lock(root,"run","task"):
+    ready.touch()
+    deadline=time.monotonic()+10
+    while not proceed.exists():
+        if time.monotonic()>=deadline:
+            raise RuntimeError("test did not release task owner")
+        time.sleep(0.01)
+    print("task-owner-released",flush=True)
+""",
+            str(root),
+            str(ready),
+            str(proceed),
+        ],
+        cwd=candidate,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        deadline = time.monotonic() + 10
+        while not ready.exists():
+            assert owner.poll() is None, "task owner exited before acquisition"
+            assert time.monotonic() < deadline, "task owner did not acquire its lock"
+            time.sleep(0.01)
+        with pytest.raises(ExecutionError) as refusal, ExitStack() as material:
+            with core._legacy_start_admission(root, task, None, material):
+                pytest.fail("a competing owner was ignored")
+        assert str(refusal.value) == "execution_activity_unknown"
+        assert budgets and 0 < budgets[0] <= 30.0
+        assert not ExecutionAdmission.held(root, None)
+        assert not core._WORKER_LIFECYCLE_GATES.get()
+    finally:
+        proceed.touch()
+        try:
+            stdout, stderr = owner.communicate(timeout=15)
+        except subprocess.TimeoutExpired:
+            owner.kill()
+            stdout, stderr = owner.communicate(timeout=5)
+            pytest.fail("task owner did not exit: " + stderr)
+    assert owner.returncode == 0, stdout + stderr
+    assert stdout.strip() == "task-owner-released"
+
+
+def test_native_start_preserves_unclassified_task_lock_exit(
+    legacy_manual: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from contextlib import ExitStack
+
+    root, _args, _paths, original_task, _state = legacy_manual
+    task = dict(original_task, parameters={"native_maintenance_job": {"fixture": True}})
+    failure = SystemExit("unclassified owner failure")
+
+    @contextmanager
+    def refused_lock(*_args: Any, **_kwargs: Any) -> Iterator[Any]:
+        raise failure
+        yield
+
+    monkeypatch.setattr(core, "worker_run_lifecycle_lock", refused_lock)
+    with pytest.raises(SystemExit) as refusal, ExitStack() as material:
+        with core._legacy_start_admission(root, task, None, material):
+            pytest.fail("unclassified lock failure was ignored")
+    assert refusal.value is failure
