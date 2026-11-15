@@ -1,4 +1,4 @@
-"""Real legacy prepare and collection proofs keep long reads outside admission."""
+"""SQL startup and explicit legacy recovery keep long reads outside admission."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from pf_runtime import host
 
 from processforge_core.common.yaml_io import write_yaml_file
 from processforge_core.executions.composition import ExecutionStorage
+from processforge_core.executions.model import ExecutionError
 from processforge_core.prepared import input as prepared_input
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from processforge_core.runtime.execution_admission import ExecutionAdmission
@@ -33,13 +34,12 @@ def legacy_manual(sql_cli_fixture: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
     monkeypatch.setattr(
         core, "_execution_storage", lambda *_args, **_kwargs: ExecutionStorage("legacy")
     )
-    monkeypatch.setattr(
-        core, "_storage_first_write", lambda *_args, **_kwargs: (None, None)
-    )
     driver = RuntimeDriverDefinitionPolicy().default_documents()["manual"]
     driver["id"] = "fixture-manual"
     write_yaml_file(driver_path, driver)
-    assert core.command_worker_run_prepare(args) == 0
+    # Seed a historical attempt through the private compatibility mechanism.
+    # Ordinary public prepare/start must require migration first.
+    core.prepare_worker_run(root, "task", args.driver)
     paths = core._work_paths.worker_run(root, "run", "task")
     task = core._worker_assignment_service.load(root, "task")
     state = core.load_agent_run_state(root, "run", "task")
@@ -48,10 +48,9 @@ def legacy_manual(sql_cli_fixture: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
     return root, args, paths, task, state
 
 
-def test_public_prepare_reconciles_legacy_without_managed_scratch(
+def test_legacy_recovery_reconciles_unknown_tree_without_managed_scratch(
     legacy_manual: Any,
     monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
 ) -> None:
     root, args, paths, _task, state = legacy_manual
     state.update(status="running", pid=None)
@@ -59,9 +58,8 @@ def test_public_prepare_reconciles_legacy_without_managed_scratch(
     before_attempts = set((paths["root"] / "attempts").iterdir())
     before_task = core._worker_assignment_service.load(root, "task")
     _forbid_legacy_effects(monkeypatch)
-    capsys.readouterr()
-    assert core.command_worker_run_prepare(args) == 1
-    assert capsys.readouterr().out.strip() == "FAIL: execution_activity_unknown"
+    with pytest.raises(ExecutionError, match="^execution_activity_unknown$"):
+        core.existing_running_worker_run(root, before_task, args.driver)
     assert core._worker_assignment_service.load(root, "task") == before_task
     current = core.load_agent_run_state(root, "run", "task")
     assert current["attempt"] == state["attempt"] and current["status"] == "running"
@@ -206,11 +204,24 @@ def test_real_collection_proof_releases_global_gate_and_revalidates_commit(
         assert json.loads(completion.read_text(encoding="utf-8"))["receipt_id"]
 
 
+@pytest.fixture
+def sql_manual(sql_cli_fixture: Any) -> Any:
+    root, _repository, args, driver_path = sql_cli_fixture
+    driver = RuntimeDriverDefinitionPolicy().default_documents()["manual"]
+    driver["id"] = "fixture-manual"
+    write_yaml_file(driver_path, driver)
+    assert core.command_worker_run_prepare(args) == 0
+    paths = core._work_paths.worker_run(root, "run", "task")
+    task = core._worker_assignment_service.load(root, "task")
+    state = core.load_agent_run_state(root, "run", "task")
+    return root, args, paths, task, state
+
+
 @pytest.mark.parametrize("stopping", [False, True])
 def test_actual_start_waits_for_heavy_planner_without_holding_workplace_gate(
-    legacy_manual: Any, monkeypatch: pytest.MonkeyPatch, stopping: bool
+    sql_manual: Any, monkeypatch: pytest.MonkeyPatch, stopping: bool
 ) -> None:
-    root, args, _paths, task, state = legacy_manual
+    root, args, _paths, task, state = sql_manual
     workplace = root / "fixture-workplace"
     write_yaml_file(workplace / "workplace.yaml", {"id": "fixture-workplace"})
     write_yaml_file(

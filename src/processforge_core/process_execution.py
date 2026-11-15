@@ -336,6 +336,9 @@ class ProcessExecutionService:
         security: dict | None = None,
         scope_intent: dict | None = None,
     ) -> dict[str, Any]:
+        storage_blocker = self._storage_write_blocker()
+        if storage_blocker is not None:
+            return storage_blocker
         with self._start_lock():
             return self._start_locked(
                 objective=objective,
@@ -943,6 +946,9 @@ class ProcessExecutionService:
         context_id: str = "",
         _completion_only: bool = False,
     ) -> dict[str, Any]:
+        storage_blocker = self._storage_write_blocker()
+        if storage_blocker is not None:
+            return storage_blocker
         try:
             selected = self._select_work(
                 run_id=run_id, assignment_id=assignment_id, session_id=session_id
@@ -1966,6 +1972,24 @@ class ProcessExecutionService:
             if isinstance(value, list)
             else []
         )
+
+    def _storage_write_blocker(self) -> dict[str, Any] | None:
+        from .configuration import ConfigurationError
+        from .database import DatabaseError
+        from .executions.model import ExecutionError
+        from .maintenance.contracts import MaintenanceError
+        from .maintenance.first_write import ensure_execution_storage_ready
+
+        try:
+            ensure_execution_storage_ready(self.project_root, self.workplace_root)
+        except (
+            ConfigurationError,
+            DatabaseError,
+            ExecutionError,
+            MaintenanceError,
+        ) as error:
+            return self._blocked(error.code)
+        return None
 
     def _blocked(
         self, reason: str, *, action: str = "blocked", **extra: Any

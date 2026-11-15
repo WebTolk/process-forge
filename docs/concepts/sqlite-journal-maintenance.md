@@ -215,12 +215,22 @@ There is no CLI safety override. The host supplies an operation-pinned full
 all dependencies without another merge. No agent, LLM, network or daemon is used.
 
 The host calls `ensure_ready(context, trigger='update'|'first_write')` before a
-mutating operation, and after terminal reconciliation/collection only after task,
-target and SQL locks are released. Active/unknown before any pending pin returns
-`legacy_allowed=true` for that target without minting a UUID or creating migration
-files. Pending always requires exact recovery, never legacy/JSON fallback. A
-changed/unavailable safety generation refuses. Pure reads, configuration, doctor
-and the 500 ms guard never call the coordinator.
+mutating operation, before task, target or SQL locks. Active/unknown
+before any pending pin returns a blocked report without minting a storage UUID or
+creating migration files. Its historical `legacy_allowed=true` field describes
+the unmigrated source; it grants no ordinary write or launch permission. Pending
+requires exact recovery. A changed/unavailable safety generation refuses. Pure
+reads, configuration, doctor and the 500 ms guard never call the coordinator.
+
+Work start/transition, continuation creation with apply, continuation resume, and
+worker prepare/start require ready SQL execution storage through the shared Core
+first-write boundary. This precedes retry recovery, scratch finalization, lifecycle
+locks, planning, registration and spawn. After successful migration the boundary
+selects SQL again; a success report alone is insufficient. An identityless project
+refuses with `project_identity_required`. Ordinary start has no file-journal route.
+Explicit stop, cancellation and collection of existing attempts remain available
+for recovery. Collection does not attempt migration after committing its result;
+the next ordinary write performs the readiness check.
 
 Recognized existing events/raw/accounting/search stores receive only
 `pf_store_meta`, `pf_schema_versions` and `store_identity@1`. Their original
@@ -273,18 +283,20 @@ host exclusion. Actual W3 composition, installed update/first-write qualificatio
 and integrated assurance are separate gates; this source slice performs no live
 migration or infrastructure actions.
 
-The cold host factory is implemented. Automatic adapter writes run the coordinator
-before their identity gate and SQL session. A supported unqualified legacy target
-can retain its original route before pending; unknown safety never creates UUID
-metadata. An absent legacy initializer also remains usable without UUID adoption.
-Pure reads validate existing pins without creating a missing identity guard.
+The cold host factory is implemented. Adapter identity access runs the coordinator
+before its identity gate and SQL session. Its low-level compatibility access to an
+unqualified target before pending remains available to migration/recovery callers;
+ordinary Work and worker entrypoints must pass the readiness boundary above.
+Unknown safety creates no storage UUID metadata. Pure reads validate existing pins
+without creating a missing identity guard.
 Installed managed-owner enrollment/exclusion and fresh updater-child qualification
 remain separate requirements; factory availability is not evidence of that proof.
 
-Automatic unpinned access checks the exact legacy schema and actual safety proof
-before requesting a full integrity or row-parity scan. Active or unknown safety
-keeps the existing deferred legacy route without scanning historical rows or
-creating migration metadata. Pending and unpinned adopted metadata still refuse.
+Unpinned access checks the exact legacy schema and actual safety proof before
+requesting a full integrity or row-parity scan. Active or unknown safety defers
+migration without scanning historical rows or creating migration metadata.
+Ordinary entrypoints refuse this state. Pending and unpinned adopted metadata
+still refuse.
 
 Proven migration scans run outside shared execution admission. A retained SQLite
 connection watches `data_version` and physical file identity after its read

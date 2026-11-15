@@ -11621,6 +11621,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
         print("FAIL: work_is_terminal")
         return 1
+    _storage_first_write(project_root)
     if _retry_pending(project_root, run_id, task_id) is not None:
         with _worker_planning_phase(project_root, run_id, task_id) as publish:
             task, driver, paths = prepare_worker_run(
@@ -11631,7 +11632,6 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
         return 0
     if not _finalize_worker_scratch(project_root, task, trigger="before_retry"):
         return 1
-    _storage_first_write(project_root)
     running = existing_running_worker_run(
         project_root, task, getattr(args, "driver", None)
     )
@@ -11687,61 +11687,13 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
 
 def _storage_first_write(
     project_root: Path,
-) -> tuple[StorageMigrationHost | None, ConfigurationProvider | None]:
+) -> tuple[StorageMigrationHost | None, ConfigurationProvider]:
     """Run the actual native coordinator before admission/task/SQL locks."""
-    from processforge_core.database import DatabaseError
-    from processforge_core.executions.model import ExecutionError
-
-    try:
-        route = _execution_storage(project_root)
-    except (OSError, ValueError, RuntimeError, DatabaseError, ExecutionError):
-        route = (
-            None  # Pending routing may be repaired only by the real coordinator below.
-        )
-    if route is not None and route.repository is not None:
-        return None, None
-    from processforge_core.configuration import ConfigurationProvider
-    from processforge_core.maintenance.contracts import MaintenanceError
-    from processforge_core.project.configuration_inputs import (
-        _first_write_storage_host,
-        operation_device_path,
-    )
+    from processforge_core.maintenance.first_write import ensure_execution_storage_ready
 
     manifest = _ProjectMetadataReader(project_root).workplace_manifest()
     workplace = manifest.parent if manifest else None
-    provider = build_configuration_provider(
-        project_root=project_root, workplace_root=workplace
-    )
-    snapshot = provider.snapshot()
-    if snapshot.errors:
-        raise MaintenanceError("storage_configuration_invalid")
-    pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
-    host = _first_write_storage_host(
-        project_root,
-        workplace,
-        operation_device_path(project_root, workplace, provider.device_path),
-        pinned,
-    )
-    if host is None:
-        return None, pinned
-    result = host.service.ensure_ready(host.context, trigger="first_write")
-    if result.get("blocked"):
-        execution = next(
-            (item for item in result.get("targets", []) if item.get("kind") == "main"),
-            None,
-        )
-        if (
-            execution is None
-            or execution.get("state") != "deferred"
-            or execution.get("legacy_allowed") is not True
-        ):
-            raise MaintenanceError(
-                str(
-                    (result.get("error") or {}).get("code")
-                    or "storage_activity_unknown"
-                )
-            )
-    return host, pinned
+    return ensure_execution_storage_ready(project_root, workplace)
 
 
 def _sql_attempt_paths(
@@ -12289,15 +12241,15 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
             print("FAIL: work_is_terminal")
             return 1
+        _host, configuration = _storage_first_write(project_root)
         _retry_refuse_pending(project_root, run_id, task_id)
         if not _finalize_worker_scratch(project_root, task, trigger="before_retry"):
             return 1
-        _host, configuration = _storage_first_write(project_root)
         repository = _execution_storage(
             project_root, configuration=configuration
         ).repository
         if repository is None:
-            return _legacy_worker_run_start(args)
+            raise MaintenanceError("execution_storage_not_ready")
         return _sql_worker_run_start(args, project_root, repository)
     except NativeStartFailure as exc:
         print("FAIL: prepared launch blocked: " + str(exc))
@@ -13258,7 +13210,6 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     if result == 0:
         if not _finalize_worker_scratch(project_root, task, trigger="final_collection"):
             return 1
-        _storage_first_write(project_root)
     return result
 
 
