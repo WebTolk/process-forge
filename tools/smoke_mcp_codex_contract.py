@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import runpy
 import subprocess
 import sys
@@ -18,14 +19,26 @@ validate_instance = runpy.run_path(str(ROOT / "tools/validate-process-forge-sche
 
 
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="pf-mcp-codex-contract-") as raw:
-        root = Path(raw)
+    scratch = Path(
+        os.environ.get("PF_TEST_SCRATCH_ROOT", tempfile.gettempdir())
+    ).resolve()
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix="pf-mcp-codex-contract-", dir=scratch
+    ) as raw:
+        root = Path(raw).resolve()
+        environment = dict(
+            os.environ,
+            LOCALAPPDATA=str(root / "device"),
+            XDG_CONFIG_HOME=str(root / "device"),
+        )
         distribution = publish_fixture(root / "distribution")
 
         def run_pf(*arguments: str) -> subprocess.CompletedProcess[str]:
             return subprocess.run(
                 [sys.executable, str(distribution / "bin/pf.py"), *arguments],
                 cwd=distribution,
+                env=environment,
                 text=True,
                 encoding="utf-8",
                 capture_output=True,
@@ -60,7 +73,11 @@ def main() -> int:
         if init.returncode != 0:
             raise AssertionError(init.stdout + init.stderr)
         if not (project / ".pf/data/execution-storage.json").is_file():
-            raise AssertionError("fresh MCP fixture has no SQL execution storage")
+            raise AssertionError(
+                "fresh MCP fixture has no SQL execution storage\n"
+                + init.stdout
+                + init.stderr
+            )
         refreshed = run_pf("project-context-refresh", "--project-root", str(project))
         if refreshed.returncode != 0:
             raise AssertionError(refreshed.stdout + refreshed.stderr)
@@ -96,6 +113,7 @@ def main() -> int:
             text=True,
             capture_output=True,
             cwd=project,
+            env=environment,
             timeout=60,
             check=False,
         )

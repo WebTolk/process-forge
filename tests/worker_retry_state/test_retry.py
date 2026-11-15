@@ -142,8 +142,11 @@ def test_retained_old_process_reaped_and_single_launch(legacy: Any) -> None:
         assert (
             key not in core._core_runtime_observation_inputs.DETACHED_WORKER_PROCESSES
         )
-        assert core.command_worker_run_start(args) == 1
-        assert core.load_agent_run_state(root, "run", "task")["attempt"] == 2
+        assert core._legacy_worker_run_start(args) == 1
+        current = core.load_agent_run_state(root, "run", "task")
+        assert current["attempt"] == 2 and current["status"] == "failed"
+        assert core._legacy_tree_probe(root, "run", "task", current) is True
+        assert (root / "target-count").read_text() == "x"
     finally:
         if proc.poll() is None:
             getattr(proc, "native_job").stop(deadline=core.time.monotonic() + 5)

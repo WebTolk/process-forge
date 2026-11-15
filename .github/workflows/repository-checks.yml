@@ -16,7 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # SQL startup requires the qualified native namespace backend.
+        os: [ubuntu-22.04, windows-latest]
     env:
       PYTHONUTF8: '1'
       PYTHONDONTWRITEBYTECODE: '1'
