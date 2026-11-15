@@ -98,6 +98,21 @@ After that merge, mirror and verify the resulting `main` ref as well.
 These are lasting development rules for subsequent releases as well. They define
 required behavior; recording them does not qualify the current implementation.
 
+- Development strictly follows [Semantic Versioning 2.0.0](https://semver.org/).
+  Assess backward compatibility from the perspective of users and their agents:
+  supported workflows, public CLI/API/MCP contracts, integration behavior, and
+  guarantees for data and identity. Incompatible public-contract changes require
+  MAJOR; backward-compatible functionality requires MINOR; backward-compatible
+  bug fixes require PATCH. This policy follows published contracts as releases
+  evolve; it is not tied to a fixed release number. Unreleased intermediate
+  implementations and their tests do not create additional compatibility contracts.
+- A small supported project migration is not, by itself, a MAJOR change. Internal
+  storage formats may evolve through an explicit migration using the provided
+  tools, provided users and agents retain their supported workflows, public
+  interfaces, and data/identity guarantees without reworking integrations.
+  Document the migration and recovery procedure and verify these guarantees.
+  If a change breaks that user-facing contract, a migration tool does not remove
+  the requirement for MAJOR. Do not retain a legacy-write bypass to avoid migration.
 - Initialize new projects with the current SQL journals and stores. Ordinary
   execution must not select legacy journals for a new project.
 - Existing projects must complete the supported mandatory migration and validate
