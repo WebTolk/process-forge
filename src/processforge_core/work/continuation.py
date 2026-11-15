@@ -236,6 +236,8 @@ class ContinuationService:
         apply: bool = False,
         **unused: Any,
     ) -> dict:
+        if apply is True:
+            self._require_storage_write_ready()
         return self._continuation_publisher().create(
             continuation_id=continuation_id,
             run_id=run_id,
@@ -275,9 +277,15 @@ class ContinuationService:
         return self._status_reader().selected(session_id)
 
     def resume(self, *, continuation_id: str, session_id: str = "") -> dict:
+        self._require_storage_write_ready()
         return self._continuation_publisher().resume(
             continuation_id=continuation_id, session_id=session_id
         )
+
+    def _require_storage_write_ready(self) -> None:
+        blocker = self.work._storage_write_blocker()
+        if blocker is not None:
+            raise ContinuationError(blocker["reason"])
 
     def _writer_check(self, binding: dict) -> None:
         self._record_reader().writer_check(binding)

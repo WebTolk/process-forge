@@ -134,8 +134,8 @@ def _first_write_storage_host(
     workplace: Path | None,
     device: Path | None,
     configuration: ConfigurationProvider,
-) -> StorageMigrationHost | None:
-    """Return deliberate legacy deferral separately from an unselected host."""
+) -> StorageMigrationHost:
+    """Resolve a qualified owner; ordinary writes cannot defer to legacy."""
     from .. import composition
     from ..maintenance.contracts import MaintenanceError
     from ..maintenance.storage_migration import StorageMigrationHost
@@ -154,13 +154,7 @@ def _first_write_storage_host(
         )
     if not isinstance(host, StorageMigrationHost):
         raise MaintenanceError("storage_host_factory_invalid")
-    try:
-        host.context
-    except MaintenanceError as error:
-        if error.code != "project_identity_required":
-            raise
-        _identityless_legacy(project, workplace, configuration)
-        return None
+    host.context
     return host
 
 

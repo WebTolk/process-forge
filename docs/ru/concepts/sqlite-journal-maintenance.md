@@ -212,13 +212,25 @@ CLI-флага для подмены safety proof нет. Host снимает о
 через общий ConfigurationProvider и передаёт pinned provider всем зависимостям.
 Нет ручного merge у consumers, agent/LLM/network/daemon dependency.
 
-Host вызывает ensure_ready перед записью и при следующем mutating use после
-terminal reconcile/collection, только после освобождения task/target/SQL locks.
-Active/unknown до pending даёт диагностированный deferred с legacy_allowed=true
-для этого target, без mint UUID и maintenance files. После pending — exact resume,
-без JSON/legacy fallback. Pure reads/config/doctor/500 ms guard не мигрируют.
+Host вызывает ensure_ready перед обычной записью, до task/target/SQL locks.
+Active/unknown до pending даёт blocked/deferred без нового storage UUID и файлов
+миграции. Историческое поле legacy_allowed=true описывает ещё не мигрированный
+источник и не разрешает обычную запись или запуск. После pending нужен exact resume.
+Pure reads/config/doctor/500 ms guard не мигрируют.
 Новый capability/version, пустой registry, terminal string, PID/TTL и CLI boolean
 не заменяют реальное доказательство исключения старых writers и owned trees.
+
+Work start/transition, continuation create с apply, continuation resume и worker
+prepare/start требуют готового SQL execution storage через общую Core-проверку
+first-write. Она выполняется до retry recovery, очистки scratch, lifecycle locks,
+планирования, регистрации и spawn. После успешной миграции SQL выбирается повторно:
+одного успешного отчёта недостаточно. Проект без identity получает
+project_identity_required. Обычный start не использует файловые журналы.
+Явные stop, cancellation и collection существующих попыток доступны для recovery.
+Collection не запускает миграцию после фиксации результата; готовность проверит
+следующая обычная запись. Низкоуровневый compatibility-доступ адаптеров до pending
+сохраняется для migration/recovery; обычные Work/worker entrypoints обязаны пройти
+описанную проверку. Pure reads проверяют имеющиеся pins без создания identity guard.
 
 Для распознанных events/raw/accounting/search добавляются только pf_store_meta,
 pf_schema_versions и store_identity@1. Пути, domain application IDs/versions,

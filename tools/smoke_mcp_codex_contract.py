@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import runpy
 import subprocess
 import sys
@@ -11,24 +12,75 @@ import tempfile
 from pathlib import Path
 
 import yaml
-
-from context_lock_smoke_helpers import make_project, refresh, run_pf
-
+from smoke_sql_project import publish_fixture
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVER = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
 validate_instance = runpy.run_path(str(ROOT / "tools/validate-process-forge-schemas.py"))["validate_instance"]
 
 
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="pf-mcp-codex-contract-") as raw:
-        root = Path(raw)
-        project = make_project(root)
+    scratch = Path(
+        os.environ.get("PF_TEST_SCRATCH_ROOT", tempfile.gettempdir())
+    ).resolve()
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix="pf-mcp-codex-contract-", dir=scratch
+    ) as raw:
+        root = Path(raw).resolve()
+        environment = dict(
+            os.environ,
+            LOCALAPPDATA=str(root / "device"),
+            XDG_CONFIG_HOME=str(root / "device"),
+        )
+        distribution = publish_fixture(root / "distribution")
+
+        def run_pf(*arguments: str) -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                [sys.executable, str(distribution / "bin/pf.py"), *arguments],
+                cwd=distribution,
+                env=environment,
+                text=True,
+                encoding="utf-8",
+                capture_output=True,
+                timeout=120,
+                check=False,
+            )
+
+        project = root / "project"
         workplace = root / "workplace"
-        init = run_pf("workplace-init", "--workplace", str(workplace), "--apply")
+        init = run_pf(
+            "workplace-init",
+            "--workplace",
+            str(workplace),
+            "--profile",
+            "software-development",
+            "--apply",
+        )
         if init.returncode != 0:
             raise AssertionError(init.stdout + init.stderr)
-        refresh(project)
+        init = run_pf(
+            "project-init",
+            "--project-root",
+            str(project),
+            "--workplace",
+            str(workplace),
+            "--type",
+            "generic",
+            "--process",
+            "software-feature-development",
+            "--apply",
+        )
+        if init.returncode != 0:
+            raise AssertionError(init.stdout + init.stderr)
+        if not (project / ".pf/data/execution-storage.json").is_file():
+            raise AssertionError(
+                "fresh MCP fixture has no SQL execution storage\n"
+                + init.stdout
+                + init.stderr
+            )
+        refreshed = run_pf("project-context-refresh", "--project-root", str(project))
+        if refreshed.returncode != 0:
+            raise AssertionError(refreshed.stdout + refreshed.stderr)
         before_assignments = set((project / ".pf/assignments").glob("*.yaml"))
         mode = {"kind": "assurance", "code_changes_allowed": False,
                 "artifact_changes_allowed": True, "requires_review": True}
@@ -56,14 +108,17 @@ def main() -> int:
             ] + [json.dumps(request) for request in starts]
         ) + "\n"
         result = subprocess.run(
-            [sys.executable, str(SERVER), "--workplace", str(workplace)],
+            [sys.executable, str(ROOT / "tools/pf_runtime/mcp_server.py"), "--workplace", str(workplace)],
             input=request,
             text=True,
             capture_output=True,
             cwd=project,
+            env=environment,
             timeout=60,
-            check=True,
+            check=False,
         )
+        if result.returncode != 0:
+            raise AssertionError(result.stdout + result.stderr)
         responses = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
         tools = {item["name"]: item for item in responses[1]["result"]["tools"]}
         if tools["pf.context"]["annotations"]["readOnlyHint"] is not True:

@@ -40,7 +40,8 @@ def test_old_launch_after_pre_intent_failure_can_retry(
     assert not archive.exists()
     abandoned = paths["root"] / "attempts/2/retry-publication-old-status.bin"
     assert abandoned.read_bytes() == ready
-    assert core.command_worker_run_start(args) == 1
+    # Seed historical activity through the private compatibility mechanism.
+    assert core._legacy_worker_run_start(args) == 1
     assert core.json_read(paths["status"])["status"] == "failed"
     assert (root / "target-count").read_bytes() == b"x"
     assert not archive.exists()

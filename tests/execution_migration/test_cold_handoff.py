@@ -1578,6 +1578,23 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
         reasoning_effort=None,
         detach=False,
     )
+    if backend == "legacy":
+        before = {
+            path: path.read_bytes()
+            for path in (root / ".pf").rglob("*")
+            if path.is_file()
+        }
+        assert core.command_worker_run_prepare(args) == 1
+        assert core.command_worker_run_start(args) == 1
+        assert all(path.read_bytes() == content for path, content in before.items())
+        assert not paths["process"].exists()
+        assert not (root / ".pf/artifacts/report.json").exists()
+        assert not (root / ".pf/data/pf.sqlite3").exists()
+        (root / "denied-route-evidence.json").write_text(
+            json.dumps({"backend": backend, "attack": attack, "spawned": False}),
+            encoding="utf-8",
+        )
+        return
     if attack == "detach":
         args.detach = True
         assert core.command_worker_run_start(args) == 1
@@ -1921,17 +1938,17 @@ def _isolated_normal_route(project: str, backend: str, attack: str) -> None:
     )
 
 
-@pytest.mark.parametrize("backend", ["legacy", "sql"])
 @pytest.mark.parametrize(
-    "attack",
+    ("backend", "attack"),
     [
-        "",
-        "attempt",
-        "cancellation",
-        "entry",
-        "detach",
-        "preflight-cancellation",
-        "preflight-config",
+        ("sql", ""),
+        ("sql", "attempt"),
+        ("sql", "cancellation"),
+        ("sql", "entry"),
+        ("sql", "detach"),
+        ("sql", "preflight-cancellation"),
+        ("sql", "preflight-config"),
+        ("legacy", "unmigrated"),
     ],
 )
 def test_normal_fixed_prepare_start_collection(
@@ -1974,7 +1991,12 @@ def test_normal_fixed_prepare_start_collection(
     if attack:
         evidence = json.loads((f.project / "denied-route-evidence.json").read_bytes())
         assert evidence["spawned"] is False
-        if attack not in {"detach", "preflight-cancellation", "preflight-config"}:
+        if attack not in {
+            "detach",
+            "preflight-cancellation",
+            "preflight-config",
+            "unmigrated",
+        }:
             assert evidence["thread_joined"]
     else:
         evidence = json.loads((f.project / "normal-route-evidence.json").read_bytes())

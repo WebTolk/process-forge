@@ -319,7 +319,6 @@ def test_native_wrapper_authenticated_tree_receipts(
     isolated_path: Path, descendant: bool
 ) -> None:
     import hashlib
-    import subprocess
     import sys
     import time
     from uuid import uuid4
@@ -398,22 +397,13 @@ def test_native_wrapper_authenticated_tree_receipts(
         (attempt / "wrapper.stdout").open("wb") as stdout,
         (attempt / "wrapper.stderr").open("wb") as stderr,
     ):
-        # Linux must exercise actual namespace containment. A directly launched
-        # legacy PGID wrapper intentionally cannot prove complete tree absence.
+        # Exercise authenticated native containment on both operating systems.
+        # Direct Popen does not supply the Windows inherited Job handle either.
         from pf_native_control import spawn_owned
 
-        if sys.platform.startswith("linux"):
-            child = spawn_owned(
-                argv, token=token, env=environment, stdout=stdout, stderr=stderr
-            )
-        else:
-            child = subprocess.Popen(
-                argv,
-                env=environment,
-                stdout=stdout,
-                stderr=stderr,
-                start_new_session=(os.name != "nt"),
-            )
+        child = spawn_owned(
+            argv, token=token, env=environment, stdout=stdout, stderr=stderr
+        )
         try:
             if descendant:
                 time.sleep(2.5)
@@ -1049,7 +1039,9 @@ def test_real_legacy_cli_timeout_cleans_owned_grandchild(
     assert core.command_worker_run_prepare(args) == 0
     args.detach = detached
     try:
-        assert core.command_worker_run_start(args) == (0 if detached else 1)
+        # Seed an old launch through the private mechanism, then exercise public
+        # recovery. Ordinary public start now requires migrated SQL storage.
+        assert core._legacy_worker_run_start(args) == (0 if detached else 1)
         if detached:
             time.sleep(1.2)
             assert core.command_worker_run_status(args) == 0
@@ -1128,7 +1120,11 @@ def test_legacy_terminal_unknown_ownership_does_not_signal(
         outcomes.append((result, capsys.readouterr().out.strip()))
         _assert_legacy_unknown(root, paths, state, before_attempts)
     assert core._worker_assignment_service.load(root, "task") == before_task
-    assert outcomes == [(1, "FAIL: execution_activity_unknown")] * 3
+    assert outcomes == [
+        (1, "FAIL: execution_activity_unknown"),
+        (1, "FAIL: execution_storage_not_ready"),
+        (1, "FAIL: execution_activity_unknown"),
+    ]
 
 
 def test_legacy_ambiguous_spawn_never_releases_ownership(
@@ -1153,7 +1149,7 @@ def test_legacy_ambiguous_spawn_never_releases_ownership(
         raise OSError("fixture ambiguity")
 
     monkeypatch.setattr(pf_native_control, "spawn_owned", ambiguous)
-    assert core.command_worker_run_start(args) == 1
+    assert core._legacy_worker_run_start(args) == 1
     state = core.load_agent_run_state(root, "run", "task")
     assert state["status"] == "running" and state["pid"] is None
     assert state["failure_reason"] == "execution activity unknown"
@@ -1169,7 +1165,11 @@ def test_legacy_ambiguous_spawn_never_releases_ownership(
     ):
         capsys.readouterr()
         assert command(args) == 1
-        assert capsys.readouterr().out.strip() == "FAIL: execution_activity_unknown"
+        assert capsys.readouterr().out.strip() == (
+            "FAIL: execution_storage_not_ready"
+            if command is core.command_worker_run_start
+            else "FAIL: execution_activity_unknown"
+        )
         _assert_legacy_unknown(root, paths, state, before_attempts)
     assert len(launches) == 1
     assert core._worker_assignment_service.load(root, "task") == before_task
@@ -1206,7 +1206,7 @@ def test_legacy_controller_crash_after_native_receipt_is_recoverable(
     monkeypatch.setattr(core, "write_agent_run_state", interrupted)
     try:
         with pytest.raises(RuntimeError, match="fixture controller"):
-            core.command_worker_run_start(args)
+            core._legacy_worker_run_start(args)
         monkeypatch.setattr(core, "write_agent_run_state", original)
         state = core.load_agent_run_state(root, "run", "task")
         assert state["status"] == "starting" and state["pid"] is None
@@ -1299,8 +1299,8 @@ def test_terminal_rejection_precedes_storage_and_provider(
     assert {p: p.read_bytes() for p in root.rglob("*") if p.is_file()} == before
 
 
-def test_real_missing_id_legacy_cli_prepare_start_and_retry(
-    sql_cli_fixture, monkeypatch
+def test_real_missing_id_legacy_cli_refuses_prepare_start_and_retry(
+    sql_cli_fixture, monkeypatch, capsys
 ):
     import argparse
     import shutil
@@ -1324,10 +1324,18 @@ def test_real_missing_id_legacy_cli_prepare_start_and_retry(
     # The actual custom driver and prepared provider are shared by the existing
     # SQL fixture; no execution router or first-write coordinator is replaced.
     assert core._execution_storage(root).repository is None
-    assert core.command_worker_run_prepare(legacy_args) == 0
-    assert core.command_worker_run_start(legacy_args) == 0
-    assert core.command_worker_run_prepare(legacy_args) == 0
-    assert core.command_worker_run_start(legacy_args) == 0
+    before = {p: p.read_bytes() for p in flow.rglob("*") if p.is_file()}
+    _forbid_legacy_effects(monkeypatch)
+    for command in (
+        core.command_worker_run_prepare,
+        core.command_worker_run_start,
+        core.command_worker_run_prepare,
+        core.command_worker_run_start,
+    ):
+        capsys.readouterr()
+        assert command(legacy_args) == 1
+        assert capsys.readouterr().out.strip() == "FAIL: project_identity_required"
+    assert {p: p.read_bytes() for p in flow.rglob("*") if p.is_file()} == before
     assert core._execution_storage(root).repository is None
     assert not (flow / "data/execution-storage.json").exists()
     assert not (flow / "data/pf.sqlite3").exists()

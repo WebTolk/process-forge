@@ -728,12 +728,15 @@ def test_script_rejects_snapshot_errors_before_host_factory(
 
 
 @pytest.mark.parametrize("operation", [False, True])
-def test_missing_identity_legacy_first_write_is_read_only(legacy_root, operation):
+def test_missing_identity_first_write_refuses_without_side_effects(
+    legacy_root, operation
+):
     from contextlib import nullcontext
 
     import processforge as core
 
     from processforge_core.database import SQLiteDriver
+    from processforge_core.maintenance.contracts import MaintenanceError
     from processforge_core.project.configuration_inputs import configuration_operation
 
     project = legacy_root / "legacy"
@@ -750,8 +753,8 @@ def test_missing_identity_legacy_first_write_is_read_only(legacy_root, operation
         patch.object(subprocess, "Popen", side_effect=AssertionError("daemon")),
         configuration_operation(project, None) if operation else nullcontext(),
     ):
-        host, _configuration = core._storage_first_write(project)
-        assert host is None
+        with pytest.raises(MaintenanceError, match="^project_identity_required$"):
+            core._storage_first_write(project)
     assert {p: p.read_bytes() for p in flow.rglob("*") if p.is_file()} == before
 
 
