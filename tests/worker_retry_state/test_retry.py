@@ -40,7 +40,8 @@ def legacy(sql_cli_fixture: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
 @pytest.mark.parametrize("stop", [False, True])
 def test_real_failed_prepare_observe_start_or_stop(legacy: Any, stop: bool) -> None:
     root, args, paths = legacy
-    assert core.command_worker_run_start(args) == 1
+    # Construct historical ownership through the private compatibility route.
+    assert core._legacy_worker_run_start(args) == 1
     old = core.load_agent_run_state(root, "run", "task")
     assert old["status"] == "failed" and old["attempt"] == 1
     originals = {
@@ -68,7 +69,7 @@ def test_real_failed_prepare_observe_start_or_stop(legacy: Any, stop: bool) -> N
         assert core.command_worker_run_stop(args) == 0
         assert core.load_agent_run_state(root, "run", "task")["status"] == "cancelled"
     else:
-        assert core.command_worker_run_start(args) == 1
+        assert core._legacy_worker_run_start(args) == 1
         current = core.load_agent_run_state(root, "run", "task")
         assert current["attempt"] == 2 and current["status"] == "failed"
         assert core._legacy_tree_probe(root, "run", "task", current) is True
@@ -213,7 +214,7 @@ def test_interrupted_resume_has_facts_and_supported_stop(
         raise OSError("fixture interrupted before resume")
 
     monkeypatch.setattr(native, "_resume_initial_thread", interrupt)
-    assert core.command_worker_run_start(args) == 1
+    assert core._legacy_worker_run_start(args) == 1
     state = core.load_agent_run_state(root, "run", "task")
     assert core._legacy_tree_facts(root, "run", "task", state) is not None
     assert core._legacy_tree_probe(root, "run", "task", state) is True

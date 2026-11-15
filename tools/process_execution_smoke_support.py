@@ -9,6 +9,7 @@ from typing import Any, Iterator
 import yaml
 
 from smoke_garage_mode_not_promoted_by_session import call_mcp, cli
+from smoke_sql_project import initialize_sql_project
 
 
 PROCESS = {
@@ -75,7 +76,7 @@ def fixture() -> Iterator[tuple[Path, Path, dict[str, Any]]]:
         workplace = root / "workplace"
         project = root / "project"
         cli("workplace-init", "--workplace", str(workplace), "--apply")
-        cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
+        initialize_sql_project(project, workplace)
         process_path = project / "processes" / "custom" / "declarative-smoke.yaml"
         process_path.parent.mkdir(parents=True, exist_ok=True)
         process_path.write_text(yaml.safe_dump(PROCESS, allow_unicode=True, sort_keys=False), encoding="utf-8")

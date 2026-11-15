@@ -12,6 +12,7 @@ import pytest
 import yaml
 from process_execution_smoke_support import PROCESS, stage_evidence
 from smoke_garage_mode_not_promoted_by_session import cli
+from smoke_sql_project import initialize_sql_project
 
 
 def make_work(
@@ -22,18 +23,7 @@ def make_work(
 ):
     workplace, project = root / "workplace", root / "project"
     cli("workplace-init", "--workplace", str(workplace), "--apply")
-    cli(
-        "project-onboard",
-        "--project-root",
-        str(project),
-        "--workplace",
-        str(workplace),
-        "--type",
-        "generic",
-        "--coordination-mode",
-        "simple",
-        "--apply",
-    )
+    initialize_sql_project(project, workplace)
     process = copy.deepcopy(PROCESS)
     if final_retry:
         process["stages"][-1]["outcomes"] = [

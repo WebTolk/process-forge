@@ -378,7 +378,7 @@ def test_applied_history_allows_start_then_retry(legacy: Any) -> None:
     root, args, paths = legacy
     assert core.command_worker_run_prepare(args) == 0
     history = (paths["root"] / "attempts/2" / rp.APPLIED).read_bytes()
-    assert core.command_worker_run_start(args) == 1
+    assert core._legacy_worker_run_start(args) == 1
     assert core.command_worker_run_prepare(args) == 0
     assert core.load_agent_run_state(root, "run", "task")["attempt"] == 3
     assert (paths["root"] / "attempts/2" / rp.APPLIED).read_bytes() == history
@@ -444,7 +444,8 @@ def test_real_native_retirement_unlink_replays_same_attempt(
 ) -> None:
     root, args, paths = legacy
     # Real bounded failing child establishes the old ownership and exit evidence.
-    assert core.command_worker_run_start(args) == 1
+    # The private mechanism constructs history; ordinary start requires SQL.
+    assert core._legacy_worker_run_start(args) == 1
     originals = capture(root, paths)
     real_unlink = Path.unlink
 
@@ -613,7 +614,7 @@ def test_pending_rechecks_old_native_quiescence(
     legacy: Any, monkeypatch: pytest.MonkeyPatch, probe: bool | None
 ) -> None:
     root, args, paths = legacy
-    assert core.command_worker_run_start(args) == 1
+    assert core._legacy_worker_run_start(args) == 1
     publication = pending(legacy, monkeypatch)
     before = capture(root, paths)
     monkeypatch.setattr(core, "_legacy_tree_probe", lambda *a, **k: probe)
@@ -696,7 +697,7 @@ def test_completed_then_retry_has_blank_new_ownership(
     )
     monkeypatch.setattr(core, "_storage_first_write", lambda *a, **k: (None, None))
     assert core.command_worker_run_prepare(args) == 0
-    assert core.command_worker_run_start(args) == 0
+    assert core._legacy_worker_run_start(args) == 0
     paths = core._work_paths.worker_run(root, "run", "task")
     originals = capture(root, paths)
     assert core.command_worker_run_prepare(args) == 0
@@ -723,6 +724,6 @@ def test_completed_then_retry_has_blank_new_ownership(
     assert (
         core.command_worker_run_stop(args)
         if stop
-        else core.command_worker_run_start(args)
+        else core._legacy_worker_run_start(args)
     ) == 0
     assert core.json_read(paths["status"])["attempt"] == 2
