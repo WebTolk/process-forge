@@ -13,7 +13,7 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 from types import FunctionType
-from typing import Any
+from typing import Any, Iterator
 from unittest.mock import patch
 
 sys.path.insert(0, str((ROOT := Path(__file__).resolve().parents[1]) / "tools"))
@@ -23,7 +23,8 @@ from garage_search_smoke_support import (
     register_fixture_resource,
     select_fixture_resource,
 )
-from smoke_conversation_completeness import pf, setup_basic_project
+from smoke_conversation_completeness import pf
+from smoke_sql_project import initialize_sql_project
 
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from processforge_core.work.worker_assignment import WorkerAssignmentService
@@ -33,6 +34,26 @@ _worker_assignment_service = WorkerAssignmentService()
 
 RUN_ID = "prepared-run"
 SCHEMA_PATH = ROOT / "schemas" / "prepared-input.schema.json"
+
+
+def setup_basic_project(root: Path, name: str) -> tuple[Path, Path]:
+    """Exercise ordinary workers only after supported fresh SQL initialization."""
+    workplace, project = root / f"{name}-workplace", root / name
+    project.mkdir()
+    (project / "README.md").write_text("# fixture\n", encoding="utf-8")
+    pf("workplace-init", "--workplace", str(workplace), "--apply")
+    initialize_sql_project(project, workplace)
+    pf(
+        "config",
+        "update",
+        "--workplace",
+        str(workplace),
+        "--key",
+        "runtime.garage_hooks",
+        "--value",
+        "true",
+    )
+    return workplace, project
 
 
 def require(condition: bool, detail: Any) -> None:
@@ -58,10 +79,10 @@ def call(project: Path, task: str, operation: str, **options: Any) -> tuple[int,
         raise TypeError("worker admission body must be a Python function")
 
     @contextmanager
-    def observed_admission(root: Path):
+    def observed_admission(root: Path, **options: Any) -> Iterator[Path | None]:
         try:
-            with original_admission(root):
-                yield
+            with original_admission(root, **options) as workplace:
+                yield workplace
         except Exception as exc:
             # Inspect only the actual failed call; never re-run admission, read
             # the cache again, change its result or serialize private paths.
@@ -646,13 +667,35 @@ def explicit_tool_grants(temp_root: Path) -> None:
         ),
     )
     denied("resource_material_unavailable", selected_reader=file_substitution)
-    for group in ("templates", "mcp"):
-        alternate = {"resolved": {group: [copy.deepcopy(projected[0])]}}
-        denied(
-            "resource_material_unavailable",
-            pinned=alternate,
-            current=alternate,
-            group=group,
+    alternate = {"resolved": {"templates": [copy.deepcopy(projected[0])]}}
+    denied(
+        "resource_material_unavailable",
+        pinned=alternate,
+        current=alternate,
+        group="templates",
+    )
+
+    def unexpected_mcp_resolution() -> Any:
+        raise AssertionError("MCP declarations must not resolve host connections")
+
+    metadata_reader = replace(
+        reader,
+        selection=unexpected_mcp_resolution,
+        workplace_manifest=unexpected_mcp_resolution,
+        path_resolver=unexpected_mcp_resolution,
+        revoked_statuses=unexpected_mcp_resolution,
+        fail=unexpected_mcp_resolution,
+    )
+    current: dict[str, Any]
+    for current in (
+        {},
+        {"resolved": {}},
+        {"resolved": {"mcp": []}},
+        {"resolved": {"mcp": [{"id": command_id, "status": "unavailable"}]}},
+    ):
+        require(
+            metadata_reader.read(project, [command_id], snapshot, current, "mcp") == [],
+            "MCP declaration became an execution grant",
         )
     for command in ("", "   ", ["invalid-command-type"]):
         changed = copy.deepcopy(definitions)

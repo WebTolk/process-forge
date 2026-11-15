@@ -72,8 +72,8 @@ write_artifact and write_product. Existing normalization, readiness and overlap
 checks apply. Omitted input retains conservative defaults; objectives imply no
 file grants. MCP `pf.work.start.scope_intent` forwards the same declaration to Core.
 
-Optional `assignment.workspace_access` requests resources through the existing
-immutable intent, capsule and preparation authorization pipeline. It accepts only
+Optional `assignment.workspace_access` records resource requests and advisory MCP
+declarations in immutable intent and the capsule. It accepts only
 `knowledge_resources`, `templates`, `tools` and `mcp`, each a list of at most 64
 distinct public IDs. An ID is at most 256 ASCII characters, with lowercase letters
 or digits separated by single dots, underscores or hyphens; an optional colon
@@ -86,18 +86,32 @@ qualifies `package-id:resource-id`. For example:
 }}}
 ```
 
-The resource IDs must be available and selected in the project's snapshot;
-this example uses the registered `docs.python-practices:root` resource.
+For `knowledge_resources`, `templates` and `tools`, resource IDs must be available
+and selected in the project's snapshot; this example uses the registered
+`docs.python-practices:root` resource.
 Combine this fragment with the explicit file/action scope required for the Work.
 Omitted groups, `{}` and empty lists request no resources. Unknown groups,
 duplicates, wrong types, wildcards, private paths, raw command definitions and
 object references (including `path_ref` and native-maintenance requests) are
 rejected by this creation API. Existing assignment APIs retain their reference
-formats. Requests grant no access by themselves: snapshot availability, admission,
-resource bindings, revocation and native preparation checks still apply. No
-resource is inferred from the objective or available registry. Retrying the same
+formats. Requests grant no access by themselves: for these three resource groups,
+snapshot availability, admission, resource bindings, revocation and native
+preparation checks still apply. No resource is inferred from the objective or
+available registry. Retrying the same
 objective with changed resource intent returns `scope_intent_mismatch`; it never
 widens the existing capsule.
+
+`workspace_access.mcp` is descriptive metadata, not authorization for host tools.
+Its declarations remain normalized and immutable and are retained in prepared
+input at `input.resources.requested.mcp`. Worker preparation does not resolve or
+pin MCP connections, check their revocation or probe their availability;
+`input.resources.grants.mcp` is empty. Each coding agent's own configuration
+controls its actual MCP connections and tool approvals. PF declarations neither
+grant nor control that availability, and preparation changes no agent configuration
+file or running MCP server. Capsule, required-source, file/action scope and
+filesystem checks remain in force. This compatibility behavior retains the MCP
+fields and catalogs; their removal is separate future work.
+
 Supplied modes are normalized into the persisted Assignment object before immutable
 capture; omitted modes keep existing creation defaults. Existing legacy Assignments
 and capsules are not rewritten on retry. Object flags retain their boolean values

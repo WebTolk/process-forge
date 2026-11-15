@@ -96,7 +96,9 @@ class PreparedRegistryResourceReader:
         current_snapshot: dict[str, Any],
         group: str,
     ) -> list[dict[str, Any]]:
-        if not requested:
+        # MCP connections belong to the agent configuration. PF retains their
+        # declarations as metadata and never resolves them into resource grants.
+        if group == "mcp" or not requested:
             return []
         selection = self.selection()
         pinned_rows = selection.resolved_rows(pinned_snapshot, group)
