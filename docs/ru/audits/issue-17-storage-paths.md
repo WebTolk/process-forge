@@ -1,7 +1,7 @@
 # Пути хранения: реализация и квалификация восстановления
 
-Конечная инвентаризация исходного кода ревизии
-`75fbbcb709f193aac5ccaa81659ce61b9a318f9b` и сопровождающих проверок для №17 / T05.
+Конечная инвентаризация сопровождает проверки для №17 / T05.
+Приёмка должна указывать точную проверенную ревизию и квитанции выполнения на ОС.
 Строка описывает границы реализации, а не квалифицированную установку или PASS.
 Каждый путь требует указанных доказательств владения и безопасности. Тест с injected host proof
 или UUID metadata не квалифицирует границу старых писателей в установке.
@@ -118,7 +118,7 @@ fallback не является поддерживаемой политикой.
 | ST10: committed WAL snapshot; exclusive restore с сохранением UUID | [backup.py][B]: `SQLiteBackupService.create/verify/restore` | [test_backup.py][BT]: `SQLiteBackupTests.test_wal_commits_are_included_without_changing_source_bytes`, `test_existing_restore_destination_is_preserved`; [test_storage_uuid.py][ID]: `test_backup_restore_of_adopted_store_preserves_uuid`; [test_acceptance.py][IT]: `test_cli_backups_include_committed_wal_and_restore_exclusively`. Одна DB, без live rebind и общего атомарного snapshot нескольких stores. |
 | ST11: сохранение journal IDs/envelopes/originals; conflict refusal и incomplete barrier | [journals.py][J]: `JournalMaintenanceService.migrate`, `_flush` | [test_journals.py][JT]: `test_conflicting_source_ids_refuse_before_mutation_even_with_skip`, `test_interrupted_import_keeps_both_barriers_and_retry_does_not_duplicate`, `test_batch_failure_rolls_back_only_current_batch_and_retry_preserves_prior_commit`; [test_acceptance.py][IT]: `test_cli_refusal_quarantine_explicit_skip_replay_and_legacy_entrypoint`. Writer cutover требует отдельного доказательства. |
 | ST12: publication/recovery и storage readiness принимаются отдельно | [update.py][U]: `apply_update`; [pf_native_control.py][N]: `replace_core`, `_run_update_child`; [file_update.py][FU] | [test_native_control.py][NT]: `test_joint_real_updater_and_independent_successor_child`, `test_real_updater_retained_target_repair_force_and_authority`; [test_cold_handoff.py][CT]: `test_unqualified_default_refuses_even_synthetic_reset`, `test_g2_interruption_resume_and_corrupt_backup`; [test_file_update.py][FT]: `test_actual_external_sealed_cli_updates_manifest_only_target`, `test_complete_or_partial_managed_markers_never_fall_back`. Ограничения provider ниже; installed/source presence недостаточно. |
-| Все пути: без внешнего file/process/network I/O внутри SQL transactions | [execution_migration.py][E]: batches готовы до transaction в `_import`; [storage_migration.py][S]: backup/journal writes вне metadata transaction; [journals.py][J]: `_flush` получает готовые rows | [test_storage_admission.py][SA]: `test_real_proven_integrity_and_parity_run_outside_global_admission`, `test_scan_witness_detects_wal_only_commit_after_read_transaction_ends` проверяют более узкие границы. Global admission не равен SQL transaction. Полная инструментальная проверка I/O во время transactions и физические результаты — pending. |
+| Все пути: без внешнего file/process/network I/O внутри SQL transactions | [execution_migration.py][E]: готовые batches до `_import`; [storage_migration.py][S]: metadata writes отделены от backup/journals; [journals.py][J]: готовые bounded rows до `_flush` | [test_storage_admission.py][SA]: `test_migration_application_io_stays_outside_sql_transactions` проверяет выбранные Python I/O на шести маршрутах по настоящему состоянию SQLite transactions. Admission fixtures остаются synthetic; native retirement и произвольный extension I/O этим не подтверждаются. |
 
 ## Границы переноса и Core providers
 
@@ -142,8 +142,24 @@ captured image может поддержать fresh SQL initialization при �
 библиотеки остаётся cold. Приватные данные проекта в `.pf` исходной копии остаются
 изменяемыми вне образа Core, с проверками alias/hardlink. Import и явные spec-loaders
 по-прежнему отклоняют неопубликованный код. Граница приватных данных sealed-образа
-не меняется. Тесты source initialization проверяют внешний проект и проект внутри
-игнорируемой `.pf/tmp` исходной копии.
+не меняется. Стандартный temporary-file staging доступен приватным данным проекта;
+пути опубликованного кода по-прежнему отклоняют custom openers. Тесты source
+initialization проверяют внешний проект и проект внутри игнорируемой `.pf/tmp`.
+
+`test_fresh_native_lazy_project_domains_keep_uuid` отдельно проверяет source
+и sealed native-входы без подмены capability. После создания standalone-проекта
+raw/search лениво создаются через обычные adapters, а второй процесс повторно
+открывает stores. Сохраняются UUID из receipt, ready pins, дедупликация events/raw,
+физическая identity search-файла и main binding.
+
+`test_migration_application_io_stays_outside_sql_transactions` наблюдает настоящие
+SQLite transactions при execution import, adoption всех четырёх признанных доменов
+и journal import. Проверяются Python file open/scan/fsync, backup, process
+creation/wait/signal и network calls; контрольная транзакция подтверждает отказ
+монитора при файловой записи. Сканер завершает транзакцию своего временного индекса
+дедупликации до передачи управления дальнейшему source/quarantine I/O или target
+importer. Это ограниченное transaction-доказательство с fixture admission,
+отдельное от native old-writer qualification и произвольного extension-level I/O.
 
 У ST12 три разные границы реализации:
 

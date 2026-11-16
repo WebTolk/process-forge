@@ -853,6 +853,9 @@ class JournalScanService:
                         report["filtered_rows"] += 1
                         continue
                     _identity(index, kind, record, report)
+                    # The iterator performs source/quarantine I/O and its caller
+                    # may open a target transaction after this yield.
+                    index.commit()
                     report[kind + "_rows"] += 1
                     report["valid_rows"] += 1
                     yield kind, record, f"{path}:{start}"

@@ -862,7 +862,7 @@ class NativeImage:
                 if (
                     target.resolve() != target
                     or relative in image.files
-                    or opener is not None
+                    or (opener is not None and not project_state)
                     or not closefd
                 ):
                     raise NativeControlError()

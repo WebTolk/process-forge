@@ -1,8 +1,7 @@
 # Storage paths: implementation and recovery qualification
 
-This finite inventory audits source revision
-`75fbbcb709f193aac5ccaa81659ce61b9a318f9b` and the accompanying qualification
-increment for issue #17 / T05.
+This finite inventory is maintained with the qualification increment for issue
+#17 / T05. Acceptance must identify the exact reviewed revision and OS receipts.
 A row describes an implementation boundary, not a qualified deployment or a PASS.
 Each path requires its stated ownership and safety evidence.
 Neither source tests with injected host proof nor UUID metadata qualify a deployed
@@ -119,7 +118,7 @@ and retained recovery evidence; unavailable required cases are not N/A.
 | ST10: committed WAL snapshot; UUID-preserving exclusive restore | [backup.py][B]: `SQLiteBackupService.create/verify/restore` | [test_backup.py][BT]: `SQLiteBackupTests.test_wal_commits_are_included_without_changing_source_bytes`, `test_existing_restore_destination_is_preserved`; [test_storage_uuid.py][ID]: `test_backup_restore_of_adopted_store_preserves_uuid`; [test_acceptance.py][IT]: `test_cli_backups_include_committed_wal_and_restore_exclusively`. One database, no live rebind or multi-store atomic snapshot. |
 | ST11: journal IDs/envelopes/originals preserved; conflict refusal and incomplete barrier | [journals.py][J]: `JournalMaintenanceService.migrate`, `_flush` | [test_journals.py][JT]: `test_conflicting_source_ids_refuse_before_mutation_even_with_skip`, `test_interrupted_import_keeps_both_barriers_and_retry_does_not_duplicate`, `test_batch_failure_rolls_back_only_current_batch_and_retry_preserves_prior_commit`; [test_acceptance.py][IT]: `test_cli_refusal_quarantine_explicit_skip_replay_and_legacy_entrypoint`. Writer cutover needs separate evidence. |
 | ST12: publication/recovery and storage readiness accepted separately | [update.py][U]: `apply_update`; [pf_native_control.py][N]: `replace_core`, `_run_update_child`; [file_update.py][FU] | [test_native_control.py][NT]: `test_joint_real_updater_and_independent_successor_child`, `test_real_updater_retained_target_repair_force_and_authority`; [test_cold_handoff.py][CT]: `test_unqualified_default_refuses_even_synthetic_reset`, `test_g2_interruption_resume_and_corrupt_backup`; [test_file_update.py][FT]: `test_actual_external_sealed_cli_updates_manifest_only_target`, `test_complete_or_partial_managed_markers_never_fall_back`. See provider limits below; installed/source presence is insufficient. |
-| All paths: no external file/process/network I/O inside SQL transactions | [execution_migration.py][E]: batches materialized before `_import` transaction; [storage_migration.py][S]: backup/journal writes outside metadata transaction; [journals.py][J]: `_flush` consumes materialized rows | [test_storage_admission.py][SA]: `test_real_proven_integrity_and_parity_run_outside_global_admission`, `test_scan_witness_detects_wal_only_commit_after_read_transaction_ends` prove narrower boundaries. Global admission is not a SQL transaction. Complete transaction-aware I/O instrumentation and physical results remain pending. |
+| All paths: no external file/process/network I/O inside SQL transactions | [execution_migration.py][E]: batches materialized before `_import`; [storage_migration.py][S]: metadata writes separated from backup/journals; [journals.py][J]: bounded rows before `_flush` | [test_storage_admission.py][SA]: `test_migration_application_io_stays_outside_sql_transactions` guards selected Python I/O across six migration routes using actual SQLite transaction state. Admission fixtures remain synthetic; this does not attest native retirement or arbitrary extension I/O. |
 
 ## Relocation and Core provider boundaries
 
@@ -144,8 +143,25 @@ Verified source entries retain the public inventory in memory; ordinary library
 imports remain cold. A source checkout's private `.pf` project data stays mutable
 outside that Core image, with alias/hardlink checks. Import and explicit spec
 loaders still refuse unpublished code. Sealed images keep their existing private
-data boundary. The source initialization tests cover both external projects and
-projects under the checkout's ignored `.pf/tmp`.
+data boundary. Standard temporary-file staging remains available for private
+project data; published code paths still reject custom openers. The source
+initialization tests cover both external projects and projects under the
+checkout's ignored `.pf/tmp`.
+
+`test_fresh_native_lazy_project_domains_keep_uuid` separately exercises source
+and sealed native entries without capability stubs. It creates a standalone
+project, lazily initializes raw/search through their ordinary adapters, and
+reopens the stores in a second process. Receipt-planned UUIDs, ready pins, event
+and raw deduplication, the search file identity and main binding must survive.
+
+`test_migration_application_io_stays_outside_sql_transactions` monitors actual
+SQLite transactions for execution import, all four recognized domain adoptions
+and journal import. It guards Python file open/scan/fsync, backup, process
+creation/wait/signal and network calls, and proves the monitor rejects a write
+inside a control transaction. The scanner commits its private deduplication
+index before yielding to further source/quarantine I/O or the target importer.
+This is bounded transaction evidence with fixture admission, separate from
+native old-writer qualification and arbitrary extension-level I/O.
 
 ST12 has three distinct implementation boundaries:
 

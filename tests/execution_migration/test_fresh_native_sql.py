@@ -200,7 +200,7 @@ def test_private_state_data_does_not_admit_unpublished_code(tmp_path, distributi
         "raise AssertionError('unpublished code executed')\n", encoding="utf-8"
     )
     code = """
-import contextlib, importlib.util, io, json, os, runpy, sys
+import contextlib, importlib.util, io, json, os, runpy, sys, tempfile
 from pathlib import Path
 cli, distribution = Path(sys.argv[1]), sys.argv[2]
 sys.argv = [str(cli), '--help']
@@ -213,6 +213,11 @@ import pf_native_control as native
 private = cli.parents[1] / '.pf/tmp/private-data'
 state = private / 'state.json'
 if distribution == 'source':
+    with tempfile.NamedTemporaryFile(dir=private) as staged:
+        staged.write(b'atomic capsule staging')
+        staged.flush()
+        staged.seek(0)
+        assert staged.read() == b'atomic capsule staging'
     assert json.loads(state.read_text(encoding='utf-8')) == {'ready': True}
     state.write_text('{"ready": false}', encoding='utf-8')
     assert json.loads(state.read_text(encoding='utf-8')) == {'ready': False}
@@ -230,6 +235,14 @@ else:
         pass
     else:
         raise AssertionError('sealed image private data boundary changed')
+def rejected_opener(*args):
+    raise AssertionError('published code reached a custom opener')
+try:
+    io.open(cli.parents[1] / 'tools/processforge.py', 'rb', opener=rejected_opener)
+except native.NativeControlError:
+    pass
+else:
+    raise AssertionError('published code accepted a custom opener')
 try:
     importlib.util.spec_from_file_location('private_alias', private / 't05_private_poison.py')
 except native.NativeControlError:
@@ -246,6 +259,76 @@ else:
 """
     result = run(tmp_path, "private-state", "-c", code, str(cli), distribution)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("distribution", ["source", "sealed"])
+def test_fresh_native_lazy_project_domains_keep_uuid(tmp_path, distribution):
+    cli = source_cli(tmp_path) if distribution == "source" else publish(tmp_path)
+    project = tmp_path / "standalone-project"
+    code = """
+import contextlib, io, json, runpy, sys
+from pathlib import Path
+cli, project, phase = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
+sys.argv = [str(cli), '--help']
+with contextlib.redirect_stdout(io.StringIO()):
+    try:
+        runpy.run_path(str(cli), run_name='__main__')
+    except SystemExit as result:
+        assert result.code == 0
+import pf_native_control as native
+from processforge_core.composition import build_storage_migration_host
+from processforge_core.configuration import ConfigurationProvider, PFConfig
+from processforge_core.maintenance import fresh_project as fresh
+from processforge_core.maintenance.storage_migration import _slot
+from processforge_core.process_event_journal import ProcessEventJournal
+from processforge_core.raw_hook_journal import RawHookJournal
+from processforge_core.resources import local_search
+provider = ConfigurationProvider.pinned(PFConfig())
+assert native.supports_owned_execution()
+if phase == 'create':
+    project.mkdir()
+    assert fresh.create_project_storage_root(project)
+    (project / '.pf/process-forge.yaml').write_text(
+        'project:\\n  id: native-domain-owner\\n', encoding='utf-8')
+    assert fresh.initialize_project_storage(project, None, configuration=provider)
+host = build_storage_migration_host(
+    project_root=project, workplace_root=None,
+    device_config_path=project.parent / 'device.yaml', configuration=provider)
+targets = {target.kind: target for target in host.context.targets}
+receipt = fresh._receipt(project)
+assert receipt['state'] == 'ready'
+expected = {item['kind']: item['store_id'] for item in receipt['domains']}
+binding = (project / '.pf/data/execution-storage.json').read_bytes()
+if phase == 'create':
+    assert not targets['raw'].target.exists()
+    assert not targets['search'].target.exists()
+else:
+    assert ProcessEventJournal(storage_host=host).count(targets['events'].target) == 1
+    assert RawHookJournal(storage_host=host).count(targets['raw'].target) == 1
+    assert local_search.index_status(project, {}, storage_host=host)['status'] == 'fresh'
+event = {'event_id': 'native-event', 'event_type': 'native.domain.test'}
+assert ProcessEventJournal(storage_host=host).append(targets['events'].target, event) == (phase == 'create')
+raw = {'raw_event_id': 'native-raw', 'raw_payload_hash': 'opaque',
+       'provider': 'fixture', 'adapter': 'fixture', 'received_at': '2026-11-16T00:00:00Z'}
+accepted = RawHookJournal(storage_host=host).accept(targets['raw'].target, raw)
+assert accepted['accepted'] and accepted['deduplicated'] == (phase != 'create')
+search_inode = targets['search'].target.stat().st_ino if phase != 'create' else None
+local_search.rebuild_index(project, {}, storage_host=host)
+if search_inode is not None:
+    assert targets['search'].target.stat().st_ino == search_inode
+for kind in ('events', 'raw', 'search'):
+    slot = _slot(project / '.pf', targets[kind])
+    assert slot['state'] == 'ready' and slot['store_id'] == expected[kind]
+assert (project / '.pf/data/execution-storage.json').read_bytes() == binding
+assert fresh._receipt(project) == receipt
+print(json.dumps({'domains': expected, 'binding': json.loads(binding)}, sort_keys=True))
+"""
+    observations = []
+    for phase in ("create", "reopen"):
+        result = run(tmp_path, phase, "-c", code, str(cli), str(project), phase)
+        assert result.returncode == 0, result.stdout + result.stderr
+        observations.append(json.loads(result.stdout))
+    assert observations[0] == observations[1]
 
 
 @pytest.mark.parametrize("core_first", [True, False])
