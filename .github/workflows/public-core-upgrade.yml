@@ -76,7 +76,7 @@ jobs:
     name: Core files from public 1.2.0 (${{ matrix.os }})
     needs: candidate
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -93,7 +93,27 @@ jobs:
           python-version: "3.11"
       - name: Install runtime dependencies
         run: python -m pip install -r requirements.txt
-      - name: Qualify the same Core archive on each OS
+      - name: Check file-update recovery and refusal regressions
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          subprocess.run([sys.executable, "-m", "pip", "install", "pytest==9.1.1"], check=True)
+          root = Path.cwd()
+          scratch = root / ".pf/tmp/t06-file-recovery-tests"
+          scratch.mkdir(parents=True)
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(str(root / p) for p in ("src", "tools", "tests"))
+          for name in ("TMPDIR", "TEMP", "TMP"):
+              environment[name] = str(scratch)
+          subprocess.run([
+              sys.executable, "-B", "-m", "pytest", "-q", "-ra", "-p", "no:cacheprovider",
+              "--basetemp=" + str(scratch / "pytest"), "tests/maintenance",
+          ], env=environment, check=True, timeout=180)
+      - name: Qualify the same Core archive and real recovery on each OS
         shell: python
         env:
           GH_TOKEN: ${{ github.token }}
@@ -140,9 +160,31 @@ jobs:
           report = json.loads((root / ".pf/artifacts/t06-public-core/results.json").read_bytes())
           assert report["core_file_checks"] == "passed"
           assert report["full_t06_qualified"] is False
+          recovery_out = root / ".pf/artifacts/t06-file-recovery"
+          subprocess.run([
+              sys.executable, "-B", "tools/smoke_public_core_upgrade.py", "--file-recovery",
+              "--public-dir", str(assets), "--candidate", str(archive),
+              "--sidecar", str(sidecar), "--commit", head,
+              "--sha256", os.environ["T06_ARCHIVE_SHA256"],
+              "--root", str(scratch / "recovery-fixture"), "--out", str(recovery_out),
+          ], check=True, timeout=300)
+          recovery = json.loads((recovery_out / "receipt.json").read_bytes())
+          assert recovery["archive_sha256"] == os.environ["T06_ARCHIVE_SHA256"]
+          assert recovery["source"]["commit"] == head
+          required = {
+              "actual_os_failure_before_manifest", "default_readonly", "no_confirm",
+              "wrong_archive", "recovery_fails_again", "confirmed_recovery",
+              "target_bytes_preimages_unknown",
+          }
+          assert set(recovery["matrix"]) == required
+          assert all(value == "pass" for value in recovery["matrix"].values())
+          assert recovery["full_t06_accepted"] is False
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: public-core-upgrade-${{ matrix.os }}
-          path: .pf/artifacts/t06-public-core/
+          path: |
+            .pf/artifacts/t06-public-core/
+            .pf/artifacts/t06-file-recovery/
           if-no-files-found: warn
+          include-hidden-files: true
