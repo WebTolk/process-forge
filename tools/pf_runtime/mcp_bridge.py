@@ -201,6 +201,39 @@ def _unavailable(request: Any) -> dict[str, Any] | None:
     return response
 
 
+def _reject_malformed(request: Any) -> tuple[bool, dict[str, Any] | None]:
+    """Reject fixed protocol shapes without starting or retaining a Core."""
+    request_id = _request_id(request)
+    if (
+        not isinstance(request, dict)
+        or request.get("jsonrpc") != "2.0"
+        or not isinstance(request.get("method"), str)
+        or (request.get("id") is not None and request_id is None)
+    ):
+        return True, {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": -32600, "message": "invalid request"},
+        }
+    params = request.get("params", {})
+    valid = isinstance(params, dict)
+    if valid and request["method"] == "tools/call":
+        valid = isinstance(params.get("name"), str) and isinstance(
+            params.get("arguments", {}), dict
+        )
+    if valid:
+        # Catalogues, per-tool schemas and all business authority belong to the
+        # fresh backend. A transport shape check cannot accept a domain request.
+        return False, None
+    if "id" not in request:
+        return True, None
+    return True, {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {"code": -32602, "message": "invalid params"},
+    }
+
+
 def _ping(request: Any) -> tuple[bool, dict[str, Any] | None]:
     """Answer transport liveness independently of business Core availability."""
     if not (
@@ -247,8 +280,23 @@ def main() -> int:
     for line in sys.stdin:
         if not line.strip():
             continue
-        request = _request_value(line)
-        handled, response = _ping(request)
+        try:
+            request = json.loads(line, parse_constant=_reject_constant)
+        except (ValueError, RecursionError):
+            print(
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": None,
+                        "error": {"code": -32700, "message": "parse error"},
+                    }
+                ),
+                flush=True,
+            )
+            continue
+        handled, response = _reject_malformed(request)
+        if not handled:
+            handled, response = _ping(request)
         if handled:
             if response is not None:
                 print(json.dumps(response, ensure_ascii=True), flush=True)
