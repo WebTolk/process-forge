@@ -134,4 +134,35 @@ Incomplete update journal записывает:
 - `manual_repair_required`, если manifest уже записан, journal неполный или безопасность нельзя доказать;
 - `nothing_to_repair`, если incomplete update отсутствует.
 
-Автоматическое выполнение continue/rollback намеренно уже, чем classification contract, и должно добавляться только для состояний, которые journal доказывает безопасными.
+По умолчанию repair и Python API `repair_status` остаются read-only.
+Одна классификация не разрешает восстановление. Новый file-only apply до первой
+мутации payload закрепляет SHA256 исходного архива, old/new manifests и плана,
+хеши и длины фактических preimages, а также исходное отсутствие added paths.
+
+Для failed/interrupted **before-manifest file-only** update, созданного этим
+updater, остановите выбранный Workplace App Server, устраните файловый сбой и
+запустите тот же внешний sealed installer с исходным архивом:
+
+```sh
+python installer/bin/pf.py core-update repair --core-root CORE --resume --archive ORIGINAL.zip --workplace-root WORKPLACE --confirm
+```
+
+Повторите исходный явный выбор Workplace; пропускайте его только если исходный
+apply также его пропустил. Без confirmation recovery не изменяет файлы.
+Сохраняются cooperating file mutex, unmanaged target, nonoverlap и offline guards.
+Проверяются identity Core/Workplace, все закреплённые control/backup bytes и
+затронутые файлы: допустимы только доказанное исходное либо точное целевое
+состояние. Прерывание после atomic replacement, но до публикации journal,
+обрабатывается идемпотентно по bytes; progress counters разрешением не служат.
+
+Recovery продолжает исходный план, не обходя incomplete-update blocker новым
+планированием. Сохраняются исходные backups, update identity и failure history;
+перед каждой допущенной попыткой удерживается точный предыдущий journal.
+Все target-owned bytes проверяются, manifest публикуется последним. Повторный
+сбой сохраняет incomplete journal и evidence. Unknown files остаются нетронутыми.
+
+Старые журналы без versioned proof, неполные/повреждённые backups, drift, чужой
+архив или binding, native/partial enrollment и любые after-manifest состояния
+отказывают. Обычный apply по-прежнему отказывает при incomplete update. Команда
+не выполняет rollback файлов, native adoption, переключение SQL binding или
+downgrade Core после SQL commits: для них нужен собственный supported maintenance.

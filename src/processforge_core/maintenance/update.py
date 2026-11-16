@@ -933,6 +933,36 @@ def apply_update(
         raise CoreUpdateError(error.code, error.message) from error
 
 
+def resume_file_update(
+    core_root: Path,
+    archive_path: Path,
+    *,
+    confirm: bool = False,
+    workplace_root: Path | None = None,
+) -> dict[str, Any]:
+    """Continue only a proven, before-manifest file-only operation."""
+    if not confirm:
+        raise CoreUpdateError(
+            "confirm_required", "file recovery requires explicit confirmation"
+        )
+    from contextvars import copy_context
+
+    for variable, value in copy_context().items():
+        if (
+            variable.name
+            in {"pf_diagnostic", "pf_configuration_operation", "pf_storage_operation"}
+            and value is not None
+        ):
+            raise CoreUpdateError(
+                "plan_blocked", "file recovery requires unwound operation scopes"
+            )
+    from .file_update import apply_file_update
+
+    return apply_file_update(
+        core_root, archive_path, workplace_root=workplace_root, resume=True
+    )
+
+
 def recovery_assessment(in_progress: dict[str, Any]) -> str:
     status = str(in_progress.get("status") or "")
     if status not in {"failed", "applying"}:

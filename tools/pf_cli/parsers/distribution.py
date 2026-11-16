@@ -149,4 +149,21 @@ class CoreUpdateCommandParser:
         core_update_apply.set_defaults(func=self._core_update_apply)
         core_update_repair = core_update_sub.add_parser("repair", help="Inspect incomplete core update repair state.")
         core_update_repair.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+        core_update_repair.add_argument(
+            "--resume",
+            action="store_true",
+            help="Continue a proven before-manifest file-only update.",
+        )
+        core_update_repair.add_argument(
+            "--archive", help="Exact original release archive, required with --resume."
+        )
+        core_update_repair.add_argument(
+            "--workplace-root",
+            help="Same explicit Workplace selected for the original apply.",
+        )
+        core_update_repair.add_argument(
+            "--confirm",
+            action="store_true",
+            help="Required confirmation for recovery file changes.",
+        )
         core_update_repair.set_defaults(func=self._core_update_repair)

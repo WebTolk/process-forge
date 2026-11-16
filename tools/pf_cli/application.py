@@ -32,7 +32,13 @@ class CliApplication:
         # have unwound. It owns its explicit updater boundary separately.
         if (
             args.command == "core-update"
-            and getattr(args, "core_update_command", "") == "apply"
+            and (
+                getattr(args, "core_update_command", "") == "apply"
+                or (
+                    getattr(args, "core_update_command", "") == "repair"
+                    and getattr(args, "resume", False)
+                )
+            )
         ) or (
             args.command in {"runtime", "server"}
             and getattr(args, "runtime_command", "") in {"serve", "run"}
