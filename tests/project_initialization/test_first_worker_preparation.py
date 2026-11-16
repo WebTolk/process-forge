@@ -275,8 +275,10 @@ def test_initialized_project_first_raw_and_worker_preparation(
     assert legacy.read_bytes() == before
 
 
+@pytest.mark.parametrize("colocated", [False, True])
 def test_source_init_creates_ready_sql_without_publishing_in_place(
     tmp_path: Path,
+    colocated: bool,
 ) -> None:
     import sqlite3
 
@@ -285,7 +287,8 @@ def test_source_init_creates_ready_sql_without_publishing_in_place(
     cli = source_cli(tmp_path)
     source = cli.parents[1]
     before = {path: path.read_bytes() for path in source.rglob("*") if path.is_file()}
-    workplace, project = tmp_path / "workplace", tmp_path / "project"
+    workplace = tmp_path / "workplace"
+    project = source / ".pf/tmp/project" if colocated else tmp_path / "project"
     successful(
         tmp_path,
         "workplace",
@@ -324,5 +327,7 @@ def test_source_init_creates_ready_sql_without_publishing_in_place(
             "SELECT authority,readiness,active_coverage FROM execution_state WHERE singleton=1"
         ).fetchone() == ("sql", "ready", "complete")
     assert {
-        path: path.read_bytes() for path in source.rglob("*") if path.is_file()
+        path: path.read_bytes()
+        for path in source.rglob("*")
+        if path.is_file() and ".pf" not in path.relative_to(source).parts
     } == before

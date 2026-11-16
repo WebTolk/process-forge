@@ -117,7 +117,7 @@ module.run_step(root, dict(os.environ), 'fixture')
                 return base
 
             def removed(path, *args, **kwargs):
-                base = Path(path)
+                base = Path(path).resolve()
                 if base in fixtures and not cleanup_observed:
                     cleanup_observed.append(base)
                     self.assertTrue((base / "child.ready").exists())

@@ -644,6 +644,7 @@ class NativeImage:
             files[relative] = raw
         self.files = MappingProxyType(files)
         self._active = False
+        self._source_checkout = False
 
     def relative(self, value: Any) -> str | None:
         if isinstance(value, int):
@@ -669,6 +670,7 @@ class NativeImage:
             resources[MANIFEST] = publication.manifest
         image.files = MappingProxyType(resources)
         image._active = False
+        image._source_checkout = False
         return image
 
     def read(self, relative: str) -> bytes:
@@ -840,9 +842,11 @@ class NativeImage:
                 and all(char in "0123456789abcdef" for char in report_parts[4])
                 and report_parts[5] in {"stdout.log", "stderr.log", "result.json"}
             )
-            if report_output:
+            project_state = image._source_checkout and report_parts[:1] == [".pf"]
+            if report_output or project_state:
                 target = image.root.joinpath(*report_parts)
-                # Only these mutable outputs may bypass the accepted byte image.
+                # Private project data in a verified source checkout is mutable.
+                # Code/spec loaders still require accepted publication bytes.
                 # Aliases, symlinks/reparse points and hard links stay failclosed.
                 for node in (target, *target.parents):
                     if node.exists() or node.is_symlink():
@@ -862,7 +866,12 @@ class NativeImage:
                     or not closefd
                 ):
                     raise NativeControlError()
-            if relative is None or relative.startswith("runtime/") or report_output:
+            if (
+                relative is None
+                or relative.startswith("runtime/")
+                or report_output
+                or project_state
+            ):
                 return original_open(
                     file, mode, buffering, encoding, errors, newline, closefd, opener
                 )
@@ -1716,6 +1725,7 @@ def bootstrap_entry(
         image = NativeImage.from_publication(root, source_publication)
         if image.root != root:
             raise NativeControlError()
+        image._source_checkout = True
         image.activate(_core_entry=_core_entry)
         _ENTRY = NativeEntry(root, source_publication, image, None)
         return _ENTRY

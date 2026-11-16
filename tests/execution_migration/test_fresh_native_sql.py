@@ -189,6 +189,65 @@ assert native.supports_owned_execution()
     assert not (source / "runtime/managed-ingress").exists()
 
 
+@pytest.mark.parametrize("distribution", ["source", "sealed"])
+def test_private_state_data_does_not_admit_unpublished_code(tmp_path, distribution):
+    cli = source_cli(tmp_path) if distribution == "source" else publish(tmp_path)
+    source = cli.parents[1]
+    private = source / ".pf/tmp/private-data"
+    private.mkdir(parents=True)
+    (private / "state.json").write_text('{"ready": true}', encoding="utf-8")
+    (private / "t05_private_poison.py").write_text(
+        "raise AssertionError('unpublished code executed')\n", encoding="utf-8"
+    )
+    code = """
+import contextlib, importlib.util, io, json, os, runpy, sys
+from pathlib import Path
+cli, distribution = Path(sys.argv[1]), sys.argv[2]
+sys.argv = [str(cli), '--help']
+with contextlib.redirect_stdout(io.StringIO()):
+    try:
+        runpy.run_path(str(cli), run_name='__main__')
+    except SystemExit as result:
+        assert result.code == 0
+import pf_native_control as native
+private = cli.parents[1] / '.pf/tmp/private-data'
+state = private / 'state.json'
+if distribution == 'source':
+    assert json.loads(state.read_text(encoding='utf-8')) == {'ready': True}
+    state.write_text('{"ready": false}', encoding='utf-8')
+    assert json.loads(state.read_text(encoding='utf-8')) == {'ready': False}
+    os.link(state, private / 'state-link.json')
+    try:
+        (private / 'state-link.json').read_bytes()
+    except native.NativeControlError:
+        pass
+    else:
+        raise AssertionError('hardlinked private data accepted')
+else:
+    try:
+        state.read_bytes()
+    except native.NativeControlError:
+        pass
+    else:
+        raise AssertionError('sealed image private data boundary changed')
+try:
+    importlib.util.spec_from_file_location('private_alias', private / 't05_private_poison.py')
+except native.NativeControlError:
+    pass
+else:
+    raise AssertionError('unpublished private spec accepted')
+sys.path.insert(0, str(private))
+try:
+    __import__('t05_private_poison')
+except native.NativeControlError:
+    pass
+else:
+    raise AssertionError('unpublished private import accepted')
+"""
+    result = run(tmp_path, "private-state", "-c", code, str(cli), distribution)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 @pytest.mark.parametrize("core_first", [True, False])
 def test_source_library_imports_leave_developer_files_available(core_first):
     code = """
