@@ -16803,9 +16803,41 @@ def command_core_update_apply(args: argparse.Namespace) -> int:
 
 
 def command_core_update_repair(args: argparse.Namespace) -> int:
-    from processforge_core.maintenance.update import repair_status
+    from processforge_core.maintenance.update import (
+        CoreUpdateError,
+        repair_status,
+        resume_file_update,
+    )
 
-    payload = repair_status(Path(args.core_root).expanduser().resolve())
+    try:
+        if args.resume:
+            if not args.archive:
+                raise CoreUpdateError(
+                    "archive_required", "file recovery requires the original archive"
+                )
+            payload = resume_file_update(
+                Path(args.core_root).expanduser().absolute(),
+                Path(args.archive).expanduser().absolute(),
+                confirm=bool(args.confirm),
+                workplace_root=Path(args.workplace_root).expanduser().absolute()
+                if args.workplace_root
+                else None,
+            )
+        else:
+            if args.archive or args.confirm or args.workplace_root:
+                raise CoreUpdateError(
+                    "resume_required", "recovery options require --resume"
+                )
+            payload = repair_status(Path(args.core_root).expanduser().resolve())
+    except CoreUpdateError as exc:
+        print(
+            json.dumps(
+                {"error": {"code": exc.code, "message": exc.message}},
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0 if payload.get("status") != "manual_repair_required" else 2
 

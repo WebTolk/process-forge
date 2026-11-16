@@ -147,6 +147,36 @@ The incomplete update journal records:
 - `manual_repair_required` when the manifest was already written, the journal is incomplete, or safety cannot be proven;
 - `nothing_to_repair` when no incomplete update exists.
 
-Automated continue/rollback execution remains intentionally narrower than the
-classification contract and should only be added for states that the journal can
-prove safe.
+The default repair command and the Python `repair_status` API remain read-only.
+The classification alone does not authorize recovery. A new file-only apply
+pins the original archive, old/new manifests, saved plan, actual preimage hashes
+and lengths, and initial absence of added paths before any payload mutation.
+
+For a failed or interrupted **before-manifest file-only** update made by this
+updater, stop the selected Workplace App Server, release the filesystem fault,
+and use the same external sealed installer and original archive:
+
+```sh
+python installer/bin/pf.py core-update repair --core-root CORE --resume --archive ORIGINAL.zip --workplace-root WORKPLACE --confirm
+```
+
+Repeat the original explicit Workplace selection; omit it only when the original
+apply omitted it. Without confirmation, no recovery writes occur. Recovery uses
+the same cooperating file mutex, unmanaged target, nonoverlap and offline guards.
+It checks target/Workplace identity, all pinned control and backup bytes, and
+current touched files against proven initial or exact intended bytes. An
+operation interrupted after replacement but before journal publication can be
+completed idempotently from those bytes. Progress counters alone grant nothing.
+
+Recovery continues the original plan without replanning around the incomplete
+update blocker. It preserves original backups, update identity and failure
+history, retains the prior journal for each admitted recovery attempt, verifies
+all target-owned bytes, and publishes the manifest last. Another failure retains
+the incomplete journal and evidence. Unknown files remain preserved.
+
+Old journals without versioned proof, incomplete/corrupt backups, drift, wrong
+archive or bindings, native/partial enrollment, and any after-manifest state
+refuse this route. Ordinary apply still refuses incomplete updates. This command
+does not roll back files, adopt native installations, change SQL bindings or
+downgrade Core after SQL commits; those states require their own supported
+maintenance procedure.

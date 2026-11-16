@@ -113,6 +113,7 @@ def apply_file_update(
     archive_path: Path,
     *,
     workplace_root: Path | None,
+    resume: bool = False,
 ) -> dict[str, Any]:
     """Apply a frozen release archive using the existing ownership contract."""
     from pf_native_control import (
@@ -239,9 +240,192 @@ def apply_file_update(
                 )
             _update_target(root, relative)
 
+    def pin(raw: bytes) -> dict[str, Any]:
+        return {"sha256": hashlib.sha256(raw).hexdigest(), "size": len(raw)}
+
+    def current(relative: str) -> bytes | None:
+        target = _update_target(root, relative)
+        try:
+            target.lstat()
+        except FileNotFoundError:
+            return None
+        return read(relative)
+
+    def binding() -> dict[str, Any]:
+        info = require_unmanaged_target(root).stat()
+        result: dict[str, Any] = {
+            "core_root": str(root),
+            "identity": [info.st_dev, info.st_ino],
+            "workplace": None,
+        }
+        if workplace_root is not None:
+            workplace = _target_root(workplace_root)
+            info = workplace.stat()
+            result["workplace"] = {
+                "root": str(workplace),
+                "identity": [info.st_dev, info.st_ino],
+                "manifest": pin(
+                    _read_regular(workplace, "workplace.yaml", MAX_MANIFEST)
+                ),
+            }
+        return result
+
+    def refuse() -> None:
+        raise CoreUpdateError(
+            "plan_blocked", "file recovery proof or target state differs"
+        )
+
+    def resume_inputs() -> tuple[dict[str, Any], dict[str, Any], Any, dict[str, Any]]:
+        progress = json.loads(
+            read("runtime/core-update/in-progress.json", MAX_MANIFEST)
+        )
+        if not isinstance(progress, dict):
+            refuse()
+        if not isinstance(progress.get("completed_operations"), list) or not all(
+            isinstance(op, dict) for op in progress["completed_operations"]
+        ):
+            refuse()
+        if (
+            not isinstance(progress.get("pending_operations"), list)
+            or not isinstance(progress.get("backed_up"), dict)
+            or not isinstance(progress.get("failure_history", []), list)
+            or not all(
+                isinstance(item, dict) for item in progress.get("failure_history", [])
+            )
+        ):
+            refuse()
+        update_id = progress["update_id"]
+        if (
+            not isinstance(update_id, str)
+            or not update_id.startswith("core-update-")
+            or any(
+                c
+                not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-."
+                for c in update_id
+            )
+            or progress.get("status") not in {"failed", "applying"}
+            or progress.get("maintenance_mode") != "file_only"
+            or progress.get("core_root") != str(root)
+            or any(
+                op.get("op") == "write_manifest"
+                for op in progress["completed_operations"]
+            )
+        ):
+            refuse()
+        prefix = f"runtime/core-update/backups/{update_id}"
+        if progress["backup_dir"] != str(_update_target(root, prefix)):
+            refuse()
+        proof_raw = read(prefix + "/control/recovery-proof.json", MAX_MANIFEST)
+        if progress.get("recovery_evidence") != {"version": 1, **pin(proof_raw)}:
+            refuse()
+        proof = json.loads(proof_raw)
+        if not isinstance(proof, dict):
+            refuse()
+        if (
+            proof["version"] != 1
+            or proof["binding"] != binding()
+            or proof["update_id"] != update_id
+            or proof["archive"] != pin(archive_raw)
+            or progress["archive_sha256"] != pin(archive_raw)["sha256"]
+        ):
+            refuse()
+        controls = {}
+        for name in ("old-manifest", "new-manifest", "plan"):
+            raw = read(prefix + f"/control/{name}.json", MAX_MANIFEST)
+            if pin(raw) != proof["controls"][name]:
+                refuse()
+            controls[name] = raw
+        if read(CORE_MANIFEST_NAME, MAX_MANIFEST) != controls["old-manifest"]:
+            refuse()
+        old, new = (
+            json.loads(controls[name]) for name in ("old-manifest", "new-manifest")
+        )
+        checked_paths(old, installed_legacy=True)
+        checked_paths(new)
+        plan = json.loads(controls["plan"])
+        if not isinstance(plan, dict) or not isinstance(proof["initial"], dict):
+            refuse()
+        frozen = _freeze_update_archive(archive_raw, {"new_manifest": new})
+        if frozen.manifest != controls["new-manifest"]:
+            refuse()
+        old_files, new_files = manifest_file_map(old), manifest_file_map(new)
+        common = old_files.keys() & new_files.keys()
+        changed, restored = set(plan["changed"]), set(plan["restored"])
+        if (
+            plan["blockers"]
+            or (plan.get("workplace_migration") or {}).get("operations")
+            or plan["core_root"] != str(root)
+            or plan["added"] != sorted(new_files.keys() - old_files.keys())
+            or plan["removed"] != sorted(old_files.keys() - new_files.keys())
+            or not changed <= common
+            or not restored <= common - changed
+            or plan["unchanged"] != sorted(common - changed)
+            or any(
+                old_files[p]["sha256"] != new_files[p]["sha256"]
+                for p in common - changed
+            )
+        ):
+            refuse()
+        paths = sorted(set(plan["removed"]) | changed | restored)
+        writes = sorted(set(plan["added"]) | changed | restored)
+        operations = (
+            [{"op": "backup", "path": p} for p in paths]
+            + [{"op": "delete", "path": p} for p in plan["removed"]]
+            + [{"op": "write", "path": p} for p in writes]
+            + [{"op": "write_manifest", "path": CORE_MANIFEST_NAME}]
+        )
+        completed = [
+            {"op": op["op"], "path": op["path"]}
+            for op in progress["completed_operations"]
+        ]
+        if (
+            completed + progress["pending_operations"] != operations
+            or len(completed) < len(paths)
+            or set(progress["backed_up"]) != set(paths)
+            or set(proof["initial"]) != set(paths) | set(writes)
+        ):
+            refuse()
+        for relative, initial in proof["initial"].items():
+            if relative in plan["added"] and initial is not None:
+                refuse()
+            if relative in paths:
+                saved = progress["backed_up"][relative]
+                if initial is None:
+                    if saved is not None:
+                        refuse()
+                elif (
+                    saved != "files/" + relative
+                    or pin(read(prefix + "/" + saved)) != initial
+                ):
+                    refuse()
+        validate_current(proof, plan, frozen)
+        return progress, plan, frozen, proof
+
+    def validate_current(
+        proof: dict[str, Any], plan: dict[str, Any], frozen: Any
+    ) -> None:
+        require_unmanaged_target(root)
+        require_offline()
+        if proof["binding"] != binding():
+            refuse()
+        for relative, initial in proof["initial"].items():
+            raw = current(relative)
+            actual = pin(raw) if raw is not None else None
+            intended = (
+                pin(frozen.payload[relative]) if relative in frozen.payload else None
+            )
+            if actual != initial and actual != intended:
+                refuse()
+        for relative, content in frozen.payload.items():
+            if relative not in proof["initial"] and current(relative) != content:
+                refuse()
+
     def run() -> dict[str, Any]:
         require_unmanaged_target(root)
         require_offline()
+        if resume:
+            progress, plan, frozen, proof = resume_inputs()
+            return execute(progress, plan, frozen, proof, resuming=True)
         old_raw = read(CORE_MANIFEST_NAME, MAX_MANIFEST)
         old = json.loads(old_raw)
         checked_paths(old, installed_legacy=True)
@@ -303,7 +487,7 @@ def apply_file_update(
             + [{"op": "write", "path": p} for p in writes]
             + [{"op": "write_manifest", "path": CORE_MANIFEST_NAME}]
         )
-        progress: dict[str, Any] = dict(
+        progress = dict(
             schema_version=1,
             update_id=update_id,
             status="applying",
@@ -322,13 +506,6 @@ def apply_file_update(
         )
         journal = _update_target(root, "runtime/core-update/in-progress.json")
 
-        def complete(op: str, relative: str) -> None:
-            progress["completed_operations"].append(
-                dict(op=op, path=relative, completed_at=_update_now())
-            )
-            progress["pending_operations"].remove(dict(op=op, path=relative))
-            write_json(journal, progress)
-
         atomic(_update_target(root, prefix + "/control/old-manifest.json"), old_raw)
         atomic(
             _update_target(root, prefix + "/control/new-manifest.json"), frozen.manifest
@@ -338,21 +515,97 @@ def apply_file_update(
             {k: v for k, v in plan.items() if k != "new_manifest"},
         )
         write_json(journal, progress)
+        return execute(progress, plan, frozen, None, resuming=False)
+
+    def execute(
+        progress: dict[str, Any],
+        plan: dict[str, Any],
+        frozen: Any,
+        proof: dict[str, Any] | None,
+        *,
+        resuming: bool,
+    ) -> dict[str, Any]:
+        prefix = "runtime/core-update/backups/" + progress["update_id"]
+        backup = _update_target(root, prefix)
+        journal = _update_target(root, "runtime/core-update/in-progress.json")
+        paths = sorted(
+            set(plan["removed"]) | set(plan["changed"]) | set(plan["restored"])
+        )
+        writes = sorted(
+            set(plan["added"]) | set(plan["changed"]) | set(plan["restored"])
+        )
+
+        def complete(op: str, relative: str) -> None:
+            item = dict(op=op, path=relative)
+            if item in progress["pending_operations"]:
+                progress["completed_operations"].append(
+                    {**item, "completed_at": _update_now()}
+                )
+                progress["pending_operations"].remove(item)
+                write_json(journal, progress)
+
         try:
-            for relative in paths:
+            if resuming:
+                # Retain the exact prior journal, including the original failure.
+                receipt = _update_target(
+                    root, prefix + f"/control/resume-{uuid.uuid4().hex}.json"
+                )
+                with _PHYSICAL_OPEN(receipt, "xb") as stream:
+                    stream.write(
+                        read("runtime/core-update/in-progress.json", MAX_MANIFEST)
+                    )
+                    stream.flush()
+                    os.fsync(stream.fileno())
+            initial: dict[str, Any] = {}
+            for relative in [] if resuming else paths:
                 require_unmanaged_target(root)
-                target = _update_target(root, relative)
-                preimage = read(relative) if target.exists() else None
+                preimage = current(relative)
                 if preimage is not None:
                     atomic(
                         _update_target(root, prefix + "/files/" + relative), preimage
                     )
+                    if read(prefix + "/files/" + relative) != preimage:
+                        raise OSError("backup verification failed")
                 progress["backed_up"][relative] = (
                     "files/" + relative if preimage is not None else None
                 )
+                initial[relative] = pin(preimage) if preimage is not None else None
                 complete("backup", relative)
+            if not resuming:
+                for relative in plan["added"]:
+                    if current(relative) is not None:
+                        refuse()
+                    initial[relative] = None
+                proof = {
+                    "version": 1,
+                    "update_id": progress["update_id"],
+                    "binding": binding(),
+                    "archive": pin(archive_raw),
+                    "initial": initial,
+                    "controls": {
+                        name: pin(read(prefix + f"/control/{name}.json", MAX_MANIFEST))
+                        for name in ("old-manifest", "new-manifest", "plan")
+                    },
+                }
+                proof_path = _update_target(
+                    root, prefix + "/control/recovery-proof.json"
+                )
+                write_json(proof_path, proof)
+                progress["recovery_evidence"] = {
+                    "version": 1,
+                    **pin(read(prefix + "/control/recovery-proof.json", MAX_MANIFEST)),
+                }
+                write_json(journal, progress)
+            assert proof is not None
+            validate_current(proof, plan, frozen)
             for relative in plan["removed"]:
                 require_unmanaged_target(root)
+                require_offline()
+                if proof["binding"] != binding():
+                    refuse()
+                raw = current(relative)
+                if raw is not None and pin(raw) != proof["initial"][relative]:
+                    refuse()
                 target = _update_target(root, relative)
                 target.unlink(missing_ok=True)
                 parent = target.parent
@@ -365,20 +618,39 @@ def apply_file_update(
                 complete("delete", relative)
             for relative in writes:
                 require_unmanaged_target(root)
-                atomic(_update_target(root, relative), frozen.payload[relative])
+                require_offline()
+                if proof["binding"] != binding():
+                    refuse()
+                raw = current(relative)
+                if raw != frozen.payload[relative]:
+                    if (pin(raw) if raw is not None else None) != proof["initial"][
+                        relative
+                    ]:
+                        refuse()
+                    atomic(_update_target(root, relative), frozen.payload[relative])
                 complete("write", relative)
             # Verify every new payload before publishing the new manifest.
             for relative, content in frozen.payload.items():
                 if read(relative) != content:
                     raise OSError("installed payload verification failed")
             require_unmanaged_target(root)
+            require_offline()
+            if (
+                read(CORE_MANIFEST_NAME, MAX_MANIFEST)
+                != read(prefix + "/control/old-manifest.json", MAX_MANIFEST)
+                or proof["binding"] != binding()
+            ):
+                refuse()
+            for relative in plan["removed"]:
+                if current(relative) is not None:
+                    refuse()
             atomic(_update_target(root, CORE_MANIFEST_NAME), frozen.manifest)
             if read(CORE_MANIFEST_NAME, MAX_MANIFEST) != frozen.manifest:
                 raise OSError("installed manifest verification failed")
             complete("write_manifest", CORE_MANIFEST_NAME)
             record = dict(
                 schema_version=1,
-                update_id=update_id,
+                update_id=progress["update_id"],
                 status="applied",
                 applied_at=_update_now(),
                 available_version=plan["available_version"],
@@ -388,6 +660,9 @@ def apply_file_update(
                 workplace_migration=None,
                 maintenance_mode="file_only",
                 archive_sha256=progress["archive_sha256"],
+                recovery_evidence=progress["recovery_evidence"],
+                failure_history=progress.get("failure_history", []),
+                resumed=resuming,
             )
             write_json(
                 _update_target(root, "runtime/core-update/last-apply.json"), record
@@ -395,16 +670,26 @@ def apply_file_update(
             journal.unlink()
             return record
         except Exception as error:
+            failure = dict(
+                code=getattr(error, "code", "file_operation_failed"),
+                errno=getattr(error, "errno", None),
+                winerror=getattr(error, "winerror", None),
+            )
+            progress.setdefault("failure_history", []).append(
+                {"failed_at": _update_now(), **failure}
+            )
             progress.update(
                 status="failed",
                 failed_at=_update_now(),
-                error=dict(code="file_operation_failed", message=str(error)),
+                error={**failure, "message": "file update operation failed"},
             )
             try:
                 write_json(journal, progress)
-            except OSError:
-                pass
-            raise _Failure("file_operation_failed", str(error)) from error
+            except OSError as cleanup:
+                error.add_note(f"journal publication failed: {type(cleanup).__name__}")
+            raise _Failure(
+                "file_operation_failed", "file update operation failed"
+            ) from error
 
     try:
         with registry_file_lock(lock, timeout_seconds=30, stale_after_seconds=0):

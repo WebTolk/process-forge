@@ -335,6 +335,239 @@ else:
     fixture.assert_no_apply(before)
 
 
+def failed_update(fixture: Harness) -> dict[str, Any]:
+    """Leave new proof and a real partial update using a supplementary I/O fault."""
+    result = fixture.run("""
+original_replace=file_update.os.replace
+def fail(source,destination):
+    if Path(destination)==target/"changed.txt":
+        raise PermissionError(13,"fixture denial")
+    return original_replace(source,destination)
+file_update.os.replace=fail
+try:
+    result=invoke()
+finally:
+    file_update.os.replace=original_replace
+result["status"]=core_status(target)
+emit(result)
+""")
+    assert result["code"] == "file_operation_failed"
+    return result["status"]["in_progress"]
+
+
+def recovery_cli(fixture: Harness, *options: str) -> tuple[int, dict[str, Any]]:
+    command = [
+        sys.executable,
+        "-I",
+        "-B",
+        str(fixture.manager / "bin/pf.py"),
+        "core-update",
+        "repair",
+        "--core-root",
+        str(fixture.target),
+        *options,
+    ]
+    result = subprocess.run(
+        command,
+        cwd=fixture.root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+    label = "repair-" + uuid.uuid4().hex
+    (fixture.root / (label + ".json")).write_text(
+        json.dumps(
+            {
+                "argv": command,
+                "exit": result.returncode,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    return result.returncode, json.loads(result.stdout)
+
+
+def evidence_snapshot(fixture: Harness) -> dict[str, str]:
+    return {
+        p.relative_to(fixture.target).as_posix(): sha(p.read_bytes())
+        for p in fixture.target.rglob("*")
+        if p.is_file()
+    }
+
+
+def test_confirmed_public_repair_preserves_preimages_and_failure(
+    fixture: Harness,
+) -> None:
+    progress = failed_update(fixture)
+    backup = Path(progress["backup_dir"])
+    saved = {
+        p.relative_to(backup).as_posix(): p.read_bytes()
+        for p in backup.rglob("*")
+        if p.is_file()
+    }
+    before = evidence_snapshot(fixture)
+    code, result = recovery_cli(fixture)
+    assert code == 0 and result["status"] == "safe_to_rollback"
+    assert evidence_snapshot(fixture) == before
+    code, result = recovery_cli(fixture, "--resume", "--archive", str(fixture.archive))
+    assert code == 1 and result["error"]["code"] == "confirm_required"
+    assert evidence_snapshot(fixture) == before
+    code, result = recovery_cli(
+        fixture, "--resume", "--archive", str(fixture.archive), "--confirm"
+    )
+    assert code == 0 and result["status"] == "applied" and result["resumed"]
+    assert result["update_id"] == progress["update_id"]
+    assert result["failure_history"] == progress["failure_history"]
+    assert all((backup / name).read_bytes() == raw for name, raw in saved.items())
+    assert any(
+        json.loads(p.read_bytes()) == progress
+        for p in (backup / "control").glob("resume-*.json")
+    )
+    for name, raw in {**NEW, **PRIVATE}.items():
+        assert (fixture.target / name).read_bytes() == raw
+    assert not (fixture.target / "removed.txt").exists()
+    assert not (fixture.target / "runtime/core-update/in-progress.json").exists()
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "archive",
+        "backup",
+        "missing_backup",
+        "control",
+        "missing_proof",
+        "old_journal",
+        "drift",
+        "added_collision",
+        "removed_drift",
+        "binding",
+        "workplace",
+        "after_manifest",
+        "manifest_bytes",
+        "native-control",
+        "managed-ingress",
+        "incomplete_backup",
+        "proof_link",
+    ],
+)
+def test_recovery_refusals_preserve_all_bytes(fixture: Harness, fault: str) -> None:
+    progress = failed_update(fixture)
+    backup = Path(progress["backup_dir"])
+    journal = fixture.target / "runtime/core-update/in-progress.json"
+    if fault == "archive":
+        fixture.archive.write_bytes(b"wrong archive")
+    elif fault == "backup":
+        (backup / "files/changed.txt").write_bytes(b"corrupt")
+    elif fault == "missing_backup":
+        (backup / "files/changed.txt").unlink()
+    elif fault == "control":
+        (backup / "control/plan.json").write_bytes(b"{}")
+    elif fault == "missing_proof":
+        (backup / "control/recovery-proof.json").unlink()
+    elif fault == "old_journal":
+        progress.pop("recovery_evidence")
+    elif fault == "drift":
+        (fixture.target / "changed.txt").write_bytes(b"foreign edit")
+    elif fault == "added_collision":
+        (fixture.target / "added.txt").write_bytes(b"foreign added path")
+    elif fault == "removed_drift":
+        (fixture.target / "removed.txt").write_bytes(b"foreign recreated path")
+    elif fault == "binding":
+        progress["core_root"] = str(fixture.root)
+    elif fault == "after_manifest":
+        progress["completed_operations"].append(
+            {"op": "write_manifest", "path": "processforge-core.manifest.json"}
+        )
+    elif fault == "manifest_bytes":
+        with zipfile.ZipFile(fixture.archive) as bundle:
+            (fixture.target / "processforge-core.manifest.json").write_bytes(
+                bundle.read("processforge-core.manifest.json")
+            )
+    elif fault in {"native-control", "managed-ingress"}:
+        (fixture.target / "runtime" / fault).mkdir()
+    elif fault == "incomplete_backup":
+        progress["backed_up"].pop("changed.txt")
+    elif fault == "proof_link":
+        os.link(backup / "control/recovery-proof.json", fixture.root / "proof-alias")
+    if fault in {"old_journal", "binding", "after_manifest", "incomplete_backup"}:
+        journal.write_text(json.dumps(progress), encoding="utf-8")
+    options = ["--resume", "--archive", str(fixture.archive), "--confirm"]
+    if fault == "workplace":
+        workplace = fixture.root / "different-workplace"
+        workplace.mkdir()
+        (workplace / "workplace.yaml").write_text("id: wrong", encoding="utf-8")
+        options += ["--workplace-root", str(workplace)]
+    before = evidence_snapshot(fixture)
+    code, result = recovery_cli(fixture, *options)
+    assert code == 1 and result["error"]["code"] == "plan_blocked", result
+    assert evidence_snapshot(fixture) == before
+
+
+def test_recovery_accepts_write_before_journal_publication(fixture: Harness) -> None:
+    result = fixture.run("""
+original_replace=file_update.os.replace
+def interrupt(source,destination):
+    result=original_replace(source,destination)
+    if Path(destination)==target/"changed.txt":
+        raise KeyboardInterrupt()
+    return result
+file_update.os.replace=interrupt
+try:
+    invoke()
+except KeyboardInterrupt:
+    emit({"interrupted": True})
+finally:
+    file_update.os.replace=original_replace
+""")
+    assert result["interrupted"]
+    progress = json.loads(
+        (fixture.target / "runtime/core-update/in-progress.json").read_bytes()
+    )
+    assert {"op": "write", "path": "changed.txt"} in progress["pending_operations"]
+    assert (fixture.target / "changed.txt").read_bytes() == NEW["changed.txt"]
+    code, result = recovery_cli(
+        fixture, "--resume", "--archive", str(fixture.archive), "--confirm"
+    )
+    assert code == 0 and result["resumed"]
+
+
+def test_recovery_failure_can_be_resumed_without_replacing_backups(
+    fixture: Harness,
+) -> None:
+    original = failed_update(fixture)
+    result = fixture.run("""
+from processforge_core.maintenance.update import resume_file_update
+original_replace=file_update.os.replace
+def fail(source,destination):
+    if Path(destination)==target/"changed.txt":
+        raise PermissionError(13,"recovery denial")
+    return original_replace(source,destination)
+file_update.os.replace=fail
+try:
+    resume_file_update(target,archive,confirm=True)
+except CoreUpdateError as error:
+    emit({"code": error.code})
+finally:
+    file_update.os.replace=original_replace
+""")
+    assert result["code"] == "file_operation_failed"
+    progress = json.loads(
+        (fixture.target / "runtime/core-update/in-progress.json").read_bytes()
+    )
+    assert progress["failure_history"][0] == original["failure_history"][0]
+    assert len(progress["failure_history"]) == 2
+    code, result = recovery_cli(
+        fixture, "--resume", "--archive", str(fixture.archive), "--confirm"
+    )
+    assert code == 0 and len(result["failure_history"]) == 2
+
+
 def test_actual_preimages_missing_owned_and_private_data_survive(
     fixture: Harness,
 ) -> None:
