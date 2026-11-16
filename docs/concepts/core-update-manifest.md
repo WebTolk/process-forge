@@ -55,6 +55,13 @@ markers, including partial enrollment, keep the target on its qualified native
 update route. The file updater creates no native authority and does not claim
 that its cooperating-writer mutex fences every independently running host.
 
+Public 1.2.0 shipped three Core-owned startup templates under its own .pf/:
+AGENTS.md, hooks.yaml and process-forge.yaml. The external file updater retains
+their actual preimages or absence before removing old-only paths. This historical
+allowance applies only to the installed 1.2.0 manifest; new archives still exclude
+private .pf data. Core replacement does not establish project migration authority.
+See the [public upgrade qualification boundary](../audits/issue-19-public-upgrade.md).
+
 ## Compatible Workplace Migration
 
 An archive may carry a declarative Workplace migration under

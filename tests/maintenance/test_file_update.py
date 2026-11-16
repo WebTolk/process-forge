@@ -89,13 +89,13 @@ def put(root: Path, relative: str, raw: bytes) -> None:
     path.write_bytes(raw)
 
 
-def old_manifest(files: dict[str, bytes]) -> bytes:
+def old_manifest(files: dict[str, bytes], *, version: str = "1.0.0") -> bytes:
     return (
         json.dumps(
             {
                 "schema_version": 1,
                 "kind": "processforge.core_manifest",
-                "version": "1.0.0",
+                "version": version,
                 "source": {"fixture": True},
                 "generated_at": "fixture",
                 "files": [
@@ -503,6 +503,9 @@ def test_invalid_archive_preserves_target(fixture: Harness, fault: str) -> None:
         "processes/user/private.yaml",
         "processes/custom/private.yaml",
         ".pf/runs/private.yaml",
+        ".pf/AGENTS.md",
+        ".pf/hooks.yaml",
+        ".pf/process-forge.yaml",
         "runtime/private.txt",
         "Processes/USER/private.yaml",
     ],
@@ -526,6 +529,54 @@ def test_manifest_cannot_claim_private_or_runtime_paths(
     result = fixture.run("emit(invoke())")
     assert result.get("code") == "plan_blocked", result
     fixture.assert_no_apply(before)
+
+
+@pytest.mark.parametrize("missing", [False, True])
+def test_public120_entry_templates_are_backed_up_and_removed(
+    fixture: Harness, missing: bool
+) -> None:
+    released = {
+        ".pf/AGENTS.md": b"public startup template\n",
+        ".pf/hooks.yaml": b"schema_version: 1\n",
+        ".pf/process-forge.yaml": b"schema_version: 1\n",
+    }
+    preimages = {**released, ".pf/AGENTS.md": b"locally edited startup template\n"}
+    for relative, raw in preimages.items():
+        put(fixture.target, relative, raw)
+    if missing:
+        (fixture.target / ".pf/hooks.yaml").unlink()
+    original = old_manifest({**OLD, **released}, version="1.2.0")
+    (fixture.target / "processforge-core.manifest.json").write_bytes(original)
+    result = fixture.run("emit(invoke())")
+    assert result["ok"], result
+    receipt = result["result"]
+    backup = Path(receipt["backup_dir"])
+    assert (backup / "control/old-manifest.json").read_bytes() == original
+    for relative, raw in preimages.items():
+        assert not (fixture.target / relative).exists()
+        if missing and relative == ".pf/hooks.yaml":
+            assert receipt["backed_up"][relative] is None
+        else:
+            assert (backup / receipt["backed_up"][relative]).read_bytes() == raw
+    for relative, raw in PRIVATE.items():
+        assert (fixture.target / relative).read_bytes() == raw
+
+
+@pytest.mark.parametrize(
+    "relative", [".pf/contexts/private.yaml", ".pf/configuration.yaml"]
+)
+def test_public120_manifest_cannot_claim_other_private_state(
+    fixture: Harness, relative: str
+) -> None:
+    put(fixture.target, relative, b"private state\n")
+    (fixture.target / "processforge-core.manifest.json").write_bytes(
+        old_manifest({**OLD, relative: b"private state\n"}, version="1.2.0")
+    )
+    before = fixture.snapshot()
+    result = fixture.run("emit(invoke())")
+    assert result.get("code") == "plan_blocked", result
+    fixture.assert_no_apply(before)
+    assert (fixture.target / relative).read_bytes() == b"private state\n"
 
 
 def directory_link(path: Path, target: Path) -> None:
