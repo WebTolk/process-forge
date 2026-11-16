@@ -215,15 +215,24 @@ def apply_file_update(
     def physical_digest(path: Path) -> str:
         return hashlib.sha256(read(path.relative_to(root).as_posix())).hexdigest()
 
-    def checked_paths(manifest: dict[str, Any]) -> None:
+    def checked_paths(
+        manifest: dict[str, Any], *, installed_legacy: bool = False
+    ) -> None:
         policy = ReleaseSourcePolicy()
         public_pf = {".pf/agents.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"}
         for relative in manifest_file_map(manifest):
             folded = relative.casefold()
+            # Public 1.2.0 shipped these Core-owned entry templates. Permit
+            # their existing backup/removal, never private target payload.
+            legacy_entry = (
+                installed_legacy
+                and manifest.get("version") == "1.2.0"
+                and folded in public_pf
+            )
             if (
                 folded.startswith("runtime/")
-                or (folded.startswith(".pf/") and folded not in public_pf)
-                or policy.release_path_is_forbidden(folded)
+                or (folded.startswith(".pf/") and not legacy_entry)
+                or (not legacy_entry and policy.release_path_is_forbidden(folded))
             ):
                 raise CoreUpdateError(
                     "plan_blocked", "manifest claims private or runtime data"
@@ -235,7 +244,7 @@ def apply_file_update(
         require_offline()
         old_raw = read(CORE_MANIFEST_NAME, MAX_MANIFEST)
         old = json.loads(old_raw)
-        checked_paths(old)
+        checked_paths(old, installed_legacy=True)
         # Existing planner accepts a pathname. Freeze its input in an owned
         # runtime control file and use exactly those validated bytes thereafter.
         frozen_path = _update_target(

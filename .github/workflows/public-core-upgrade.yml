@@ -1,0 +1,86 @@
+name: Public Core upgrade
+
+on:
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-files:
+    name: Core files from public 1.2.0 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Build exact candidate and qualify Core files
+        shell: python
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          import hashlib
+          import json
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / ".pf/tmp/t06-public-core"
+          assets = scratch / "assets"
+          assets.mkdir(parents=True)
+          archive = assets / "processforge-candidate.zip"
+          sidecar = assets / "processforge-candidate.manifest.json"
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], text=True).strip()
+          print("SOURCE_HEAD", head, "SOURCE_TREE", tree, flush=True)
+          subprocess.run([
+              sys.executable, "-B", "bin/pf.py", "release-pack",
+              "--root", str(root), "--output", str(archive),
+          ], check=True, timeout=90)
+          metadata = json.loads(sidecar.read_bytes())
+          assert metadata["source"]["commit"] == head
+          assert metadata["source"]["dirty"] is False
+          archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
+          assert archive_hash == metadata["archive"]["sha256"]
+          subprocess.run([
+              "gh", "release", "download", "v1.2.0",
+              "--repo", "WebTolk/process-forge",
+              "--pattern", "processforge-1.2.0.zip",
+              "--pattern", "processforge-1.2.0.manifest.json",
+              "--dir", str(assets),
+          ], check=True, timeout=90)
+          subprocess.run([
+              sys.executable, "-B", "tools/smoke_public_core_upgrade.py",
+              "--public-dir", str(assets), "--candidate", str(archive),
+              "--sidecar", str(sidecar), "--commit", head, "--sha256", archive_hash,
+              "--root", str(scratch / "fixture"),
+              "--out", str(root / ".pf/artifacts/t06-public-core"),
+          ], check=True, timeout=660)
+          # Component success never qualifies native adoption, SQL or a worker.
+          report = json.loads((root / ".pf/artifacts/t06-public-core/results.json").read_bytes())
+          assert report["core_file_checks"] == "passed"
+          assert report["full_t06_qualified"] is False
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: public-core-upgrade-${{ matrix.os }}
+          path: |
+            .pf/artifacts/t06-public-core/
+            .pf/tmp/t06-public-core/assets/processforge-candidate.manifest.json
+          if-no-files-found: warn

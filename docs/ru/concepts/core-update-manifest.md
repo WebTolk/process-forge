@@ -39,6 +39,13 @@ python bin/pf.py core-update repair --core-root <core>
 
 `plan` работает read-only. `apply` требует `--confirm`.
 
+Публичная 1.2.0 включала три Core-owned startup template в собственной .pf/:
+AGENTS.md, hooks.yaml и process-forge.yaml. Внешний file updater сохраняет их
+реальные preimages либо отсутствие перед удалением old-only paths. Исключение
+действует только для установленного manifest точной версии 1.2.0; новые архивы
+по-прежнему исключают private .pf data. Замена Core не даёт authority для миграции
+проекта. См. [границы проверки public upgrade](../audits/issue-19-public-upgrade.md).
+
 ## Совместимая миграция Workplace
 
 Архив может содержать декларативную миграцию Workplace в `updates/migrations/`.
