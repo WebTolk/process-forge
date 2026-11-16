@@ -152,6 +152,7 @@ def _database(
     except sqlite3.Error as exc:
         raise JournalError("journal_database_error: " + str(exc)) from exc
     connection.row_factory = sqlite3.Row
+    primary: BaseException | None = None
     try:
         connection.execute("PRAGMA busy_timeout = 10000")
         actual_id = connection.execute("PRAGMA application_id").fetchone()[0]
@@ -207,9 +208,23 @@ def _database(
             connection.execute("PRAGMA synchronous = FULL")
         yield connection
     except sqlite3.Error as exc:
-        raise JournalError("journal_database_error: " + str(exc)) from exc
+        primary = JournalError("journal_database_error: " + str(exc))
+        raise primary from exc
+    except BaseException as exc:
+        primary = exc
+        raise
     finally:
-        connection.close()
+        try:
+            connection.close()
+        except (sqlite3.Error, OSError) as cleanup:
+            if primary is None:
+                from .database.errors import DatabaseError
+                from .database.sqlite import _failure
+
+                if isinstance(cleanup, sqlite3.Error):
+                    raise _failure(cleanup, None) from cleanup
+                raise DatabaseError("database_io_failed") from cleanup
+            primary.add_note(f"journal_close_failed: {type(cleanup).__name__}")
 
 
 @contextmanager
@@ -220,7 +235,7 @@ def adapter_identity_access(
     if storage_host is None:
         from .project.configuration_inputs import operation_storage_host
 
-        storage_host = operation_storage_host(path)
+        storage_host = operation_storage_host(path, writable=writable)
     if storage_host is None:
         yield None
         return
@@ -230,7 +245,7 @@ def adapter_identity_access(
     try:
         selected_context = storage_host.context
     except MaintenanceError as error:
-        if error.code != "project_identity_required":
+        if writable or error.code != "project_identity_required":
             raise
         # Missing stable identity prevents adoption, while the original
         # adapter still refuses any already-adopted envelope without its host.
@@ -240,6 +255,8 @@ def adapter_identity_access(
     if not targets and any(
         selected == path for _kind, selected in storage_host.context.unqualified_targets
     ):
+        if writable:
+            raise MaintenanceError("owner_identity_required")
         from .maintenance.storage_migration import _descriptor
 
         # Qualified layout and no metadata/pending pin are required even when
@@ -252,18 +269,20 @@ def adapter_identity_access(
     if len(targets) != 1 or targets[0].kind == "main":
         raise MaintenanceError("storage_target_invalid")
     target = targets[0]
+    if writable:
+        from .maintenance.fresh_project import ordinary_identity_access, owns_target
+
+        if owns_target(storage_host, target):
+            with ordinary_identity_access(storage_host, target) as identity:
+                yield identity
+            return
     if writable and path.exists() and storage_host.automatic:
         # Run adoption/recovery before any target gate or domain SQL session.
         from dataclasses import replace
 
         context = replace(storage_host.context, targets=(target,))
         report = storage_host.service.ensure_ready(context, trigger="first_write")
-        if report.get("blocked") and not any(
-            item.get("target_relative_path") == target.target_relative_path
-            and item.get("state") == "deferred"
-            and item.get("legacy_allowed") is True
-            for item in report.get("targets", ())
-        ):
+        if report.get("blocked"):
             raise MaintenanceError(
                 str(
                     (report.get("error") or {}).get("code")
@@ -272,9 +291,11 @@ def adapter_identity_access(
             )
     if writable and not path.exists():
         with storage_host.service.new_store_identity(
-            storage_host.context, target, _allow_legacy=True
+            storage_host.context, target
         ) as store_id:
-            yield None if store_id is None else (target, store_id)
+            if store_id is None:
+                raise MaintenanceError("storage_migration_required")
+            yield target, store_id
     else:
         root = (
             storage_host.context.workplace_root
@@ -316,6 +337,8 @@ def adapter_identity_access(
             registry_lock=storage_host.service.registry_lock,
             driver=storage_host.service.driver,
         ) as store_id:
+            if writable and store_id is None:
+                raise MaintenanceError("storage_migration_required")
             yield None if store_id is None else (target, store_id)
 
 

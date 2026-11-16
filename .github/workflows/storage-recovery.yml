@@ -42,7 +42,8 @@ jobs:
           scratch = root / '.pf' / 'tmp' / 'storage-recovery'
           environment = dict(os.environ)
           environment['PYTHONPATH'] = os.pathsep.join(str(root / name) for name in ('src', 'tools', 'tests'))
-          for name in ('PF_W4_TEST_ROOT', 'W3_FIXTURE_ROOT', 'TMPDIR', 'TEMP', 'TMP'):
+          for name in ('PF_W4_TEST_ROOT', 'W3_FIXTURE_ROOT', 'PF_TEST_SCRATCH_ROOT',
+                       'TMPDIR', 'TEMP', 'TMP', 'LOCALAPPDATA', 'XDG_CONFIG_HOME'):
               directory = scratch / name.lower()
               directory.mkdir(parents=True, exist_ok=True)
               environment[name] = str(directory)
@@ -51,6 +52,13 @@ jobs:
               'tests/execution_migration/test_storage_uuid.py',
               'tests/execution_migration/test_automatic.py',
               'tests/execution_migration/test_storage_admission.py',
+              'tests/execution_migration/test_physical_storage_paths.py',
+              'tests/execution_migration/test_fresh_native_sql.py',
+               'tests/execution_migration/test_fresh_project_domains.py',
+               'tests/execution_migration/test_fresh_bootstrap_preflight.py',
+               'tests/project_initialization',
+              'tests/execution_migration/test_required_write_readiness.py',
+              'tests/executions/test_configuration_access.py',
               'tests/execution_migration/test_compatibility.py',
               'tests/database', 'tests/maintenance_backup', 'tests/maintenance_scan',
               'tests/maintenance_service', 'tests/maintenance_cli',
@@ -58,7 +66,13 @@ jobs:
           ]
           # These two assertions exercise semantics of the other OS only.
           # Applicable link/locking/recovery cases may not be skipped.
-          if os.name != 'nt':
+          if os.name == 'nt':
+              selection += [
+                  'tests/execution_migration/test_native_control.py::test_real_legacy_manager_refuses_active_tree_then_retires',
+                  'tests/execution_migration/test_native_control.py::test_real_managed_execution_import_process_death_resume',
+                  'tests/execution_migration/test_native_control.py::test_real_managed_uuid_adoption_process_death_resume',
+              ]
+          else:
               selection += [
                   '--deselect=tests/maintenance_backup/test_backup.py::SQLiteBackupTests::test_windows_device_names_are_rejected_before_io',
                   '--deselect=tests/maintenance_integration/test_acceptance.py::test_windows_junctions_are_refused_by_all_maintenance_operations',
@@ -66,7 +80,8 @@ jobs:
           report = root / 'storage-recovery-results.xml'
           result = subprocess.run([
               sys.executable, '-B', '-m', 'pytest', '-q', '-ra',
-              '-p', 'no:cacheprovider', '--junitxml=' + str(report), *selection,
+              '-p', 'no:cacheprovider', '--basetemp=' + str(scratch / 'pytest'),
+              '--junitxml=' + str(report), *selection,
           ], env=environment, check=False, timeout=900)
           if report.exists():
               skipped = [case.get('name') for case in ET.parse(report).iter('testcase')
@@ -80,3 +95,73 @@ jobs:
         with:
           name: storage-recovery-results-${{ matrix.os }}
           path: storage-recovery-results.xml
+
+  update-paths:
+    name: Storage update paths (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Qualify existing file and managed update boundaries
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+          import xml.etree.ElementTree as ET
+
+          root = Path.cwd()
+          scratch = root / '.pf' / 'tmp' / 'storage-update'
+          environment = dict(os.environ)
+          environment['PYTHONPATH'] = os.pathsep.join(str(root / name) for name in ('src', 'tools', 'tests'))
+          for name in ('PF_W4_TEST_ROOT', 'W3_FIXTURE_ROOT', 'PF_TEST_SCRATCH_ROOT',
+                       'TMPDIR', 'TEMP', 'TMP', 'LOCALAPPDATA', 'XDG_CONFIG_HOME'):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          selection = ['tests/maintenance/test_file_update.py']
+          if os.name == 'nt':
+              selection += [
+                  'tests/execution_migration/test_native_control.py::test_joint_real_updater_and_independent_successor_child',
+                  'tests/execution_migration/test_native_control.py::test_real_updater_retained_target_repair_force_and_authority',
+                  'tests/execution_migration/test_cold_handoff.py::test_unqualified_default_refuses_even_synthetic_reset',
+                  'tests/execution_migration/test_cold_handoff.py::test_real_same_boot_negative',
+                  'tests/execution_migration/test_cold_handoff.py::test_actual_accesscheck_and_child_file_denial',
+                  'tests/execution_migration/test_cold_handoff.py::test_native_lock_blocks_real_other_process',
+              ]
+          else:
+              # These fault seams exercise the Windows tasklist branch only.
+              selection += ['-k', 'not test_uncertain_or_active_windows_pid_refuses_before_apply']
+          report = root / 'storage-update-results.xml'
+          result = subprocess.run([
+              sys.executable, '-B', '-m', 'pytest', '-q', '-ra',
+              '-p', 'no:cacheprovider', '--basetemp=' + str(scratch / 'pytest'),
+              '--junitxml=' + str(report), *selection,
+          ], env=environment, check=False, timeout=600)
+          if report.exists():
+              skipped = [case.get('name') for case in ET.parse(report).iter('testcase')
+                         if case.find('skipped') is not None]
+              assert not skipped, 'Required update scenarios skipped: ' + repr(skipped)
+          if result.returncode:
+              raise SystemExit(result.returncode)
+          assert report.is_file(), 'Update qualification report missing'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: storage-update-results-${{ matrix.os }}
+          path: storage-update-results.xml

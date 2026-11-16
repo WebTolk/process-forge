@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import platform
 import queue
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -19,6 +19,12 @@ from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[2]
 IDENTITY_URI = "pf://core/identity"
+INVENTORY_SPEC = importlib.util.spec_from_file_location(
+    "bridge_inventory", ROOT / "tools/validate-process-forge-checksums.py"
+)
+assert INVENTORY_SPEC is not None and INVENTORY_SPEC.loader is not None
+INVENTORY = importlib.util.module_from_spec(INVENTORY_SPEC)
+INVENTORY_SPEC.loader.exec_module(INVENTORY)
 
 
 class WireClient:
@@ -171,16 +177,14 @@ class StdioBridgeTest(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory(prefix="pf-mcp-bridge-")
         self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name).resolve()
         self.source = self.root / "distribution"
         self.source.mkdir()
-        for directory in ("src", "tools"):
-            shutil.copytree(
-                ROOT / directory,
-                self.source / directory,
-                ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
-            )
-        shutil.copyfile(ROOT / "VERSION", self.source / "VERSION")
+        for name, path in INVENTORY.public_file_entries(ROOT):
+            target = self.source / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(INVENTORY.released_content(path))
+        self.refresh_inventory()
         self.workplace = self.root / "workplace"
         self.workplace.mkdir()
         (self.workplace / "workplace.yaml").write_text(
@@ -188,6 +192,12 @@ class StdioBridgeTest(unittest.TestCase):
         )
         self.client = WireClient(self.source, self.workplace, backend_timeout_seconds=5)
         self.addCleanup(self.client.close)
+
+    def refresh_inventory(self) -> None:
+        """Publish coherent source bytes for the next genuine backend entry."""
+        inventory = self.source / INVENTORY.PUBLIC_INVENTORY
+        inventory.parent.mkdir(parents=True, exist_ok=True)
+        inventory.write_text(INVENTORY.build_inventory(self.source), encoding="utf-8")
 
     def identity(self) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         response, notices = self.client.exchange(
@@ -227,7 +237,7 @@ class StdioBridgeTest(unittest.TestCase):
         properties = self.source / "src/processforge_core/common/properties.py"
         original = properties.read_text(encoding="utf-8")
         changed = original.replace(
-            "build_metadata_unavailable", "bridge_fixture_core_v2"
+            "source_revision_unavailable", "bridge_fixture_core_v2"
         )
         self.assertNotEqual(original, changed)
         properties.write_text(changed, encoding="utf-8")
@@ -239,6 +249,7 @@ class StdioBridgeTest(unittest.TestCase):
         )
         self.assertNotEqual(original_entry, changed_entry)
         entry.write_text(changed_entry, encoding="utf-8")
+        self.refresh_inventory()
         print(
             json.dumps(
                 {
@@ -271,6 +282,7 @@ class StdioBridgeTest(unittest.TestCase):
         self.assertEqual(ping["result"], {})
         self.client.exchange("resources/unsubscribe", {"uri": IDENTITY_URI})
         properties.write_text(original, encoding="utf-8")
+        self.refresh_inventory()
         _, notices = self.identity()
         self.assertEqual(notices, [])
         denied, _ = self.client.exchange("resources/read", {"uri": properties.as_uri()})
@@ -309,6 +321,7 @@ class StdioBridgeTest(unittest.TestCase):
         self.assertNotIn("private backend diagnostic", json.dumps(failed))
         self.assertEqual(self.client.stderr, [])
         entry.write_bytes(original)
+        self.refresh_inventory()
         ping, _ = self.client.exchange("ping")
         self.assertEqual(ping["result"], {})
         restored, _ = self.client.exchange("resources/read", {"uri": IDENTITY_URI})
@@ -316,11 +329,15 @@ class StdioBridgeTest(unittest.TestCase):
         self.assertEqual(marker.read_text(encoding="utf-8"), "attempt\n")
 
     def test_invalid_protocol_does_not_load_business_core(self) -> None:
+        # Capture the genuine transport before introducing a business-Core trap.
+        ping, _ = self.client.exchange("ping")
+        self.assertEqual(ping["result"], {})
         core = self.source / "tools/processforge.py"
         original = core.read_bytes()
         core.write_text(
             "raise RuntimeError('business Core must not load')\n", encoding="utf-8"
         )
+        self.refresh_inventory()
         rejected, notices = self.client.exchange("initialize", {"capabilities": []})
         self.assertEqual(rejected["error"]["code"], -32602)
         self.assertEqual(notices, [])
@@ -329,6 +346,7 @@ class StdioBridgeTest(unittest.TestCase):
             rejected, _ = self.client.exchange("tools/call", {"name": name})
             self.assertEqual(rejected["error"]["code"], -32602)
         core.write_bytes(original)
+        self.refresh_inventory()
         accepted, _ = self.client.exchange("initialize")
         self.assertEqual(accepted["result"]["protocolVersion"], "2024-11-05")
 
@@ -360,6 +378,7 @@ class StdioBridgeTest(unittest.TestCase):
                 ping, _ = self.client.exchange("ping")
                 self.assertEqual(ping["result"], {})
                 entry.write_bytes(original)
+                self.refresh_inventory()
                 restored, _ = self.client.exchange(
                     "resources/read", {"uri": IDENTITY_URI}
                 )
@@ -391,6 +410,7 @@ class StdioBridgeTest(unittest.TestCase):
                 ping, _ = self.client.exchange("ping")
                 self.assertEqual(ping["result"], {})
                 entry.write_bytes(original)
+                self.refresh_inventory()
                 restored, _ = self.client.exchange(
                     "resources/read", {"uri": IDENTITY_URI}
                 )

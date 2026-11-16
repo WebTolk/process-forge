@@ -344,24 +344,14 @@ def test_windows_junctions_are_refused_by_all_maintenance_operations(
     original_source = source.read_bytes()
     originals = events.read_bytes(), raw.read_bytes()
     junction = tmp_path / "project-junction"
-    script = tmp_path / "create-junction.ps1"
-    script.write_text(
-        "param([string] $JunctionPath, [string] $JunctionTarget)\n"
-        "$ErrorActionPreference = 'Stop'\n"
-        "New-Item -ItemType Junction -Path $JunctionPath "
-        "-Target $JunctionTarget | Out-Null\n",
-        encoding="utf-8-sig",
-    )
     result = subprocess.run(
         [
-            "powershell.exe",
-            "-NoProfile",
-            "-NonInteractive",
-            "-File",
-            str(script),
-            "-JunctionPath",
+            os.environ.get("COMSPEC", "cmd.exe"),
+            "/d",
+            "/c",
+            "mklink",
+            "/J",
             str(junction),
-            "-JunctionTarget",
             str(project),
         ],
         cwd=tmp_path,

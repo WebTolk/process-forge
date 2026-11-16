@@ -78,7 +78,7 @@ def interrupt(service, started, project, evidence, target, when):
     require(captured["hit"], target)
     return captured["intent"]
 
-def verify_final(project, started, intent):
+def verify_final(project, workplace, started, intent):
     owned = paths(project, started)
     task = yaml.safe_load(owned["assignment"].read_text(encoding="utf-8"))
     run = yaml.safe_load(owned["run"].read_text(encoding="utf-8"))
@@ -93,9 +93,11 @@ def verify_final(project, started, intent):
         require(task == intent["final"]["assignment"] and run == intent["final"]["run"], "terminal payload changed on retry")
         for key, journal_key in [("summary", "summary"), ("handoff", "handoff"), ("index", "task_index")]:
             require(owned[key].read_text(encoding="utf-8") == intent["final"][journal_key]["content"], f"{key} content changed on retry")
+        from processforge_core.project.configuration_inputs import configuration_operation
         from processforge_core.work.consistency import RunTaskInputReader
 
-        events = [row for _sequence, row, _error in core.iter_process_events(RunTaskInputReader().event_runtime_paths(project)[0])]
+        with configuration_operation(project, workplace):
+            events = [row for _sequence, row, _error in core.iter_process_events(RunTaskInputReader().event_runtime_paths(project)[0])]
         for spec in intent["final"]["events"]:
             require(sum(item.get("event_id") == spec["event_id"] for item in events) == 1, spec)
     summary = owned["summary"].read_text(encoding="utf-8")
@@ -123,7 +125,7 @@ def test_failure_matrix():
             result = operation(**selection, outcome="ignored-invalid-outcome" if pending else "completed", notes="ignored retry note" if pending else "original completion note")
             committed = target == "cleanup" and when == "after"
             require(result.get("action") == "run_completed" or (committed and result.get("reason") == "work_is_terminal"), result)
-            verify_final(project, started, intent)
+            verify_final(project, workplace, started, intent)
             owned = paths(project, started)
             before = {key: path.read_bytes() for key, path in owned.items() if key != "intent"}
             repeated = fresh.transition(run_id=started["run_id"], outcome="completed")
@@ -157,7 +159,7 @@ def test_invalid_intents_fail_closed():
         owned["intent"].write_bytes(original)
         recovered = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer()).transition(run_id=started["run_id"], outcome="completed")
         require(recovered.get("action") == "run_completed", recovered)
-        verify_final(project, started, intent)
+        verify_final(project, workplace, started, intent)
         print("PASS: malformed journals rejected without writes", flush=True)
 
 def main():

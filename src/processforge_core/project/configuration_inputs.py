@@ -158,7 +158,9 @@ def _first_write_storage_host(
     return host
 
 
-def operation_storage_host(path: Path) -> StorageMigrationHost | None:
+def operation_storage_host(
+    path: Path, *, writable: bool = False
+) -> StorageMigrationHost | None:
     """Route a selected adapter within this operation; no process-global cache."""
     from ..maintenance.contracts import MaintenanceError
 
@@ -169,7 +171,11 @@ def operation_storage_host(path: Path) -> StorageMigrationHost | None:
         context = host.context
     except MaintenanceError as error:
         current = _OPERATION.get()
-        if error.code == "project_identity_required" and current is not None:
+        if (
+            not writable
+            and error.code == "project_identity_required"
+            and current is not None
+        ):
             _identityless_legacy(current[0][0], current[0][1], current[1])
             return None
         raise

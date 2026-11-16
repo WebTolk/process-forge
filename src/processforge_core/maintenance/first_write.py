@@ -42,6 +42,9 @@ def _ensure_execution_storage_ready(
     if snapshot.errors:
         raise MaintenanceError("storage_configuration_invalid")
     pinned = ConfigurationProvider.pinned(snapshot.config, errors=snapshot.errors)
+    from .fresh_project import initialize_project_storage
+
+    initialize_project_storage(project_root, workplace_root, configuration=pinned)
     try:
         route = select_execution_storage(
             project_root, workplace_root, configuration=pinned

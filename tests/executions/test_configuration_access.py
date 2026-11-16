@@ -768,8 +768,50 @@ def test_accounting_injection_snapshot_and_backup_destination(workspace):
         repository.backup(target)
 
 
+def _qualified_transport_stores(project, workplace, pinned):
+    """Seed ready envelopes for transport tests, without native migration proof."""
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.maintenance.storage_migration import (
+        _publish_pin,
+        add_store_identity,
+    )
+
+    _write(project / ".pf/process-forge.yaml", "project: {id: project}\n")
+    _write(workplace / "workplace.yaml", "id: workplace\n")
+    _write(
+        workplace / "data/accounting/identity.json",
+        '{"schema_version":1,"origin_id":"workplace"}',
+    )
+    host = build_storage_migration_host(
+        project_root=project,
+        workplace_root=workplace,
+        device_config_path=project.parent / "device.yaml",
+        configuration=pinned,
+    )
+    for target in host.context.targets:
+        if target.kind in {"events", "raw"} and target.scope == "project":
+            journal = ProcessEventJournal if target.kind == "events" else RawHookJournal
+            with journal.connection(target.target, writable=True):
+                pass
+        elif target.kind == "accounting":
+            SQLiteAccountingRepository(target.target)
+        else:
+            continue
+        identifier = uuid4().hex
+        with sqlite3.connect(target.target) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            add_store_identity(connection, target, identifier)
+        root = project / ".pf" if target.scope == "project" else workplace
+        _publish_pin(root, target, identifier, "sha256:" + "a" * 64, "ready")
+    return host
+
+
 def test_full_pinned_consumers_do_not_read_yaml(workspace, monkeypatch):
+    from processforge_core.project.configuration_inputs import configuration_operation
+
     pinned = _pinned()
+    project = workspace / "project"
+    host = _qualified_transport_stores(project, workspace / "workplace", pinned)
     driver = RecordingDriver()
     seen = []
 
@@ -792,7 +834,7 @@ def test_full_pinned_consumers_do_not_read_yaml(workspace, monkeypatch):
     }
     assert recorder.admit_process_event(project, event, dispatch=False)
     events = project / ".pf/runtime/events/events.sqlite3"
-    assert ProcessEventJournal(driver=driver).count(events) == 0
+    assert ProcessEventJournal(driver=driver, storage_host=host).count(events) == 0
     readiness = AutomationReadinessService(
         project_root=project,
         has_output_checks=lambda: False,
@@ -804,9 +846,10 @@ def test_full_pinned_consumers_do_not_read_yaml(workspace, monkeypatch):
         latest_event=lambda *args: None,
         configuration=pinned,
     )
-    assert readiness.latest_assignment_event("task", {"passed"}) == event
+    with configuration_operation(project, None, configuration=pinned):
+        assert readiness.latest_assignment_event("task", {"passed"}) == event
     kernel = RawIngressKernel(
-        workspace, flow_root=project / ".pf", configuration=pinned
+        workspace / "workplace", flow_root=project / ".pf", configuration=pinned
     )
     native = NativeAgentEvent(
         "fixture",
@@ -817,7 +860,8 @@ def test_full_pinned_consumers_do_not_read_yaml(workspace, monkeypatch):
     )
     receipt = kernel.ingest(native)
     assert (
-        receipt.accepted and RawHookJournal(driver=driver).count(kernel.database) == 0
+        receipt.accepted
+        and RawHookJournal(driver=driver, storage_host=host).count(kernel.database) == 0
     )
     assert list(kernel.records())
     kernel.finish(receipt.raw_event_id, {"status": "done"})
@@ -830,7 +874,7 @@ def test_full_pinned_consumers_do_not_read_yaml(workspace, monkeypatch):
         project_id="project",
         configuration=pinned,
     )
-    assert accounting.service() is None
+    assert accounting.service() is not None
     assert accounting.service(create=True) is not None
     assert accounting.service() is not None
     index = local_search.ResourceSearchIndex(project, {}, configuration=pinned)
@@ -989,6 +1033,7 @@ def test_replay_raw_reader_uses_derived_driver(workspace, monkeypatch):
 
     project, workplace = workspace / "project", workspace / "workplace"
     pinned = _pinned()
+    _qualified_transport_stores(project, workplace, pinned)
     driver = RecordingDriver()
     selected = []
     monkeypatch.setattr(
@@ -1001,7 +1046,11 @@ def test_replay_raw_reader_uses_derived_driver(workspace, monkeypatch):
     )
     monkeypatch.setattr(session_replay, "resolve_project", lambda *args: project)
     kernel = RawIngressKernel(
-        workplace, flow_root=project / ".pf", record_raw=True, driver=driver
+        workplace,
+        flow_root=project / ".pf",
+        record_raw=True,
+        driver=driver,
+        configuration=pinned,
     )
     kernel.ingest(
         NativeAgentEvent(
@@ -1030,7 +1079,7 @@ def test_replay_raw_reader_uses_derived_driver(workspace, monkeypatch):
         configuration=pinned,
     )
     assert result["status"] == "ok" and result["counts"]["unsupported_mapping"] == 1
-    assert selected == [pinned.current().database]
+    assert selected and all(config is pinned.current().database for config in selected)
     assert any(
         not call[3] for call in driver.calls[initial_connections:]
     )  # finish() used the same transport.
@@ -1155,6 +1204,64 @@ def test_adopted_legacy_access_uses_exact_pin_and_search_keeps_uuid(workspace, k
             )
     with pytest.raises(MaintenanceError, match="storage_pin_conflict"):
         _publish_pin(flow, target, identifier, "sha256:" + "a" * 64, "pending")
+
+
+@pytest.mark.parametrize("route", ["explicit", "operation"])
+@pytest.mark.parametrize("owner", [False, True])
+@pytest.mark.parametrize("existing", [False, True])
+@pytest.mark.parametrize("kind", ["events", "raw"])
+def test_governed_host_never_loses_write_identity(
+    workspace, route, owner, existing, kind
+):
+    from contextlib import nullcontext
+
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.project.configuration_inputs import configuration_operation
+
+    project = workspace / "project"
+    _write(
+        project / ".pf/process-forge.yaml",
+        "project: {id: project}\n" if owner else "project: {}\n",
+    )
+    relative = (
+        "runtime/events/events.sqlite3"
+        if kind == "events"
+        else "runtime/agent-events/hooks.sqlite3"
+    )
+    path = project / ".pf" / relative
+    journal = ProcessEventJournal if kind == "events" else RawHookJournal
+    if existing:
+        # Standalone library construction remains available outside an operation.
+        with journal.connection(path, writable=True):
+            pass
+    before = path.read_bytes() if existing else None
+    pinned = _pinned()
+    host = (
+        build_storage_migration_host(
+            project_root=project,
+            workplace_root=None,
+            device_config_path=workspace / "device.yaml",
+            configuration=pinned,
+        )
+        if route == "explicit"
+        else None
+    )
+    operation = (
+        configuration_operation(project, None, configuration=pinned)
+        if route == "operation"
+        else nullcontext()
+    )
+    with operation:
+        if existing:
+            with journal.connection(path, storage_host=host) as connection:
+                assert connection.execute("PRAGMA user_version").fetchone()[0] == 1
+        code = "storage_activity_unknown" if owner else "project_identity_required"
+        with pytest.raises(MaintenanceError, match=code):
+            with journal.connection(path, storage_host=host, writable=True):
+                pytest.fail("governed write was treated as standalone")
+    assert (path.read_bytes() if path.exists() else None) == before
+    assert path.exists() == existing
 
 
 def test_configuration_operation_pins_exact_scope_and_restores(workspace, monkeypatch):

@@ -2798,61 +2798,262 @@ diagnostic output.
     write_file(report, content, force=True)
 
 
-def execute_project_initialization(
+def _project_bootstrap_preflight(
     request: dict[str, Any], files: dict[Path, str]
-) -> dict[str, Any]:
-    """Qualify actual new roots before the existing acknowledged writer runs."""
-    from pf_native_control import supports_owned_execution
-
-    from processforge_core.runtime.execution_admission import ExecutionAdmission
+) -> None:
+    """Validate current and effective bootstrap facts without authoring them."""
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.configuration import ConfigurationProvider
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.maintenance.fresh_project import _domain, _receipt
+    from processforge_core.maintenance.storage_migration import _safe
 
     project = request["project_root"]
     flow = project / PROJECT_FLOW_ROOT
-    if flow.exists() or not supports_owned_execution():
-        if (
-            flow.exists()
-            and (flow / "maintenance/execution-initialization.json").is_file()
-        ):
-            # Repair before any ordinary authoring writes, through the same
-            # qualified coordinator as first-write/resume. Capability alone
-            # does not establish the historical owner/exclusion proof.
-            _storage_first_write(project)
-        return _execute_project_initialization(request, files)
-    # An existing root, including --force, never takes this branch. Create it
-    # exclusively before publishing a manifest and take admission before writes.
     try:
-        flow.mkdir()
-    except FileExistsError:
-        return _execute_project_initialization(request, files)
+        document = _receipt(project)
+    except (TypeError, ValueError) as error:
+        # Malformed JSON field types must not escape the receipt boundary.
+        raise MaintenanceError("storage_fresh_receipt_invalid") from error
+    if document is None:
+        return
+    unbound = document["domains"] is None
+    if unbound and (
+        document["state"] != "pending"
+        or document["project_id"] is not None
+        or document["workplace"] is not None
+    ):
+        raise MaintenanceError("storage_fresh_receipt_invalid")
+    if not unbound and not isinstance(document["domains"], list):
+        raise MaintenanceError("storage_fresh_receipt_invalid")
+
+    def read_manifest(name: str, *, proposed: bool) -> dict[str, Any]:
+        path = _safe(flow / name)
+        if (
+            proposed
+            and path in files
+            and (request.get("force", False) or not path.exists())
+        ):
+            try:
+                import yaml
+            except ModuleNotFoundError:
+                value = parse_simple_yaml(files[path])
+            else:
+                try:
+                    value = yaml.safe_load(files[path])
+                except yaml.YAMLError as error:
+                    raise MaintenanceError("storage_configuration_invalid") from error
+        else:
+            value = load_yaml_document(path)
+        if not isinstance(value, dict) or "__yaml_error__" in value:
+            raise MaintenanceError("storage_configuration_invalid")
+        return value
+
+    def owner(manifest: dict[str, Any]) -> str:
+        section = manifest.get("project")
+        value = section.get("id") if isinstance(section, dict) else None
+        if not isinstance(value, str) or not value.strip():
+            raise MaintenanceError("project_identity_required")
+        return value
+
     selected = request.get("workplace")
     workplace = Path(selected).parent if selected is not None else None
-    with ExecutionAdmission().maintenance(project, workplace):
-        result = _execute_project_initialization(request, files)
-        if (
-            result.get("status") == "complete"
-            and result.get("doctor", {}).get("status") == "pass"
+    proposed_owner = owner(read_manifest("process-forge.yaml", proposed=True))
+    manifest_path = _safe(flow / "process-forge.yaml")
+    if not unbound or manifest_path.exists():
+        current_owner = owner(read_manifest("process-forge.yaml", proposed=False))
+        if proposed_owner != current_owner or (
+            not unbound and current_owner != document["project_id"]
         ):
-            from processforge_core.configuration import ConfigurationProvider
-            from processforge_core.executions.composition import (
-                _initialize_fresh_execution_storage,
+            raise MaintenanceError("storage_fresh_target_conflict")
+    if not unbound and document["workplace"] != str(workplace or ""):
+        raise MaintenanceError("storage_fresh_target_conflict")
+
+    # Match ProjectMetadataReader routing, including project-relative references.
+    current_reference = None
+    for proposed in (False, True):
+        local = read_manifest("process-forge.local.yaml", proposed=proposed)
+        section = local.get("workplace", {})
+        if not isinstance(section, dict):
+            raise MaintenanceError("storage_configuration_invalid")
+        reference = section.get("manifest")
+        if not proposed:
+            current_reference = reference
+        elif current_reference and not reference:
+            raise MaintenanceError("storage_enrollment_conflict")
+        if reference:
+            if not isinstance(reference, str):
+                raise MaintenanceError("storage_configuration_invalid")
+            declared = Path(reference).expanduser()
+            if not declared.is_absolute():
+                declared = (project / declared).resolve()
+            if workplace is None or declared.absolute() != workplace / "workplace.yaml":
+                raise MaintenanceError("storage_enrollment_conflict")
+
+    snapshot = build_configuration_provider(
+        project_root=project, workplace_root=workplace
+    ).snapshot()
+    if snapshot.errors:
+        raise MaintenanceError("storage_configuration_invalid")
+    if not unbound:
+        host = build_storage_migration_host(
+            project_root=project,
+            workplace_root=workplace,
+            device_config_path=None,
+            configuration=ConfigurationProvider.pinned(snapshot.config),
+        )
+        targets = tuple(
+            target
+            for target in host.context.targets
+            if target.scope == "project" and target.kind != "main"
+        )
+        if len(document["domains"]) != len(targets):
+            raise MaintenanceError("storage_fresh_target_conflict")
+        for target in targets:
+            _domain(document, target)
+
+    from processforge_core.executions.composition import (
+        _contained,
+        _execution_profile,
+        _fresh_initialization,
+        select_execution_storage,
+    )
+    from processforge_core.maintenance.execution_migration import _read
+    from processforge_core.maintenance.storage_migration import _uuid
+
+    # Main publication checks also apply before the receipt has domain identities.
+    profile, relative, _timeout = _execution_profile(snapshot.config.database)
+    target_path = _contained(flow, relative)
+    binding_path = _contained(flow, "data/execution-storage.json")
+    initializer = _fresh_initialization(flow)
+    if initializer is None:
+        # Without a marker, the initializer requires both publication slots empty.
+        if (
+            document["state"] == "ready"
+            or binding_path.exists()
+            or target_path.exists()
+        ):
+            raise MaintenanceError("execution_storage_not_ready")
+    else:
+        binding = initializer["binding"]
+        if (
+            not isinstance(binding, dict)
+            or set(binding)
+            != {
+                "schema_version",
+                "project_id",
+                "store_id",
+                "profile_id",
+                "target_relative_path",
+            }
+            or type(binding["schema_version"]) is not int
+            or (
+                binding["schema_version"],
+                binding["project_id"],
+                binding["profile_id"],
+                binding["target_relative_path"],
+            )
+            != (1, proposed_owner, profile, relative)
+        ):
+            raise MaintenanceError("execution_storage_not_ready")
+        _uuid(binding["store_id"])
+        if binding_path.exists():
+            existing = _read(binding_path)
+            if (
+                existing != binding
+                or any(
+                    type(existing.get(key)) is not type(value)
+                    for key, value in binding.items()
+                )
+            ):
+                raise MaintenanceError("execution_storage_not_ready")
+        elif document["state"] != "pending" or initializer["state"] != "pending":
+            raise MaintenanceError("execution_storage_not_ready")
+        # A pending marker precedes binding publication. Explicit recovery owns
+        # publishing that exact planned binding; preflight must remain read-only.
+        if initializer["state"] == "pending" and target_path.exists():
+            from processforge_core.database import (
+                DatabaseFactory,
+                DatabaseIdentity,
+                DatabaseTarget,
+                SchemaManager,
+                SqlStatement,
+            )
+            from processforge_core.executions.schema import EXECUTION_SCHEMA
+            from processforge_core.executions.sqlite_repository import (
+                SQLiteExecutionRepository,
+            )
+            from processforge_core.maintenance.execution_migration import (
+                EXECUTION_MIGRATION_SCHEMA,
             )
 
-            provider = build_configuration_provider(
-                project_root=project, workplace_root=workplace
-            )
-            snapshot = provider.snapshot()
-            if snapshot.errors:
-                raise project_initialization.ProjectInitializationError(
-                    "storage_configuration_invalid"
-                )
-            _initialize_fresh_execution_storage(
-                project,
-                workplace,
-                configuration=ConfigurationProvider.pinned(
-                    snapshot.config, errors=snapshot.errors
+            database = DatabaseFactory.from_profile(
+                snapshot.config.database,
+                profile,
+                DatabaseTarget(
+                    target_path,
+                    DatabaseIdentity(binding["store_id"], "project", proposed_owner),
                 ),
             )
-        return result
+            schemas = (EXECUTION_SCHEMA, EXECUTION_MIGRATION_SCHEMA)
+            if SchemaManager().inspect(database, schemas).state != "ready":
+                raise MaintenanceError("execution_storage_not_ready")
+            with database.read() as session:
+                state = session.fetch_one(
+                    SqlStatement("SELECT * FROM execution_state WHERE singleton=1")
+                )
+                if state is None and session.fetch_one(
+                    SqlStatement("SELECT 1 FROM execution_attempts LIMIT 1")
+                ) is not None:
+                    raise MaintenanceError("execution_storage_not_ready")
+            if state is not None and (
+                (state["authority"], state["readiness"], state["active_coverage"])
+                != ("sql", "ready", "complete")
+                or not SQLiteExecutionRepository(
+                    database, proposed_owner
+                ).readiness().ready
+            ):
+                raise MaintenanceError("execution_storage_not_ready")
+    if document["state"] == "ready" or (
+        initializer is not None and initializer["state"] == "ready"
+    ):
+        selected_storage = select_execution_storage(
+            project,
+            workplace,
+            configuration=ConfigurationProvider.pinned(snapshot.config),
+        )
+        if (
+            selected_storage.repository is None
+            or not selected_storage.repository.readiness().ready
+        ):
+            raise MaintenanceError("execution_storage_not_ready")
+
+
+def execute_project_initialization(
+    request: dict[str, Any], files: dict[Path, str]
+) -> dict[str, Any]:
+    """Establish explicit freshness before any ordinary onboarding writes."""
+    from processforge_core.maintenance.fresh_project import (
+        RECEIPT,
+        create_project_storage_root,
+    )
+
+    project = request["project_root"]
+    flow = project / PROJECT_FLOW_ROOT
+    if not flow.exists():
+        if not create_project_storage_root(project):
+            # Losing exclusive creation never confers fresh authority.
+            _storage_first_write(project)
+    elif not (flow / RECEIPT).exists():
+        # Existing/forced/unknown roots must use supported migration.
+        _storage_first_write(project)
+    from processforge_core.maintenance.contracts import MaintenanceError
+
+    try:
+        _project_bootstrap_preflight(request, files)
+    except OSError as error:
+        raise MaintenanceError("storage_activity_unknown") from error
+    return _execute_project_initialization(request, files)
 
 
 def _execute_project_initialization(
@@ -2887,6 +3088,25 @@ def _execute_project_initialization(
         )
         if path in files and path not in protected
     }
+    from processforge_core.configuration import ConfigurationProvider
+    from processforge_core.maintenance.fresh_project import initialize_project_storage
+
+    selected = request.get("workplace")
+    workplace = Path(selected).parent if selected is not None else None
+    snapshot = build_configuration_provider(
+        project_root=project_root, workplace_root=workplace
+    ).snapshot()
+    if snapshot.errors:
+        raise project_initialization.ProjectInitializationError(
+            "storage_configuration_invalid"
+        )
+    initialize_project_storage(
+        project_root,
+        workplace,
+        configuration=ConfigurationProvider.pinned(
+            snapshot.config, errors=snapshot.errors
+        ),
+    )
     _process_event_recorder.emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
     results = [
         bootstrap[path] if path in bootstrap else write_file(path, content, force=force)
@@ -18865,6 +19085,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from processforge_core.database import DatabaseError
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.maintenance.contracts import MaintenanceError
     from processforge_core.resources.index_maintenance import IndexMaintenanceError
 
     try:
@@ -18873,7 +19096,7 @@ def main(argv: list[str] | None = None) -> int:
             project_id_resolver=project_id,
             entry_file=__file__,
         ).run(argv)
-    except IndexMaintenanceError as error:
+    except (DatabaseError, ExecutionError, MaintenanceError, IndexMaintenanceError) as error:
         print(f"FAIL: {error.code}")
         return 1
     except OSError as error:

@@ -238,13 +238,15 @@ def make_shell_driver(project: Path) -> Path:
     return path
 
 
-def event_rows(project: Path) -> list[dict[str, Any]]:
+def event_rows(project: Path, workplace: Path) -> list[dict[str, Any]]:
+    from processforge_core.project.configuration_inputs import configuration_operation
     from processforge_core.work.consistency import RunTaskInputReader
 
     path = RunTaskInputReader().event_runtime_paths(project)[0]
     if not path.is_file():
         return []
-    return [row for _sequence, row, _error in core.iter_process_events(path)]
+    with configuration_operation(project, workplace):
+        return [row for _sequence, row, _error in core.iter_process_events(path)]
 
 
 def mutate_resource_indexing(
@@ -1103,14 +1105,24 @@ def main() -> int:
                 "completion": completion_path.exists(),
             },
         )
-        status, output = call(project, "manual-task", "collect")
+        # Recover through a genuine entry: completion can initialize a lazy
+        # project store, which a cold library import cannot authorize.
+        output = pf(
+            "worker-run",
+            "collect",
+            "--project-root",
+            str(project),
+            "--task",
+            "manual-task",
+        )
+        status = 0
         require(
             status == 0 and completion_path.is_file(),
             {"status": status, "output": output},
         )
         status, output = call(project, "manual-task", "collect")
         require(status == 0, {"status": status, "output": output})
-        manual_events = event_rows(project)
+        manual_events = event_rows(project, workplace)
         for event_type, expected_count in (
             ("worker.run.collected", 1),
             ("task.completed", 1),

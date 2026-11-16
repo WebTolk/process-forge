@@ -6,6 +6,29 @@ Protocol `ExecutionRepository` — в `executions.ports`. Импорт и кон
 миграция и композиция адаптеров относятся к отдельным слоям. Этот срез DTO сам
 по себе не включает SQL route и не доказывает интеграционную приёмку Runtime.
 
+## Семантическое версионирование и обязательная миграция
+
+Разработка строго следует [Semantic Versioning 2.0.0](https://semver.org/) и
+[долгосрочным правилам контрибьютера](../../../CONTRIBUTING.ru.md#готовность-хранилища-и-обязательная-миграция).
+Совместимость оценивается по опубликованным контрактам глазами пользователя
+и его агентов: поддерживаемые сценарии, публичные интерфейсы, интеграции,
+гарантии данных и идентичности. Несовместимые публичные изменения требуют MAJOR,
+совместимые возможности — MINOR, совместимые исправления — PATCH. Правило
+не привязано к фиксированному релизу. Промежуточные нерелизные реализации и тесты
+не добавляют публичных контрактов.
+
+Небольшая поддерживаемая миграция проекта сама по себе не требует MAJOR. Внутренние
+форматы хранения могут меняться через явную миграцию предоставленными инструментами
+с сохранением этих пользовательских контрактов без переделки интеграций.
+Процедуры миграции и восстановления нужно документировать и проверять.
+Наличие инструмента миграции не делает сломанный публичный контракт совместимым.
+
+Новый проект сразу создаёт актуальные журналы и хранилища. Старый проект обязан
+завершить применимую квалифицированную миграцию до возобновления обычной записи.
+Выпущенные гарантии данных и идентичности сохраняются; обход миграции обычной
+legacy-записью не допускается. Отсутствие доказательств readiness или safety
+означает отказ, а не успешное обновление.
+
 ## Идентичность и валидация
 
 `ExecutionKey(project_id, run_id, task_id, attempt)` обозначает попытку
@@ -175,13 +198,17 @@ inspection, apply и recovery; update вызывает квалифициров�
 Успешная установка сама не означает project readiness. Pure status/config/doctor/
 guard reads не запускают migration или scans.
 
-До публикации pending pin/binding распознанный unbound legacy project сохраняет
-прежний route. Active/unknown ownership откладывает migration с diagnostics;
-поддержанные start/stop/collect, IDs и receipts активных attempts сохраняются.
-Retry происходит после terminal reconciliation/collection или при следующем
-mutating use, после освобождения lifecycle/target locks и SQL sessions. Нет
-scheduler, polling loop, live takeover или automatic kill. Отсутствующий explicit
-stable project/owner ID, ambiguous source или unknown old writer нельзя объявить
+Новые проекты инициализируют актуальное SQL-хранилище. Существующие проекты должны
+завершить квалифицированную миграцию до обычных записей Work или worker. Read-only
+selection и explicit recovery могут исследовать распознанное legacy-хранилище,
+но отложенная, неуспешная или неопределённая миграция не разрешает обычную запись
+или новую попытку. Active/unknown ownership блокирует такую запись с diagnostics;
+существующие IDs, receipts и исходные байты сохраняются. First-write boundary
+требует готовый результат миграции, затем повторно выбирает фактический SQL
+repository перед продолжением. Retry возможен только после устранения причины
+блокировки и освобождения lifecycle/target locks и SQL sessions. Нет scheduler,
+polling loop, live takeover или automatic kill. Отсутствующий explicit stable
+project/owner ID, ambiguous source или unknown old writer нельзя объявить
 безопасными через config или opt-in flag.
 
 Proven safety — host evidence для exact authorized project/store, target и
@@ -190,8 +217,8 @@ sources и квалифицированное исключение старых 
 admission при freeze, resume и непосредственно перед cutover. Empty registry,
 текущая версия, terminal string, истёкший TTL, PID probe или один
 `offline_confirmed` не являются proof. Отсутствующее, устаревшее, изменённое или
-недоступное proof не разрешает migration/cutover; до pending сохраняется
-описанный legacy route. Старые binaries технически не
+недоступное proof не разрешает migration/cutover и сохраняет блокировку обычных
+записей, в том числе до публикации pending. Старые binaries технически не
 соблюдают незнакомые markers; их исключают реальным ownership/maintenance
 evidence, а после SQL cutover они не поддерживаются как writers.
 
@@ -234,32 +261,55 @@ target с controlled offline binding switch; old-Core rollback после SQL wr
 служат диагностике и управляемому ремонту, не являются условием обычной migration
 для пользователя. См. [SQLite journal maintenance](sqlite-journal-maintenance.md).
 
-Fresh SQL route разрешён только при успешной explicit initialization нового
-flow root. Существующий root, включая forced initialization, не становится fresh
-по предположению. Публикация fresh binding/DB recoverable, но не atomic между
-files и SQL. Fresh marker в состоянии pending закрывает legacy route сразу после
-публикации, даже если binding ещё отсутствует. Чтение сообщает о pending без
-ремонта. Безопасная обычная mutation или native resume восстанавливает только
-закреплённые marker owner/UUID/profile под admission, после проверки native
-capability и стабильной safety generation. Перед ready safety проверяется снова;
-выбор другого target или нового UUID запрещён.
+Полномочия нового проекта возникают только при успешном эксклюзивном создании
+flow root с квалифицированным native-владением деревом процессов. Host фиксирует
+создание в `maintenance/project-initialization.json`, привязывая запись к физическому
+корню, владельцу проекта, выбранному workplace и запланированным UUID доменов.
+Существующий root, включая forced initialization, не становится новым по предположению.
 
-????? ????????? adoption ????????? ????????? retirement commitment, ???????? ?
-filesystem identities, successor generation ? committed native epoch. ?????????
-??????? ????????? durable state ?? Core capture ? ?????????? ??????????? ????????
-OS lease; ???????? manager ????? bound ????? ???????????. ?? bound ??? ??? ?????
-???????? ???????? ??????? owner/tree closure: ????? ?????? ????????? ?? ?? ????????.
-Pending/updating head ????????? shared entry, ??????? ???? ?? ????? epoch.
-Migration proof ????????????? ????????? owner/routing/instance/targets ? ??????
-pinned PFConfig ??? admission. Native update ????????? ?????? pending transition
-?? overwrite, ????? successor epoch/head. Maintenance ????????? ?????? ??????
-child ? ??????????? lease; ?????????? child ???? ?? publication ?? ?????????
-????????? ??????????.
+Под admission инициализация публикует main execution binding и domain identity pins
+до создания соответствующих БД. Main SQL и журнал событий готовы до первого
+обычного события onboarding. Project raw и standalone search сохраняют запланированные
+UUID и создаются при первом использовании. Полномочия нового проекта не разрешают
+adoption или создание хранилищ workplace.
+
+Публикация файлов и SQL допускает восстановление, но не является одной атомарной
+транзакцией. Recovery проверяет ту же запись создания, владельца, физический корень,
+routing и native capability, затем использует прежние UUID и pending state.
+Готовое, но исчезнувшее или чужое хранилище отклоняется без пересоздания и новых UUID.
+Pending reads не ремонтируют хранилище. Прежний путь main initializer без записи
+создания проекта по-прежнему требует квалифицированную migration safety generation;
+запись нового проекта не доказывает retirement старых писателей.
+
+Host создаёт `build_storage_migration_host` без чтения конфигурации, подключений,
+получения gates или создания UUID. Первая операция разрешает выбранные roots,
+стабильные owner IDs и main profile alias. Неквалифицированный legacy target
+откладывается до создания execution engine; pending/bound target не использует
+этот legacy route. Workplace stores без стабильного владельца возвращают явную
+диагностику target, а не получают identity из имени каталога.
+
+Установка с подтверждённым adoption сохраняет исходное retirement commitment,
+filesystem binding, successor generation и committed native epoch. Последующие
+процессы проверяют это durable state до Core capture и получают собственные
+короткие OS leases; исходный manager может завершиться после bound publication.
+До bound по-прежнему требуется исходное доказательство historical closure;
+новое пустое состояние его не заменяет. Pending/updating head запрещает shared
+entry, включая окно сбоя до замены epoch. Migration proof использует фактически
+выбранные owner/routing/instance/targets и полный закреплённый PFConfig под
+admission. Native update публикует точный pending transition до overwrite,
+затем successor epoch/head. Только новый независимо leased child выполняет
+maintenance нового Core; устаревший child прежней publication не может завершить
+последующее обновление.
 
 
-### ?????? cold-???????
+### Первый cold-переход
 
-??? ???????????? ????????? ??? ????????? ??????? ingress owner ????????? ???????? ????????????????? ??????????? cold-???????. ???????? native controller ????????? ?????????? ?????? ?? retirement, ???????? ?????? ???????? frozen publication ? ??????????? backup ? ????????? ????????? adoption `cold-v1`. ????? bound ??????? ???????? ?????????? ???????? ??????????? native leases; ?????????? controller/service ?? ?????????.
+Исторические установки без исходного полного ingress owner требуют отдельно
+квалифицированной однократной cold-границы. Конечный native controller фиксирует
+устойчивый запрет до retirement, копирует только принятую frozen publication
+с сохранёнными backups и публикует отдельный adoption `cold-v1`. Обычные операции
+после bound используют короткие независимые native leases; controller не является
+постоянным сервисом.
 
 Prepared-resource adapter предоставляет узкий канал runtime/deployment grants
 для private fixed native-maintenance descriptor. Проверка пересекает запрос

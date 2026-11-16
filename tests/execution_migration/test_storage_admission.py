@@ -9,7 +9,7 @@ import subprocess
 import sys
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
@@ -26,6 +26,107 @@ from processforge_core.runtime.execution_admission import (
 )
 
 from .test_storage_uuid import StorageHarness
+
+
+@pytest.mark.parametrize(
+    "route", ["execution", "events", "raw", "accounting", "search", "journals"]
+)
+def test_migration_application_io_stays_outside_sql_transactions(
+    tmp_path, monkeypatch, route
+):
+    """Observe real SQLite transactions; fixture proof is not native retirement."""
+    import builtins
+    import io
+    import socket
+
+    from maintenance_service.test_journals import _layout
+
+    from processforge_core.maintenance.backup import SQLiteBackupService
+    from processforge_core.maintenance.journals import JournalMaintenanceService
+
+    from .test_migration import Harness
+
+    apply: Callable[[], dict[str, Any]]
+    if route == "execution":
+        execution = Harness(tmp_path / "execution")
+        for index in range(257):
+            execution.status(f"task-{index:04}")
+        apply = execution.apply
+    elif route == "journals":
+        files = _layout(tmp_path)
+        service = JournalMaintenanceService()
+
+        def import_journals():
+            return service.migrate(files.project, files.workplace, apply=True)
+
+        apply = import_journals
+    else:
+        adoption = StorageHarness(tmp_path / "adoption", route)
+        adoption.create()
+        apply = adoption.ensure
+
+    connections = []
+    transactions = []
+    original_connect = sqlite3.connect
+
+    def connect(*args, **kwargs):
+        connection = original_connect(*args, **kwargs)
+        connections.append(connection)
+
+        def trace(statement):
+            if statement.lstrip().upper().startswith("BEGIN"):
+                transactions.append(statement)
+
+        connection.set_trace_callback(trace)
+        return connection
+
+    def guard(operation):
+        def observed(*args, **kwargs):
+            for connection in connections:
+                try:
+                    active = connection.in_transaction
+                except sqlite3.ProgrammingError:
+                    continue  # Closed connection, no SQL transaction remains.
+                assert not active, (
+                    f"application I/O inside SQL transaction: {operation.__name__}"
+                )
+            return operation(*args, **kwargs)
+
+        return observed
+
+    with monkeypatch.context() as monitor:
+        monitor.setattr(sqlite3, "connect", connect)
+        for owner, name in (
+            (builtins, "open"),
+            (io, "open"),
+            (os, "open"),
+            (os, "scandir"),
+            (os, "listdir"),
+            (os, "fsync"),
+            (os, "kill"),
+            (subprocess.Popen, "__init__"),
+            (subprocess.Popen, "wait"),
+            (time, "sleep"),
+            (socket.socket, "connect"),
+            (socket.socket, "connect_ex"),
+            (socket.socket, "send"),
+            (socket.socket, "sendall"),
+            (SQLiteBackupService, "create"),
+        ):
+            monitor.setattr(owner, name, guard(getattr(owner, name)))
+        control = sqlite3.connect(":memory:")
+        try:
+            control.execute("BEGIN")
+            with pytest.raises(AssertionError, match="application I/O inside SQL"):
+                (tmp_path / "forbidden-write").write_bytes(b"must not be written")
+            control.rollback()
+        finally:
+            control.close()
+        transactions.clear()
+        result = apply()
+    assert result["status"] == "ready", json.dumps(result, sort_keys=True)
+    assert transactions, "qualification did not observe a real SQL transaction"
+    assert not (tmp_path / "forbidden-write").exists()
 
 
 @pytest.fixture
@@ -111,7 +212,7 @@ def seed_history(storage: StorageHarness) -> None:
 
 
 @pytest.mark.parametrize("state", ["unknown", "active"])
-def test_ordinary_large_legacy_write_defers_before_any_history_scan(
+def test_ordinary_large_legacy_write_refuses_before_any_history_scan(
     storage: StorageHarness, monkeypatch: pytest.MonkeyPatch, state: Any
 ) -> None:
     seed_history(storage)
@@ -125,8 +226,11 @@ def test_ordinary_large_legacy_write_defers_before_any_history_scan(
         storage.context, storage.service, _automatic=True
     )
     journal = ProcessEventJournal(storage_host=host)
-    assert journal.append(storage.target.target, {"event_id": "ordinary-new-event"})
-    assert journal.contains(storage.target.target, "ordinary-new-event")
+    before = storage.target.target.read_bytes()
+    with pytest.raises(MaintenanceError, match="storage_activity_unknown"):
+        journal.append(storage.target.target, {"event_id": "ordinary-new-event"})
+    assert not journal.contains(storage.target.target, "ordinary-new-event")
+    assert storage.target.target.read_bytes() == before
     assert not storage.slot
     assert not (storage.owner / "maintenance/storage-migrations").exists()
 
