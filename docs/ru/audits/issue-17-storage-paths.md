@@ -111,7 +111,7 @@ fallback не является поддерживаемой политикой.
 | ST03: recognized adoption на месте; точные rows/blobs/schema; отказ до UUID | [storage_migration.py][S]: `_target`, `_apply_target` | [test_storage_uuid.py][ID]: `test_known_formats_in_place_uuid_parity_and_replay`, `test_unknown_or_active_defers_without_uuid_or_maintenance`, `test_unknown_extra_objects_refuse_without_relabel`. Proof подставлен; exclusion писателей установки — pending. |
 | ST04: прежние selector/UUID/backup, восстановление после commit до file journal | [storage_migration.py][S]: `resume`, `_load`, `_repair_ready` | [test_storage_uuid.py][ID]: `test_selector_before_pin_crash_never_remints`, `test_crash_after_commit_or_publication_recovers_exact_uuid`, `test_two_targets_progress_independently`. Fault injection не доказывает восстановление после физической смерти controller. |
 | ST05: точные snapshot bytes/floors, ограниченные batches, атомарный checkpoint | [execution_migration.py][E]: `_batches`, `_import`, `_cutover` | [test_migration.py][M]: `test_success_exact_bytes_and_one_cutover`, `test_mixed_floor_batches_are_bounded_and_replay_exact`, `test_empty_record_batch_floor_and_checkpoint_rollback_together`. Есть случай 257 units; safety подставлена. |
-| ST06: детерминированный resume; отказ при corrupt/drift evidence; authority остаётся SQL | [execution_migration.py][E]: `resume`, `_verify`, `_ready` | [test_migration.py][M]: `test_interruption_and_exact_resume`, `test_corrupt_backup_blocks_resume`; [test_compatibility.py][CP]: `test_committed_resume_does_not_reimport_updated_json`. Native interruption/cutover qualification — pending. |
+| ST06: детерминированный resume; отказ при corrupt/drift evidence; authority остаётся SQL | [execution_migration.py][E]: `resume`, `_verify`, `_ready` | [test_migration.py][M]: `test_interruption_and_exact_resume`, `test_corrupt_backup_blocks_resume`; [test_compatibility.py][CP]: `test_committed_resume_does_not_reimport_updated_json`. Контролируемые Windows native interruption cases описаны ниже; квалификация конкретного deployment остаётся отдельной. |
 | ST07: pending нового домена до создания; тот же UUID после сбоя | [storage_migration.py][S]: `new_store_identity`, `add_store_identity` | [test_storage_uuid.py][ID]: `test_explicit_new_initializer_pins_before_creation_and_commits_metadata`, `test_explicit_initializer_before_creation_retries_same_uuid`. `test_governed_journal_writes_after_qualified_creation_or_migration` проверяет готовую identity до записи с engine proof; native exclusion старых писателей остаётся отдельным требованием. |
 | ST08: fresh main SQL; pending repair; отказ записи в старый проект | [composition.py][C]: `_initialize_fresh_execution_storage`, `_repair_fresh_execution_storage`; [first_write.py][F] | [test_automatic.py][A]: `test_fresh_initialization_uses_alias_and_repairs_same_pending_uuid`; [test_required_write_readiness.py][RW]: `test_actual_cli_refuses_unmigrated_project_without_private_paths`, `test_success_report_must_be_followed_by_ready_sql_selection`; [test_fresh_native_sql.py][FN]: `test_fresh_sql_worker_lifecycle_clears_resolved_unknown`. Наличие native backend — предусловие, не PASS. |
 | ST09: offline-перенос без потери identity/ресурсов | [composition.py][C]: relative binding selection; [pf_native_control.py][N]: `ManagedEnrollmentProducer._binding` | [test_migration.py][M]: `test_project_move_preserves_relative_binding_and_identity` проверяет engine rename. [test_physical_storage_paths.py][PH]: `test_offline_move_preserves_sql_but_refuses_bound_attempt_reuse` проверяет физический rename, сохранность SQL/файлов/отчёта и отказ повторного использования старой попытки. Это не квалификация переноса всех stores или нового native lifecycle после переноса. |
@@ -190,14 +190,28 @@ importer. Это ограниченное transaction-доказательств
 
 ## Статус доказательств и условия завершения
 
+Windows managed recovery cases в [test_native_control.py][NT] добавляют
+контролируемые доказательства original manager:
+`test_real_legacy_manager_refuses_active_tree_then_retires` отклоняет живых
+и detached старых писателей до handoff;
+`test_real_managed_execution_import_process_death_resume` завершает настоящий
+importer после commit checkpoint из 256 units либо SQL cutover и возобновляет
+операцию независимым процессом;
+`test_real_managed_uuid_adoption_process_death_resume` завершает процесс после
+metadata commit и проверяет точный resume и backup/restore на шести признанных
+owner/layout маршрутах. Настоящие snapshots расположены по обе стороны checkpoint,
+directory-only allocation floors сохраняются. Migration safety не подменяется.
+Это квалификация объявленной fixture-установки, а не истории произвольного
+deployment или неквалифицированного Windows cold-reset build.
+
 [Storage recovery qualification][WF] задаёт Windows/Linux jobs, сохраняет JUnit
 и запрещает skips выбранных случаев. В Linux явно исключены два Windows-only
 device-name/junction cases; применимые symlink/reparse cases требуют настоящих
 результатов. Выбраны migration/UUID/automatic/admission, database, backup, journal
 и projection suites, а также physical storage paths, required-write-readiness
-и fresh-native-SQL, fresh project domains и configuration access. В selection **нет**
-native-update, cold-handoff и file-only
-update suites.
+и fresh-native-SQL, fresh project domains и configuration access. Windows также
+выбирает три managed recovery узла выше; соответствующего Linux managed provider
+нет. Остальные native-update, cold-handoff и file-only update suites не выбраны.
 [Linux native execution][LW] отдельно выбирает fresh-native-SQL и native lifecycle
 tests и запускает controlled-cohort suite.
 
@@ -205,12 +219,11 @@ tests и запускает controlled-cohort suite.
 sealed fresh SQL, отказ для недопустимого bound target, реальную конкуренцию писателей
 и существующую границу offline rename. Приёмка должна ссылаться на Windows/Linux
 результаты проверенной ревизии с сохранением полезных отказов и исправленных запусков.
-Этот инкремент не подтверждает полный перенос всех stores, qualified retirement
-старых писателей/cold transition, физическое прерывание cutover или универсальную
-инструментальную проверку transaction I/O. Обязательные доказательства для этих
-реализованных путей остаются pending; низкоуровневые тесты с подставленным proof
-их не заменяют. Новый неподдерживаемый relocation или Linux cold backend здесь
-не добавляется.
+Этот инкремент не подтверждает полный перенос всех stores, retirement произвольного
+deployment/cold transition или универсальный extension-level transaction I/O.
+Контролируемые managed interruption tests требуют квитанций точной ревизии и ревью;
+низкоуровневые тесты с подставленным proof их не заменяют. Новый неподдерживаемый
+relocation или Linux cold backend здесь не добавляется.
 
 См. [Execution storage and authority](../concepts/execution-storage.md),
 [SQLite maintenance](../concepts/sqlite-journal-maintenance.md) и

@@ -111,7 +111,7 @@ and retained recovery evidence; unavailable required cases are not N/A.
 | ST03: recognized in-place adoption; exact rows/blobs/schema; refusal before UUID | [storage_migration.py][S]: `_target`, `_apply_target` | [test_storage_uuid.py][ID]: `test_known_formats_in_place_uuid_parity_and_replay`, `test_unknown_or_active_defers_without_uuid_or_maintenance`, `test_unknown_extra_objects_refuse_without_relabel`. Injected proof; deployed writer exclusion pending. |
 | ST04: exact selector/UUID/backup reuse, commit-before-journal recovery | [storage_migration.py][S]: `resume`, `_load`, `_repair_ready` | [test_storage_uuid.py][ID]: `test_selector_before_pin_crash_never_remints`, `test_crash_after_commit_or_publication_recovers_exact_uuid`, `test_two_targets_progress_independently`. Fault injection is not physical controller-death proof. |
 | ST05: exact snapshot bytes/floors, bounded batches, atomic checkpoint | [execution_migration.py][E]: `_batches`, `_import`, `_cutover` | [test_migration.py][M]: `test_success_exact_bytes_and_one_cutover`, `test_mixed_floor_batches_are_bounded_and_replay_exact`, `test_empty_record_batch_floor_and_checkpoint_rollback_together`. Counts include 257 units; safety remains injected. |
-| ST06: deterministic resume; corrupt/drifted evidence refuses; SQL stays authority | [execution_migration.py][E]: `resume`, `_verify`, `_ready` | [test_migration.py][M]: `test_interruption_and_exact_resume`, `test_corrupt_backup_blocks_resume`; [test_compatibility.py][CP]: `test_committed_resume_does_not_reimport_updated_json`. Native interruption/cutover qualification pending. |
+| ST06: deterministic resume; corrupt/drifted evidence refuses; SQL stays authority | [execution_migration.py][E]: `resume`, `_verify`, `_ready` | [test_migration.py][M]: `test_interruption_and_exact_resume`, `test_corrupt_backup_blocks_resume`; [test_compatibility.py][CP]: `test_committed_resume_does_not_reimport_updated_json`. Controlled Windows native interruption cases are described below; deployment-specific qualification remains separate. |
 | ST07: new domain pending before creation; same UUID after interruption | [storage_migration.py][S]: `new_store_identity`, `add_store_identity` | [test_storage_uuid.py][ID]: `test_explicit_new_initializer_pins_before_creation_and_commits_metadata`, `test_explicit_initializer_before_creation_retries_same_uuid`. `test_governed_journal_writes_after_qualified_creation_or_migration` verifies ready identity before writes with engine proof; native old-writer exclusion is a separate obligation. |
 | ST08: fresh main SQL; pending repair; old-project writes refuse | [composition.py][C]: `_initialize_fresh_execution_storage`, `_repair_fresh_execution_storage`; [first_write.py][F] | [test_automatic.py][A]: `test_fresh_initialization_uses_alias_and_repairs_same_pending_uuid`; [test_required_write_readiness.py][RW]: `test_actual_cli_refuses_unmigrated_project_without_private_paths`, `test_success_report_must_be_followed_by_ready_sql_selection`; [test_fresh_native_sql.py][FN]: `test_fresh_sql_worker_lifecycle_clears_resolved_unknown`. Native backend availability is a prerequisite, not a pass. |
 | ST09: offline move without identity/resource loss | [composition.py][C]: relative binding selection; [pf_native_control.py][N]: `ManagedEnrollmentProducer._binding` | [test_migration.py][M]: `test_project_move_preserves_relative_binding_and_identity` covers engine rename. [test_physical_storage_paths.py][PH]: `test_offline_move_preserves_sql_but_refuses_bound_attempt_reuse` checks physical rename, preserved SQL/files/report and refusal of old-attempt reuse. It does not qualify all-store relocation or a fresh post-move native lifecycle. |
@@ -190,13 +190,26 @@ ST12 has three distinct implementation boundaries:
 
 ## Evidence status and completion requirements
 
+The Windows managed recovery cases in [test_native_control.py][NT] add controlled
+original-manager evidence: `test_real_legacy_manager_refuses_active_tree_then_retires`
+rejects live and detached old writers before handoff;
+`test_real_managed_execution_import_process_death_resume` exits a real importer
+after a committed 256-unit checkpoint or SQL cutover and resumes independently;
+`test_real_managed_uuid_adoption_process_death_resume` exits after metadata commit
+and verifies exact resume plus backup/restore across six recognized owner/layout
+routes. The import fixture puts actual snapshots on both sides of the checkpoint
+and preserves directory-only allocation floors. No synthetic migration safety is
+substituted. These tests qualify the declared fixture installation, not the
+history of an arbitrary deployment or an unqualified Windows cold-reset build.
+
 [Storage recovery qualification][WF] configures Windows and Linux jobs, retains
 JUnit, and rejects skips among selected cases. Linux explicitly deselects the two
 Windows-only device-name/junction cases; applicable symlink/reparse cases still
 need actual results. The selection includes the migration/UUID/automatic/admission,
 database, backup, journal and projection suites, plus physical storage paths,
 required-write-readiness, fresh-native-SQL, fresh project domains and configuration
-access. It does **not** select native-update,
+access. Windows also selects the three managed recovery nodes above; Linux has
+no corresponding managed provider. It does **not** select the remaining native-update,
 cold-handoff or file-only update suites. [Linux native execution][LW] separately selects fresh-native-SQL
 and native lifecycle tests and runs the controlled-cohort suite.
 
@@ -204,10 +217,11 @@ Workflow definitions are not execution receipts. The physical suite covers seale
 fresh SQL, bound-target refusal, real writer contention and the existing offline
 rename boundary. Acceptance must cite the reviewed revision's Windows/Linux results
 and retain useful failures and corrected runs. This increment does not establish
-full all-store relocation, qualified old-writer/cold retirement, physical interrupted
-cutover, or universal transaction I/O instrumentation. Required evidence for those
-implemented paths remains pending; lower-level or injected-proof passes do not
-replace it. A new unsupported relocation or Linux cold backend is not added here.
+full all-store relocation, arbitrary deployment/cold retirement, or universal
+extension-level transaction I/O instrumentation. Exact-source receipts and review
+remain required for the controlled managed interruption tests; lower-level or
+injected-proof passes do not replace them. A new unsupported relocation or Linux
+cold backend is not added here.
 
 See [Execution storage and authority](../concepts/execution-storage.md),
 [SQLite maintenance](../concepts/sqlite-journal-maintenance.md), and the

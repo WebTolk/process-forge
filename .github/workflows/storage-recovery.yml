@@ -66,7 +66,13 @@ jobs:
           ]
           # These two assertions exercise semantics of the other OS only.
           # Applicable link/locking/recovery cases may not be skipped.
-          if os.name != 'nt':
+          if os.name == 'nt':
+              selection += [
+                  'tests/execution_migration/test_native_control.py::test_real_legacy_manager_refuses_active_tree_then_retires',
+                  'tests/execution_migration/test_native_control.py::test_real_managed_execution_import_process_death_resume',
+                  'tests/execution_migration/test_native_control.py::test_real_managed_uuid_adoption_process_death_resume',
+              ]
+          else:
               selection += [
                   '--deselect=tests/maintenance_backup/test_backup.py::SQLiteBackupTests::test_windows_device_names_are_rejected_before_io',
                   '--deselect=tests/maintenance_integration/test_acceptance.py::test_windows_junctions_are_refused_by_all_maintenance_operations',

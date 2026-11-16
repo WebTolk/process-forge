@@ -2535,3 +2535,534 @@ def test_stable_mcp_connection_survives_real_managed_core_update(
         )
     finally:
         client.close()
+
+
+# Bounded T05 fixtures describe their own original managed installation.
+# They do not reconstruct arbitrary deployment history or retirement proof.
+_RECOVERY_MANAGER = (
+    _ADOPTED_PREAMBLE
+    + r'''
+import os,subprocess,time
+work=root/'runtime/fixture';work.mkdir(parents=True)
+(work/'gate').write_bytes(b'0');(work/'protocol').write_bytes(b'original')
+publication=p.accept_publication(root,trusted_leaf=leaf)
+boundary=p.LegacyManagedBoundary(root,existing_gate=p.NativeControl(work/'gate',work/'protocol','original'),accepted_archive=publication.payload)
+entry=p.NativeEntry(root,publication,p.NativeImage.from_publication(root,publication),None)
+entry.image.activate()
+from processforge_core.composition import build_configuration_provider,build_storage_migration_host
+from processforge_core.configuration import ConfigurationProvider
+project=work/'project';flow=project/'.pf';flow.mkdir(parents=True)
+(flow/'process-forge.yaml').write_text('project:\n  id: stable-project\n')
+device=work/'device.yaml';device.write_text('schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 17\n')
+workplace=None
+if sys.argv[2]=='workplace':
+    workplace=work/'workplace';workplace.mkdir()
+    (workplace/'workplace.yaml').write_text('schema_version: 1\nid: stable-workplace\n')
+    identity=workplace/'data/accounting/identity.json';identity.parent.mkdir(parents=True)
+    identity.write_text('{"origin_id":"old-origin"}')
+provider=build_configuration_provider(project_root=project,workplace_root=workplace,device_config_path=device)
+config=ConfigurationProvider.pinned(provider.snapshot().config)
+host=build_storage_migration_host(project_root=project,workplace_root=workplace,device_config_path=device,configuration=config)
+selection=host.service._native_selection()
+owner=None
+def refuse_old():
+    for ingress in sorted(boundary.INGRESS):
+        try:
+            boundary.launch([sys.executable,'-B','-c',"raise AssertionError('old ingress ran')"],ingress=ingress)
+        except p.NativeControlError:
+            pass
+        else:
+            raise AssertionError('old ingress admitted: '+ingress)
+def refuse_active():
+    with boundary.held():
+        assert boundary.facts()[0]=='active'
+    try:
+        p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=selection)
+    except p.NativeControlError:
+        pass
+    else:
+        raise AssertionError('live legacy tree adopted')
+    assert not (root/'runtime/managed-ingress').exists()
+    assert not (root/'runtime/native-control').exists()
+    assert sorted(str(path.relative_to(flow)) for path in flow.rglob('*'))==['process-forge.yaml']
+try:
+    if sys.argv[2]=='active':
+        writer = r"""
+import os,sys,time,subprocess
+from pathlib import Path
+work=Path(sys.argv[1])
+child="import os,sys,time;from pathlib import Path;work=Path(sys.argv[1]);stream=(work/'old-child.log').open('ab',buffering=0);(work/'old-child.pid').write_text(str(os.getpid()));\nwhile True: stream.write(b'child\\n');os.fsync(stream.fileno());time.sleep(0.02)"
+subprocess.Popen([sys.executable,'-B','-c',child,str(work)],creationflags=subprocess.DETACHED_PROCESS|subprocess.CREATE_NEW_PROCESS_GROUP)
+with (work/'old-writer.log').open('ab',buffering=0) as stream:
+    while True:
+        stream.write(b'writer\n');os.fsync(stream.fileno());time.sleep(0.02)
+"""
+        owner=boundary.launch([sys.executable,'-B','-c',writer,str(work)],ingress='worker')
+        job=owner.native_job
+        deadline=time.monotonic()+10
+        while not (work/'old-child.pid').is_file() or not (work/'old-writer.log').is_file():
+            assert time.monotonic()<deadline,'old writer tree did not start'
+            time.sleep(0.01)
+        assert job.active()>=2
+        refuse_active()
+        owner.terminate();owner.wait(timeout=5)
+        assert job.active()>=1
+        refuse_active()
+        assert job.stop(deadline=time.monotonic()+5) and job.active()==0
+    else:
+        owner=boundary.launch([sys.executable,'-B','-c','pass'],ingress='worker')
+        assert owner.wait(timeout=5)==0
+    with boundary.held():
+        assert boundary.facts()[0]=='proven'
+    pending=[]
+    class PendingObserved(Exception): pass
+    def checkpoint(phase):
+        if phase=='pending':
+            raise PendingObserved()
+    if sys.argv[2]=='active':
+        try:
+            p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=selection,checkpoint=checkpoint)
+        except PendingObserved:
+            pending.append(boundary.producer._state()['adoption'])
+        else:
+            raise AssertionError('pending checkpoint not reached')
+        assert boundary.producer._state()['phase']=='pending'
+        refuse_old()
+    producer,entry=p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=selection)
+    assert producer._state()['phase']=='bound'
+    if pending:
+        assert pending==[producer._state()['adoption']]
+    refuse_old()
+    print(json.dumps({'generation':producer._state()['adoption'],'active_refusals':2 if pending else 0,'pending_refusal':bool(pending)}))
+finally:
+    if owner is not None:
+        owner.native_job.stop(deadline=time.monotonic()+5)
+        owner.wait(timeout=5)
+        owner.native_job.close()
+    boundary.anchor.close()
+'''
+)
+
+_RECOVERY_HOST = (
+    _ADOPTED_PREAMBLE
+    + r"""
+import os
+entry=p.bootstrap_entry(root,trusted_leaf=leaf)
+from processforge_core.composition import build_configuration_provider,build_storage_migration_host
+from processforge_core.configuration import ConfigurationProvider
+project=root/'runtime/fixture/project';flow=project/'.pf'
+device=root/'runtime/fixture/device.yaml'
+workplace=root/'runtime/fixture/workplace'
+if not workplace.exists(): workplace=None
+provider=build_configuration_provider(project_root=project,workplace_root=workplace,device_config_path=device)
+config=ConfigurationProvider.pinned(provider.snapshot().config)
+host=build_storage_migration_host(project_root=project,workplace_root=workplace,device_config_path=device,configuration=config)
+"""
+)
+
+
+def _recovery_process(code: str, root: Path, *args: object) -> None:
+    """Require physical child exit at the named post-commit seam."""
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", code, str(root), *map(str, args)],
+        env={
+            **os.environ,
+            "LOCALAPPDATA": str(root / "runtime/device"),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        },
+        capture_output=True,
+        text=True,
+        timeout=90,
+    )
+    assert result.returncode == 86, result.stdout + "\n" + result.stderr
+    assert result.stdout == ""
+
+
+def _recovery_hashes(directory: Path) -> dict[str, str]:
+    import hashlib
+
+    return {
+        path.relative_to(directory).as_posix(): hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+        for path in directory.rglob("*")
+        if path.is_file()
+    }
+
+
+def test_real_legacy_manager_refuses_active_tree_then_retires(
+    native_root: Path,
+) -> None:
+    root, _ = _adopted_fixture_install(native_root)
+    bound = _adopted_run(_RECOVERY_MANAGER, root, "active", timeout=90)
+    assert bound["active_refusals"] == 2 and bound["pending_refusal"]
+    first = _adopted_run(_ADOPTED_CHILD, root, "after-retirement")
+    second = _adopted_run(_ADOPTED_CHILD, root, "independent-successor")
+    assert first["authority"] == second["authority"] == "sql"
+    assert bound["generation"] == first["generation"] == second["generation"]
+    assert first["pins"] == second["pins"]
+
+
+_EXECUTION_DEATH = (
+    _RECOVERY_HOST
+    + r"""
+from processforge_core.database import SchemaManager
+from processforge_core.maintenance.execution_migration import ExecutionMigrationService
+target=next(target for target in host.context.targets if target.kind=='main')
+with host.service._native_operation(host.context,None):
+    with host.service.admission.maintenance(project,workplace):
+        assert host.service.safety(host.context).state=='proven'
+        engine=host.service.execution_factory(host.context,target)
+        # A real generic SQL envelope makes backup a required, non-null pin.
+        SchemaManager().initialize(engine.database,())
+    plan=engine.plan(project)
+    assert plan['status']=='planned' and plan['counts']['import_units']==257,plan
+    assert plan['target_existed']
+    evidence=flow/'maintenance/native-import'
+    if sys.argv[2]=='batch':
+        batches=ExecutionMigrationService._batches
+        def die_after_batch(self,plan,evidence):
+            for batch in batches(self,plan,evidence):
+                yield batch
+                # Another batch is requested AFTER the previous transaction
+                # committed records and checkpoint together.
+                if sys._getframe(1).f_code.co_name=='_import' and batch[0]==256:
+                    os._exit(86)
+        ExecutionMigrationService._batches=die_after_batch
+    else:
+        cutover=ExecutionMigrationService._cutover
+        def die_after_cutover(self,plan):
+            cutover(self,plan)
+            os._exit(86)
+        ExecutionMigrationService._cutover=die_after_cutover
+    result=engine.apply(project,plan,evidence_dir=evidence,offline_confirmed=True)
+    raise AssertionError(result)
+"""
+)
+
+_EXECUTION_RESUME = (
+    _RECOVERY_HOST
+    + r"""
+evidence=flow/'maintenance/native-import'
+plan=json.loads((evidence/'plan.json').read_text(encoding="utf-8"))
+assert (plan['migration_id'],plan['plan_checksum'])==(sys.argv[2],sys.argv[3])
+target=next(target for target in host.context.targets if target.kind=='main')
+with host.service._native_operation(host.context,None):
+    engine=host.service.execution_factory(host.context,target)
+    assert engine.database.target.identity.store_id==plan['store_id']
+    assert engine.profile_id==json.loads((flow/'data/execution-storage.json').read_text(encoding="utf-8"))['profile_id']
+    result=engine.resume(project,migration_id=sys.argv[2],plan_checksum=sys.argv[3],evidence_dir=evidence,offline_confirmed=True)
+    assert result['status']=='ready',result
+    assert engine.repository.readiness().authority=='sql'
+print(json.dumps({'result':result,'generation':p.ManagedEnrollmentProducer(root,leaf)._state()['adoption']}))
+"""
+)
+
+
+@pytest.mark.parametrize("point", ["batch", "cutover"])
+def test_real_managed_execution_import_process_death_resume(
+    native_root: Path, point: str
+) -> None:
+    import hashlib
+    import sqlite3
+    from contextlib import closing
+
+    from .test_migration import payload
+
+    root, _ = _adopted_fixture_install(native_root)
+    bound = _adopted_run(_RECOVERY_MANAGER, root, "idle")
+    flow = root / "runtime/fixture/project/.pf"
+    sources = []
+    # Put a real snapshot on each side of the 256-unit checkpoint. Directory
+    # floors supply the other units without duplicating the freeze-I/O scale test.
+    for index in (0, 256):
+        task = f"task-{index:04}"
+        source = flow / "runtime/agent-runs/run" / task / "status.json"
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            json.dumps(payload(task), ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        (source.parent / "attempts/19").mkdir(parents=True)
+        sources.append(source)
+    for index in range(1, 256):
+        (flow / f"runtime/agent-runs/run/task-{index:04}/attempts/19").mkdir(
+            parents=True
+        )
+    original = {source: source.read_bytes() for source in sources}
+    _recovery_process(_EXECUTION_DEATH, root, point)
+    evidence = flow / "maintenance/native-import"
+    plan_bytes = (evidence / "plan.json").read_bytes()
+    plan = json.loads(plan_bytes)
+    binding_bytes = (flow / "data/execution-storage.json").read_bytes()
+    binding = json.loads(binding_bytes)
+    database = flow / plan["target_relative_path"]
+    frozen = _recovery_hashes(evidence / "sources")
+    backup = _recovery_hashes(evidence / "backup")
+    manifest_bytes = (evidence / "manifest.ndjson").read_bytes()
+    assert len(frozen) == 2 and backup
+    assert plan["counts"]["imported"] == 2
+    assert plan["counts"]["floor_only"] == 255
+    assert {path.name for path in (evidence / "sources").iterdir()} == {
+        hashlib.sha256(raw).hexdigest() for raw in original.values()
+    }
+    assert binding["store_id"] == plan["store_id"]
+    assert plan["safety_generation"] == bound["generation"]
+    assert plan["project_id"] == binding["project_id"] == "stable-project"
+    assert plan["target_relative_path"] == binding["target_relative_path"]
+    assert not (evidence / "report.json").exists()
+    with closing(sqlite3.connect(database)) as connection:
+        connection.row_factory = sqlite3.Row
+        marker = dict(
+            connection.execute("SELECT * FROM execution_migrations").fetchone()
+        )
+        state = dict(connection.execute("SELECT * FROM execution_state").fetchone())
+        expected = 256 if point == "batch" else 257
+        assert marker["checkpoint"] == expected
+        assert marker["state"] == ("importing" if point == "batch" else "ready")
+        assert marker["plan_checksum"] == plan["plan_checksum"]
+        assert marker["store_id"] == plan["store_id"]
+        assert marker["manifest_checksum"] == plan["manifest_checksum"]
+        assert marker["backup_manifest_checksum"] == "sha256:" + backup["manifest.json"]
+        assert (marker["source_generation"], marker["target_generation"]) == (0, 1)
+        assert (
+            marker["evidence_relative_path"]
+            == evidence.relative_to(flow.parent).as_posix()
+        )
+        assert connection.execute("SELECT count(*) FROM execution_attempts").fetchone()[
+            0
+        ] == (1 if point == "batch" else 2)
+        assert [
+            row[0]
+            for row in connection.execute(
+                "SELECT task_id FROM execution_attempts ORDER BY task_id"
+            )
+        ] == (["task-0000"] if point == "batch" else ["task-0000", "task-0256"])
+        assert (
+            connection.execute(
+                "SELECT count(*) FROM execution_allocation_floors"
+            ).fetchone()[0]
+            == 255
+        )
+        assert marker["migration_id"] == plan["migration_id"]
+        assert (
+            connection.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
+            == plan["store_id"]
+        )
+        assert state["authority"] == ("legacy" if point == "batch" else "sql")
+        assert state["generation"] == (0 if point == "batch" else 1)
+        interrupted_revision = state["revision"]
+    assert original == {source: source.read_bytes() for source in sources}
+    if point == "cutover":
+        sources[0].write_text('{"invalid":"changed after cutover"}', encoding="utf-8")
+    first = _adopted_run(
+        _EXECUTION_RESUME, root, plan["migration_id"], plan["plan_checksum"]
+    )
+    assert first["generation"] == bound["generation"]
+    assert first["result"]["checkpoint"] == 257
+    with closing(sqlite3.connect(database)) as connection:
+        revision = connection.execute(
+            "SELECT revision FROM execution_state"
+        ).fetchone()[0]
+        if point == "cutover":
+            assert revision == interrupted_revision
+        assert (
+            connection.execute("SELECT count(*) FROM execution_attempts").fetchone()[0]
+            == 2
+        )
+        assert (
+            connection.execute("SELECT count(*) FROM execution_current").fetchone()[0]
+            == 0
+        )
+        assert connection.execute(
+            "SELECT DISTINCT next_attempt FROM execution_allocation_floors"
+        ).fetchall() == [(20,)]
+        assert connection.execute(
+            "SELECT DISTINCT next_attempt FROM execution_heads"
+        ).fetchall() == [(20,)]
+        rows = connection.execute(
+            "SELECT task_id,payload_json,history_seq FROM execution_attempts "
+            "ORDER BY task_id"
+        ).fetchall()
+        assert len({row[2] for row in rows}) == 2
+        for task, raw, _ in rows:
+            assert json.loads(raw) == payload(task)
+        provenance = connection.execute(
+            "SELECT task_id,source_checksum FROM execution_attempts"
+        ).fetchall()
+        for task, checksum in provenance:
+            source = flow / "runtime/agent-runs/run" / task / "status.json"
+            assert checksum == "sha256:" + hashlib.sha256(original[source]).hexdigest()
+        assert connection.execute(
+            "SELECT checkpoint,state FROM execution_migrations"
+        ).fetchall() == [(257, "ready")]
+        assert connection.execute(
+            "SELECT generation,authority,readiness FROM execution_state"
+        ).fetchall() == [(1, "sql", "ready")]
+        assert connection.execute("PRAGMA integrity_check").fetchall() == [("ok",)]
+    sources[0].write_text('{"invalid":"must never reimport"}', encoding="utf-8")
+    second = _adopted_run(
+        _EXECUTION_RESUME, root, plan["migration_id"], plan["plan_checksum"]
+    )
+    assert second["result"]["status"] == "ready"
+    assert second["generation"] == bound["generation"]
+    with closing(sqlite3.connect(database)) as connection:
+        assert (
+            connection.execute("SELECT revision FROM execution_state").fetchone()[0]
+            == revision
+        )
+        assert (
+            connection.execute("SELECT count(*) FROM execution_attempts").fetchone()[0]
+            == 2
+        )
+    assert (evidence / "plan.json").read_bytes() == plan_bytes
+    assert (flow / "data/execution-storage.json").read_bytes() == binding_bytes
+    assert (evidence / "manifest.ndjson").read_bytes() == manifest_bytes
+    assert _recovery_hashes(evidence / "sources") == frozen
+    assert _recovery_hashes(evidence / "backup") == backup
+    assert (
+        json.loads((evidence / "report.json").read_text(encoding="utf-8"))["status"]
+        == "ready"
+    )
+
+
+_DOMAIN_RECOVERY = (
+    _RECOVERY_HOST
+    + r"""
+from processforge_core.maintenance import storage_migration as migration
+target=next(target for target in host.context.targets if (target.kind,target.scope)==(sys.argv[3],sys.argv[4]))
+owner=migration.storage_owner_root(host.context,target)
+if sys.argv[2]=='inventory':
+    print(json.dumps({'target':str(target.target),'owner':str(owner),'owner_id':target.owner_id}))
+else:
+    if sys.argv[2]=='die':
+        inspect=migration._inspect_target
+        def die_after_metadata(target_,*args,**kwargs):
+            facts=inspect(target_,*args,**kwargs)
+            if target_==target and facts.get('store_id') is not None and sys._getframe(1).f_code.co_name=='_apply_target':
+                os._exit(86)
+            return facts
+        migration._inspect_target=die_after_metadata
+    result=host.service.resume(host.context)
+    assert result['status']=='ready',result
+    slot=migration._slot(owner,target)
+    plan=json.loads((host.service._journal(owner,slot['plan_checksum'])/'plan.json').read_text(encoding="utf-8"))
+    assert slot['store_id']==plan['store_id']
+    assert plan['safety_generation']==p.ManagedEnrollmentProducer(root,leaf)._state()['adoption']
+    print(json.dumps({'slot':slot,'plan':plan,'result':result}))
+"""
+)
+
+
+@pytest.mark.parametrize(
+    "kind,scope",
+    [
+        ("events", "project"),
+        ("raw", "project"),
+        ("raw", "workplace"),
+        ("accounting", "workplace"),
+        ("search", "workplace"),
+        ("search", "project"),
+    ],
+)
+def test_real_managed_uuid_adoption_process_death_resume(
+    native_root: Path, kind: str, scope: str
+) -> None:
+    import sqlite3
+    from contextlib import closing
+
+    from processforge_core.maintenance.backup import SQLiteBackupService
+
+    from .test_storage_uuid import create_legacy
+
+    root, _ = _adopted_fixture_install(native_root)
+    mode = "idle" if (kind, scope) == ("search", "project") else "workplace"
+    bound = _adopted_run(_RECOVERY_MANAGER, root, mode)
+    resolved = _adopted_run(_DOMAIN_RECOVERY, root, "inventory", kind, scope)
+    target, owner = Path(resolved["target"]), Path(resolved["owner"])
+    create_legacy(target, kind)
+
+    def domain(path: Path) -> tuple[object, ...]:
+        # Include original DDL, opaque rows, FTS shadow tables and pragmas.
+        with closing(sqlite3.connect(path)) as connection:
+            schema = connection.execute(
+                "SELECT type,name,tbl_name,sql FROM sqlite_schema WHERE name NOT IN "
+                "('pf_store_meta','pf_schema_versions','sqlite_autoindex_pf_store_meta_1',"
+                "'sqlite_autoindex_pf_schema_versions_1') ORDER BY type,name"
+            ).fetchall()
+            tables = [row[1] for row in schema if row[0] == "table"]
+            data = [
+                (
+                    table,
+                    connection.execute(
+                        'SELECT * FROM "' + table.replace('"', '""') + '"'
+                    ).fetchall(),
+                )
+                for table in tables
+            ]
+            return (
+                schema,
+                data,
+                connection.execute("PRAGMA application_id").fetchone(),
+                connection.execute("PRAGMA user_version").fetchone(),
+            )
+
+    before = domain(target)
+    _recovery_process(_DOMAIN_RECOVERY, root, "die", kind, scope)
+    pins = json.loads(
+        (owner / "data/storage-identities.json").read_text(encoding="utf-8")
+    )
+    slot = next(
+        row
+        for row in pins["slots"]
+        if row["target_relative_path"] == target.relative_to(owner).as_posix()
+    )
+    assert slot["state"] == "pending"
+    directory = (
+        owner / "data/storage-migrations/r02-storage-v1" / slot["plan_checksum"][7:]
+    )
+    plan_bytes = (directory / "plan.json").read_bytes()
+    plan = json.loads(plan_bytes)
+    journal = json.loads((directory / "journal.json").read_text(encoding="utf-8"))
+    backup = _recovery_hashes(directory / "backup")
+    assert journal["state"] == "importing"
+    assert journal["backup_manifest_checksum"] is not None and backup
+    assert not (directory / "report.json").exists()
+    assert plan["safety_generation"] == bound["generation"]
+    assert plan["owner_id"] == resolved["owner_id"]
+    assert plan["store_id"] == slot["store_id"]
+    with closing(sqlite3.connect(target)) as connection:
+        assert connection.execute(
+            "SELECT store_id,scope,owner_id FROM pf_store_meta"
+        ).fetchall() == [(slot["store_id"], scope, resolved["owner_id"])]
+    assert domain(target) == before
+    assert domain(directory / "backup/database.sqlite3") == before
+    first = _adopted_run(_DOMAIN_RECOVERY, root, "resume", kind, scope)
+    second = _adopted_run(_DOMAIN_RECOVERY, root, "resume", kind, scope)
+    assert first["slot"] == second["slot"] == {**slot, "state": "ready"}
+    assert first["plan"] == second["plan"] == plan
+    assert domain(target) == before
+    assert (directory / "plan.json").read_bytes() == plan_bytes
+    assert _recovery_hashes(directory / "backup") == backup
+    assert (
+        json.loads((directory / "journal.json").read_text(encoding="utf-8"))[
+            "backup_manifest_checksum"
+        ]
+        == journal["backup_manifest_checksum"]
+    )
+    service = SQLiteBackupService()
+    adopted_bundle = root / "runtime/fixture/adopted-backup"
+    service.create(target, adopted_bundle)
+    assert service.verify(adopted_bundle)["verified"] is True
+    restored = root / "runtime/fixture/restored.sqlite3"
+    service.restore(adopted_bundle, restored)
+    assert domain(restored) == before
+    with closing(sqlite3.connect(restored)) as connection:
+        assert connection.execute(
+            "SELECT store_id,scope,owner_id FROM pf_store_meta"
+        ).fetchall() == [(slot["store_id"], scope, resolved["owner_id"])]
+    if kind == "search":
+        with closing(sqlite3.connect(target)) as connection:
+            assert connection.execute(
+                "SELECT title FROM documents_fts WHERE documents_fts MATCH 'Unicode'"
+            ).fetchall() == [("title",)]
