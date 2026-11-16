@@ -211,7 +211,9 @@ device-name/junction cases; применимые symlink/reparse cases треб�
 и projection suites, а также physical storage paths, required-write-readiness
 и fresh-native-SQL, fresh project domains и configuration access. Windows также
 выбирает три managed recovery узла выше; соответствующего Linux managed provider
-нет. Остальные native-update, cold-handoff и file-only update suites не выбраны.
+нет. Отдельные update-path jobs выбирают file-only update tests на обеих ОС,
+а на Windows — managed publication/recovery и native cold-refusal границы.
+Положительная cold-reset qualification этим не утверждается.
 [Linux native execution][LW] отдельно выбирает fresh-native-SQL и native lifecycle
 tests и запускает controlled-cohort suite.
 

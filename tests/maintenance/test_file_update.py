@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import stat
 import subprocess
 import sys
 import textwrap
@@ -45,7 +46,7 @@ PRIVATE = {
 }
 
 PREAMBLE = """
-import importlib.util, json, os, sys, types
+import contextlib, importlib.util, io, json, os, runpy, sys, types
 from pathlib import Path
 manager, case, target, archive = map(Path, sys.argv[1:5])
 leaf=(manager/'tools/pf_native_control.py').read_bytes()
@@ -54,6 +55,14 @@ native.__file__=str(manager/'tools/pf_native_control.py')
 native._captured_source=leaf
 sys.modules[native.__name__]=native
 exec(compile(leaf,native.__file__,'exec',dont_inherit=True),native.__dict__)
+saved_argv=sys.argv
+sys.argv=[str(manager/'tools/processforge.py'),'--help']
+with contextlib.redirect_stdout(io.StringIO()):
+    try:
+        runpy.run_path(sys.argv[0],run_name='__main__')
+    except SystemExit as result:
+        assert result.code==0
+sys.argv=saved_argv
 entry=native.bootstrap_entry(manager,trusted_leaf=leaf)
 assert entry.publication is not None and entry.image is not None and entry.control is None
 sys.path[:0]=[str(manager/'tools'),str(manager/'src')]
@@ -519,8 +528,24 @@ def test_manifest_cannot_claim_private_or_runtime_paths(
     fixture.assert_no_apply(before)
 
 
+def directory_link(path: Path, target: Path) -> None:
+    """Exercise the native directory alias on this OS without crossing hosts."""
+    if os.name == "nt":
+        created = subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J", str(path), str(target)],
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
+        assert created.returncode == 0, created.stdout + created.stderr
+        assert path.lstat().st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT
+    else:
+        path.symlink_to(target, target_is_directory=True)
+        assert path.is_symlink()
+
+
 @pytest.mark.parametrize(
-    "kind", ["unowned_file", "unowned_directory", "hardlink", "junction"]
+    "kind", ["unowned_file", "unowned_directory", "hardlink", "directory_link"]
 )
 def test_collisions_and_link_boundaries_preserve_foreign_objects(
     fixture: Harness, kind: str
@@ -536,20 +561,14 @@ def test_collisions_and_link_boundaries_preserve_foreign_objects(
         original.rename(fixture.root / "saved-original")
         external = fixture.root / "external-junction-target"
         put(external, "sub/file.txt", b"foreign junction bytes\n")
-        created = subprocess.run(
-            ["cmd.exe", "/d", "/c", "mklink", "/J", str(original), str(external)],
-            capture_output=True,
-            timeout=10,
-            check=False,
-        )
-        assert created.returncode == 0, created.stdout + created.stderr
+        directory_link(original, external)
     before = fixture.snapshot()
     result = fixture.run("emit(invoke())")
     assert not result["ok"]
     fixture.assert_no_apply(before)
     if kind == "hardlink":
         assert (fixture.root / "external-hardlink").read_bytes() == OLD["changed.txt"]
-    if kind == "junction":
+    if kind == "directory_link":
         assert (
             fixture.root / "external-junction-target/sub/file.txt"
         ).read_bytes() == b"foreign junction bytes\n"
@@ -668,13 +687,7 @@ def test_linked_update_control_directory_refuses_cleanly(fixture: Harness) -> No
     foreign = fixture.root / "foreign-control"
     put(foreign, "keep", b"foreign control evidence\n")
     link = fixture.target / "runtime/core-update"
-    created = subprocess.run(
-        ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(foreign)],
-        capture_output=True,
-        timeout=10,
-        check=False,
-    )
-    assert created.returncode == 0, created.stdout + created.stderr
+    directory_link(link, foreign)
     before = fixture.snapshot()
     result = fixture.run("emit(invoke())")
     assert result["code"] == "plan_blocked"

@@ -209,8 +209,10 @@ need actual results. The selection includes the migration/UUID/automatic/admissi
 database, backup, journal and projection suites, plus physical storage paths,
 required-write-readiness, fresh-native-SQL, fresh project domains and configuration
 access. Windows also selects the three managed recovery nodes above; Linux has
-no corresponding managed provider. It does **not** select the remaining native-update,
-cold-handoff or file-only update suites. [Linux native execution][LW] separately selects fresh-native-SQL
+no corresponding managed provider. Separate update-path jobs select file-only
+update tests on both systems, plus Windows managed publication/recovery and
+native cold-refusal boundaries. They make no positive cold-reset qualification
+claim. [Linux native execution][LW] separately selects fresh-native-SQL
 and native lifecycle tests and runs the controlled-cohort suite.
 
 Workflow definitions are not execution receipts. The physical suite covers sealed
