@@ -155,20 +155,35 @@ def apply_file_update(
     def require_offline() -> None:
         if workplace_root is None:
             return
-        from pf_runtime.service import inspect_lifecycle
+        from pf_runtime.service import (
+            classify_lifecycle,
+            lock_path,
+            read_json,
+            service_path,
+        )
 
         from ..runtime.observation_inputs import WorkerObservationInputService
 
-        observed = inspect_lifecycle(workplace_root, None)
-        pid = observed["state"].get("pid")
-        if (
-            observed["kind"] not in {"stopped", "not_running", "stale"}
-            or observed["pid_running"]
-            or (
-                isinstance(pid, int)
-                and WorkerObservationInputService().process_pid_running(pid)
-            )
-        ):
+        # Offline admission uses the shared classifier without endpoint readiness.
+        # A stopped service record is not proof that its process is absent.
+        state = read_json(service_path(workplace_root))
+        lock = read_json(lock_path(workplace_root))
+        for pid in (state.get("pid"), lock.get("pid")):
+            if isinstance(
+                pid, int
+            ) and WorkerObservationInputService().process_pid_running(pid):
+                raise CoreUpdateError(
+                    "plan_blocked", "stop the Workplace App Server before file update"
+                )
+        kind = classify_lifecycle(
+            state,
+            lock,
+            lock_exists=lock_path(workplace_root).exists(),
+            pid_running=False,
+            state_pid_running=False,
+            ready=False,
+        )
+        if kind not in {"stopped", "not_running", "stale"}:
             raise CoreUpdateError(
                 "plan_blocked", "stop the Workplace App Server before file update"
             )

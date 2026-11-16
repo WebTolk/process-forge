@@ -107,13 +107,20 @@ class WorkerObservationInputService:
             return None
 
     def process_pid_running(self, pid: int) -> bool:
+        """Return False only for confirmed absence; uncertainty may still be live."""
         if os.name == "nt":
-            result = subprocess.run(
-                ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                shell=False,
-            )
+            try:
+                result = subprocess.run(
+                    ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    shell=False,
+                    timeout=5,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                return True
+            if result.returncode != 0:
+                return True
             # tasklist uses a Windows console code page even when Python uses UTF-8.
             # Only the CSV PID column is relevant; localized names/messages are not.
             rows = csv.reader(

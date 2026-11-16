@@ -183,7 +183,10 @@ importer. Это ограниченное transaction-доказательств
   отдельный sealed unbound installer и непересекающийся manifest-owned target,
   который никогда не был enrolled. Даже частичные managed markers запрещают
   fallback. Путь фиксирует archive bytes, сохраняет preimages и правдивый failure
-  journal, использует mutex для cooperating updaters. Он не выполняет enrollment,
+  journal, использует mutex для cooperating updaters. Живые PID из service/lock
+  и ошибки Windows-наблюдения блокируют изменение target без обращения к readiness
+  endpoint. Успешное подтверждение отсутствия PID сохраняет offline update.
+  Путь не выполняет enrollment,
   retirement посторонних interpreters и не разрешает storage migration.
   `bootstrap_entry` может получить portable file-only image без control/epoch;
   это не native exclusion proof.
@@ -216,6 +219,8 @@ device-name/junction cases; применимые symlink/reparse cases треб�
 Положительная cold-reset qualification этим не утверждается.
 [Linux native execution][LW] отдельно выбирает fresh-native-SQL и native lifecycle
 tests и запускает controlled-cohort suite.
+Linux update job исключает Windows-only `tasklist` fault seams; нативные POSIX
+проверки живого PID и завершившегося child продолжают выполняться.
 
 Описание workflow не является квитанцией выполнения. Физический набор проверяет
 sealed fresh SQL, отказ для недопустимого bound target, реальную конкуренцию писателей

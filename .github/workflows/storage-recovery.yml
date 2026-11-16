@@ -144,6 +144,9 @@ jobs:
                   'tests/execution_migration/test_cold_handoff.py::test_actual_accesscheck_and_child_file_denial',
                   'tests/execution_migration/test_cold_handoff.py::test_native_lock_blocks_real_other_process',
               ]
+          else:
+              # These fault seams exercise the Windows tasklist branch only.
+              selection += ['-k', 'not test_uncertain_or_active_windows_pid_refuses_before_apply']
           report = root / 'storage-update-results.xml'
           result = subprocess.run([
               sys.executable, '-B', '-m', 'pytest', '-q', '-ra',

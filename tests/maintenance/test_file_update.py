@@ -243,7 +243,7 @@ class Harness:
         return json.loads((self.root / "probe-result.json").read_text(encoding="utf-8"))
 
     def snapshot(self) -> dict[str, bytes]:
-        names = {*OLD, *PRIVATE, "processforge-core.manifest.json"}
+        names = {*OLD, *NEW, *PRIVATE, "processforge-core.manifest.json"}
         return {
             name: (self.target / name).read_bytes()
             for name in names
@@ -574,23 +574,146 @@ def test_collisions_and_link_boundaries_preserve_foreign_objects(
         ).read_bytes() == b"foreign junction bytes\n"
 
 
+def prepare_workplace(fixture: Harness) -> None:
+    manifest = {
+        "schema_version": 1,
+        "workplace": {
+            "id": "fixture",
+            "name": "File update fixture",
+            "type": "agent_environment",
+            "os": sys.platform,
+        },
+        "paths": {},
+        "policies": {},
+    }
+    put(fixture.root / "workplace", "workplace.yaml", json.dumps(manifest).encode())
+
+
+@pytest.mark.parametrize("owner_record", ["state", "matching_lock", "lock_only"])
 def test_known_workplace_live_pid_blocks_without_endpoint_contact(
-    fixture: Harness,
+    fixture: Harness, owner_record: str
 ) -> None:
+    prepare_workplace(fixture)
     before = fixture.snapshot()
-    result = fixture.run("""
+    result = fixture.run(
+        """
 workplace=case/'workplace'
 import pf_runtime.service as service
+from processforge_core.maintenance.update import build_plan
+assert not build_plan(target,archive,workplace_root=workplace)['blockers']
 state=service.service_path(workplace)
 state.parent.mkdir(parents=True)
-state.write_text(json.dumps({'pid':os.getpid(),'status':'stopped','instance_id':'fixture'}))
+record={'pid':os.getpid(),'status':'stopped','instance_id':'fixture','endpoint':'http://127.0.0.1:1'}
+state.write_text(json.dumps(record))
+if OWNER_RECORD!='state':service.lock_path(workplace).write_text(json.dumps(record))
+if OWNER_RECORD=='lock_only':state.unlink()
 def forbidden(*args,**kwargs):raise AssertionError('endpoint contact during offline refusal')
 service.http_json=forbidden
 emit(invoke(workplace_root=workplace))
-""")
+""".replace("OWNER_RECORD", repr(owner_record))
+    )
     assert result["code"] == "plan_blocked"
     assert "stop" in result["message"].lower()
     fixture.assert_no_apply(before)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows tasklist observation seam")
+@pytest.mark.parametrize(
+    "observation", ["present", "nonzero", "launch_denied", "launch_missing", "timeout"]
+)
+@pytest.mark.parametrize("owner_record", ["state", "matching_lock", "lock_only"])
+def test_uncertain_or_active_windows_pid_refuses_before_apply(
+    fixture: Harness, observation: str, owner_record: str
+) -> None:
+    prepare_workplace(fixture)
+    before = fixture.snapshot()
+    result = fixture.run(
+        """
+import subprocess
+import pf_runtime.service as service
+from processforge_core.runtime import observation_inputs
+workplace=case/'workplace'
+from processforge_core.maintenance.update import build_plan
+assert not build_plan(target,archive,workplace_root=workplace)['blockers']
+state=service.service_path(workplace)
+state.parent.mkdir(parents=True)
+record={'pid':os.getpid(),'status':'stopped','instance_id':'fixture','endpoint':'http://127.0.0.1:1'}
+state.write_text(json.dumps(record))
+if OWNER_RECORD!='state':service.lock_path(workplace).write_text(json.dumps(record))
+if OWNER_RECORD=='lock_only':state.unlink()
+original=observation_inputs.subprocess.run
+calls=[]
+def observe(command,**kwargs):
+    if command[0]!='tasklist':return original(command,**kwargs)
+    assert kwargs['timeout']==5
+    calls.append(command)
+    if OBSERVATION=='launch_denied':raise PermissionError(13,'controlled observation denial')
+    if OBSERVATION=='launch_missing':raise FileNotFoundError(2,'controlled missing tasklist')
+    if OBSERVATION=='timeout':raise subprocess.TimeoutExpired(command,kwargs['timeout'])
+    if OBSERVATION=='nonzero':return subprocess.CompletedProcess(command,1,b'',b'ERROR: Access denied')
+    return subprocess.CompletedProcess(command,0,('"python.exe","%s","Console","1","100 K"\\n'%os.getpid()).encode())
+def forbidden(*args,**kwargs):raise AssertionError('endpoint contact during offline refusal')
+service.http_json=forbidden
+observation_inputs.subprocess.run=observe
+try:
+    result=invoke(workplace_root=workplace)
+finally:
+    observation_inputs.subprocess.run=original
+assert calls
+emit(result)
+""".replace("OBSERVATION", repr(observation)).replace(
+            "OWNER_RECORD", repr(owner_record)
+        )
+    )
+    assert result["code"] == "plan_blocked"
+    assert "stop" in result["message"].lower()
+    fixture.assert_no_apply(before)
+
+
+@pytest.mark.parametrize("known_absent_pid", [False, True])
+def test_offline_workplace_with_valid_manifest_can_apply(
+    fixture: Harness, known_absent_pid: bool
+) -> None:
+    prepare_workplace(fixture)
+    result = fixture.run(
+        """
+import subprocess
+import pf_runtime.service as service
+from processforge_core.runtime import observation_inputs
+workplace=case/'workplace'
+state=service.service_path(workplace)
+state.parent.mkdir(parents=True)
+record={'status':'stopped','instance_id':'fixture','endpoint':'http://127.0.0.1:1'}
+calls=[]
+original=observation_inputs.subprocess.run
+if KNOWN_ABSENT:
+    child=subprocess.Popen([sys.executable,'-I','-B','-c','pass'])
+    assert child.wait(timeout=10)==0
+    record['pid']=child.pid
+    if os.name=='nt':
+        # Algorithm control: restricted native tasklist may deny even a dead PID.
+        def absent(command,**kwargs):
+            if command[0]!='tasklist':return original(command,**kwargs)
+            calls.append(command)
+            return subprocess.CompletedProcess(command,0,b'INFO: No tasks are running which match the specified criteria.\\r\\n')
+        observation_inputs.subprocess.run=absent
+state.write_text(json.dumps(record))
+def forbidden(*args,**kwargs):raise AssertionError('endpoint contact during offline update')
+service.http_json=forbidden
+try:
+    result=invoke(workplace_root=workplace)
+finally:
+    observation_inputs.subprocess.run=original
+if KNOWN_ABSENT and os.name=='nt':assert calls
+emit(result)
+""".replace("KNOWN_ABSENT", repr(known_absent_pid))
+    )
+    assert result["ok"], result
+    assert result["result"]["status"] == "applied"
+    assert result["result"]["maintenance_mode"] == "file_only"
+    for relative, raw in {**NEW, **PRIVATE}.items():
+        assert (fixture.target / relative).read_bytes() == raw
+    assert (fixture.target / "runtime/core-update/last-apply.json").is_file()
 
 
 def test_real_file_mutex_excludes_contender_until_release(fixture: Harness) -> None:

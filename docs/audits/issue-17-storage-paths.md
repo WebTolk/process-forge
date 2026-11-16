@@ -184,7 +184,10 @@ ST12 has three distinct implementation boundaries:
   separate sealed, unbound installer and a disjoint manifest-owned, never-enrolled
   target. Even partial managed markers refuse fallback. It freezes the archive,
   retains preimages and a truthful failure journal, and uses a cooperating
-  updater mutex. It does not enroll a deployment, retire unrelated interpreters,
+  updater mutex. Known live service/lock PIDs and failed Windows PID observations
+  block before target changes, without contacting a readiness endpoint. A
+  successful observation of an absent PID preserves the offline update path.
+  It does not enroll a deployment, retire unrelated interpreters,
   or authorize storage migration. `bootstrap_entry` can capture a portable
   file-only image without control/epoch; that is not native exclusion proof.
 
@@ -214,6 +217,8 @@ update tests on both systems, plus Windows managed publication/recovery and
 native cold-refusal boundaries. They make no positive cold-reset qualification
 claim. [Linux native execution][LW] separately selects fresh-native-SQL
 and native lifecycle tests and runs the controlled-cohort suite.
+The Linux update job deselects Windows-only `tasklist` fault seams; its native
+POSIX live-PID and completed-child controls still run.
 
 Workflow definitions are not execution receipts. The physical suite covers sealed
 fresh SQL, bound-target refusal, real writer contention and the existing offline
