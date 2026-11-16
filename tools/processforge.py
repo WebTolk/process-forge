@@ -2958,12 +2958,62 @@ def _project_bootstrap_preflight(
             raise MaintenanceError("execution_storage_not_ready")
         _uuid(binding["store_id"])
         if binding_path.exists():
-            if _read(binding_path) != binding:
+            existing = _read(binding_path)
+            if (
+                existing != binding
+                or any(
+                    type(existing.get(key)) is not type(value)
+                    for key, value in binding.items()
+                )
+            ):
                 raise MaintenanceError("execution_storage_not_ready")
         elif document["state"] != "pending" or initializer["state"] != "pending":
             raise MaintenanceError("execution_storage_not_ready")
         # A pending marker precedes binding publication. Explicit recovery owns
         # publishing that exact planned binding; preflight must remain read-only.
+        if initializer["state"] == "pending" and target_path.exists():
+            from processforge_core.database import (
+                DatabaseFactory,
+                DatabaseIdentity,
+                DatabaseTarget,
+                SchemaManager,
+                SqlStatement,
+            )
+            from processforge_core.executions.schema import EXECUTION_SCHEMA
+            from processforge_core.executions.sqlite_repository import (
+                SQLiteExecutionRepository,
+            )
+            from processforge_core.maintenance.execution_migration import (
+                EXECUTION_MIGRATION_SCHEMA,
+            )
+
+            database = DatabaseFactory.from_profile(
+                snapshot.config.database,
+                profile,
+                DatabaseTarget(
+                    target_path,
+                    DatabaseIdentity(binding["store_id"], "project", proposed_owner),
+                ),
+            )
+            schemas = (EXECUTION_SCHEMA, EXECUTION_MIGRATION_SCHEMA)
+            if SchemaManager().inspect(database, schemas).state != "ready":
+                raise MaintenanceError("execution_storage_not_ready")
+            with database.read() as session:
+                state = session.fetch_one(
+                    SqlStatement("SELECT * FROM execution_state WHERE singleton=1")
+                )
+                if state is None and session.fetch_one(
+                    SqlStatement("SELECT 1 FROM execution_attempts LIMIT 1")
+                ) is not None:
+                    raise MaintenanceError("execution_storage_not_ready")
+            if state is not None and (
+                (state["authority"], state["readiness"], state["active_coverage"])
+                != ("sql", "ready", "complete")
+                or not SQLiteExecutionRepository(
+                    database, proposed_owner
+                ).readiness().ready
+            ):
+                raise MaintenanceError("execution_storage_not_ready")
     if document["state"] == "ready" or (
         initializer is not None and initializer["state"] == "ready"
     ):

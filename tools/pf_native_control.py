@@ -26,7 +26,7 @@ from ctypes import wintypes
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import FrameType, MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, BinaryIO
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -338,6 +338,7 @@ def spawn_owned(
     token: str | None = None,
     receipt_path: Path | None = None,
     identity: dict[str, Any] | None = None,
+    independent: bool = False,
     **options: Any,
 ) -> subprocess.Popen[bytes]:
     """Assign a suspended child to its retained Job before its first instruction.
@@ -345,14 +346,25 @@ def spawn_owned(
     A duplicate Job handle is inherited by exactly the launched root. Therefore
     abrupt controller death cannot leave a wrapper without a containment fence.
     Child death closes that handle; last-handle close kills remaining members.
+    On Linux, independent=True requests a new ephemeral namespace even inside
+    an inherited owner; durable token/receipt/identity inputs are then refused.
     """
+    if type(independent) is not bool:
+        raise TypeError("independent must be a bool")
     if sys.platform.startswith("linux"):
         from pf_linux_native_control import spawn
 
         return spawn(
-            argv, token=token, receipt_path=receipt_path, identity=identity, **options
+            argv,
+            token=token,
+            receipt_path=receipt_path,
+            identity=identity,
+            independent=independent,
+            **options,
         )
     if os.name != "nt":
+        if independent:
+            raise NativeControlError()
         # A POSIX process group is useful for signalling but is not a complete
         # descendant ownership primitive. No positive tree proof is exported.
         options.setdefault("start_new_session", True)
@@ -1371,6 +1383,20 @@ def build_publication(
     return Build(MappingProxyType(frozen), final, pin)
 
 
+def _read_bounded(stream: BinaryIO, limit: int) -> bytes:
+    """Retain bounded file bytes without allocating the caller's full ceiling."""
+    chunks: list[bytes] = []
+    size = 0
+    while True:
+        chunk = stream.read(min(64 * 1024, limit + 1 - size))
+        if not chunk:
+            return b"".join(chunks)
+        size += len(chunk)
+        if size > limit:
+            raise Refusal("read_limit")
+        chunks.append(chunk)
+
+
 def _read_regular(root: Path, relative: str, limit: int) -> bytes:
     path = root
     for part in ("", *relative.split("/")):
@@ -1382,7 +1408,7 @@ def _read_regular(root: Path, relative: str, limit: int) -> bytes:
     if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
         raise Refusal("not_regular")
     with _PHYSICAL_OPEN(path, "rb") as stream:
-        raw = stream.read(limit + 1)
+        raw = _read_bounded(stream, limit)
     if len(raw) > limit:
         raise Refusal("read_limit")
     return raw
@@ -1461,7 +1487,7 @@ def _snapshot_read_regular(root: Path, relative: str, limit: int) -> bytes:
             before = os.fstat(stream.fileno())
             if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
                 raise Refusal("not_regular")
-            raw = stream.read(limit + 1)
+            raw = _read_bounded(stream, limit)
             after = os.fstat(stream.fileno())
         # Reading can update atime; it is not content or alias drift.
         if any(
@@ -1498,6 +1524,12 @@ def _snapshot_origin(
         raise NativeControlError()
     for relative in (
         "tools/processforge.py",
+        "tools/pf_runtime/mcp_server.py",
+        "tools/pf_runtime/codex_hooks.py",
+        "tools/pf_runtime/kimi_hooks.py",
+        "tools/pf_runtime/service.py",
+        "tools/migrate-storage.py",
+        "tools/migrate-hook-journals.py",
         "tools/prepared_executor.py",
         "tools/codex_exec_worker.py",
         "src/processforge_core/__init__.py",
@@ -1567,6 +1599,93 @@ class NativeEntry:
 _ENTRY: NativeEntry | None = None
 
 
+def _capture_source_publication(
+    root: Path, trusted_leaf: bytes, caller: FrameType
+) -> Publication:
+    """Verify a source inventory, then seal and recapture only retained bytes.
+
+    The checkout and its inventory are the trusted source input. This portable
+    image grants neither enrollment nor historical writer retirement. Nothing
+    is published back into the checkout, including the generated seal.
+    """
+
+    def source_only() -> None:
+        for relative in (MANIFEST, "runtime/native-control", "runtime/managed-ingress"):
+            path = root / relative
+            if path.exists() or path.is_symlink():
+                raise Refusal("source_has_installation_state")
+
+    read = _read_regular if os.name == "nt" else _snapshot_read_regular
+    source_only()
+    try:
+        leaf = canonical_release_bytes(trusted_leaf)
+        parts = _block(leaf)
+        if parts is None or parts[1].strip() != b"_PUBLICATION_SEAL = None":
+            raise Refusal("source_seal_slot")
+        if read(root, LEAF, MAX_FILE) != trusted_leaf:
+            raise Refusal("source_leaf_drift")
+        inventory = canonical_release_bytes(read(root, INVENTORY, MAX_MANIFEST))
+        entries: dict[str, str] = {}
+        names: list[str] = []
+        for line in inventory.decode("utf-8").splitlines():
+            expected, separator, name = line.partition("  ")
+            if not separator or not HEX.fullmatch(expected):
+                raise Refusal("source_inventory_entry")
+            names.append(safe_path(name))
+            entries[name] = expected
+        _unique_paths(names)
+        required = {
+            LEAF,
+            "VERSION",
+            "tools/processforge.py",
+            "src/processforge_core/__init__.py",
+        }
+        if (
+            not required.issubset(entries)
+            or INVENTORY in entries
+            or MANIFEST in entries
+            or any(name.lower().endswith((".pyc", ".pyo")) for name in entries)
+        ):
+            raise Refusal("source_inventory_files")
+        payload: dict[str, bytes] = {}
+        total = 0
+        for name, expected in entries.items():
+            raw = canonical_release_bytes(read(root, name, MAX_FILE))
+            total += len(raw)
+            if total > MAX_TOTAL or digest(raw) != expected:
+                raise Refusal("source_payload_drift")
+            payload[name] = raw
+        if payload[LEAF] != leaf or inventory_bytes(payload) != inventory:
+            raise Refusal("source_inventory_drift")
+        # Bind the executing entry before replacing its leaf seal in memory.
+        # A library import cannot promote arbitrary caller code.
+        _snapshot_origin(
+            root, trusted_leaf, Publication(MappingProxyType(payload), "", ""), caller
+        )
+        source_only()
+        payload[INVENTORY] = inventory
+        build = build_publication(
+            payload,
+            version=payload["VERSION"].decode("utf-8").strip(),
+            source={"source_inventory_sha256": digest(inventory)},
+            generated_at="source",
+        )
+        retained = {**build.payload, MANIFEST: build.manifest}
+
+        def captured_read(_root: Path, relative: str, limit: int) -> bytes:
+            raw = retained[relative]
+            if len(raw) > limit:
+                raise Refusal("read_limit")
+            return raw
+
+        publication = _capture_publication(root, build.payload[LEAF], captured_read)
+        if publication is None:
+            raise NativeControlError()
+        return publication
+    except (OSError, UnicodeError) as exc:
+        raise Refusal("source_unreadable") from exc
+
+
 def bootstrap_entry(
     root: Path, *, trusted_leaf: bytes, _core_entry: Any = None
 ) -> NativeEntry:
@@ -1582,12 +1701,24 @@ def bootstrap_entry(
             raise NativeControlError()
         return _ENTRY
     seal = leaf_seal(trusted_leaf)
-    if seal is None:
+    if seal is None and sys._getframe(1).f_globals.get("__name__") != "__main__":
+        # Source libraries remain ordinary imports. Only an explicit trusted
+        # script entry activates a retained image and native execution capability.
         return NativeEntry(root, None, None, None)
     for path in (root, *root.parents):
         info = path.lstat()
         if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
             raise NativeControlError()
+    if seal is None:
+        source_publication = _capture_source_publication(
+            root, trusted_leaf, sys._getframe(1)
+        )
+        image = NativeImage.from_publication(root, source_publication)
+        if image.root != root:
+            raise NativeControlError()
+        image.activate(_core_entry=_core_entry)
+        _ENTRY = NativeEntry(root, source_publication, image, None)
+        return _ENTRY
     guard = root / "runtime/native-control/installation.guard"
     epoch = root / "runtime/native-control/epoch"
     if guard.exists() != epoch.exists():
@@ -1886,6 +2017,14 @@ def supports_owned_execution() -> bool:
     ):
         return False
     try:
+        if sys.platform.startswith("linux"):
+            from pf_linux_native_control import inherited
+
+            # Membership is checked against the live kernel namespace, carrier
+            # and init identities. It proves this process is already fenced;
+            # it grants no independent owner or historical migration authority.
+            if inherited(dict(os.environ)) is not None:
+                return True
         process = spawn_owned(
             [sys.executable, "-B", "-c", "pass"],
             env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},

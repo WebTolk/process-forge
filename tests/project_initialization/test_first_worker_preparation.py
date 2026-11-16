@@ -1,7 +1,7 @@
 """Qualified fresh CLI initialization and preparation without launching a model.
 
-Sealed fixture publications qualify fresh journals; they do not establish
-retirement of old workplace writers. Unsealed source initialization refuses safely.
+Source and sealed installations qualify fresh journals; neither establishes
+retirement of old workplace writers.
 """
 
 from __future__ import annotations
@@ -16,28 +16,23 @@ import pytest
 
 SOURCE = Path(__file__).resolve().parents[2]
 CLI = SOURCE / "tools/processforge.py"
-RAW_PROBE = """
-import importlib.util, json, sqlite3, sys
+STORAGE_PROBE = """
+import json, sqlite3, sys
 from contextlib import closing
 from pathlib import Path
 cli, project, workplace = map(Path, sys.argv[1:])
-spec = importlib.util.spec_from_file_location('raw_fixture_cli', cli)
-assert spec and spec.loader
-module = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = module
-spec.loader.exec_module(module)
-from pf_runtime.raw_ingress_kernel import NativeAgentEvent, RawIngressKernel
+source = cli.parents[1]
+sys.path[:0] = [str(source / 'src'), str(source / 'tools')]
 from processforge_core import build_configuration_provider
 from processforge_core.executions.composition import select_execution_storage
 configuration = build_configuration_provider(project_root=project, workplace_root=workplace)
 route = select_execution_storage(project, workplace, configuration=configuration)
 assert route.repository is not None
 assert route.repository.readiness().ready
-kernel = RawIngressKernel(workplace, flow_root=project / '.pf', configuration=configuration)
-receipt = kernel.ingest(NativeAgentEvent('generic', 'integration', 'reply', {'first': True}, source_project_ref=str(project)))
-with closing(sqlite3.connect(kernel.database.resolve().as_uri() + '?mode=ro', uri=True)) as connection:
+database = project / '.pf/runtime/agent-events/hooks.sqlite3'
+with closing(sqlite3.connect(database.resolve().as_uri() + '?mode=ro', uri=True)) as connection:
     assert connection.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
-print(json.dumps({'accepted': receipt.accepted, 'execution_sql_selected': route.repository is not None}))
+print(json.dumps({'execution_sql_selected': True, 'raw_integrity': 'ok'}))
 """
 
 
@@ -92,12 +87,13 @@ def successful(root: Path, label: str, *arguments: str) -> str:
 
 
 @pytest.mark.parametrize("history_owner", ["foreign", "own"])
+@pytest.mark.parametrize("distribution", ["source", "sealed"])
 def test_initialized_project_first_raw_and_worker_preparation(
-    tmp_path: Path, history_owner: str
+    tmp_path: Path, history_owner: str, distribution: str
 ) -> None:
-    from execution_migration.test_fresh_native_sql import publish
+    from execution_migration.test_fresh_native_sql import publish, source_cli
 
-    cli = publish(tmp_path)
+    cli = source_cli(tmp_path) if distribution == "source" else publish(tmp_path)
     workplace, project = tmp_path / "workplace", tmp_path / "project"
     successful(
         tmp_path,
@@ -111,6 +107,20 @@ def test_initialized_project_first_raw_and_worker_preparation(
         "--apply",
     )
     legacy = workplace / "runtime/agent-events/raw/v1/history.ndjson"
+    successful(
+        tmp_path,
+        "enable-fixture-hooks",
+        str(cli),
+        "config",
+        "update",
+        "--workplace",
+        str(workplace),
+        "--key",
+        "runtime.garage_hooks",
+        "--value",
+        "true",
+        "--json",
+    )
     legacy.parent.mkdir(parents=True, exist_ok=True)
     reference = project if history_owner == "own" else tmp_path / "foreign-project"
     legacy.write_text(
@@ -134,21 +144,62 @@ def test_initialized_project_first_raw_and_worker_preparation(
     )
     assert "status: complete" in initialized
     assert "status: pass" in initialized
-    raw = run(tmp_path, "raw", "-c", RAW_PROBE, str(cli), str(project), str(workplace))
+    envelope = tmp_path / "raw-input.json"
+    envelope.write_text(
+        json.dumps(
+            {
+                "provider": "generic",
+                "adapter": "integration",
+                "native_event_type": "reply",
+                "raw_payload": {"first": True},
+                "source_project_ref": str(project),
+            }
+        ),
+        encoding="utf-8",
+    )
+    # Exercise the supported file-only Host command, whose trusted CLI entry
+    # captures native capability before Core. A library import grants none.
+    raw = run(
+        tmp_path,
+        "raw",
+        str(cli),
+        "runtime-host",
+        "event",
+        "--project-root",
+        str(project),
+        "--workplace",
+        str(workplace),
+        "--input",
+        str(envelope),
+        "--json",
+    )
     assert legacy.read_bytes() == before
     database = project / ".pf/runtime/agent-events/hooks.sqlite3"
     if history_owner == "own":
         assert raw.returncode != 0
-        assert "JournalMigrationRequired" in raw.stderr
         assert "raw_journal_migration_required" in raw.stderr
         assert not database.exists()
         return
     assert raw.returncode == 0, raw.stderr
-    assert json.loads(raw.stdout) == {
-        "accepted": True,
-        "execution_sql_selected": True,
-    }
+    receipt = json.loads(raw.stdout)
+    assert receipt["accepted"] is True
+    assert receipt["raw_event_id"]
+    assert receipt["routing_status"] == "denied"
+    assert receipt["diagnostics"]["adapter"]["reason"] == "adapter_untrusted"
     assert database.is_file()
+    storage = successful(
+        tmp_path,
+        "raw-storage",
+        "-c",
+        STORAGE_PROBE,
+        str(cli),
+        str(project),
+        str(workplace),
+    )
+    assert json.loads(storage) == {
+        "execution_sql_selected": True,
+        "raw_integrity": "ok",
+    }
     scope = tmp_path / "scope.json"
     scope.write_text(
         json.dumps(
@@ -224,14 +275,21 @@ def test_initialized_project_first_raw_and_worker_preparation(
     assert legacy.read_bytes() == before
 
 
-def test_unsealed_source_init_refuses_without_traceback_or_flow_root(
+def test_source_init_creates_ready_sql_without_publishing_in_place(
     tmp_path: Path,
 ) -> None:
+    import sqlite3
+
+    from execution_migration.test_fresh_native_sql import source_cli
+
+    cli = source_cli(tmp_path)
+    source = cli.parents[1]
+    before = {path: path.read_bytes() for path in source.rglob("*") if path.is_file()}
     workplace, project = tmp_path / "workplace", tmp_path / "project"
     successful(
         tmp_path,
         "workplace",
-        str(CLI),
+        str(cli),
         "workplace-init",
         "--workplace",
         str(workplace),
@@ -242,7 +300,7 @@ def test_unsealed_source_init_refuses_without_traceback_or_flow_root(
     result = run(
         tmp_path,
         "unsealed-init",
-        str(CLI),
+        str(cli),
         "project-init",
         "--project-root",
         str(project),
@@ -254,7 +312,17 @@ def test_unsealed_source_init_refuses_without_traceback_or_flow_root(
         "software-feature-development",
         "--apply",
     )
-    assert result.returncode == 1
-    assert result.stdout == "FAIL: storage_fresh_capability_required\n"
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "status: complete" in result.stdout
+    assert "status: pass" in result.stdout
     assert result.stderr == ""
-    assert not (project / ".pf").exists()
+    flow = project / ".pf"
+    binding = json.loads((flow / "data/execution-storage.json").read_bytes())
+    database = flow / binding["target_relative_path"]
+    with sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True) as sql:
+        assert sql.execute(
+            "SELECT authority,readiness,active_coverage FROM execution_state WHERE singleton=1"
+        ).fetchone() == ("sql", "ready", "complete")
+    assert {
+        path: path.read_bytes() for path in source.rglob("*") if path.is_file()
+    } == before

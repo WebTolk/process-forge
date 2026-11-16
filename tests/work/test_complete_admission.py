@@ -84,16 +84,21 @@ def make_work(
 
 def saved_work(project: Path) -> dict[str, bytes]:
     result = {}
-    main = project / ".pf/data/pf.sqlite3"
+    databases = (
+        project / ".pf/data/pf.sqlite3",
+        project / ".pf/runtime/events/events.sqlite3",
+    )
+    read_marks = {Path(str(database) + "-shm") for database in databases}
+    empty_wals = {Path(str(database) + "-wal") for database in databases}
     for path in (project / ".pf").rglob("*"):
         if not path.is_file() or path.name.endswith((".lock", ".guard")):
             continue
-        # Read-only main readiness may create shared-memory read marks and an
-        # empty WAL. Preserve all database bytes and every nonempty WAL.
-        if path == Path(str(main) + "-shm"):
+        # Read-only main/event readiness may create shared-memory read marks and
+        # empty WALs. Preserve all database bytes and every nonempty WAL.
+        if path in read_marks:
             continue
         raw = path.read_bytes()
-        if path == Path(str(main) + "-wal") and not raw:
+        if path in empty_wals and not raw:
             continue
         result[path.relative_to(project).as_posix()] = raw
     return result

@@ -497,3 +497,76 @@ def test_marker_conflicts_preserve_nonidentity_and_entry_bytes(
             request_for(cli, root), changed_nonidentity_files(root)
         )
     assert bytes_before(root) == before
+
+
+@pytest.mark.parametrize("boundary", ["before_binding", "before_schema"])
+@pytest.mark.parametrize("version", [True, 1.0])
+def test_pending_binding_types_refuse_before_authoring(
+    tmp_path, cli, main_configuration, boundary, version
+):
+    root = tmp_path / "project"
+    interrupt_main(root, boundary)
+    marker = execution._fresh_initialization(root / ".pf")
+    binding = {**marker["binding"], "schema_version": version}
+    (root / ".pf/data/execution-storage.json").write_text(json.dumps(binding))
+    before = bytes_before(root)
+    with pytest.raises((MaintenanceError, ExecutionError)):
+        cli.execute_project_initialization(
+            request_for(cli, root), changed_nonidentity_files(root)
+        )
+    assert bytes_before(root) == before
+
+
+@pytest.mark.parametrize("boundary", ["before_binding", "before_schema"])
+@pytest.mark.parametrize(
+    "damage", ["corrupt", "empty", "partial", "foreign_owner", "foreign_store"]
+)
+def test_pending_target_conflict_refuses_before_authoring(
+    tmp_path, cli, main_configuration, boundary, damage
+):
+    from processforge_core.database import (
+        DatabaseError,
+        DatabaseFactory,
+        DatabaseIdentity,
+        DatabaseTarget,
+    )
+    from processforge_core.maintenance.execution_migration import (
+        EXECUTION_MIGRATION_SCHEMA,
+    )
+
+    root = tmp_path / "project"
+    interrupt_main(root, boundary)
+    binding = execution._fresh_initialization(root / ".pf")["binding"]
+    target = root / ".pf" / binding["target_relative_path"]
+    if damage in {"corrupt", "empty"}:
+        target.write_bytes(b"not SQLite" if damage == "corrupt" else b"")
+    else:
+        identity = DatabaseIdentity(
+            "b" * 32 if damage == "foreign_store" else binding["store_id"],
+            "project",
+            "foreign-owner" if damage == "foreign_owner" else binding["project_id"],
+        )
+        database = DatabaseFactory.from_profile(
+            main_configuration.current().database,
+            binding["profile_id"],
+            DatabaseTarget(target, identity),
+        )
+        schemas = (
+            (execution.EXECUTION_SCHEMA,)
+            if damage == "partial"
+            else (execution.EXECUTION_SCHEMA, EXECUTION_MIGRATION_SCHEMA)
+        )
+        SchemaManager().initialize(database, schemas)
+    before = bytes_before(root)
+    with pytest.raises((MaintenanceError, ExecutionError, DatabaseError)):
+        cli.execute_project_initialization(
+            request_for(cli, root), changed_nonidentity_files(root)
+        )
+    after = bytes_before(root)
+    # Read-only SQLite inspection may add only transient SHM/empty WAL files.
+    # Every original byte and all authored files must remain unchanged.
+    assert {path: after[path] for path in before} == before
+    for path in after.keys() - before.keys():
+        assert root / path in {Path(str(target) + "-shm"), Path(str(target) + "-wal")}
+        if path.name.endswith("-wal"):
+            assert after[path] == b""

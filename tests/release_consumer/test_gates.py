@@ -29,6 +29,22 @@ adapter = load_module(
 )
 
 
+def source_fixture(source: Path) -> None:
+    """Copy current public source and inventory without sealing or Git writes."""
+    source.mkdir()
+    inventory = load_module(
+        "release_gate_inventory", ROOT / "tools/validate-process-forge-checksums.py"
+    )
+    for name, path in inventory.public_file_entries(ROOT):
+        target = source / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(inventory.released_content(path))
+    checksums = source / "checksums/processforge.sha256"
+    checksums.parent.mkdir(parents=True, exist_ok=True)
+    checksums.write_text(inventory.build_inventory(source), encoding="utf-8")
+    assert not (source / ".pf").exists()
+
+
 class ConsumerFailures(unittest.TestCase):
     def test_setup_failure_stops_before_validation(self):
         with (
@@ -69,7 +85,7 @@ class PublicReleaseGates(unittest.TestCase):
         cls.addClassCleanup(cls.temporary.cleanup)
         cls.base = Path(cls.temporary.name).resolve()
         cls.source = cls.base / "source"
-        cls.source.mkdir()
+        source_fixture(cls.source)
         cls.env = {
             key: value
             for key, value in os.environ.items()
@@ -88,17 +104,6 @@ class PublicReleaseGates(unittest.TestCase):
             target = cls.base / key.lower()
             target.mkdir()
             cls.env[key] = str(target)
-        inventory = load_module(
-            "release_gate_inventory", ROOT / "tools/validate-process-forge-checksums.py"
-        )
-        for name, path in inventory.public_file_entries(ROOT):
-            target = cls.source / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(inventory.released_content(path))
-        checksums = cls.source / "checksums/processforge.sha256"
-        checksums.parent.mkdir(parents=True, exist_ok=True)
-        checksums.write_bytes((ROOT / "checksums/processforge.sha256").read_bytes())
-        assert not (cls.source / ".pf").exists()
         cls.run_cli(
             cls.source,
             "release-test",
@@ -199,12 +204,30 @@ class PublicReleaseGates(unittest.TestCase):
                         (root / "checksums/processforge.sha256").read_bytes(), inventory
                     )
 
+
+class SourceConsumerValidation(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="pf-source-consumer-")
+        self.addCleanup(temporary.cleanup)
+        self.source = Path(temporary.name).resolve() / "source"
+        source_fixture(self.source)
+
     def test_real_validators_reject_corrupt_consumer(self):
         original = adapter.prepare_consumer
+        original_run = adapter.run_step
         for check in ("events-validate", "doctor-project"):
+            prepared = []
+            refused = []
 
             def corrupted(base, env):
-                project = original(base, env)
+                try:
+                    project = original(base, env)
+                    original_run(base, env, check, "--project-root", str(project))
+                except subprocess.CalledProcessError as error:
+                    raise AssertionError(
+                        "healthy consumer setup/validation failed"
+                    ) from error
+                self.assertTrue((project / ".pf/data/execution-storage.json").is_file())
                 if check == "events-validate":
                     transcript = next(
                         (project / ".pf/runtime/chat/transcripts").glob("*.ndjson")
@@ -212,13 +235,26 @@ class PublicReleaseGates(unittest.TestCase):
                     transcript.write_text("{broken\n", encoding="utf8")
                 else:
                     (project / ".gitignore").unlink()
+                prepared.append(project)
                 return project
+
+            def validate(base, env, *args):
+                try:
+                    original_run(base, env, *args)
+                except subprocess.CalledProcessError:
+                    if args[0] == check and prepared:
+                        refused.append(args)
+                    raise
 
             with (
                 self.subTest(check=check),
+                mock.patch.object(adapter, "ROOT", self.source),
                 mock.patch.object(adapter, "prepare_consumer", side_effect=corrupted),
+                mock.patch.object(adapter, "run_step", side_effect=validate),
             ):
                 self.assertEqual(adapter.main(["--check", check]), 1)
+                self.assertEqual(len(prepared), 1)
+                self.assertEqual(refused, [(check, "--project-root", str(prepared[0]))])
 
 
 if __name__ == "__main__":

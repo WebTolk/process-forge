@@ -71,8 +71,9 @@ Detached file-only execution has no autonomous timer between observations.
 
 ## Prerequisites and limits
 
-Use Linux with user/PID namespace creation enabled, readable procfs mounted for
-the controller PID namespace, and Python 3.11+ with pidfd APIs. Seccomp, AppArmor,
+Use Linux with user/PID namespace creation enabled, readable procfs, and Python
+3.11+ with pidfd APIs. Durable v1 receipt controllers require procfs mounted for
+their own PID namespace. Seccomp, AppArmor,
 container policy or unavailable kernel features can refuse a launch. The real
 capability probe returns false on refusal; it never silently advertises groups
 as equivalent containment. The platform error retains the existing
@@ -80,10 +81,44 @@ as equivalent containment. The platform error retains the existing
 `linux_user_pid_namespace_unavailable`, `linux_pidfd_unavailable` or
 `linux_controller_procfs_mismatch`.
 
-Ordinary nested targets inherit their verified outer namespace. Starting an
-independent token/receipt-owned attempt from inside that namespace is refused as
-`linux_nested_owned_launch_unsupported`; run its controller in the supported
-host procfs context. Namespace containment is a process-lifetime guarantee,
+Ordinary nested targets inherit their verified outer namespace and return an
+ordinary `Popen` without an independent owner. Starting a token/receipt-owned
+attempt from inside that namespace is refused as
+`linux_nested_owned_launch_unsupported`; run its durable controller in the
+supported host procfs context.
+
+For a temporary consumer step, `spawn_owned(argv, independent=True)` requests a
+new, independently owned user/PID namespace, including from a verified inherited
+target. It requires actual kernel creation and proof before GO. The new owner
+retains exact carrier/init pidfds; stopping it kills only the new namespace and
+waits for its retirement while the enclosing owner remains alive. The option
+does not grant capability or confer control over the inherited owner.
+
+This mode is ephemeral. Explicit `token`, `receipt_path` or `identity` inputs,
+including an empty identity, are refused as
+`linux_ephemeral_durable_inputs_unsupported`. Its private
+`linux-pidns-ephemeral-v1` facts are rejected by durable reopen and process identity
+validation. There is no restart/reopen receipt contract for this mode. Retain
+`process.native_job` through cleanup; `close()` releases handles and does not stop
+a running namespace.
+
+The procfs view may belong to an ancestor PID namespace. The helper derives
+proof-path PIDs from actual retained pidfd fdinfo. The caller translates the
+known init procfs PID using `NSpid` and its own namespace depth, opens a pidfd in
+its local PID namespace, then verifies that fdinfo still names the exact procfs
+PID and process birth. It checks the separate namespace identities and exact
+carrier/init parent relationship before GO. Hidden, malformed, sibling, reused,
+inaccessible or conflicting identities refuse the launch before target entry.
+Neither a PID scan nor a process group supplies signalling authority.
+
+`Popen.pid`, `wait()` and carrier lifetime keep their stdlib semantics: the PID is
+local to the caller, and wait completes after all descendants retire. An adapter
+that needs the launcher's earlier result must use a separate private result
+channel, then stop and wait for the retained owner before removing its fixture.
+Windows consumes the same option and keeps its existing separate non-breakaway
+Job behavior; other unsupported platforms refuse an independent request.
+
+Namespace containment is a process-lifetime guarantee,
 not a filesystem/network sandbox or a substitute for current PF grants. It does
 not isolate hostile processes with the same host authority from one another.
 

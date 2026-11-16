@@ -25,6 +25,9 @@ _TREE = re.compile(
     r"linux-pidns-v1:([a-f0-9]{32}):([1-9][0-9]*):([1-9][0-9]*):([1-9][0-9]*):([1-9][0-9]*)\Z"
 )
 _BIRTH = re.compile(r"linux-start:([a-f0-9-]{36}):([1-9][0-9]*)\Z")
+_EPHEMERAL_TREE = re.compile(
+    _TREE.pattern.replace("linux-pidns-v1:", "linux-pidns-ephemeral-v1:")
+)
 _LIMIT = 65536
 
 
@@ -50,10 +53,15 @@ def validate_tree_id(value: Any, token: str) -> bool:
     )
 
 
-def _boot() -> str:
+def _boot_id() -> str:
     value = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
     if not re.fullmatch(r"[a-f0-9-]{36}", value):
         raise LinuxControlError()
+    return value
+
+
+def _boot() -> str:
+    value = _boot_id()
     # An unavailable or differently mounted procfs is not evidence of death.
     if int(Path("/proc/self/stat").read_text().split(" ", 1)[0]) != os.getpid():
         raise LinuxControlError("linux_controller_procfs_mismatch")
@@ -71,6 +79,61 @@ def _ticks(pid: int) -> str:
 
 def _ready(descriptor: int | None) -> bool:
     return descriptor is None or bool(select.select([descriptor], [], [], 0)[0])
+
+
+def _pid_numbers(raw: str, field: str) -> tuple[int, ...]:
+    rows = [
+        line.split()[1:] for line in raw.splitlines() if line.startswith(field + ":")
+    ]
+    if (
+        len(rows) != 1
+        or not rows[0]
+        or any(
+            not value.isascii()
+            or not value.isdecimal()
+            or not 0 < int(value) <= 0x7FFFFFFF
+            for value in rows[0]
+        )
+    ):
+        raise LinuxControlError("linux_pid_mapping_invalid")
+    return tuple(int(value) for value in rows[0])
+
+
+def _pidfd_pids(descriptor: int) -> tuple[int, ...]:
+    raw = Path(f"/proc/self/fdinfo/{descriptor}").read_text(encoding="ascii")
+    pids = _pid_numbers(raw, "NSpid")
+    if _pid_numbers(raw, "Pid") != (pids[0],):
+        raise LinuxControlError("linux_pidfd_mapping_mismatch")
+    return pids
+
+
+def _self_pids() -> tuple[int, ...]:
+    pids = _pid_numbers(Path("/proc/self/status").read_text(encoding="ascii"), "NSpid")
+    visible = int(Path("/proc/self/stat").read_text(encoding="ascii").split(" ", 1)[0])
+    if pids[0] != visible or pids[-1] != os.getpid():
+        raise LinuxControlError("linux_controller_procfs_mismatch")
+    return pids
+
+
+def _retain_ephemeral(local_pid: int, proc_pid: int, ticks: str) -> int:
+    """Bind a syscall-local PID to its exact procfs-visible kernel object."""
+    descriptor = getattr(os, "pidfd_open")(local_pid)
+    try:
+        depth = len(_self_pids()) - 1
+        pids = _pidfd_pids(descriptor)
+        if len(pids) <= depth or pids[0] != proc_pid or pids[depth] != local_pid:
+            raise LinuxControlError("linux_pidfd_mapping_mismatch")
+        if _ticks(proc_pid) != ticks:
+            raise LinuxControlError("linux_process_birth_mismatch")
+        if _pidfd_pids(descriptor) != pids or _ready(descriptor):
+            raise LinuxControlError("linux_process_observation_unavailable")
+        return descriptor
+    except BaseException as error:
+        try:
+            os.close(descriptor)
+        except OSError as cleanup:
+            error.add_note(f"linux_descriptor_cleanup_failed:{cleanup.errno}")
+        raise
 
 
 def _retain(pid: int, ticks: str) -> int | None:
@@ -189,6 +252,101 @@ class OwnedNamespace:
         self.close()
 
 
+class EphemeralNamespace(OwnedNamespace):
+    """Control a new namespace by retained handles, without durable reopen."""
+
+    def __init__(self, facts: dict[str, Any], *, local_carrier: int) -> None:
+        self.carrier = None
+        self.init = None
+        self.facts = facts
+        self.name = facts["job_name"]
+        self.closed = False
+        try:
+            tree = _EPHEMERAL_TREE.fullmatch(self.name)
+            birth = _BIRTH.fullmatch(facts["birth_id"])
+            if (
+                tree is None
+                or birth is None
+                or not _valid_ephemeral_tree(self.name, tree[1])
+                or _boot_id() != birth[1]
+                or facts["schema_version"] != 1
+                or facts["identity"] != {}
+            ):
+                raise LinuxControlError("linux_ephemeral_facts_invalid")
+            self.carrier = _retain_ephemeral(local_carrier, facts["pid"], birth[2])
+            depth = len(_self_pids()) - 1
+            init_pid = int(tree[2])
+            pids = _pid_numbers(
+                Path(f"/proc/{init_pid}/status").read_text(encoding="ascii"), "NSpid"
+            )
+            if len(pids) != depth + 2 or pids[0] != init_pid or pids[-1] != 1:
+                raise LinuxControlError("linux_init_pid_mapping_invalid")
+            self.init = _retain_ephemeral(pids[depth], init_pid, tree[3])
+            carrier = Path(f"/proc/{facts['pid']}")
+            init = Path(f"/proc/{init_pid}")
+            current_pidns = os.readlink("/proc/self/ns/pid")
+            current_userns = os.readlink("/proc/self/ns/user")
+            pidns, userns = f"pid:[{tree[4]}]", f"user:[{tree[5]}]"
+            if (
+                pidns == current_pidns
+                or userns == current_userns
+                or os.readlink(carrier / "ns/pid") != current_pidns
+                or os.readlink(carrier / "ns/pid_for_children") != pidns
+                or os.readlink(carrier / "ns/user") != userns
+                or os.readlink(init / "ns/pid") != pidns
+                or os.readlink(init / "ns/user") != userns
+                or _pid_numbers((init / "status").read_text(encoding="ascii"), "PPid")
+                != (facts["pid"],)
+            ):
+                raise LinuxControlError("linux_independent_namespace_mismatch")
+            marker = f"{TOKEN_ENVIRONMENT}={tree[1]}".encode("ascii")
+            for base, descriptor, pid, ticks in (
+                (carrier, self.carrier, facts["pid"], birth[2]),
+                (init, self.init, init_pid, tree[3]),
+            ):
+                with (base / "environ").open("rb") as stream:
+                    environment = stream.read(1024 * 1024 + 1)
+                if (
+                    len(environment) > 1024 * 1024
+                    or marker not in environment.split(b"\0")
+                    or _ticks(pid) != ticks
+                    or _pidfd_pids(descriptor)[0] != pid
+                    or _ready(descriptor)
+                ):
+                    raise LinuxControlError("linux_ephemeral_ownership_unverifiable")
+        except BaseException as error:
+            try:
+                self.close()
+            except OSError as cleanup:
+                error.add_note(f"linux_descriptor_cleanup_failed:{cleanup.errno}")
+            raise
+
+    def close(self) -> None:
+        failure: OSError | None = None
+        for name in ("carrier", "init"):
+            descriptor = getattr(self, name)
+            setattr(self, name, None)
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError as error:
+                    if failure is None:
+                        failure = error
+                    else:
+                        failure.add_note(
+                            f"linux_descriptor_cleanup_failed:{error.errno}"
+                        )
+        self.closed = True
+        if failure is not None:
+            raise failure
+
+
+def _valid_ephemeral_tree(value: str, token: str) -> bool:
+    return _EPHEMERAL_TREE.fullmatch(value) is not None and validate_tree_id(
+        value.replace("linux-pidns-ephemeral-v1:", "linux-pidns-v1:", 1), token
+    )
+
+
 def reopen(
     facts: dict[str, Any], *, pid: int, identity: dict[str, Any]
 ) -> OwnedNamespace:
@@ -217,12 +375,17 @@ def inherited(environment: dict[str, str]) -> dict[str, Any] | None:
         return None
     try:
         facts = json.loads(value)
-        tree = _TREE.fullmatch(facts["job_name"])
+        tree = _TREE.fullmatch(facts["job_name"]) or _EPHEMERAL_TREE.fullmatch(
+            facts["job_name"]
+        )
         birth = _BIRTH.fullmatch(facts["birth_id"])
         if (
             tree is None
             or birth is None
-            or not validate_tree_id(facts["job_name"], tree[1])
+            or not (
+                validate_tree_id(facts["job_name"], tree[1])
+                or _valid_ephemeral_tree(facts["job_name"], tree[1])
+            )
             or (
                 os.readlink("/proc/self/ns/pid") != f"pid:[{tree[4]}]"
                 or os.readlink("/proc/self/ns/user") != f"user:[{tree[5]}]"
@@ -272,17 +435,24 @@ try:
     packet = json.loads(control.recv(65537))
     uid, gid = os.getuid(), os.getgid()
     carrier = os.getpid()
+    parent_fd = os.pidfd_open(carrier)
+    def proc_pid(descriptor):
+        raw = Path(f"/proc/self/fdinfo/{descriptor}").read_text(encoding="ascii")
+        rows = [line.split()[1:] for line in raw.splitlines() if line.startswith("Pid:")]
+        if len(rows) != 1 or len(rows[0]) != 1 or not rows[0][0].isascii() or not rows[0][0].isdecimal() or int(rows[0][0]) < 1:
+            raise OSError("linux_pidfd_mapping_invalid")
+        return int(rows[0][0])
+    carrier_proc = proc_pid(parent_fd)
     def ticks(pid):
         raw = Path(f"/proc/{pid}/stat").read_text()
         return raw[raw.rindex(")") + 2:].split()[19]
-    birth = "linux-start:" + Path("/proc/sys/kernel/random/boot_id").read_text().strip() + ":" + ticks(carrier)
+    birth = "linux-start:" + Path("/proc/sys/kernel/random/boot_id").read_text().strip() + ":" + ticks(carrier_proc)
     libc = ctypes.CDLL(None, use_errno=True)
     if libc.unshare(0x10000000 | 0x20000000) != 0:
         raise OSError(ctypes.get_errno(), "linux_user_pid_namespace_unavailable")
     Path("/proc/self/uid_map").write_text(f"0 {uid} 1\n")
     Path("/proc/self/setgroups").write_text("deny\n")
     Path("/proc/self/gid_map").write_text(f"0 {gid} 1\n")
-    parent_fd = os.pidfd_open(carrier)
     gate_read, gate_write = os.pipe()
     child = os.fork()
     if child == 0:
@@ -314,10 +484,12 @@ try:
     os.close(gate_read)
     os.close(parent_fd)
     init_fd = os.pidfd_open(child)
-    pidns = os.readlink(f"/proc/{child}/ns/pid").split("[")[1][:-1]
-    userns = os.readlink(f"/proc/{child}/ns/user").split("[")[1][:-1]
-    facts = {"schema_version": 1, "pid": carrier, "birth_id": birth,
-             "job_name": f"linux-pidns-v1:{packet['token']}:{child}:{ticks(child)}:{pidns}:{userns}",
+    child_proc = proc_pid(init_fd)
+    pidns = os.readlink(f"/proc/{child_proc}/ns/pid").split("[")[1][:-1]
+    userns = os.readlink(f"/proc/{child_proc}/ns/user").split("[")[1][:-1]
+    prefix = "linux-pidns-ephemeral-v1" if packet["ephemeral"] else "linux-pidns-v1"
+    facts = {"schema_version": 1, "pid": carrier_proc, "birth_id": birth,
+             "job_name": f"{prefix}:{packet['token']}:{child_proc}:{ticks(child_proc)}:{pidns}:{userns}",
              "identity": packet["identity"]}
     control.send(json.dumps(facts).encode())
     if control.recv(16) != b"GO":
@@ -355,11 +527,18 @@ def spawn(
     token: str | None = None,
     receipt_path: Path | None = None,
     identity: dict[str, Any] | None = None,
+    independent: bool = False,
     **options: Any,
 ) -> subprocess.Popen[bytes]:
     """Publish exact ownership before releasing the target from its GO barrier."""
+    if type(independent) is not bool:
+        raise TypeError("independent must be a bool")
     current = inherited(dict(os.environ))
-    if current is not None:
+    if independent and (
+        token is not None or receipt_path is not None or identity is not None
+    ):
+        raise LinuxControlError("linux_ephemeral_durable_inputs_unsupported")
+    if current is not None and not independent:
         if token is not None or receipt_path is not None or identity is not None:
             raise LinuxControlError("linux_nested_owned_launch_unsupported")
         supplied = options.pop("env", None)
@@ -373,11 +552,18 @@ def spawn(
         or not hasattr(signal, "pidfd_send_signal")
     ):
         raise LinuxControlError("linux_pidfd_unavailable")
-    _boot()
+    if independent:
+        _self_pids()
+    else:
+        _boot()
     value = token or uuid4().hex
     if not re.fullmatch(r"[a-f0-9]{32}", value):
         raise LinuxControlError("linux_launch_token_invalid")
-    if options.get("shell") or options.get("preexec_fn") is not None:
+    if (
+        options.get("shell")
+        or options.get("preexec_fn") is not None
+        or options.get("executable") is not None
+    ):
         raise LinuxControlError("linux_launch_option_unsupported")
     parent, child = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
     process: subprocess.Popen[bytes] | None = None
@@ -385,7 +571,8 @@ def spawn(
     try:
         supplied = options.pop("env", None)
         environment = dict(os.environ if supplied is None else supplied)
-        environment.pop(ENVIRONMENT, None)
+        if current is None:
+            environment.pop(ENVIRONMENT, None)
         environment[TOKEN_ENVIRONMENT] = value
         # Target loader settings may execute arbitrary code before Python main.
         # The trusted carrier receives only a fixed interpreter environment;
@@ -412,6 +599,7 @@ def spawn(
                 "identity": identity or {},
                 "pass_fds": forwarded,
                 "environment": environment,
+                "ephemeral": independent,
             }
         ).encode()
         if len(packet) > _LIMIT:
@@ -425,8 +613,17 @@ def spawn(
         facts = json.loads(raw)
         if "error" in facts:
             raise LinuxControlError(str(facts["error"]))
-        job = reopen(facts, pid=process.pid, identity=identity or {})
-        if not validate_tree_id(job.name, value) or job.active() == 0:
+        job = (
+            EphemeralNamespace(facts, local_carrier=process.pid)
+            if independent
+            else reopen(facts, pid=process.pid, identity=identity or {})
+        )
+        valid_name = (
+            _valid_ephemeral_tree(job.name, value)
+            if independent
+            else validate_tree_id(job.name, value)
+        )
+        if not valid_name or job.active() == 0:
             raise LinuxControlError()
         if receipt_path is not None:
             receipt_path.parent.mkdir(parents=True, exist_ok=True)
@@ -450,17 +647,32 @@ def spawn(
         setattr(process, "native_facts", facts)
         parent.send(b"GO")
         return process
-    except (OSError, ValueError, KeyError, TypeError):
+    except BaseException as error:
         parent.close()  # EOF before GO cannot execute target code.
         if job is not None:
-            job.stop(deadline=time.monotonic() + 5)
-            job.close()
+            try:
+                if not job.stop(deadline=time.monotonic() + 5):
+                    error.add_note("linux_namespace_cleanup_timeout")
+            except OSError as cleanup:
+                error.add_note(f"linux_namespace_cleanup_failed:{cleanup.errno}")
+            finally:
+                try:
+                    job.close()
+                except OSError as cleanup:
+                    error.add_note(f"linux_descriptor_cleanup_failed:{cleanup.errno}")
         if process is not None:
             try:
                 process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=5)
+                try:
+                    process.kill()
+                    process.wait(timeout=5)
+                except (OSError, subprocess.SubprocessError) as cleanup:
+                    error.add_note(
+                        f"linux_carrier_cleanup_failed:{type(cleanup).__name__}"
+                    )
+            except OSError as cleanup:
+                error.add_note(f"linux_carrier_cleanup_failed:{cleanup.errno}")
         raise
     finally:
         parent.close()
