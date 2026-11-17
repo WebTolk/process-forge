@@ -39,12 +39,36 @@ python bin/pf.py core-update repair --core-root <core>
 
 `plan` работает read-only. `apply` требует `--confirm`.
 
-Публичная 1.2.0 включала три Core-owned startup template в собственной .pf/:
-AGENTS.md, hooks.yaml и process-forge.yaml. Внешний file updater сохраняет их
-реальные preimages либо отсутствие перед удалением old-only paths. Исключение
-действует только для установленного manifest точной версии 1.2.0; новые архивы
-по-прежнему исключают private .pf data. Замена Core не даёт authority для миграции
-проекта. См. [границы проверки public upgrade](../audits/issue-19-public-upgrade.md).
+### Остановка, обновление, проверка и запуск
+
+В Garage человек останавливает PF и остальных писателей перед заменой файлов.
+В Forge единственным исполнителем PF и его остановкой, обновлением и запуском
+управляет updater. Файловая операция требует остановленной установки; она не
+обнаруживает и не исключает все исторические процессы. Известный работающий
+App Server выбранного Workplace блокирует apply.
+
+Распакуйте проверенный релиз вне установленного Core. Запускайте из него
+`bin/pf.py core-update plan|apply`, явно указывая установленный Core, исходный ZIP
+и обслуживаемый Workplace. Для его сервера используется существующая команда
+`server stop --workplace <workplace>`; до замены убедитесь в успешной остановке.
+
+Сохраняются backups, журнал операции, частные данные и запись manifest после
+проверки файлов. Корни installer и target не должны пересекаться. Исторические
+маркеры native enrollment сохраняются, но не требуются и не служат допуском.
+Файловый mutex исключает одновременные операции updater, а не произвольные
+независимые процессы.
+
+Старый installed manifest может владеть startup templates
+`.pf/AGENTS.md`, `.pf/hooks.yaml` и `.pf/process-forge.yaml`.
+Перед удалением old-only paths updater сохраняет реальные preimages либо
+отсутствие. Это правило совместимости опирается на владение в manifest,
+а не номер продукта. Новый архив не может объявлять private `.pf` data.
+
+Замена Core не мигрирует журналы проектов. Старые проекты остаются
+заблокированы до явной [миграции журналов](sqlite-journal-maintenance.md);
+новые сразу используют SQL. После apply выполните
+`doctor-workplace --root <workplace>` перед запуском нужного PF.
+См. [проверку public upgrade](../audits/issue-19-public-upgrade.md).
 
 ## Совместимая миграция Workplace
 
@@ -73,9 +97,9 @@ python bin/pf.py core-update apply --core-root <core> --archive <processforge.zi
 копий обновления Core и регистрирует операцию в журнале. Если миграция
 Workplace после обновления Core не завершилась, Core остаётся на новом manifest,
 а `core-update repair` показывает состояние, требующее ручного решения, и путь
-к резервным копиям. После успешного apply с `--workplace-root` автоматически
-выполняется короткая проверка `doctor-workplace`; её результат записывается в
-`<core>/runtime/core-update/last-apply.json`.
+к резервным копиям. После успешного apply явно выполните
+`doctor-workplace --root <workplace>`; updater не запускает другой Core
+для автоматической maintenance.
 
 Updater вычисляет:
 
@@ -149,7 +173,7 @@ python installer/bin/pf.py core-update repair --core-root CORE --resume --archiv
 
 Повторите исходный явный выбор Workplace; пропускайте его только если исходный
 apply также его пропустил. Без confirmation recovery не изменяет файлы.
-Сохраняются cooperating file mutex, unmanaged target, nonoverlap и offline guards.
+Сохраняются cooperating file mutex, проверки physical target, nonoverlap и offline.
 Проверяются identity Core/Workplace, все закреплённые control/backup bytes и
 затронутые файлы: допустимы только доказанное исходное либо точное целевое
 состояние. Прерывание после atomic replacement, но до публикации journal,
@@ -162,7 +186,7 @@ Recovery продолжает исходный план, не обходя incom
 сбой сохраняет incomplete journal и evidence. Unknown files остаются нетронутыми.
 
 Старые журналы без versioned proof, неполные/повреждённые backups, drift, чужой
-архив или binding, native/partial enrollment и любые after-manifest состояния
+архив или binding и любые after-manifest состояния
 отказывают. Обычный apply по-прежнему отказывает при incomplete update. Команда
-не выполняет rollback файлов, native adoption, переключение SQL binding или
+не выполняет rollback файлов, переключение SQL binding или
 downgrade Core после SQL commits: для них нужен собственный supported maintenance.

@@ -619,23 +619,7 @@ def _run_target_in_operation(
                 document, Path(options.prepared_input), current_env
             )
             if document.get("native_launch", {}).get("maintenance") is not None:
-                tools_path = str(_native_root / "tools")
-                if tools_path not in sys.path:
-                    sys.path.insert(0, tools_path)
-                import pf_native_maintenance as maintenance
-
-                maintenance.validate_preparation(
-                    document, Path(document["project_root"]), _native_root
-                )
-                expected = [
-                    sys.executable,
-                    "-I",
-                    "-B",
-                    str(_native_root / "tools/pf_native_maintenance.py"),
-                    str(Path(options.prepared_input)),
-                ]
-                if target != expected:
-                    raise ExecutorError("fixed_command_mismatch")
+                raise ExecutorError("runtime_driver_retired")
         except (ExecutorError, OSError, ValueError) as exc:
             reason = (
                 exc.code

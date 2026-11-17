@@ -10,9 +10,11 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+import processforge_core.maintenance.update as core_update
 from processforge_core.maintenance.update import (
     CORE_MANIFEST_NAME,
     CoreUpdateError,
@@ -26,11 +28,11 @@ from processforge_core.maintenance.update import (
 # The named Core entry captures native before its library import.
 # isort: split
 from smoke_core_update_manifest import (
-    apply_managed_update,
+    apply_fixture_update,
     init_workplace_fixture,
-    managed_target,
-    run_managed_smoke,
+    installed_target,
     run_pf,
+    run_updater_smoke,
     write_native_archive,
 )
 
@@ -172,7 +174,9 @@ def main() -> int:
     ) as raw:
         root = Path(raw)
         core, workplace = make_fixture(root)
-        with managed_target(core, {"a.txt": "same"}, workplace_root=workplace) as entry:
+        with installed_target(
+            core, {"a.txt": "same"}, workplace_root=workplace
+        ) as entry:
             existing = workplace / "runtime-drivers" / "existing.yaml"
             existing.parent.mkdir(parents=True, exist_ok=True)
             existing.write_text("keep-existing\n", encoding="utf-8")
@@ -220,10 +224,8 @@ def main() -> int:
         )
         applied = json.loads(applied_process.stdout)
         assert applied["status"] == "applied", applied
-        assert applied["post_update_doctor"]["status"] == "pass", applied
-        assert applied["post_update_doctor"]["storage_migration"]["exit_code"] == 0, (
-            applied
-        )
+        assert "post_update_doctor" not in applied, applied
+        assert "storage_migration" not in applied, applied
         assert (
             applied["workplace_migration"]["migration"]["id"] == "fixture-migration"
         ), applied
@@ -237,7 +239,9 @@ def main() -> int:
     ) as raw:
         root = Path(raw)
         core, workplace = make_fixture(root)
-        with managed_target(core, {"a.txt": "same"}, workplace_root=workplace) as entry:
+        with installed_target(
+            core, {"a.txt": "same"}, workplace_root=workplace
+        ) as entry:
             archive = root / "release.zip"
             write_native_archive(
                 archive,
@@ -261,12 +265,19 @@ def main() -> int:
                     "templates/new.yaml": "new-driver\n",
                 },
                 version="1.1.0",
-                child_fault="migration-read",
             )
             plan = build_plan(core, archive, workplace_root=workplace)
             assert plan["status"] == "planned", plan
+            original_read = core_update.read_archive_member
+
+            def fail_read(archive, relative_path):
+                if relative_path == "templates/new.yaml":
+                    raise CoreUpdateError("archive_file_missing", relative_path)
+                return original_read(archive, relative_path)
+
             try:
-                apply_managed_update(entry, archive, workplace_root=workplace)
+                with patch.object(core_update, "read_archive_member", fail_read):
+                    apply_fixture_update(entry, archive, workplace_root=workplace)
             except CoreUpdateError as exc:
                 assert exc.code == "archive_file_missing", exc
             else:
@@ -296,4 +307,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(run_managed_smoke(Path(__file__)))
+    raise SystemExit(run_updater_smoke(Path(__file__)))

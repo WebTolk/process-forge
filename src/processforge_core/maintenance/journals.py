@@ -164,6 +164,41 @@ class JournalMaintenanceService:
         skip_invalid: bool = False,
         evidence_dir: Path | None = None,
     ) -> JsonObject:
+        """Keep admitted writers out throughout an explicit operator import."""
+        if not apply or self.storage_host is None:
+            return self._migrate(
+                project_root,
+                workplace,
+                apply=apply,
+                skip_invalid=skip_invalid,
+                evidence_dir=evidence_dir,
+            )
+        host = self.storage_host
+        context = host.context
+        with host.service._admit(context, None):
+            proof = host.service.safety(context)
+            if proof.state != "proven":
+                raise MaintenanceError("storage_offline_confirmation_required")
+            result = self._migrate(
+                project_root,
+                workplace,
+                apply=apply,
+                skip_invalid=skip_invalid,
+                evidence_dir=evidence_dir,
+            )
+            if host.service.safety(context) != proof:
+                raise MaintenanceError("storage_safety_changed")
+            return result
+
+    def _migrate(
+        self,
+        project_root: Path,
+        workplace: Path,
+        *,
+        apply: bool = False,
+        skip_invalid: bool = False,
+        evidence_dir: Path | None = None,
+    ) -> JsonObject:
         """Plan or explicitly apply an import without changing legacy sources.
 
         Args:
@@ -222,6 +257,7 @@ class JournalMaintenanceService:
                 else JournalScanService(driver=driver),
                 configuration=provider,
                 driver=driver,
+                storage_host=self.storage_host,
             )
             return operation_service.migrate(
                 project_root,
@@ -330,29 +366,32 @@ class JournalMaintenanceService:
             self._unchanged(project, workplace, flow, sources, report)
 
             replay = _scan_report()
-            with events.connection(
-                event_path,
-                migrating=True,
-                driver=events.driver,
-                storage_host=events.storage_host,
-            ) as event_connection:
-                with raw.connection(
-                    raw_path,
+            from itertools import groupby
+
+            rows = self._scan.rows(
+                sources,
+                project,
+                replay,
+                skip_invalid=skip_invalid,
+                quarantine_dir=scan_evidence,
+            )
+            # Both journals share one owner gate. Verify one kind at a time
+            # while retaining a single bounded replay of the source stream.
+            for kind, records in groupby(rows, key=lambda row: row[0]):
+                owner, path = (
+                    (events, event_path) if kind == "events" else (raw, raw_path)
+                )
+                with owner.connection(
+                    path,
                     migrating=True,
-                    driver=raw.driver,
-                    storage_host=raw.storage_host,
-                ) as raw_connection:
-                    for kind, record, _location in self._scan.rows(
-                        sources,
-                        project,
-                        replay,
-                        skip_invalid=skip_invalid,
-                        quarantine_dir=scan_evidence,
-                    ):
+                    driver=owner.driver,
+                    storage_host=owner.storage_host,
+                ) as connection:
+                    for _kind, record, _location in records:
                         if kind == "events":
-                            self._verify_event(event_connection, record)
+                            self._verify_event(connection, record)
                         else:
-                            self._verify_raw(raw_connection, record)
+                            self._verify_raw(connection, record)
             self._same_scan(report, replay)
             self._same_destinations(destinations)
             after = self._statistics(events, raw, event_path, raw_path)

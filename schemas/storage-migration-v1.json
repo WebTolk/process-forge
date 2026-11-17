@@ -30,11 +30,11 @@
   "transform_files": [
     {
       "relative_path": "src/processforge_core/maintenance/contracts.py",
-      "sha256": "sha256:a5047bbed49c2a59226bdbb002ecb92e29f88fb2ad3adf7f462a758c70c14f56"
+      "sha256": "sha256:ca3687ed7b080105a5b55cfd476111ee85fb23831baa5ca0700d540bcb8308d4"
     },
     {
       "relative_path": "src/processforge_core/maintenance/storage_migration.py",
-      "sha256": "sha256:e4d2eebd83f4b2577b74f0df25a8fb29a610432560dd7d24f217f8c655b61ce0"
+      "sha256": "sha256:fd430dec864bd5820ce0542d8b17b0736f6bfe6da627c56cffdb3e7d63f5e679"
     },
     {
       "relative_path": "src/processforge_core/maintenance/backup.py",
@@ -58,8 +58,8 @@
     },
     {
       "relative_path": "schemas/execution-migration-v1.json",
-      "sha256": "sha256:66f66eaed608d306dc3b57e82ea4e980482d4d5b958256647febf987f6de52c4"
+      "sha256": "sha256:29b4230dfa783df6b488cb0c5509a897c737ae4ddab3fa5969efea570cb4227c"
     }
   ],
-  "transform_checksum": "sha256:cb7831ab58eda7a520e408efddd338cc9a11b85979aee2220ddee13524b77bd9"
+  "transform_checksum": "sha256:2ee6abf74ce464df12ad8178c6e01cf43459a7f78259a2fff5edf47f4f6fb178"
 }

@@ -36,24 +36,13 @@ from .storage_migration import (
 RECEIPT = "maintenance/project-initialization.json"
 
 
-def _capable() -> None:
-    # Use the already captured native entry, never reload a leaf from disk.
-    import sys
-
-    native = sys.modules.get("pf_native_control")
-    probe = getattr(native, "supports_owned_execution", None)
-    if not callable(probe) or not probe():
-        raise MaintenanceError("storage_fresh_capability_required")
-
-
 def _physical(flow: Path) -> list[int]:
     info = _safe(flow).stat()
     return [info.st_dev, info.st_ino]
 
 
 def create_project_storage_root(project: Path) -> bool:
-    """Qualify the backend and exclusively create the root before issuing authority."""
-    _capable()
+    """Exclusively create a fresh root before recording its storage identity."""
     flow = _safe(project / ".pf")
     try:
         flow.mkdir()
@@ -321,7 +310,6 @@ def _domain_identity(
     ):
         raise MaintenanceError("storage_identity_conflict")
     if slot is None or slot["state"] == "pending":
-        _capable()
         if slot is None:
             if target.target.exists():
                 raise MaintenanceError("storage_existing_target")
@@ -390,8 +378,11 @@ def initialize_project_storage(
     with ExecutionAdmission().maintenance(project, workplace):
         document = _receipt(project)
         assert document is not None
-        if document["state"] == "pending":
-            _capable()
+
+        def verify_receipt() -> None:
+            if _receipt(project) != document:
+                raise MaintenanceError("storage_fresh_receipt_invalid")
+
         host = build_storage_migration_host(
             project_root=project,
             workplace_root=workplace,
@@ -441,7 +432,7 @@ def initialize_project_storage(
             )
         elif marker["state"] == "pending":
             _repair_fresh_execution_storage(
-                project, workplace, configuration=configuration, _verify=_capable
+                project, workplace, configuration=configuration, _verify=verify_receipt
             )
         if (
             select_execution_storage(

@@ -188,12 +188,11 @@ def redirected_helper(relative: str) -> Callable[[Path], bool]:
 
 
 class ExistingHelperTests(unittest.TestCase):
-    """Check the two pure distribution guards without invoking any fixtures."""
+    """Check remaining distribution guards without invoking any fixtures."""
 
     def test_redirected_helpers_reject_links_and_reparse_metadata(self) -> None:
         for relative in (
             "tests/core_properties/test_composition.py",
-            "tests/execution_migration/test_cold_handoff.py",
         ):
             helper = redirected_helper(relative)
             for info, expected in (

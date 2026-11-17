@@ -179,136 +179,56 @@ history scan. The 400,000-history zero-terminal-read acceptance concerns SQL-rea
 operation; legacy projects retain their existing bounded observer semantics.
 File-only operation requires no Runtime/MCP bootstrap, network or LLM.
 
-## Routing and native migration recovery
+## Explicit migration and update responsibility
 
-This page describes the accepted final contract. It does not assert that the
-current live project has migrated or that integrated implementation QA has passed.
+New projects use SQL immediately. Existing projects with legacy journals refuse
+ordinary Work/worker writes with `storage_migration_required` until the operator
+runs the supported migration. Read-only status/config/doctor operations do not
+migrate. Core file replacement does not migrate every project automatically.
 
-Ordinary supported updates and first safe writes invoke the native migration
-script/service automatically, without project opt-in, manual data transfer or
-agent/LLM/model-provider calls. `tools/migrate-storage.py` is the native inspection,
-apply and recovery entrypoint; update invokes qualified installed code, while
-first-write uses the same coordinator for standalone/file-only operation.
-Installation success alone does not establish project readiness. Pure
-status/config/doctor/guard reads do not initiate migration or scans.
+In Garage the operator stops PF and all writers before maintenance. In Forge the
+updater stops the single PF executor before replacing files and restarts it after
+maintenance. PF does not claim technical exclusion of arbitrary historical
+processes. No historical manager, enrollment, cold controller or release-specific
+authority transfer is required.
 
-New projects initialize current SQL storage. Existing projects must complete
-qualified migration before ordinary Work or worker writes. Read-only selection
-and explicit recovery may inspect recognized legacy storage, but a deferred,
-failed or indeterminate migration does not authorize an ordinary write or a new
-attempt. Active or unknown ownership blocks that write with diagnostics; existing
-IDs, receipts and source bytes are retained. The first-write boundary requires a
-ready migration result and then reselects the actual SQL repository before
-continuing. Retry occurs only after the blocking condition is resolved and
-lifecycle/target locks and SQL sessions are released. There is no scheduler,
-polling loop, live takeover or automatic kill. A missing explicit stable
-project/owner identity, ambiguous source or unknown old writer cannot be turned
-into a safe window by configuration or an opt-in flag.
+With PF stopped, inspect and import event/raw journals, then bind existing stores
+and import execution snapshots:
 
-Proven safety is host evidence bound to the exact authorized project/store,
-target and generation: quiescence, no pre-spawn gap or live owned tree, stable
-sources and qualified exclusion of old writers. It is revalidated under admission
-at freeze, resume and immediately before cutover. An empty registry, current
-version, terminal string, elapsed TTL, PID probe or `offline_confirmed` alone is
-not proof. Missing, stale, changed or unavailable proof prevents migration/cutover
-and keeps ordinary writes blocked, including before pending publication. Old binaries
-cannot be technically fenced by markers they do not understand; they must be
-excluded by actual ownership/maintenance evidence, and are unsupported writers
-after SQL cutover.
+```text
+python -B bin/pf.py journal-maintenance inspect --project-root PROJECT --workplace WORKPLACE --json
+python -B bin/pf.py journal-maintenance import --project-root PROJECT --workplace WORKPLACE --apply --json
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --apply --offline-confirmed --json
+```
 
-When safety is proven, publish the exact pending identity pin/execution binding
-before DB mutation. Capable clients then block ordinary access to the pending
-target and permit only recovery of that exact plan. Missing/partial bound storage
-never falls back to JSON or another target. Ready access verifies exact
-project/store UUID, scope/owner, pinned path, schema/checksum and readiness.
-Binding routes and pins identity; the SQL transaction alone sets execution
-authority/readiness. Explicit manifest project ID is required; directory-name
-fallback or silently minted replacement owner identity is forbidden.
+`--offline-confirmed` records operator/updater responsibility. The host also
+requires the actual project/workplace admission lock, rejects a known live
+Runtime, pins current configuration, roots, owners and targets, and rechecks that
+selection before mutation. Confirmation does not bypass source, identity, schema,
+backup or checkpoint validation. Unsupported or changed inputs remain blocked.
 
-Migration retains deterministic descriptors, frozen source manifests/original
-bytes, verified WAL-aware backups, journals and same-batch checkpoints. UUID
-adoption adds metadata in place without altering domain rows/IDs; its per-target
-commit is separate from execution import and from the global file journal.
-Unused absent stores are not created merely for abstraction. Execution import
-uses observable latest snapshots only, no invented overwritten history; attempt
-directory names only establish allocation floors. Import batches are at most
-256, with import and checkpoint in one transaction. History may be incomplete,
-but first cutover requires zero proven current executions and complete active
-coverage. Invalid records cannot be skipped to conceal unknown active work.
+The pending binding precedes DB mutation. Ready access verifies the store UUID,
+owner, path, schema and readiness. An existing missing/partial bound store never
+falls back to JSON or gets a new identity. Execution import preserves observable
+snapshots and allocation floors; it does not invent overwritten history. Batches
+and checkpoints commit together. The SQL CAS from importing/legacy to ready/sql
+is the execution cutover; adding UUID metadata alone is not that commit.
 
-The only execution cutover is the CAS commit of `execution_state` from
-importing/legacy to ready/sql at the target generation together with the ready
-`execution_migrations` marker. UUID adoption alone is not this commit. Before
-the initiating write continues, a proven-safe migration completes synchronously;
-interruption retains pending/checkpoint state for automatic exact resume on the
-next mutating use. Resume verifies code/descriptor/source facts, the same backup
-and checkpoint, without reminting UUIDs or creating an arbitrary second backup.
-An already-ready target is not implicitly rolled back if a later target fails.
+Migration retains frozen sources, transform hashes, verified WAL-aware backups,
+journals and checkpoints. Resume explicitly with the same roots and
+`--resume --offline-confirmed`. It must match the original plan, sources and
+backup; it does not remint UUIDs or overwrite recovery evidence. An already-ready
+store is not rolled back when another target fails. After SQL writes, old-Core
+rollback is not data rollback and JSON must not be reimported as new truth.
 
-After cutover, recovery rolls forward from SQL and repairs only owned projections
-and reports; JSON is never reimported as new truth. There is no automatic abort.
-Explicit pre-cutover abort requires admission, unchanged sources and proof of no
-ready authority/new SQL commits. Restore uses a new target and controlled offline
-binding switch; old-Core rollback after SQL writes requires separately qualified
-reverse export. Maintenance inspection and existing `journal-maintenance`
-execution inspection/import/resume interfaces support diagnosis and controlled
-repair; they are not ordinary user migration prerequisites. See
-[SQLite journal maintenance](sqlite-journal-maintenance.md).
+Fresh project authority comes from exclusive creation of its flow root and the
+receipt at `maintenance/project-initialization.json`. It is independent of the
+ability to launch native workers. Main SQL and events storage are ready before
+the first onboarding event; project raw/search stores retain planned UUIDs and
+initialize lazily. Recovery reuses the receipt, physical root, owner, routing and
+UUIDs. A foreign, missing-ready or corrupt store refuses recreation.
 
-Only successful exclusive creation of a new flow root with qualified native
-process-tree ownership may establish fresh project authority. The host records
-that creation in `maintenance/project-initialization.json`, bound to the physical
-root, project owner, selected workplace and planned domain UUIDs. Existing roots,
-including forced initialization, do not become fresh by inference.
-
-Under admission, initialization publishes the main execution binding and domain
-identity pins before creating their databases. Main SQL and the events journal
-are ready before the first ordinary onboarding event. Project raw and standalone
-search stores retain planned UUIDs and initialize lazily on first use. Fresh
-project authority never authorizes adoption or creation of workplace stores.
-
-Publication across files and SQL is recoverable, not one atomic transaction.
-Recovery validates the same receipt, owner, physical root, routing and native
-capability, then reuses recorded UUIDs and pending state. A ready but missing or
-foreign store is refused without recreation or reminting. Pending reads do not
-repair storage. The legacy main-initializer path without a project-creation
-receipt still requires its existing qualified migration safety generation; a
-fresh-project receipt does not establish old-writer retirement.
-
-The host composes `build_storage_migration_host` without reading configuration,
-connecting, taking gates or minting UUIDs. Its first operation resolves the exact
-selected roots, stable owner IDs and main profile alias. An unqualified legacy
-target defers before constructing its execution engine; a pending/bound target
-cannot use that legacy route. Workplace stores without a stable owner produce
-an explicit per-target diagnostic rather than a directory-derived identity.
-
-A genuinely adopted installation retains its original retirement commitment,
-filesystem binding, successor generation and committed native epoch. Subsequent
-processes validate that durable state before Core capture and acquire their own
-short OS leases; the original manager may exit after bound publication. The
-initial historical closure is still required until bound and is never inferred
-from new empty state. Pending/updating heads refuse shared entry, including the
-crash window before epoch replacement. Migration proof uses the actual selected
-owner/routing/instance/targets and pinned full configuration under admission.
-Native update publishes an exact pending transition before overwrite, then a
-successor epoch/head. Only a fresh independently leased child runs new Core
-maintenance; stale same-publication children cannot finalize a later update.
-
-
-### First cold transition
-
-Historical installations without their original complete ingress owner require a separately qualified one-time cold boundary. The finite native controller records persistent inhibition before retirement, copies only an accepted frozen publication with retained backups, and publishes a distinct `cold-v1` adoption. Normal post-bound operations continue with short independent native leases; the controller is not a permanent service.
-
-The prepared-resource adapter supplies a narrow runtime/deployment resource-grant
-channel for the private fixed native-maintenance descriptor. It intersects the
-requested tool, authoritative tool policy, grant and Work scope. The binding pins
-`management-python` body/execute access, exact attempt identity, source hashes and
-operation-specific deployment authority. `bind_preparation()` records
-`native_launch.maintenance`; consumer validation and start preflight recheck
-authority, material and source pins before admission.
-
-This source implementation does not qualify a specific deployment. A current
-authorized binding, final integrated assurance and real
-platform/principal/boot/fault qualification remain necessary. Source, archive,
-installed-Core and connected-host evidence are distinct. No caller flag, receipt,
-observed interpreter hash or new empty Job establishes retirement.
+Existing native worker ownership and short cooperating OS leases remain in use
+for their own lifecycle. They do not certify unknown old processes or authorize
+migration. Ordinary reads and writes cannot turn a legacy project into a fresh
+one. See [journal maintenance and recovery](sqlite-journal-maintenance.md).

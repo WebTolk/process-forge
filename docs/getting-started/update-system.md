@@ -29,12 +29,14 @@ of the release source and migration notes. See [requirements](../requirements.md
 ## Update the installed Core
 
 Do not unpack a release over a project's `.pf/`. Back up the installation and
-its mutable data. If long-lived PF processes are configured, arrange an operator
-maintenance window before replacement, then start the intended new processes
-after validation. File-only Garage needs no service installation.
+its mutable data. In Garage, the operator stops PF and other writers before
+replacement and restarts the intended version after validation. In Forge,
+the updater owns that lifecycle for the single PF executor. File-only Garage
+needs no service installation.
 
-With an updater-capable installation, plan against the downloaded archive and
-inspect conflicts and the declared workplace migration before apply:
+Extract the verified target archive outside the installed Core. Run the
+following commands from that extracted distribution, retaining the original ZIP.
+Inspect conflicts and the declared Workplace migration before apply:
 
 ```bash
 python bin/pf.py core-update plan --core-root <installed-processforge> --archive <release-archive.zip> --workplace-root <workplace>
@@ -72,11 +74,22 @@ update index. It does not automatically migrate project configuration or prove
 that journal data has been migrated. Read the assessment and the target release's
 migration instructions before changing files.
 
-Existing non-empty legacy project event/raw-hook NDJSON journals require explicit
-SQLite import before those journals can be used. This is separate from replacing
-Core files or refreshing context. Follow [SQLite journal migration](../concepts/hook-journal-sqlite.md)
-and the declared [migration tool](../../tools/migrate-hook-journals.py); retain the
-originals and do not treat other NDJSON owners as obsolete.
+Existing projects with legacy journals refuse ordinary writes with
+`storage_migration_required`. New projects create SQL journals immediately;
+they do not need an upgrade migration. With PF and writers stopped, run:
+
+```bash
+python bin/pf.py journal-maintenance import --project-root <project> --workplace <workplace> --apply
+python tools/migrate-storage.py --project-root <project> --workplace-root <workplace> --apply --offline-confirmed --json
+```
+
+The first command imports event/raw-hook journals; the second imports execution
+snapshots and binds supported stores to stable UUIDs. This is separate from Core
+replacement and context refresh. For an interrupted second command, repeat its
+exact roots with `--resume --offline-confirmed`. Preserve the original journals,
+plans and backups. See [SQLite journal maintenance](../concepts/sqlite-journal-maintenance.md)
+for checks, refusal states and recovery. Other NDJSON owners are not obsolete
+merely because they use that format.
 
 When required migrations are complete, refresh and check the current project:
 

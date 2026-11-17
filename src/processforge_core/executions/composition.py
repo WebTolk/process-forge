@@ -216,8 +216,8 @@ def _initialize_fresh_execution_storage(
 ) -> None:
     """Initialize only inside the acknowledged new-flow admission boundary.
 
-    The host establishes physical fresh-root creation and a qualified native
-    tree backend before calling. This function is never a read-path fallback.
+    The host establishes physical fresh-root creation before calling.
+    This function is never a read-path fallback and does not launch workers.
     Binding precedes DDL, so interruption leaves an exact blocked route.
     """
     from uuid import uuid4

@@ -1,4 +1,4 @@
-"""Fresh engine tests use explicit capability stubs, not native qualification."""
+"""Fresh SQL identities and recovery do not depend on a worker process backend."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from processforge_core.sqlite_storage import adapter_identity_access
 
 @pytest.fixture
 def project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(native, "supports_owned_execution", lambda: True)
+    monkeypatch.setattr(native, "supports_owned_execution", lambda: False)
     root = tmp_path / "project"
     flow = root / ".pf"
     root.mkdir()
@@ -171,12 +171,11 @@ def test_unknown_existing_root_is_not_fresh(tmp_path):
     assert list((root / ".pf").iterdir()) == []
 
 
-def test_capability_failure_publishes_no_authority(tmp_path, monkeypatch):
+def test_existing_root_never_acquires_fresh_receipt(tmp_path, monkeypatch):
     root = tmp_path / "unsupported"
     (root / ".pf").mkdir(parents=True)
     monkeypatch.setattr(native, "supports_owned_execution", lambda: False)
-    with pytest.raises(MaintenanceError, match="storage_fresh_capability_required"):
-        fresh.create_project_storage_root(root)
+    assert fresh.create_project_storage_root(root) is False
     assert not (root / ".pf" / fresh.RECEIPT).exists()
 
 

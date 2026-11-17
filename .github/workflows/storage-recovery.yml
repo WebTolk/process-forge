@@ -54,10 +54,11 @@ jobs:
               'tests/execution_migration/test_storage_admission.py',
               'tests/execution_migration/test_physical_storage_paths.py',
               'tests/execution_migration/test_fresh_native_sql.py',
-               'tests/execution_migration/test_fresh_project_domains.py',
-               'tests/execution_migration/test_fresh_bootstrap_preflight.py',
-               'tests/project_initialization',
+              'tests/execution_migration/test_fresh_project_domains.py',
+              'tests/execution_migration/test_fresh_bootstrap_preflight.py',
+              'tests/project_initialization',
               'tests/execution_migration/test_required_write_readiness.py',
+              'tests/execution_migration/test_operator_migration.py',
               'tests/executions/test_configuration_access.py',
               'tests/execution_migration/test_compatibility.py',
               'tests/database', 'tests/maintenance_backup', 'tests/maintenance_scan',
@@ -66,13 +67,7 @@ jobs:
           ]
           # These two assertions exercise semantics of the other OS only.
           # Applicable link/locking/recovery cases may not be skipped.
-          if os.name == 'nt':
-              selection += [
-                  'tests/execution_migration/test_native_control.py::test_real_legacy_manager_refuses_active_tree_then_retires',
-                  'tests/execution_migration/test_native_control.py::test_real_managed_execution_import_process_death_resume',
-                  'tests/execution_migration/test_native_control.py::test_real_managed_uuid_adoption_process_death_resume',
-              ]
-          else:
+          if os.name != 'nt':
               selection += [
                   '--deselect=tests/maintenance_backup/test_backup.py::SQLiteBackupTests::test_windows_device_names_are_rejected_before_io',
                   '--deselect=tests/maintenance_integration/test_acceptance.py::test_windows_junctions_are_refused_by_all_maintenance_operations',
@@ -116,7 +111,7 @@ jobs:
           python-version: '3.11'
       - name: Install runtime and pinned test dependencies
         run: python -m pip install -r requirements.txt pytest==9.1.1
-      - name: Qualify existing file and managed update boundaries
+      - name: Qualify file update and recovery boundaries
         shell: python
         run: |
           import os
@@ -135,16 +130,7 @@ jobs:
               directory.mkdir(parents=True, exist_ok=True)
               environment[name] = str(directory)
           selection = ['tests/maintenance/test_file_update.py']
-          if os.name == 'nt':
-              selection += [
-                  'tests/execution_migration/test_native_control.py::test_joint_real_updater_and_independent_successor_child',
-                  'tests/execution_migration/test_native_control.py::test_real_updater_retained_target_repair_force_and_authority',
-                  'tests/execution_migration/test_cold_handoff.py::test_unqualified_default_refuses_even_synthetic_reset',
-                  'tests/execution_migration/test_cold_handoff.py::test_real_same_boot_negative',
-                  'tests/execution_migration/test_cold_handoff.py::test_actual_accesscheck_and_child_file_denial',
-                  'tests/execution_migration/test_cold_handoff.py::test_native_lock_blocks_real_other_process',
-              ]
-          else:
+          if os.name != 'nt':
               # These fault seams exercise the Windows tasklist branch only.
               selection += ['-k', 'not test_uncertain_or_active_windows_pid_refuses_before_apply']
           report = root / 'storage-update-results.xml'

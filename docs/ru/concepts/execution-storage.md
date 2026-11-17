@@ -185,142 +185,58 @@ workplace gate, объявляя себя standalone. Guard с бюджетом 
 projects сохраняют прежний bounded observer. File-only operation не требует
 bootstrap Runtime/MCP, network или LLM.
 
-## Routing и восстановление native migration
+## Явная миграция и ответственность за обновление
 
-Страница описывает принятый итоговый контракт. Она не утверждает, что текущий
-живой проект мигрирован или интеграционная QA реализации уже пройдена.
+Новые проекты сразу используют SQL. Старые проекты с legacy-журналами блокируют
+обычную запись Work/worker с `storage_migration_required`, пока оператор не
+выполнит поддерживаемую миграцию. Чтение status/config/doctor её не запускает.
+Обновление файлов Core не мигрирует все проекты автоматически.
 
-Обычный поддержанный update и первая безопасная запись автоматически вызывают
-native migration script/service без project opt-in, ручного переноса данных или
-agent/LLM/model-provider calls. `tools/migrate-storage.py` — native entrypoint для
-inspection, apply и recovery; update вызывает квалифицированный установленный
-код, first-write использует тот же coordinator для standalone/file-only.
-Успешная установка сама не означает project readiness. Pure status/config/doctor/
-guard reads не запускают migration или scans.
+В Гараже человек останавливает PF и всех писателей перед обслуживанием.
+В Кузне updater останавливает единственный исполнитель PF, обновляет его и
+запускает после обслуживания. PF не заявляет техническое исключение произвольных
+исторических процессов. Исторический менеджер, enrollment, cold controller и
+передача власти между конкретными версиями продукта не требуются.
 
-Новые проекты инициализируют актуальное SQL-хранилище. Существующие проекты должны
-завершить квалифицированную миграцию до обычных записей Work или worker. Read-only
-selection и explicit recovery могут исследовать распознанное legacy-хранилище,
-но отложенная, неуспешная или неопределённая миграция не разрешает обычную запись
-или новую попытку. Active/unknown ownership блокирует такую запись с diagnostics;
-существующие IDs, receipts и исходные байты сохраняются. First-write boundary
-требует готовый результат миграции, затем повторно выбирает фактический SQL
-repository перед продолжением. Retry возможен только после устранения причины
-блокировки и освобождения lifecycle/target locks и SQL sessions. Нет scheduler,
-polling loop, live takeover или automatic kill. Отсутствующий explicit stable
-project/owner ID, ambiguous source или unknown old writer нельзя объявить
-безопасными через config или opt-in flag.
+После остановки PF проверьте и импортируйте event/raw-журналы, затем выполните
+привязку существующих хранилищ и импорт execution snapshots:
 
-Proven safety — host evidence для exact authorized project/store, target и
-generation: quiescence, отсутствие pre-spawn gap и живого owned tree, стабильные
-sources и квалифицированное исключение старых writers. Проверка повторяется под
-admission при freeze, resume и непосредственно перед cutover. Empty registry,
-текущая версия, terminal string, истёкший TTL, PID probe или один
-`offline_confirmed` не являются proof. Отсутствующее, устаревшее, изменённое или
-недоступное proof не разрешает migration/cutover и сохраняет блокировку обычных
-записей, в том числе до публикации pending. Старые binaries технически не
-соблюдают незнакомые markers; их исключают реальным ownership/maintenance
-evidence, а после SQL cutover они не поддерживаются как writers.
+```text
+python -B bin/pf.py journal-maintenance inspect --project-root PROJECT --workplace WORKPLACE --json
+python -B bin/pf.py journal-maintenance import --project-root PROJECT --workplace WORKPLACE --apply --json
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --apply --offline-confirmed --json
+```
 
-При proven safety exact pending identity pin/execution binding публикуется до
-DB mutation. Capable clients блокируют обычный доступ к pending target и
-разрешают только восстановление точного плана. Missing/partial bound storage
-не допускает fallback в JSON или другой target. Ready access проверяет exact
-project/store UUID, scope/owner, pinned path, schema/checksum и readiness.
-Binding задаёт route и identity pin; только SQL transaction устанавливает
-execution authority/readiness. Нужен explicit manifest project ID; имя каталога
-или молча созданный replacement owner ID его не заменяют.
+`--offline-confirmed` фиксирует ответственность оператора/updater. Дополнительно
+host требует реальный admission lock проекта/Workplace, отклоняет известный
+работающий Runtime, закрепляет текущую конфигурацию, roots, owners и targets и
+проверяет их перед изменениями. Подтверждение не отменяет проверок источников,
+identity, схемы, backups и checkpoints. Неизвестные или изменённые данные
+сохраняют блокировку.
 
-Migration сохраняет deterministic descriptors, frozen source manifests/original
-bytes, verified WAL-aware backups, journals и same-batch checkpoints. UUID
-adoption добавляет metadata на месте без изменения domain rows/IDs; per-target
-commit отделён от execution import и global file journal. Unused absent stores
-не создаются ради abstraction. Execution import использует только наблюдаемые
-latest snapshots без выдумывания перезаписанной history; имена attempt directories
-определяют только allocation floors. Batch не превышает 256, import и checkpoint
-коммитятся в одной transaction. History может быть неполной, но первый cutover
-требует zero proven current executions и complete active coverage. Нельзя
-пропускать invalid records, скрывая unknown active work.
+Pending binding публикуется до изменения БД. Ready access проверяет UUID,
+владельца, путь, схему и готовность. Отсутствующее или частично записанное bound
+хранилище не получает новую identity и не переключается обратно на JSON.
+Execution import сохраняет наблюдаемые snapshots и allocation floors, не
+выдумывая перезаписанную историю. Batch и checkpoint фиксируются вместе.
+Execution cutover — SQL CAS из importing/legacy в ready/sql; добавление UUID
+metadata само по себе этим commit не является.
 
-Единственный execution cutover — CAS commit `execution_state` из importing/legacy
-в ready/sql с target generation вместе с ready marker `execution_migrations`.
-UUID adoption сама не является этим commit. Proven-safe migration синхронно
-завершается до продолжения initiating write; interruption сохраняет pending/
-checkpoint для automatic exact resume при следующем mutating use. Resume
-проверяет code/descriptor/source facts, тот же backup и checkpoint без повторного
-mint UUID или произвольного второго backup. Ready target не откатывается
-неявно, если следующий target завершился ошибкой.
+Миграция сохраняет frozen sources, transform hashes, проверенные WAL-aware
+backups, журналы и checkpoints. Продолжение запускается явно для тех же roots
+через `--resume --offline-confirmed`: проверяются исходный план, источники и
+backup, UUID не заменяются, recovery evidence не перезаписывается. Сбой другого
+target не откатывает уже готовое хранилище. После SQL-записей откат Core не
+означает откат данных; JSON нельзя снова импортировать как новую истину.
 
-После cutover recovery выполняет roll-forward из SQL и ремонтирует только owned
-projections/reports; JSON не импортируется как новая истина. Automatic abort
-отсутствует. Explicit pre-cutover abort требует admission, неизменных sources и
-proof отсутствия ready authority/new SQL commits. Restore выполняется в новый
-target с controlled offline binding switch; old-Core rollback после SQL writes
-требует отдельно квалифицированного reverse export. Maintenance inspection и
-существующие `journal-maintenance` execution inspection/import/resume interfaces
-служат диагностике и управляемому ремонту, не являются условием обычной migration
-для пользователя. См. [SQLite journal maintenance](sqlite-journal-maintenance.md).
+Fresh authority подтверждается исключительным созданием flow root и receipt
+`maintenance/project-initialization.json`; возможность запуска native worker
+для этого не нужна. Main SQL и events готовы до первого onboarding event.
+Project raw/search сохраняют planned UUIDs и создаются при первом использовании.
+Восстановление использует прежние receipt, физический root, owner, routing и UUID.
+Чужое, повреждённое или исчезнувшее ready-хранилище не пересоздаётся.
 
-Полномочия нового проекта возникают только при успешном эксклюзивном создании
-flow root с квалифицированным native-владением деревом процессов. Host фиксирует
-создание в `maintenance/project-initialization.json`, привязывая запись к физическому
-корню, владельцу проекта, выбранному workplace и запланированным UUID доменов.
-Существующий root, включая forced initialization, не становится новым по предположению.
-
-Под admission инициализация публикует main execution binding и domain identity pins
-до создания соответствующих БД. Main SQL и журнал событий готовы до первого
-обычного события onboarding. Project raw и standalone search сохраняют запланированные
-UUID и создаются при первом использовании. Полномочия нового проекта не разрешают
-adoption или создание хранилищ workplace.
-
-Публикация файлов и SQL допускает восстановление, но не является одной атомарной
-транзакцией. Recovery проверяет ту же запись создания, владельца, физический корень,
-routing и native capability, затем использует прежние UUID и pending state.
-Готовое, но исчезнувшее или чужое хранилище отклоняется без пересоздания и новых UUID.
-Pending reads не ремонтируют хранилище. Прежний путь main initializer без записи
-создания проекта по-прежнему требует квалифицированную migration safety generation;
-запись нового проекта не доказывает retirement старых писателей.
-
-Host создаёт `build_storage_migration_host` без чтения конфигурации, подключений,
-получения gates или создания UUID. Первая операция разрешает выбранные roots,
-стабильные owner IDs и main profile alias. Неквалифицированный legacy target
-откладывается до создания execution engine; pending/bound target не использует
-этот legacy route. Workplace stores без стабильного владельца возвращают явную
-диагностику target, а не получают identity из имени каталога.
-
-Установка с подтверждённым adoption сохраняет исходное retirement commitment,
-filesystem binding, successor generation и committed native epoch. Последующие
-процессы проверяют это durable state до Core capture и получают собственные
-короткие OS leases; исходный manager может завершиться после bound publication.
-До bound по-прежнему требуется исходное доказательство historical closure;
-новое пустое состояние его не заменяет. Pending/updating head запрещает shared
-entry, включая окно сбоя до замены epoch. Migration proof использует фактически
-выбранные owner/routing/instance/targets и полный закреплённый PFConfig под
-admission. Native update публикует точный pending transition до overwrite,
-затем successor epoch/head. Только новый независимо leased child выполняет
-maintenance нового Core; устаревший child прежней publication не может завершить
-последующее обновление.
-
-
-### Первый cold-переход
-
-Исторические установки без исходного полного ingress owner требуют отдельно
-квалифицированной однократной cold-границы. Конечный native controller фиксирует
-устойчивый запрет до retirement, копирует только принятую frozen publication
-с сохранёнными backups и публикует отдельный adoption `cold-v1`. Обычные операции
-после bound используют короткие независимые native leases; controller не является
-постоянным сервисом.
-
-Prepared-resource adapter предоставляет узкий канал runtime/deployment grants
-для private fixed native-maintenance descriptor. Проверка пересекает запрос
-инструмента, authoritative tool policy, grant и Work scope. Binding закрепляет
-`management-python` с доступом body/execute, точную identity попытки, хеши
-исходников и deployment authority для конкретной операции.
-`bind_preparation()` сохраняет `native_launch.maintenance`; consumer validation
-и start preflight повторно проверяют authority, material и source pins до admission.
-
-Наличие реализации в Source не квалифицирует конкретное развёртывание. Нужны
-текущий разрешённый binding, итоговая интеграционная проверка и реальная
-квалификация платформы, principal, boot и fault-сценариев. Свидетельства Source,
-архива, установленного Core и подключённого Host различаются. Caller flag,
-receipt, наблюдаемый хеш интерпретатора или новый пустой Job не доказывают retirement.
+Native ownership workers и короткие OS leases сохраняются для их собственного
+lifecycle. Они не доказывают отсутствие неизвестных старых процессов и не выдают
+права на миграцию. Обычное чтение или запись не превращает старый проект в новый.
+См. [обслуживание журналов и восстановление](sqlite-journal-maintenance.md).

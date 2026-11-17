@@ -156,10 +156,12 @@ jobs:
               "--root", str(scratch / "fixture"),
               "--out", str(root / ".pf/artifacts/t06-public-core"),
           ], check=True, timeout=660)
-          # Component success never qualifies native adoption, SQL or a worker.
+          # The same archive must complete migration and a real retained worker.
           report = json.loads((root / ".pf/artifacts/t06-public-core/results.json").read_bytes())
           assert report["core_file_checks"] == "passed"
-          assert report["full_t06_qualified"] is False
+          assert report["full_t06_qualified"] is True
+          assert report["project_migration"]["status"] == "ready"
+          assert report["retained_worker"]["collection"] == "collected"
           recovery_out = root / ".pf/artifacts/t06-file-recovery"
           subprocess.run([
               sys.executable, "-B", "tools/smoke_public_core_upgrade.py", "--file-recovery",

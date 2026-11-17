@@ -201,36 +201,25 @@ resume также требует точных migration/checksum selectors. Вы
 exit 0 для plan/ready, 1 для отказа и argparse 2 для неверного синтаксиса.
 Без host composition/verifier новые операции fail-closed.
 
-## Native UUID coordinator и автоматические hooks
+## Явная миграция и UUID
 
-`StorageMigrationService` объединяет update, first-write и exact resume.
-`tools/migrate-storage.py` принимает явно выбранные `--project-root` и/или
-`--workplace-root`, необязательный `--device-config`, один из `--inspect`
-(по умолчанию), `--apply`, `--resume`. stdout содержит ровно один JSON;
-коды выхода: 0 planned/ready, 1 deferred/refused/failed, argparse 2.
-CLI-флага для подмены safety proof нет. Host снимает один полный PFConfig snapshot
-через общий ConfigurationProvider и передаёт pinned provider всем зависимостям.
-Нет ручного merge у consumers, agent/LLM/network/daemon dependency.
+`StorageMigrationService` выполняет явную операцию оператора/updater.
+`tools/migrate-storage.py` принимает `--project-root` и/или `--workplace-root`,
+необязательный `--device-config` и один из `--inspect` (по умолчанию),
+`--apply`, `--resume`. Apply/resume требуют `--offline-confirmed`: в Гараже
+оператор остановил PF и писателей, в Кузне updater управляет единственным
+исполнителем PF. Коды выхода: 0 planned/ready, 1 blocked/failed, argparse 2.
 
-Host вызывает ensure_ready перед обычной записью, до task/target/SQL locks.
-Active/unknown до pending даёт blocked/deferred без нового storage UUID и файлов
-миграции. Историческое поле legacy_allowed=true описывает ещё не мигрированный
-источник и не разрешает обычную запись или запуск. После pending нужен exact resume.
-Pure reads/config/doctor/500 ms guard не мигрируют.
-Новый capability/version, пустой registry, terminal string, PID/TTL и CLI boolean
-не заменяют реальное доказательство исключения старых writers и owned trees.
+Сначала импортируйте event/raw командой выше, затем выполните:
 
-Work start/transition, continuation create с apply, continuation resume и worker
-prepare/start требуют готового SQL execution storage через общую Core-проверку
-first-write. Она выполняется до retry recovery, очистки scratch, lifecycle locks,
-планирования, регистрации и spawn. После успешной миграции SQL выбирается повторно:
-одного успешного отчёта недостаточно. Проект без identity получает
-project_identity_required. Обычный start не использует файловые журналы.
-Явные stop, cancellation и collection существующих попыток доступны для recovery.
-Collection не запускает миграцию после фиксации результата; готовность проверит
-следующая обычная запись. Низкоуровневый compatibility-доступ адаптеров до pending
-сохраняется для migration/recovery; обычные Work/worker entrypoints обязаны пройти
-описанную проверку. Pure reads проверяют имеющиеся pins без создания identity guard.
+```text
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --apply --offline-confirmed --json
+```
+
+Обычные записи Work/worker проверяют готовность и отклоняют legacy storage с
+`storage_migration_required`; автоматического импорта при первой записи нет.
+Pure reads не создают migration files. Явные stop/cancel/collection существующей
+попытки сохраняются для recovery и не разрешают запуск новой попытки.
 
 Для распознанных events/raw/accounting/search добавляются только pf_store_meta,
 pf_schema_versions и store_identity@1. Пути, domain application IDs/versions,
@@ -267,11 +256,14 @@ Execution import, source originals, batches<=256/checkpoint и единстве�
 exact durable selector; история не выдумывается, main не получает второй pin.
 После cutover SQL остаётся authority; projection repair выполняет его владелец.
 
-Script использует composition.build_configuration_provider и
-composition.build_storage_migration_host. Host factory закрепляет enrollment,
-installed capability/code, instance/routing, old-writer exclusion, pre-spawn gaps
-и полные process trees и внедряет оба verifier. При отсутствии factory — bounded
-storage_host_factory_unavailable. Fixture proof tests подтверждают policy,
-не реальную host safety. W3 production composition, installed automatic hooks и
-integrated QA остаются отдельными gates. Этот source slice не мигрирует live data
-и не запускает инфраструктуру.
+Host закрепляет один configuration snapshot, точные roots, стабильных owners и
+выбранные targets. Явное обслуживание требует реального admission и отклоняет
+известный работающий Runtime. Перед изменением повторно проверяется тот же выбор.
+Это локальное обслуживание под ответственностью оператора/updater; техническое
+исключение любого неизвестного исторического процесса не заявляется.
+
+Для продолжения используйте те же roots и `--resume --offline-confirmed`.
+Pending identity, изменения source/schema/transform, чужие UUID, неизвестные
+активные executions и повреждённое recovery evidence сохраняют отказ. Изменение
+кода не переписывает старый pending plan и не отменяет его проверки.
+См. [execution storage](execution-storage.md#явная-миграция-и-ответственность-за-обновление).

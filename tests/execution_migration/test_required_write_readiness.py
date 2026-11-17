@@ -82,7 +82,7 @@ def test_legacy_refusal_precedes_all_ordinary_mutation(
     if operation in {"prepare", "start"}:
         args = argparse.Namespace(project_root=str(old_project), task="task")
         assert getattr(core, "command_worker_run_" + operation)(args) == 1
-        assert capsys.readouterr().out.strip() == "FAIL: storage_activity_unknown"
+        assert capsys.readouterr().out.strip() == "FAIL: storage_migration_required"
     elif operation.startswith("continuation-"):
         from processforge_core.work.continuation import ContinuationService
 
@@ -98,7 +98,7 @@ def test_legacy_refusal_precedes_all_ordinary_mutation(
             operation.removeprefix("continuation-"), **arguments
         )
         assert result["action"] == "blocked"
-        assert result["reason"] == "storage_activity_unknown"
+        assert result["reason"] == "storage_migration_required"
     else:
         service = core.process_execution_service(old_project)
         result = (
@@ -109,7 +109,7 @@ def test_legacy_refusal_precedes_all_ordinary_mutation(
             )
         )
         assert result["action"] == "blocked"
-        assert result["reason"] == "storage_activity_unknown"
+        assert result["reason"] == "storage_migration_required"
     assert all(path.read_bytes() == content for path, content in before.items())
     after = files(old_project)
     # Physical admission may establish its persistent lock inode; it conveys no
@@ -164,22 +164,22 @@ def test_actual_cli_refuses_unmigrated_project_without_private_paths(
     )
     assert child.returncode == 1, child.stdout + child.stderr
     assert not child.stderr
-    assert "storage_activity_unknown" in child.stdout
+    assert "storage_migration_required" in child.stdout
     assert str(old_project) not in child.stdout
     assert all(path.read_bytes() == content for path, content in before.items())
     assert not (old_project / ".pf/data").exists()
 
 
-def test_success_report_must_be_followed_by_ready_sql_selection(
+def test_ordinary_write_never_invokes_legacy_migration(
     old_project: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
         StorageMigrationService,
         "ensure_ready",
-        lambda *_args, **_kwargs: {"status": "ready", "blocked": False},
+        forbidden,
     )
     before = files(old_project)
-    with pytest.raises(MaintenanceError, match="^execution_storage_not_ready$"):
+    with pytest.raises(MaintenanceError, match="^storage_migration_required$"):
         core._storage_first_write(old_project)
     assert files(old_project) == before
 

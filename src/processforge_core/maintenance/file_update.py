@@ -1,23 +1,28 @@
-"""Manifest-owned archive updates for existing file-only installations.
+"""Manifest-owned archive updates under operator or updater responsibility.
 
-This compatibility route supplies a cooperating updater mutex and recovery
-journal. It never supplies native enrollment, migration authority or proof that
-unrelated interpreters have retired. Managed installations retain their own
-exclusive replacement protocol.
+A cooperating updater mutex and a durable recovery journal protect the selected
+files. The caller stops PF and its writers before applying or resuming an update.
 """
 
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import stat
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 from .release_sources import ReleaseSourcePolicy
-from .update import CORE_MANIFEST_NAME, CoreUpdateError, _build_plan, manifest_file_map
+from .update import (
+    CORE_MANIFEST_NAME,
+    CoreUpdateError,
+    _build_plan,
+    apply_workplace_migration,
+    manifest_file_map,
+)
 
 
 def _target_root(core_root: Path) -> Path:
@@ -53,33 +58,13 @@ def _target_root(core_root: Path) -> Path:
     return root
 
 
-def _managed_marker_present(root: Path) -> bool:
-    for name in ("native-control", "managed-ingress"):
-        try:
-            (root / "runtime" / name).lstat()
-        except FileNotFoundError:
-            continue
-        except OSError as error:
-            raise CoreUpdateError(
-                "plan_blocked", "native enrollment state cannot be inspected"
-            ) from error
-        else:
-            return True
-    return False
-
-
-def require_unmanaged_target(core_root: Path) -> Path:
-    """Validate a real root with no complete or partial native enrollment."""
-    root = _target_root(core_root)
-    if _managed_marker_present(root):
-        raise CoreUpdateError(
-            "plan_blocked", "managed installation requires native replacement"
-        )
-    return root
+def require_update_target(core_root: Path) -> Path:
+    """Validate the physical target; old enrollment markers grant no authority."""
+    return _target_root(core_root)
 
 
 def file_update_candidate(core_root: Path) -> bool:
-    """Select only a sealed, unbound caller and a never-enrolled target."""
+    """Select a separate verified installer for the manifest-owned target."""
     from pf_native_control import current_entry
 
     entry = current_entry()
@@ -90,11 +75,7 @@ def file_update_candidate(core_root: Path) -> bool:
         or entry.image is None
     ):
         return False
-    # Presence, including a broken link or an empty directory, is a managed
-    # refusal. Do not turn an error in managed metadata into a compatibility path.
     root = _target_root(core_root)
-    if _managed_marker_present(root):
-        return False
     if root == entry.root or root in entry.root.parents or entry.root in root.parents:
         raise CoreUpdateError("plan_blocked", "installer and target roots overlap")
     return (root / CORE_MANIFEST_NAME).is_file()
@@ -114,6 +95,7 @@ def apply_file_update(
     *,
     workplace_root: Path | None,
     resume: bool = False,
+    force_local_modifications: bool = False,
 ) -> dict[str, Any]:
     """Apply a frozen release archive using the existing ownership contract."""
     from pf_native_control import (
@@ -133,7 +115,7 @@ def apply_file_update(
             "plan_blocked",
             "file update requires an external sealed file-only installer",
         )
-    root = require_unmanaged_target(core_root)
+    root = require_update_target(core_root)
 
     def atomic(path: Path, content: bytes) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -223,13 +205,9 @@ def apply_file_update(
         public_pf = {".pf/agents.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"}
         for relative in manifest_file_map(manifest):
             folded = relative.casefold()
-            # Public 1.2.0 shipped these Core-owned entry templates. Permit
-            # their existing backup/removal, never private target payload.
-            legacy_entry = (
-                installed_legacy
-                and manifest.get("version") == "1.2.0"
-                and folded in public_pf
-            )
+            # Older manifests owned these entry templates. Permit their
+            # existing backup/removal, never new private target payload.
+            legacy_entry = installed_legacy and folded in public_pf
             if (
                 folded.startswith("runtime/")
                 or (folded.startswith(".pf/") and not legacy_entry)
@@ -252,7 +230,7 @@ def apply_file_update(
         return read(relative)
 
     def binding() -> dict[str, Any]:
-        info = require_unmanaged_target(root).stat()
+        info = require_update_target(root).stat()
         result: dict[str, Any] = {
             "core_root": str(root),
             "identity": [info.st_dev, info.st_ino],
@@ -270,7 +248,7 @@ def apply_file_update(
             }
         return result
 
-    def refuse() -> None:
+    def refuse() -> NoReturn:
         raise CoreUpdateError(
             "plan_blocked", "file recovery proof or target state differs"
         )
@@ -353,7 +331,6 @@ def apply_file_update(
         changed, restored = set(plan["changed"]), set(plan["restored"])
         if (
             plan["blockers"]
-            or (plan.get("workplace_migration") or {}).get("operations")
             or plan["core_root"] != str(root)
             or plan["added"] != sorted(new_files.keys() - old_files.keys())
             or plan["removed"] != sorted(old_files.keys() - new_files.keys())
@@ -401,15 +378,31 @@ def apply_file_update(
         validate_current(proof, plan, frozen)
         return progress, plan, frozen, proof
 
+    def replaced_by_directory(relative: str, frozen: Any) -> bool:
+        if not any(name.startswith(relative + "/") for name in frozen.payload):
+            return False
+        try:
+            info = _update_target(root, relative).lstat()
+        except FileNotFoundError:
+            return False
+        return stat.S_ISDIR(info.st_mode) and not (
+            getattr(info, "st_file_attributes", 0) & 0x400
+        )
+
     def validate_current(
         proof: dict[str, Any], plan: dict[str, Any], frozen: Any
     ) -> None:
-        require_unmanaged_target(root)
+        require_update_target(root)
         require_offline()
         if proof["binding"] != binding():
             refuse()
         for relative, initial in proof["initial"].items():
-            raw = current(relative)
+            raw = (
+                None
+                if relative in plan["removed"]
+                and replaced_by_directory(relative, frozen)
+                else current(relative)
+            )
             actual = pin(raw) if raw is not None else None
             intended = (
                 pin(frozen.payload[relative]) if relative in frozen.payload else None
@@ -421,7 +414,7 @@ def apply_file_update(
                 refuse()
 
     def run() -> dict[str, Any]:
-        require_unmanaged_target(root)
+        require_update_target(root)
         require_offline()
         if resume:
             progress, plan, frozen, proof = resume_inputs()
@@ -453,14 +446,9 @@ def apply_file_update(
                 frozen_path.unlink(missing_ok=True)
         if plan["blockers"]:
             raise CoreUpdateError("plan_blocked", "core update plan has blockers")
-        migration = plan.get("workplace_migration") or {}
-        if migration.get("operations"):
-            raise CoreUpdateError(
-                "plan_blocked", "file update cannot apply Workplace migrations"
-            )
         checked_paths(plan["new_manifest"])
         frozen = _freeze_update_archive(archive_raw, plan)
-        require_unmanaged_target(root)
+        require_update_target(root)
         if read(CORE_MANIFEST_NAME, MAX_MANIFEST) != old_raw:
             raise CoreUpdateError(
                 "plan_blocked", "installed manifest changed during planning"
@@ -558,7 +546,7 @@ def apply_file_update(
                     os.fsync(stream.fileno())
             initial: dict[str, Any] = {}
             for relative in [] if resuming else paths:
-                require_unmanaged_target(root)
+                require_update_target(root)
                 preimage = current(relative)
                 if preimage is not None:
                     atomic(
@@ -599,10 +587,13 @@ def apply_file_update(
             assert proof is not None
             validate_current(proof, plan, frozen)
             for relative in plan["removed"]:
-                require_unmanaged_target(root)
+                require_update_target(root)
                 require_offline()
                 if proof["binding"] != binding():
                     refuse()
+                if replaced_by_directory(relative, frozen):
+                    complete("delete", relative)
+                    continue
                 raw = current(relative)
                 if raw is not None and pin(raw) != proof["initial"][relative]:
                     refuse()
@@ -617,7 +608,7 @@ def apply_file_update(
                     parent = parent.parent
                 complete("delete", relative)
             for relative in writes:
-                require_unmanaged_target(root)
+                require_update_target(root)
                 require_offline()
                 if proof["binding"] != binding():
                     refuse()
@@ -633,7 +624,7 @@ def apply_file_update(
             for relative, content in frozen.payload.items():
                 if read(relative) != content:
                     raise OSError("installed payload verification failed")
-            require_unmanaged_target(root)
+            require_update_target(root)
             require_offline()
             if (
                 read(CORE_MANIFEST_NAME, MAX_MANIFEST)
@@ -642,12 +633,26 @@ def apply_file_update(
             ):
                 refuse()
             for relative in plan["removed"]:
-                if current(relative) is not None:
+                if (
+                    not replaced_by_directory(relative, frozen)
+                    and current(relative) is not None
+                ):
                     refuse()
             atomic(_update_target(root, CORE_MANIFEST_NAME), frozen.manifest)
             if read(CORE_MANIFEST_NAME, MAX_MANIFEST) != frozen.manifest:
                 raise OSError("installed manifest verification failed")
             complete("write_manifest", CORE_MANIFEST_NAME)
+            migration = plan.get("workplace_migration") or {}
+            migration_record = None
+            if migration.get("operations"):
+                require_offline()
+                if workplace_root is None or proof["binding"] != binding():
+                    refuse()
+                # Supplemental Workplace files use the same frozen archive.
+                # Journal/SQL migration remains an explicit, separate operation.
+                migration_record = apply_workplace_migration(
+                    io.BytesIO(archive_raw), workplace_root, migration, backup
+                )
             record = dict(
                 schema_version=1,
                 update_id=progress["update_id"],
@@ -657,7 +662,7 @@ def apply_file_update(
                 backup_dir=str(backup),
                 backed_up=progress["backed_up"],
                 counts=plan["counts"],
-                workplace_migration=None,
+                workplace_migration=migration_record,
                 maintenance_mode="file_only",
                 archive_sha256=progress["archive_sha256"],
                 recovery_evidence=progress["recovery_evidence"],
@@ -688,7 +693,7 @@ def apply_file_update(
             except OSError as cleanup:
                 error.add_note(f"journal publication failed: {type(cleanup).__name__}")
             raise _Failure(
-                "file_operation_failed", "file update operation failed"
+                str(failure["code"]), "file update operation failed"
             ) from error
 
     try:

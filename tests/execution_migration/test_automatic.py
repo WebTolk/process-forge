@@ -238,11 +238,9 @@ def storage() -> StorageHarness:
     return StorageHarness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex)
 
 
-def test_marker_before_binding_closes_legacy_and_native_factory_repairs(
+def test_marker_before_binding_requires_explicit_offline_repair(
     storage: StorageHarness,
 ) -> None:
-    from types import SimpleNamespace
-
     from processforge_core.composition import build_storage_migration_host
     from processforge_core.executions.composition import (
         _initialize_fresh_execution_storage,
@@ -283,19 +281,16 @@ def test_marker_before_binding_closes_legacy_and_native_factory_repairs(
     assert not any(item.get("legacy_allowed") for item in refused["targets"])
     assert json.loads(marker.read_bytes())["binding"] == original
 
-    # These injected native facts qualify engine policy only, not G1 enrollment.
-    def proof(context):
-        assert ExecutionAdmission.held(context.project_root, context.workplace_root)
-        return "proven", "fixture-generation", ("fixture-native-proof",)
-
-    entry = SimpleNamespace(storage_safety=proof)
-    native = SimpleNamespace(
-        current_entry=lambda: entry, supports_owned_execution=lambda: True
+    confirmed_host = build_storage_migration_host(
+        project_root=storage.project,
+        workplace_root=None,
+        device_config_path=storage.context.device_config_path,
+        configuration=provider,
+        offline_confirmed=True,
     )
-    with patch.dict(sys.modules, {"pf_native_control": native}):
-        repaired = host.service.resume(host.context)
-        assert repaired["blocked"] is False, repaired
-        assert host.service.resume(host.context)["blocked"] is False
+    repaired = confirmed_host.service.resume(confirmed_host.context)
+    assert repaired["blocked"] is False, repaired
+    assert host.service.resume(host.context)["blocked"] is False
     assert json.loads(marker.read_bytes()) == {
         "schema_version": 1,
         "state": "ready",

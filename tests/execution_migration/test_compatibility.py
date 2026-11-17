@@ -45,7 +45,9 @@ def test_cold_adapters_and_service_construction(harness: Harness) -> None:
         patch.object(Path, "mkdir", side_effect=AssertionError("unexpected mkdir")),
     ):
         command = JournalMaintenanceCommand(
-            execution_factory=lambda root: nullcontext(harness.service)
+            execution_factory=lambda root, offline_confirmed: nullcontext(
+                harness.service
+            )
         )
         parser(command)
         type(harness.service)(
@@ -62,7 +64,7 @@ def test_readonly_commands_one_json_no_initialization(
 ) -> None:
     harness.status("task")
     command = JournalMaintenanceCommand(
-        execution_factory=lambda root: nullcontext(harness.service)
+        execution_factory=lambda root, offline_confirmed: nullcontext(harness.service)
     )
     args = parser(command).parse_args(
         ["journal-maintenance", operation, "--project-root", str(harness.project)]
@@ -96,7 +98,7 @@ def test_new_cli_missing_host_factory_fails_closed(harness: Harness) -> None:
 def test_new_cli_real_success_and_resume(harness: Harness) -> None:
     harness.status("task")
     command = JournalMaintenanceCommand(
-        execution_factory=lambda root: nullcontext(harness.service)
+        execution_factory=lambda root, offline_confirmed: nullcontext(harness.service)
     )
     args = parser(command).parse_args(
         [
@@ -139,7 +141,7 @@ def test_new_cli_real_success_and_resume(harness: Harness) -> None:
 
 def test_apply_missing_required_arguments_refuses(harness: Harness) -> None:
     command = JournalMaintenanceCommand(
-        execution_factory=lambda root: nullcontext(harness.service)
+        execution_factory=lambda root, offline_confirmed: nullcontext(harness.service)
     )
     args = parser(command).parse_args(
         [
@@ -295,7 +297,7 @@ def test_report_failure_after_commit_remains_ready(harness: Harness) -> None:
 
 def test_error_payload_never_leaks_private_host_message(harness: Harness) -> None:
     command = JournalMaintenanceCommand(
-        execution_factory=lambda root: nullcontext(harness.service)
+        execution_factory=lambda root, offline_confirmed: nullcontext(harness.service)
     )
     args = parser(command).parse_args(
         [
@@ -418,7 +420,9 @@ def test_execution_scope_failure_is_one_json(harness: Harness, phase: str) -> No
             raise MaintenanceError("execution_activity_unknown")
         return {"status": "planned"}
 
-    command = JournalMaintenanceCommand(execution_factory=lambda root: Scope())
+    command = JournalMaintenanceCommand(
+        execution_factory=lambda root, offline_confirmed: Scope()
+    )
     args = parser(command).parse_args(
         [
             "journal-maintenance",

@@ -39,11 +39,12 @@ class StorageMigrationContext:
 
 @dataclass(frozen=True)
 class MigrationSafety:
-    """Trusted host verdict, never inferred from an operator confirmation flag.
+    """Admission for the selected maintenance operation and responsibility model.
 
-    Generation pins the host ownership/routing/capability evidence. Proven means
-    old writers, publication gaps and all owned physical trees were excluded for
-    the exact supplied context. Evidence references are private, not report text.
+    Generation pins routing and identity across freeze/resume/cutover. In Garage,
+    the operator stops writers; in Forge, the updater stops the PF executor.
+    The host also holds admission and rejects a known running Runtime. Historical
+    process enrollment is not a prerequisite. Evidence references are private.
     """
 
     state: Literal["proven", "active", "unknown"]
@@ -55,10 +56,9 @@ class MigrationSafety:
 class ExecutionMigrationContext:
     """Exact host-authorized pins to revalidate under admission.
 
-    A verifier must resolve enrollment and compare workplace_root, inspect the
-    matching Runtime instance/routing, capability and old-writer exclusion,
-    pre-spawn gaps and complete process trees. None means verified standalone,
-    not a fallback when an enrolled workplace is inaccessible.
+    A verifier resolves and compares routing/owners and validates the selected
+    maintenance admission. None means standalone, never a fallback when an
+    enrolled workplace is inaccessible.
     """
 
     project_root: Path
@@ -74,12 +74,13 @@ class ExecutionMigrationContext:
 
 
 class ExecutionMigrationVerifier(Protocol):
-    """Recheck actual host evidence; return unknown on any unavailable proof.
+    """Recheck the host's maintenance admission and pinned routing.
 
     Engine invokes freeze/resume/cutover while holding real admission gates.
     A missing verifier or changed generation refuses migration. Implementations
-    must not treat terminal text, empty registry, TTL, PID-only or CLI flags as
-    proof. They must keep excluded legacy entrypoints disabled through resume.
+    must retain data and identity checks. Operator confirmation supplies the
+    responsibility for other writers; it does not bypass admission or source
+    verification, and does not claim OS isolation of historical processes.
     """
 
     def __call__(self, context: ExecutionMigrationContext) -> MigrationSafety:
