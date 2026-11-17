@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
 from contextlib import closing
 from pathlib import Path
@@ -29,6 +30,8 @@ def _native_capability_notes(log: Path) -> list[str]:
         },
         "child_exit": {"returncode": int},
         "job_active_after_wait": {"active": int},
+        "job_retired_after_wait": {"active": int},
+        "job_retirement_timeout": {},
         "probe_exception": {},
     }
     failure_types = {
@@ -62,13 +65,31 @@ def _native_capability_notes(log: Path) -> list[str]:
         if not isinstance(reason, str) or reason not in fields:
             continue
         if any(
-            type(value.get(key)) is not kind for key, kind in fields[reason].items()
+            type(value.get(key)) is not kind
+            or (kind is int and not -(2**31) <= value[key] < 2**32)
+            for key, kind in fields[reason].items()
         ):
             continue
         clean: dict[str, object] = {
             "reason": reason,
             **{key: value[key] for key in fields[reason]},
         }
+        for key in (
+            "active",
+            "first_active",
+            "observations",
+            "root_wait_ms",
+            "elapsed_ms",
+        ):
+            number = value.get(key)
+            kinds = (int, float) if key.endswith("_ms") else (int,)
+            if (
+                isinstance(number, (int, float))
+                and type(number) in kinds
+                and 0 <= number < 2**32
+                and math.isfinite(number)
+            ):
+                clean[key] = number
         failures = value.get("failures")
         if not isinstance(failures, list) or len(failures) > 4:
             continue
@@ -133,6 +154,21 @@ def test_private_stderr_export_filters_forged_records_and_bounds_notes(
     log.write_bytes(b"x" * 100000 + b"\n" + (marker + json.dumps(valid)).encode())
     assert len(_native_capability_notes(log)) == 1
     assert _native_capability_notes(tmp_path / "missing") == []
+    retired = {
+        "reason": "job_retired_after_wait",
+        "active": 0,
+        "first_active": 1,
+        "observations": 3,
+        "root_wait_ms": 10.125,
+        "elapsed_ms": 30.25,
+        "failures": [],
+        "private": "private-path-and-token",
+    }
+    log.write_text(marker + json.dumps(retired), encoding="utf-8")
+    exported = json.loads(_native_capability_notes(log)[0].removeprefix(marker))
+    assert exported == {
+        key: value for key, value in retired.items() if key != "private"
+    }
 
 
 @pytest.mark.parametrize("failure", [ValueError, OSError, RuntimeError])

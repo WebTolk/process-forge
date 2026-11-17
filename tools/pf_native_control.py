@@ -2067,6 +2067,7 @@ def supports_owned_execution() -> bool:
             publication_present=_ENTRY is not None and _ENTRY.publication is not None,
         )
         return False
+    probe_facts: dict[str, Any] = {}
     try:
         if sys.platform.startswith("linux"):
             from pf_linux_native_control import inherited
@@ -2084,27 +2085,57 @@ def supports_owned_execution() -> bool:
         )
         job = getattr(process, "native_job")
         try:
-            returncode = process.wait(timeout=5)
+            started = time.monotonic()
+            deadline = started + 5
+            returncode = process.wait(timeout=max(0, deadline - time.monotonic()))
+            probe_facts["root_wait_ms"] = round((time.monotonic() - started) * 1000, 3)
             if returncode != 0:
-                _log_owned_execution_refusal("child_exit", returncode=returncode)
+                _log_owned_execution_refusal(
+                    "child_exit", returncode=returncode, **probe_facts
+                )
                 return False
-            active = job.active()
-            if active != 0:
-                _log_owned_execution_refusal("job_active_after_wait", active=active)
-                return False
-            return True
+            # Root exit does not prove whole-tree retirement. Retain ownership
+            # until an empty backend is observed within the same wait budget.
+            probe_facts["observations"] = 0
+            while True:
+                now = time.monotonic()
+                probe_facts["elapsed_ms"] = round((now - started) * 1000, 3)
+                if now >= deadline:
+                    _log_owned_execution_refusal(
+                        "job_retirement_timeout", **probe_facts
+                    )
+                    return False
+                active = job.active()
+                probe_facts["observations"] += 1
+                probe_facts.setdefault("first_active", active)
+                probe_facts["active"] = active
+                now = time.monotonic()
+                probe_facts["elapsed_ms"] = round((now - started) * 1000, 3)
+                if now >= deadline:
+                    _log_owned_execution_refusal(
+                        "job_retirement_timeout", **probe_facts
+                    )
+                    return False
+                if active == 0:
+                    _log_owned_execution_refusal(
+                        "job_retired_after_wait", **probe_facts
+                    )
+                    return True
+                time.sleep(min(0.01, deadline - now))
         finally:
-            if process.poll() is None:
-                job.stop(deadline=time.monotonic() + 5)
-                process.wait(timeout=5)
-            job.close()
+            try:
+                if process.poll() is None:
+                    job.stop(deadline=time.monotonic() + 5)
+                    process.wait(timeout=5)
+            finally:
+                job.close()
     except (
         OSError,
         AttributeError,
         ValueError,
         subprocess.SubprocessError,
     ) as error:
-        _log_owned_execution_refusal("probe_exception", error=error)
+        _log_owned_execution_refusal("probe_exception", error=error, **probe_facts)
         return False
 
 

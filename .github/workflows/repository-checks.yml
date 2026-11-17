@@ -383,15 +383,41 @@ jobs:
               "--junitxml=runtime-public-event-reads.xml",
               "tests/process_journal/test_event_owner_reads.py",
               "tests/runtime/test_event_reads.py",
+              "tests/native_control/test_capability_retirement.py",
           ], env=environment, check=True)
           subprocess.run([
               sys.executable, "-B", "tools/smoke_runtime_scheduler_failure_isolation.py",
           ], env=environment, check=True)
+      - name: Retain redacted native observations on success and failure
+        if: always()
+        shell: python
+        run: |
+          from itertools import islice
+          from pathlib import Path
+          import sys
+
+          root = Path.cwd()
+          sys.path[:0] = [str(root / name) for name in ("tools", "src", "tests/runtime")]
+          from test_event_reads import _native_capability_notes
+
+          scratch = Path(".pf/tmp/runtime-public-event-reads")
+          observations = []
+          marker = "PF_NATIVE_CAPABILITY "
+          for log in islice(scratch.rglob("runtime.stderr.log"), 16):
+              observations.extend(note.removeprefix(marker)
+                                  for note in _native_capability_notes(log))
+          target = Path("runtime-public-native-observations.jsonl")
+          target.write_text("".join(row + "\n" for row in observations), encoding="utf-8")
+          for row in observations:
+              print(marker + row)
+          print("native_observations=" + str(len(observations)))
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: runtime-public-event-reads-${{ matrix.os }}
-          path: runtime-public-event-reads.xml
+          path: |
+            runtime-public-event-reads.xml
+            runtime-public-native-observations.jsonl
           if-no-files-found: error
 
   mcp-declarations:
