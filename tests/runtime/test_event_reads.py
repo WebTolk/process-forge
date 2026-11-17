@@ -70,6 +70,8 @@ def _native_capability_notes(log: Path) -> list[str]:
             for key, kind in fields[reason].items()
         ):
             continue
+        if "active" in fields[reason] and value["active"] < 0:
+            continue
         clean: dict[str, object] = {
             "reason": reason,
             **{key: value[key] for key in fields[reason]},
@@ -137,6 +139,8 @@ def test_private_stderr_export_filters_forged_records_and_bounds_notes(
         "private-path-and-token",
         json.dumps({"reason": "private-path-and-token", "failures": []}),
         json.dumps({"reason": "job_active_after_wait", "active": True, "failures": []}),
+        json.dumps({"reason": "job_active_after_wait", "active": -1, "failures": []}),
+        json.dumps({"reason": "job_retired_after_wait", "active": -1, "failures": []}),
         json.dumps({"reason": ["private-path-and-token"], "failures": []}),
         "[" * 1000,
     ]
