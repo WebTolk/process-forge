@@ -7553,7 +7553,7 @@ def public_process_origin(origin: str) -> str:
 
 def command_process_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    _run_task_inputs.require_flow_root(project_root)
+    # Catalog inspection also supports a distribution without a consumer .pf.
     workplace_manifest = None
     if getattr(args, "workplace", None):
         workplace_manifest = _project_coordination_state.workplace_manifest_path_from_root(
@@ -7611,7 +7611,7 @@ def command_process_list(args: argparse.Namespace) -> int:
 
 def command_process_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    _run_task_inputs.require_flow_root(project_root)
+    # Use the same Core catalog resolution as process-list before onboarding.
     workplace_manifest = None
     if getattr(args, "workplace", None):
         workplace_manifest = _project_coordination_state.workplace_manifest_path_from_root(
