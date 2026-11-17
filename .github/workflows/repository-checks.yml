@@ -425,6 +425,14 @@ jobs:
           subprocess.run([
               sys.executable, "-B", "tools/smoke_runtime_scheduler_failure_isolation.py",
           ], env=environment, check=True)
+          for smoke in (
+              "smoke_central_event_ingress.py", "smoke_central_event_replay.py",
+              "smoke_provider_adapter_admission.py", "smoke_runtime_host_poc.py",
+              "smoke_session_identity_roundtrip.py", "smoke_codex_lifecycle_identity.py",
+          ):
+              print("RUN " + smoke, flush=True)
+              subprocess.run([sys.executable, "-B", "tools/" + smoke],
+                             env=environment, check=True)
       - name: Retain redacted native observations on success and failure
         if: always()
         shell: python

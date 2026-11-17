@@ -39,10 +39,10 @@ PENDING_CONVERSATION_CAPTURES: dict[
 ] = {}
 
 
-def event_journal():
-    from processforge_core.process_event_journal import ProcessEventJournal
+def event_journal(project_root: Path):
+    from processforge_core.agents.process_events import ProcessEventRecorder
 
-    return ProcessEventJournal()
+    return ProcessEventRecorder().event_journal_for_project(project_root)
 
 
 def state_lock() -> threading.RLock:
@@ -112,7 +112,9 @@ def journal_events(project_root: Path, core: Any) -> list[dict[str, Any]]:
     from processforge_core.work.consistency import RunTaskInputReader
 
     path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
-    return [event for _sequence, event, _error in event_journal().records(path)]
+    return [
+        event for _sequence, event, _error in event_journal(project_root).records(path)
+    ]
 
 
 def execution_stage(
@@ -368,7 +370,7 @@ def declared_verification_event(
     failed_event = str(verification.get("failed_event") or "")
     from processforge_core.work.consistency import RunTaskInputReader
 
-    return event_journal().latest_assignment_event(
+    return event_journal(project_root).latest_assignment_event(
         RunTaskInputReader().event_runtime_paths(project_root)[0],
         task_id,
         {passed_event, failed_event},
@@ -507,7 +509,7 @@ def _stage_input_signature(
 
     return (
         tuple(facts),
-        event_journal().verification_revision(
+        event_journal(project_root).verification_revision(
             RunTaskInputReader().event_runtime_paths(project_root)[0]
         ),
     )
@@ -700,7 +702,7 @@ def save_state(workplace_root: Path, state: dict[str, Any], core: Any) -> None:
 def event_exists(project_root: Path, event_id: str, core: Any) -> bool:
     from processforge_core.work.consistency import RunTaskInputReader
 
-    return event_journal().contains(
+    return event_journal(project_root).contains(
         RunTaskInputReader().event_runtime_paths(project_root)[0], event_id
     )
 
@@ -1068,7 +1070,9 @@ def rebuild_projection(project_root: Path, core: Any) -> Path:
         events_path, _outbox = RunTaskInputReader().event_runtime_paths(project_root)
         rows = [
             item
-            for _sequence, item, _error in event_journal().records(events_path)
+            for _sequence, item, _error in event_journal(project_root).records(
+                events_path
+            )
             if str(item.get("event_type") or "").startswith("agent.")
         ]
         out = projection_path(project_root, core)
@@ -2099,7 +2103,9 @@ def _ingest_event(
     # Refuse a half-migrated project before admitting new raw work.
     from processforge_core.work.consistency import RunTaskInputReader
 
-    event_journal().count(RunTaskInputReader().event_runtime_paths(project_root)[0])
+    event_journal(project_root).count(
+        RunTaskInputReader().event_runtime_paths(project_root)[0]
+    )
     from processforge_core.configuration import ConfigurationProvider
 
     pinned = ConfigurationProvider.pinned(
@@ -2655,7 +2661,7 @@ def work_state_payload(
             if str(item.get("project_id") or "") == handle["project_id"]
         ],
         "events_path": core.rel(events_path, project_root),
-        "event_count": event_journal().count(events_path),
+        "event_count": event_journal(project_root).count(events_path),
         "supervisor": supervisor,
         "projections": {"stage_obligations": projection},
         "current_work_state": current_work_state,

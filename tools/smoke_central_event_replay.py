@@ -5,19 +5,21 @@ from __future__ import annotations
 
 import hashlib
 import json
-import tempfile
+import sqlite3
 import sys
+import tempfile
+from contextlib import closing
 from pathlib import Path
 
-from processforge_subprocess import diagnostic_text, run_command
+import pf_runtime.session_replay as session_replay_module
 from pf_runtime.codex_hooks import runtime_bootstrap
 from pf_runtime.raw_ingress_kernel import NativeAgentEvent, RawIngressKernel
-import pf_runtime.session_replay as session_replay_module
 from pf_runtime.session_replay import checkpoint_path, replay_session_raw_records
+from processforge_subprocess import diagnostic_text, run_command
 from smoke_hook_sqlite_support import events, remove_event
-from processforge_core.raw_hook_journal import RawHookJournal
-from processforge_core.sqlite_storage import transaction
 
+from processforge_core.composition import build_configuration_provider
+from processforge_core.sqlite_storage import transaction
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
@@ -31,7 +33,13 @@ def pf(*args: str, expect: int = 0) -> str:
 
 
 def raw_append(workplace: Path, project: Path, session: str, hook: str, payload: dict[str, object]) -> str:
-    receipt = RawIngressKernel(workplace, flow_root=project / ".pf").ingest(
+    receipt = RawIngressKernel(
+        workplace,
+        flow_root=project / ".pf",
+        configuration=build_configuration_provider(
+            project_root=project, workplace_root=workplace
+        ),
+    ).ingest(
         NativeAgentEvent(
             provider="codex",
             adapter="codex-hooks",
@@ -74,7 +82,10 @@ def read_checkpoint(workplace: Path, session: str, project: Path) -> dict[str, o
 
 def append_malformed_raw_line(workplace: Path, project: Path, session: str) -> str:
     kernel = RawIngressKernel(workplace, flow_root=project / ".pf")
-    with kernel.storage.connection(kernel.database, writable=True) as connection:
+    # Deliberate fixture corruption, outside ordinary admitted journal writes.
+    with closing(
+        sqlite3.connect(kernel.database.as_uri() + "?mode=rw", uri=True)
+    ) as connection:
         with transaction(connection):
             cursor = connection.execute(
                 "INSERT INTO receipts(raw_event_id,native_identity_key,raw_payload_hash,provider,adapter,session_id,project_ref,received_at) "

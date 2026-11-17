@@ -111,6 +111,12 @@ class ProcessEventRecorder:
         )
         return journal.latest(events_path)
 
+    def event_journal_for_project(
+        self, project_root: Path, workplace_root: Path | None = None
+    ) -> ProcessEventJournal:
+        """Use the same configured owner for Runtime reads and event publication."""
+        return self._event_journal(project_root, workplace_root)[2]
+
     def _event_journal(
         self, project_root: Path, workplace_root: Path | None = None
     ) -> tuple[Path, PFConfig, ProcessEventJournal]:
