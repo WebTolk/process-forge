@@ -942,14 +942,11 @@ class RuntimeProcess:
         latest: dict[str, Any] | None = None
         for project_root in roots:
             try:
-                from processforge_core.work.consistency import RunTaskInputReader
+                from processforge_core.agents.process_events import ProcessEventRecorder
 
-                events_path, _outbox = RunTaskInputReader().event_runtime_paths(
-                    project_root
+                item = ProcessEventRecorder().latest_process_event(
+                    project_root, self.workplace_root
                 )
-                if not events_path.is_file():
-                    continue
-                item = host.event_journal().latest(events_path)
                 if item is not None:
                     latest = {
                         "project_id": self.core.project_id(project_root),

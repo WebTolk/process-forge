@@ -99,6 +99,18 @@ class ProcessEventRecorder:
                 )
         return inserted
 
+    def latest_process_event(
+        self, project_root: Path, workplace_root: Path | None = None
+    ) -> dict[str, Any] | None:
+        """Read the latest event with the configured project storage identity."""
+        events_path, _outbox = self.inputs.event_runtime_paths(project_root)
+        if not events_path.is_file():
+            return None
+        events_path, _config, journal = self._event_journal(
+            project_root, workplace_root
+        )
+        return journal.latest(events_path)
+
     def _event_journal(
         self, project_root: Path, workplace_root: Path | None = None
     ) -> tuple[Path, PFConfig, ProcessEventJournal]:
