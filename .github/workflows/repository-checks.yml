@@ -87,6 +87,23 @@ jobs:
           environment = dict(os.environ, TMPDIR=str(scratch), TEMP=str(scratch), TMP=str(scratch))
           subprocess.run([sys.executable, "-B", "tools/smoke_expected_report_containment.py",
                           "--require-symlink"], env=environment, check=True)
+      - name: Check authenticated report through public ingress
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = Path(os.environ["PF_TEST_SCRATCH_ROOT"]) / "authenticated-report"
+          scratch.mkdir(parents=True, exist_ok=True)
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(str(root / name) for name in ("src", "tools"))
+          for name in ("TMPDIR", "TEMP", "TMP"):
+              environment[name] = str(scratch)
+          subprocess.run([sys.executable, "-B", "tools/smoke_authenticated_report_content.py"],
+                         env=environment, check=True)
       - name: Check contributor installation boundaries
         run: python -m unittest discover -s tests/contributor_setup -v
       - name: Check public release consumer gates on source and archive
