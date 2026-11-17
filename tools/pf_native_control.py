@@ -11,6 +11,7 @@ import ctypes
 import hashlib
 import io
 import json
+import logging
 import os
 import re
 import stat
@@ -2014,6 +2015,32 @@ def _sha256_update_plan_file(path: Path) -> str:
     return result.hexdigest()
 
 
+def _log_owned_execution_refusal(reason: str, **facts: Any) -> None:
+    """Emit only bounded native facts, never paths, argv, identities or messages."""
+    error = facts.pop("error", None)
+    failures: list[dict[str, Any]] = []
+    while error is not None and len(failures) < 4:
+        failure = {
+            "type": type(error).__name__,
+            "errno": getattr(error, "errno", None),
+            "winerror": getattr(error, "winerror", None),
+        }
+        trace = error.__traceback__
+        while trace is not None:
+            if trace.tb_frame.f_code.co_filename == __file__:
+                failure.update(
+                    native_function=trace.tb_frame.f_code.co_name,
+                    native_line=trace.tb_lineno,
+                )
+            trace = trace.tb_next
+        failures.append(failure)
+        error = error.__cause__ or error.__context__
+    logging.getLogger(__name__).warning(
+        "PF_NATIVE_CAPABILITY %s",
+        json.dumps({"reason": reason, **facts, "failures": failures}, sort_keys=True),
+    )
+
+
 def supports_owned_execution() -> bool:
     """Probe the actual retained whole-tree backend, independently of SQLite.
 
@@ -2025,6 +2052,12 @@ def supports_owned_execution() -> bool:
         or _ENTRY is None
         or _ENTRY.publication is None
     ):
+        _log_owned_execution_refusal(
+            "entry_or_platform",
+            supported_platform=os.name == "nt" or sys.platform.startswith("linux"),
+            entry_present=_ENTRY is not None,
+            publication_present=_ENTRY is not None and _ENTRY.publication is not None,
+        )
         return False
     try:
         if sys.platform.startswith("linux"):
@@ -2043,7 +2076,15 @@ def supports_owned_execution() -> bool:
         )
         job = getattr(process, "native_job")
         try:
-            return process.wait(timeout=5) == 0 and job.active() == 0
+            returncode = process.wait(timeout=5)
+            if returncode != 0:
+                _log_owned_execution_refusal("child_exit", returncode=returncode)
+                return False
+            active = job.active()
+            if active != 0:
+                _log_owned_execution_refusal("job_active_after_wait", active=active)
+                return False
+            return True
         finally:
             if process.poll() is None:
                 job.stop(deadline=time.monotonic() + 5)
@@ -2054,7 +2095,8 @@ def supports_owned_execution() -> bool:
         AttributeError,
         ValueError,
         subprocess.SubprocessError,
-    ):
+    ) as error:
+        _log_owned_execution_refusal("probe_exception", error=error)
         return False
 
 

@@ -165,6 +165,20 @@ def test_fresh_cli_to_runtime_public_status_and_bound_refusal(tmp_path: Path) ->
         assert refused["last_event"] == summary
         assert "storage_identity_conflict" in str(refused["project_errors"])
         assert (journal.read_bytes(), pin.read_bytes()) == before
+    except AssertionError as error:
+        # Runtime stderr is private. Retain only the native probe allowlist in
+        # pytest/JUnit, which the existing CI job uploads even after failure.
+        log = service.runtime_root(workplace) / "logs/runtime.stderr.log"
+        try:
+            for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+                marker = "PF_NATIVE_CAPABILITY "
+                if marker in line:
+                    error.add_note(line[line.index(marker) :])
+        except OSError as diagnostic_error:
+            error.add_note(
+                "native diagnostic unavailable: " + type(diagnostic_error).__name__
+            )
+        raise
     finally:
         if started:
             pf("runtime", "stop", "--workplace", str(workplace), "--timeout", "30")
