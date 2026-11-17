@@ -350,6 +350,165 @@ class StdioBridgeTest(unittest.TestCase):
         accepted, _ = self.client.exchange("initialize")
         self.assertEqual(accepted["result"]["protocolVersion"], "2024-11-05")
 
+    def test_malformed_frames_do_not_start_backend(self) -> None:
+        self.client.exchange("ping")
+        cases: list[tuple[Any, Any, int]] = [
+            ([], None, -32600),
+            (None, None, -32600),
+            (1, None, -32600),
+            ({"jsonrpc": "1.0", "id": "old", "method": "initialize"}, "old", -32600),
+            ({"jsonrpc": "2.0", "id": "method", "method": 3}, "method", -32600),
+            ({"jsonrpc": "2.0", "method": False}, None, -32600),
+        ]
+        for identifier in (True, [], {}):
+            cases.append(
+                (
+                    {"jsonrpc": "2.0", "id": identifier, "method": "initialize"},
+                    None,
+                    -32600,
+                )
+            )
+        for identifier in (None, "Текст \u2028 \ud800", 4, 1.5):
+            cases.append(
+                (
+                    {
+                        "jsonrpc": "2.0",
+                        "id": identifier,
+                        "method": "tools/call",
+                        "params": [],
+                    },
+                    identifier,
+                    -32602,
+                )
+            )
+        for params in (None, False, 2, "bad"):
+            cases.append(
+                (
+                    {
+                        "jsonrpc": "2.0",
+                        "id": "params",
+                        "method": "unknown",
+                        "params": params,
+                    },
+                    "params",
+                    -32602,
+                )
+            )
+        for params in ({}, {"name": []}, {"name": "pf.work.start", "arguments": None}):
+            cases.append(
+                (
+                    {
+                        "jsonrpc": "2.0",
+                        "id": "call",
+                        "method": "tools/call",
+                        "params": params,
+                    },
+                    "call",
+                    -32602,
+                )
+            )
+        lines = [json.dumps(value, ensure_ascii=True) for value, _, _ in cases]
+        expected = [(identifier, code) for _, identifier, code in cases]
+        for raw, code in (
+            ("{bad-json", -32700),
+            ("NaN", -32700),
+            ("""{"jsonrpc":"2.0","id":1e400,"method":"initialize"}""", -32600),
+        ):
+            lines.append(raw)
+            expected.append((None, code))
+        lines.extend(
+            json.dumps(value)
+            for value in (
+                {"jsonrpc": "2.0", "method": "initialize", "params": []},
+                {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": []}},
+                {
+                    "jsonrpc": "2.0",
+                    "method": "tools/call",
+                    "params": {"name": "pf.work.start", "arguments": []},
+                },
+            )
+        )
+        # Compare the public transport to the genuine current backend, including
+        # exact errors, null IDs and silence, before replacing the backend.
+        backend = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                str(self.source / "tools/pf_runtime/mcp_server.py"),
+                "--workplace",
+                str(self.workplace),
+                "--backend-request",
+            ],
+            input="\n".join(lines) + "\n",
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            timeout=30,
+            cwd=self.source,
+        )
+        self.assertEqual(backend.returncode, 0, backend.stderr)
+        baseline = [json.loads(line) for line in backend.stdout.split("\n") if line]
+        self.assertEqual(len(baseline), len(expected))
+        self.assertEqual(
+            [(value["id"], value["error"]["code"]) for value in baseline], expected
+        )
+        entry = self.source / "tools/pf_runtime/mcp_server.py"
+        original = entry.read_bytes()
+        marker = self.root / "malformed-backend-attempts.txt"
+        entry.write_text(
+            "from pathlib import Path\nimport sys\n"
+            f"""with Path({str(marker)!r}).open("a", encoding="utf-8") as stream:\n"""
+            "    stream.write(sys.stdin.readline())\n"
+            "raise SystemExit(31)\n",
+            encoding="utf-8",
+        )
+        sentinel = {"jsonrpc": "2.0", "id": "transport-sentinel", "method": "ping"}
+        assert self.client.process.stdin is not None
+        started = time.monotonic()
+        self.client.process.stdin.write(
+            "\n".join([*lines, json.dumps(sentinel)]) + "\n"
+        )
+        self.client.process.stdin.flush()
+        responses = []
+        for _ in range(len(expected) + 1):
+            raw = self.client.messages.get(timeout=20)
+            self.assertIsNotNone(raw)
+            responses.append(json.loads(cast(str, raw)))
+        self.client.transcript.append(
+            {
+                "kind": "malformed-frame-batch",
+                "responses": responses,
+                "elapsed_seconds": time.monotonic() - started,
+            }
+        )
+        self.assertEqual(responses[:-1], baseline)
+        self.assertEqual(
+            responses[-1],
+            {"jsonrpc": "2.0", "id": "transport-sentinel", "result": {}},
+        )
+        self.assertFalse(marker.exists(), "Malformed frames launched a backend")
+
+        # Fixed transport shapes cannot accept business arguments or silence a
+        # valid notification. Each must still launch exactly one fresh backend.
+        failed, _ = self.client.exchange(
+            "tools/call", {"name": "pf.session_chat", "arguments": {"limit": True}}
+        )
+        self.assertTrue(failed["result"]["isError"])
+        self.client.notify("notifications/initialized")
+        self.client.exchange("ping")
+        attempts = marker.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(attempts), 2)
+        self.assertEqual(
+            json.loads(attempts[0])["params"]["arguments"], {"limit": True}
+        )
+        self.assertEqual(json.loads(attempts[1])["method"], "notifications/initialized")
+        entry.write_bytes(original)
+        self.refresh_inventory()
+        rejected, _ = self.client.exchange(
+            "tools/call", {"name": "pf.session_chat", "arguments": {"limit": True}}
+        )
+        self.assertEqual(rejected["error"]["code"], -32602)
+
     def test_bad_backend_frames_and_timeout_preserve_connection(self) -> None:
         self.client.exchange("initialize")
         entry = self.source / "tools/pf_runtime/mcp_server.py"
