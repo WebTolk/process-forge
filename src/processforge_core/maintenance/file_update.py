@@ -12,6 +12,7 @@ import json
 import os
 import stat
 import uuid
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -116,6 +117,7 @@ def apply_file_update(
             "file update requires an external sealed file-only installer",
         )
     root = require_update_target(core_root)
+    offline_records: tuple[dict[str, Any], dict[str, Any], bool] | None = None
 
     def atomic(path: Path, content: bytes) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -136,6 +138,7 @@ def apply_file_update(
         atomic(path, (json.dumps(value, indent=2, sort_keys=True) + "\n").encode())
 
     def require_offline() -> None:
+        nonlocal offline_records
         if workplace_root is None:
             return
         from pf_runtime.service import (
@@ -151,6 +154,12 @@ def apply_file_update(
         # A stopped service record is not proof that its process is absent.
         state = read_json(service_path(workplace_root))
         lock = read_json(lock_path(workplace_root))
+        records = (state, lock, lock_path(workplace_root).exists())
+        # The existing Runtime singleton mutex is held throughout this update.
+        # An unchanged record whose process was observed absent stays historical:
+        # probing its PID again can mistake PID reuse for a restarted Runtime.
+        if records == offline_records:
+            return
         for pid in (state.get("pid"), lock.get("pid")):
             if isinstance(
                 pid, int
@@ -161,7 +170,7 @@ def apply_file_update(
         kind = classify_lifecycle(
             state,
             lock,
-            lock_exists=lock_path(workplace_root).exists(),
+            lock_exists=records[2],
             pid_running=False,
             state_pid_running=False,
             ready=False,
@@ -170,6 +179,7 @@ def apply_file_update(
             raise CoreUpdateError(
                 "plan_blocked", "stop the Workplace App Server before file update"
             )
+        offline_records = records
 
     # Read the archive once. Subsequent path replacement cannot change the bytes
     # whose manifest, seal, inventory and every member are verified below.
@@ -675,8 +685,14 @@ def apply_file_update(
             journal.unlink()
             return record
         except Exception as error:
+            message = (
+                error.message
+                if isinstance(error, CoreUpdateError)
+                else "file update operation failed"
+            )
             failure = dict(
                 code=getattr(error, "code", "file_operation_failed"),
+                message=message,
                 errno=getattr(error, "errno", None),
                 winerror=getattr(error, "winerror", None),
             )
@@ -686,22 +702,51 @@ def apply_file_update(
             progress.update(
                 status="failed",
                 failed_at=_update_now(),
-                error={**failure, "message": "file update operation failed"},
+                error=failure,
             )
             try:
                 write_json(journal, progress)
             except OSError as cleanup:
                 error.add_note(f"journal publication failed: {type(cleanup).__name__}")
-            raise _Failure(
-                str(failure["code"]), "file update operation failed"
-            ) from error
+            raise _Failure(str(failure["code"]), message) from error
 
     try:
         with registry_file_lock(lock, timeout_seconds=30, stale_after_seconds=0):
-            try:
-                return run()
-            except CoreUpdateError as error:
-                raise _Failure(error.code, error.message) from error
+            with ExitStack() as lifecycle:
+                try:
+                    if workplace_root is not None:
+                        from pf_runtime.service import lock_path
+
+                        workplace_root = _target_root(workplace_root)
+                        runtime_lock = lock_path(workplace_root)
+                        for path in (
+                            runtime_lock,
+                            runtime_lock.with_name(f".{runtime_lock.name}.lock"),
+                            runtime_lock.with_name(f".{runtime_lock.name}.lock.guard"),
+                        ):
+                            _update_target(
+                                workplace_root,
+                                path.relative_to(workplace_root).as_posix(),
+                            )
+                            try:
+                                info = path.lstat()
+                            except FileNotFoundError:
+                                continue
+                            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                                raise CoreUpdateError(
+                                    "plan_blocked",
+                                    "Runtime singleton lock is not regular",
+                                )
+                        lifecycle.enter_context(
+                            registry_file_lock(
+                                runtime_lock,
+                                timeout_seconds=30,
+                                stale_after_seconds=0,
+                            )
+                        )
+                    return run()
+                except CoreUpdateError as error:
+                    raise _Failure(error.code, error.message) from error
     except _Failure as error:
         raise CoreUpdateError(error.code, error.message) from error
     except SystemExit as error:

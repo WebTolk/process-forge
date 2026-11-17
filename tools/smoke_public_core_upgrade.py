@@ -619,9 +619,13 @@ def main() -> int:
             sha256((backup / applied["backed_up"][name]).read_bytes())
             == old_files[name]["sha256"]
         )
-    assert (
-        snapshot(project) == project_before and snapshot(workplace) == workplace_before
-    )
+    workplace_after = snapshot(workplace)
+    singleton_guard = "runtime/pf-runtime/.runtime.lock.lock.guard"
+    if singleton_guard not in workplace_before:
+        # Keep exact data parity while allowing only the new empty mutex inode.
+        assert workplace_after.pop(singleton_guard) == sha256(b"")
+    assert snapshot(project) == project_before
+    assert workplace_after == workplace_before
     report["user_data_byte_parity"] = True
     _, status = run("08-status", cli, "core-update", "status", "--core-root", core)
     assert (

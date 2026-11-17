@@ -896,6 +896,135 @@ emit(invoke(workplace_root=workplace))
     fixture.assert_no_apply(before)
 
 
+def test_confirmed_runtime_exit_is_not_reinterpreted_after_pid_reuse(
+    fixture: Harness,
+) -> None:
+    prepare_workplace(fixture)
+    result = fixture.run("""
+import pf_runtime.service as service
+from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+workplace=case/'workplace'
+state=service.service_path(workplace)
+state.parent.mkdir(parents=True)
+state.write_text(json.dumps({'pid':12345,'status':'stopped','instance_id':'old'}))
+observations=[]
+original=WorkerObservationInputService.process_pid_running
+def reused(self,pid):
+    observations.append(pid)
+    return len(observations)>1
+WorkerObservationInputService.process_pid_running=reused
+try:
+    result=invoke(workplace_root=workplace)
+finally:
+    WorkerObservationInputService.process_pid_running=original
+assert observations
+emit(result)
+""")
+    assert result["ok"] and result["result"]["status"] == "applied", result
+    for relative, raw in {**NEW, **PRIVATE}.items():
+        assert (fixture.target / relative).read_bytes() == raw
+
+
+def test_runtime_record_change_stops_update_and_retains_reason(
+    fixture: Harness,
+) -> None:
+    prepare_workplace(fixture)
+    result = fixture.run("""
+import pf_runtime.service as service
+workplace=case/'workplace'
+state=service.service_path(workplace)
+state.parent.mkdir(parents=True)
+state.write_text(json.dumps({'status':'stopped','instance_id':'old'}))
+original=file_update.os.replace
+def changed(source,destination):
+    original(source,destination)
+    if Path(destination)==target/'added.txt':
+        state.write_text(json.dumps({'pid':os.getpid(),'status':'running','instance_id':'new'}))
+file_update.os.replace=changed
+try:
+    result=invoke(workplace_root=workplace)
+finally:
+    file_update.os.replace=original
+emit(result)
+""")
+    assert result["code"] == "plan_blocked"
+    assert "stop the Workplace App Server" in result["message"]
+    progress = json.loads(
+        (fixture.target / "runtime/core-update/in-progress.json").read_bytes()
+    )
+    assert progress["error"]["message"] == result["message"]
+    assert progress["failure_history"][-1]["message"] == result["message"]
+    assert (fixture.target / "changed.txt").read_bytes() == OLD["changed.txt"]
+    assert (fixture.target / "processforge-core.manifest.json").read_bytes() == (
+        old_manifest(OLD)
+    )
+
+
+def test_runtime_singleton_mutex_is_held_during_update_and_released(
+    fixture: Harness,
+) -> None:
+    prepare_workplace(fixture)
+    result = fixture.run(
+        """
+import subprocess
+import pf_runtime.service as service
+workplace=case/'workplace'
+contender=case/'runtime-contender.py'
+contender.write_text(PREAMBLE_TEXT+'''
+from processforge_core.runtime.execution_admission import registry_file_lock
+import pf_runtime.service as service
+try:
+    with registry_file_lock(service.lock_path(case/'workplace'),timeout_seconds=0.2,stale_after_seconds=0):
+        acquired=True
+except SystemExit as error:
+    assert 'registry is locked by another writer' in str(error),error
+    acquired=False
+print(json.dumps({'acquired':acquired}))
+''')
+command=[sys.executable,'-I','-B',str(contender),str(manager),str(case),str(target),str(archive)]
+def contend():
+    result=subprocess.run(command,cwd=case,capture_output=True,text=True,timeout=15)
+    assert result.returncode==0,result.stdout+result.stderr
+    return json.loads(result.stdout)['acquired']
+planner=file_update._build_plan
+def planning(*args,**kwargs):
+    assert not contend(),'Runtime could acquire singleton during update'
+    return planner(*args,**kwargs)
+file_update._build_plan=planning
+result=invoke(workplace_root=workplace)
+assert result['ok'],result
+assert contend(),'Runtime singleton was not released after update'
+emit(result)
+""".replace("PREAMBLE_TEXT", repr(PREAMBLE))
+    )
+    assert result["ok"]
+
+
+@pytest.mark.parametrize(
+    "linked", ["directory", "runtime.lock", ".runtime.lock.lock.guard"]
+)
+def test_update_does_not_lock_a_foreign_runtime_path(
+    fixture: Harness, linked: str
+) -> None:
+    prepare_workplace(fixture)
+    workplace = fixture.root / "workplace"
+    foreign = fixture.root / "foreign-runtime"
+    put(foreign, "keep", b"foreign bytes")
+    runtime = workplace / "runtime/pf-runtime"
+    runtime.parent.mkdir(parents=True, exist_ok=True)
+    if linked == "directory":
+        directory_link(runtime, foreign)
+    else:
+        runtime.mkdir()
+        os.link(foreign / "keep", runtime / linked)
+    before = fixture.snapshot()
+    result = fixture.run("emit(invoke(workplace_root=case/'workplace'))")
+    assert result["code"] == "plan_blocked"
+    fixture.assert_no_apply(before)
+    assert list(foreign.iterdir()) == [foreign / "keep"]
+    assert (foreign / "keep").read_bytes() == b"foreign bytes"
+
+
 @pytest.mark.skipif(os.name != "nt", reason="Windows tasklist observation seam")
 @pytest.mark.parametrize(
     "observation", ["present", "nonzero", "launch_denied", "launch_missing", "timeout"]
