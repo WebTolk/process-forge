@@ -58,6 +58,13 @@ enrollment markers are neither required nor interpreted as update authority;
 they remain untouched. The cooperating file mutex prevents simultaneous update
 operations, not arbitrary independently running writers.
 
+With an explicit Workplace, the updater also holds its existing Runtime
+singleton mutex for the whole apply/resume operation. After confirming the old
+process is absent, it retains that observation while the lifecycle records stay
+unchanged; an unrelated process reusing the old PID cannot interrupt the update.
+Changed lifecycle records are checked again. The mutex is released on success
+and failure so the caller can restart PF or resume recovery.
+
 An installed manifest may own the old Core startup templates
 `.pf/AGENTS.md`, `.pf/hooks.yaml` and `.pf/process-forge.yaml`. The updater
 backs up their actual preimages or records absence before removing old-only
