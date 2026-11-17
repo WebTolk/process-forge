@@ -9,11 +9,155 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
 
+import pf_native_control as native
+import pytest
 from pf_runtime import service
 from smoke_runtime_scheduler_failure_isolation import pf
 
 from processforge_core.common.yaml_io import write_yaml_file
 from processforge_core.process_event_journal import ProcessEventJournal
+
+
+def _native_capability_notes(log: Path) -> list[str]:
+    """Export bounded typed facts from private stderr, never marked raw text."""
+    marker = "PF_NATIVE_CAPABILITY "
+    fields: dict[str, dict[str, type]] = {
+        "entry_or_platform": {
+            "supported_platform": bool,
+            "entry_present": bool,
+            "publication_present": bool,
+        },
+        "child_exit": {"returncode": int},
+        "job_active_after_wait": {"active": int},
+        "probe_exception": {},
+    }
+    failure_types = {
+        "OSError",
+        "FileNotFoundError",
+        "PermissionError",
+        "NativeControlError",
+        "TimeoutExpired",
+        "ValueError",
+        "AttributeError",
+        "SubprocessError",
+    }
+    try:
+        with log.open("rb") as stream:
+            stream.seek(0, 2)
+            stream.seek(max(0, stream.tell() - 65536))
+            raw = stream.read(65536)
+    except (OSError, ValueError):
+        return []
+    notes = []
+    for line in raw.decode("utf-8", errors="replace").splitlines():
+        if marker not in line or len(line) > 4096:
+            continue
+        try:
+            value = json.loads(line.split(marker, 1)[1])
+        except (ValueError, RecursionError):
+            continue
+        if not isinstance(value, dict):
+            continue
+        reason = value.get("reason")
+        if not isinstance(reason, str) or reason not in fields:
+            continue
+        if any(
+            type(value.get(key)) is not kind for key, kind in fields[reason].items()
+        ):
+            continue
+        clean: dict[str, object] = {
+            "reason": reason,
+            **{key: value[key] for key in fields[reason]},
+        }
+        failures = value.get("failures")
+        if not isinstance(failures, list) or len(failures) > 4:
+            continue
+        safe_failures = []
+        for failure in failures:
+            if not isinstance(failure, dict):
+                continue
+            name = failure.get("type")
+            safe: dict[str, object] = {
+                "type": name
+                if isinstance(name, str) and name in failure_types
+                else "other"
+            }
+            for key in ("errno", "winerror", "native_line"):
+                number = failure.get(key)
+                if type(number) is int and -(2**31) <= number < 2**32:
+                    safe[key] = number
+            safe_failures.append(safe)
+        clean["failures"] = safe_failures
+        notes.append(marker + json.dumps(clean, sort_keys=True))
+        if len(notes) == 8:
+            break
+    return notes
+
+
+def test_private_stderr_export_filters_forged_records_and_bounds_notes(
+    tmp_path: Path,
+) -> None:
+    log = tmp_path / "stderr"
+    marker = "PF_NATIVE_CAPABILITY "
+    valid = {
+        "reason": "job_active_after_wait",
+        "active": 1,
+        "private": "private-path-and-token",
+        "failures": [
+            {
+                "type": "PermissionError",
+                "errno": 13,
+                "native_function": "private-path-and-token",
+                "message": "private-path-and-token",
+            }
+        ],
+    }
+    invalid = [
+        "private-path-and-token",
+        json.dumps({"reason": "private-path-and-token", "failures": []}),
+        json.dumps({"reason": "job_active_after_wait", "active": True, "failures": []}),
+        json.dumps({"reason": ["private-path-and-token"], "failures": []}),
+        "[" * 1000,
+    ]
+    log.write_text("\n".join(marker + value for value in invalid), encoding="utf-8")
+    assert _native_capability_notes(log) == []
+    log.write_text((marker + json.dumps(valid) + "\n") * 1001, encoding="utf-8")
+    notes = _native_capability_notes(log)
+    assert len(notes) == 8
+    assert all("private-path-and-token" not in note for note in notes)
+    assert json.loads(notes[0].removeprefix(marker)) == {
+        "reason": "job_active_after_wait",
+        "active": 1,
+        "failures": [{"type": "PermissionError", "errno": 13}],
+    }
+    log.write_bytes(b"x" * 100000 + b"\n" + (marker + json.dumps(valid)).encode())
+    assert len(_native_capability_notes(log)) == 1
+    assert _native_capability_notes(tmp_path / "missing") == []
+
+
+@pytest.mark.parametrize("failure", [ValueError, OSError, RuntimeError])
+def test_diagnostic_output_failure_preserves_capability_refusal(
+    monkeypatch: pytest.MonkeyPatch, failure: type[Exception]
+) -> None:
+    def refuse_output(*args: object, **kwargs: object) -> None:
+        raise failure("private diagnostic output failure")
+
+    monkeypatch.setattr(native.logging.Logger, "warning", refuse_output)
+    # An ordinary import has no executable entry; no authority is fabricated.
+    assert native._ENTRY is None
+    assert native.supports_owned_execution() is False
+
+
+@pytest.mark.parametrize("signal", [KeyboardInterrupt, SystemExit])
+def test_diagnostic_output_does_not_swallow_process_signals(
+    monkeypatch: pytest.MonkeyPatch, signal: type[BaseException]
+) -> None:
+    def interrupt_output(*args: object, **kwargs: object) -> None:
+        raise signal()
+
+    monkeypatch.setattr(native.logging.Logger, "warning", interrupt_output)
+    with pytest.raises(signal):
+        native._log_owned_execution_refusal("probe_exception")
 
 
 def test_last_event_isolates_corrupt_project_and_keeps_public_allowlist(
@@ -169,15 +313,8 @@ def test_fresh_cli_to_runtime_public_status_and_bound_refusal(tmp_path: Path) ->
         # Runtime stderr is private. Retain only the native probe allowlist in
         # pytest/JUnit, which the existing CI job uploads even after failure.
         log = service.runtime_root(workplace) / "logs/runtime.stderr.log"
-        try:
-            for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
-                marker = "PF_NATIVE_CAPABILITY "
-                if marker in line:
-                    error.add_note(line[line.index(marker) :])
-        except OSError as diagnostic_error:
-            error.add_note(
-                "native diagnostic unavailable: " + type(diagnostic_error).__name__
-            )
+        for note in _native_capability_notes(log):
+            error.add_note(note)
         raise
     finally:
         if started:

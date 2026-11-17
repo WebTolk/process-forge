@@ -2016,6 +2016,14 @@ def _sha256_update_plan_file(path: Path) -> str:
 
 
 def _log_owned_execution_refusal(reason: str, **facts: Any) -> None:
+    # Diagnostics must not turn a fail-closed capability result into an error.
+    try:
+        _write_owned_execution_refusal(reason, **facts)
+    except Exception:
+        return
+
+
+def _write_owned_execution_refusal(reason: str, **facts: Any) -> None:
     """Emit only bounded native facts, never paths, argv, identities or messages."""
     error = facts.pop("error", None)
     failures: list[dict[str, Any]] = []
