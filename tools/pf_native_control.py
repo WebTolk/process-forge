@@ -2043,7 +2043,9 @@ def _write_owned_execution_refusal(reason: str, **facts: Any) -> None:
             trace = trace.tb_next
         failures.append(failure)
         error = error.__cause__ or error.__context__
-    logging.getLogger(__name__).warning(
+    logger = logging.getLogger(__name__)
+    emit = logger.debug if reason == "job_retired_after_wait" else logger.warning
+    emit(
         "PF_NATIVE_CAPABILITY %s",
         json.dumps({"reason": reason, **facts, "failures": failures}, sort_keys=True),
     )

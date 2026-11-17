@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import sqlite3
 from contextlib import closing
 from pathlib import Path
@@ -248,8 +249,26 @@ def test_last_event_isolates_corrupt_project_and_keeps_public_allowlist(
     } == before
 
 
-def test_fresh_cli_to_runtime_public_status_and_bound_refusal(tmp_path: Path) -> None:
+def test_fresh_cli_to_runtime_public_status_and_bound_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Use real onboarding and IPC; no native, migration or identity guard patches."""
+    # Configure only the native logger in these fixture subprocesses, including
+    # the real Runtime child. Normal CLI invocations retain silent successes.
+    diagnostic_entry = tmp_path / "diagnostic-entry"
+    diagnostic_entry.mkdir()
+    (diagnostic_entry / "sitecustomize.py").write_text(
+        "import logging\n"
+        'logger = logging.getLogger("pf_native_control")\n'
+        "logger.setLevel(logging.DEBUG)\n"
+        "logger.addHandler(logging.StreamHandler())\n"
+        "logger.propagate = False\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(
+        "PYTHONPATH",
+        os.pathsep.join([str(diagnostic_entry), os.environ.get("PYTHONPATH", "")]),
+    )
     workplace = tmp_path / "workplace"
     pf("workplace-init", "--workplace", str(workplace), "--apply")
     projects = [tmp_path / name for name in ("bad-project", "good-project")]
@@ -330,6 +349,12 @@ def test_fresh_cli_to_runtime_public_status_and_bound_refusal(tmp_path: Path) ->
             pf("runtime", "status", "--workplace", str(workplace), "--json")
         )
         assert status["health"] == "ready", status
+        log = service.runtime_root(workplace) / "logs/runtime.stderr.log"
+        assert any(
+            json.loads(note.split("PF_NATIVE_CAPABILITY ", 1)[1])["reason"]
+            == "job_retired_after_wait"
+            for note in _native_capability_notes(log)
+        ), "fixture logger must retain native success observations"
         summary = status["last_event"]
         assert summary["event_id"] == admitted[1]["event_id"]
         assert summary["project_id"] == admitted[1]["project_id"]

@@ -7,6 +7,7 @@ Only this module substitutes entry, process, backend and monotonic clock.
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import sys
 from collections.abc import Callable
@@ -104,7 +105,8 @@ def test_controlled_delayed_retirement_requires_actual_empty_observation(
     values = iter([1, 1, 0])
     probe.root_delay = 4.5
     probe.query = lambda: next(values)
-    assert native.supports_owned_execution()
+    with caplog.at_level(logging.DEBUG, logger=native.__name__):
+        assert native.supports_owned_execution()
     assert len(probe.queries) == 3
     assert probe.now == pytest.approx(104.52)
     assert probe.closed == 1 and probe.stops == 0
@@ -113,6 +115,43 @@ def test_controlled_delayed_retirement_requires_actual_empty_observation(
     assert facts["first_active"] == 1 and facts["active"] == 0
     assert facts["observations"] == 3
     assert facts["root_wait_ms"] == 4500 and facts["elapsed_ms"] == 4520
+
+
+@pytest.mark.parametrize("level", [logging.WARNING, logging.INFO])
+def test_controlled_success_is_silent_under_public_logging(
+    probe: Probe, caplog: pytest.LogCaptureFixture, level: int
+) -> None:
+    values = iter([1, 0])
+    probe.query = lambda: next(values)
+    with caplog.at_level(level, logger=native.__name__):
+        assert native.supports_owned_execution()
+    assert len(probe.queries) == 2 and probe.closed == 1
+    assert caplog.records == []
+
+
+@pytest.mark.parametrize("failure", [ValueError, OSError, RuntimeError])
+def test_controlled_success_survives_diagnostic_output_failure(
+    probe: Probe, monkeypatch: pytest.MonkeyPatch, failure: type[Exception]
+) -> None:
+    def refuse_output(*args: object, **kwargs: object) -> None:
+        raise failure("private diagnostic output failure")
+
+    monkeypatch.setattr(native.logging.Logger, "debug", refuse_output)
+    assert native.supports_owned_execution()
+    assert len(probe.queries) == 1 and probe.closed == 1
+
+
+@pytest.mark.parametrize("signal", [KeyboardInterrupt, SystemExit])
+def test_controlled_success_diagnostic_preserves_process_signals(
+    probe: Probe, monkeypatch: pytest.MonkeyPatch, signal: type[BaseException]
+) -> None:
+    def interrupt_output(*args: object, **kwargs: object) -> None:
+        raise signal()
+
+    monkeypatch.setattr(native.logging.Logger, "debug", interrupt_output)
+    with pytest.raises(signal):
+        native.supports_owned_execution()
+    assert probe.closed == 1
 
 
 def test_controlled_persistent_activity_refuses_at_existing_deadline(
