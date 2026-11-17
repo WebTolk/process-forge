@@ -18,6 +18,8 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
+# Direct Runtime imports need the local Core before the CLI bootstrap runs.
+sys.path.insert(1, str(ROOT / "src"))
 
 from pf_runtime import service  # noqa: E402
 import processforge as core  # noqa: E402
