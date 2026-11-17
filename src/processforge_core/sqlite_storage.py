@@ -229,7 +229,11 @@ def _database(
 
 @contextmanager
 def adapter_identity_access(
-    path: Path, storage_host: StorageMigrationHost | None, *, writable: bool = False
+    path: Path,
+    storage_host: StorageMigrationHost | None,
+    *,
+    writable: bool = False,
+    migrating: bool = False,
 ) -> Iterator[tuple[StoreTarget, str] | None]:
     """Use the actual host-selected target and W4 gate; never discover an owner."""
     if storage_host is None:
@@ -269,6 +273,21 @@ def adapter_identity_access(
     if len(targets) != 1 or targets[0].kind == "main":
         raise MaintenanceError("storage_target_invalid")
     target = targets[0]
+    if migrating:
+        # Explicit import may read its own importing barrier, but never ignores
+        # a pending identity binding or a different owner/store.
+        with storage_host.service._admit(selected_context, None):
+            if storage_host.service.safety(selected_context).state != "proven":
+                raise MaintenanceError("storage_offline_confirmation_required")
+            with storage_identity_access(
+                selected_context,
+                target,
+                registry_lock=storage_host.service.registry_lock,
+                driver=storage_host.service.driver,
+                allow_importing=True,
+            ) as store_id:
+                yield None if store_id is None else (target, store_id)
+        return
     if writable:
         from .maintenance.fresh_project import ordinary_identity_access, owns_target
 
@@ -356,7 +375,7 @@ def database(
 ) -> Iterator[sqlite3.Connection]:
     """Hold identity admission until the legacy connection is closed."""
     with adapter_identity_access(
-        Path(path), storage_host, writable=writable
+        Path(path), storage_host, writable=writable, migrating=migrating
     ) as identity:
         with _database(
             path,

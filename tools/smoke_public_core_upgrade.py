@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Qualify public 1.2.0 Core files and record separate project migration limits."""
+"""Qualify public Core replacement, explicit migration and retained Work/worker."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import platform as host_info
+import sqlite3
 import subprocess
 import sys
 import time
@@ -373,7 +374,7 @@ def main() -> int:
     root.mkdir(parents=True)
     out.mkdir(parents=True)
     report: dict[str, Any] = {
-        "scope": "Core file replacement; project migration/worker acceptance is separate",
+        "scope": "Public Core update, explicit journal migration and retained Work/worker",
         "os": host_info.platform(),
         "kernel": host_info.release(),
         "python": sys.version,
@@ -520,7 +521,12 @@ def main() -> int:
             },
             "allowed_actions": ["read", "write_artifact"],
             "allowed_files": [".pf/artifacts/retained/**"],
+            "expected_report": {
+                "artifact": ".pf/artifacts/retained/report.md",
+                "format": "markdown",
+            },
             "allowed_read_files": [
+                ".pf/**",
                 "README.md",
                 ".pf/process-forge.yaml",
                 ".pf/assignments/**",
@@ -577,7 +583,14 @@ def main() -> int:
     assert snapshot(core) == before
     _, refusal = run("06-no-confirm", cli, "core-update", "apply", *update, expected=1)
     assert refusal["error"]["code"] == "confirm_required" and snapshot(core) == before
-    _, applied = run("07-apply", cli, "core-update", "apply", *update, "--confirm")
+    _, applied = run(
+        "07-apply",
+        cli,
+        "core-update",
+        "apply",
+        *update,
+        "--confirm",
+    )
     assert applied["status"] == "applied" and applied["maintenance_mode"] == "file_only"
     for name, row in new_files.items():
         assert sha256((core / name).read_bytes()) == row["sha256"], name
@@ -625,36 +638,99 @@ def main() -> int:
     assert retained["context"]["checksum"] == work["context"]["checksum"]
     report["core_file_checks"] = "passed"
     run("11-workplace-doctor", old_cli, "doctor-workplace", "--root", workplace)
-    migration_code, migration = run(
-        "12-storage-migration",
-        core / "tools/migrate-storage.py",
+    worker = ("--project-root", project, "--task", work["assignment_id"])
+    blocked_code, _ = run(
+        "12-legacy-write-blocked",
+        old_cli,
+        "worker-run",
+        "prepare",
+        *worker,
+        "--driver",
+        "test-echo-worker",
+        expected=1,
+    )
+    assert blocked_code == 1
+    assert "storage_migration_required" in (
+        out / "12-legacy-write-blocked.stdout.txt"
+    ).read_text(encoding="utf-8")
+    legacy_sources = {
+        path: path.read_bytes()
+        for base in (project, workplace)
+        for path in base.rglob("*.ndjson")
+    }
+    _, journals = run(
+        "13-journal-import",
+        old_cli,
+        "journal-maintenance",
+        "import",
+        "--project-root",
+        project,
+        "--workplace",
+        workplace,
+        "--apply",
+    )
+    assert journals["status"] == "ready", journals
+    migration_args = (
         "--project-root",
         project,
         "--workplace-root",
         workplace,
-        "--apply",
+        "--offline-confirmed",
         "--json",
-        expected=None,
     )
-    prepare_code, _ = run(
-        "13-worker-prepare",
+    _, migration = run(
+        "14-storage-migration",
+        core / "tools/migrate-storage.py",
+        *migration_args,
+        "--apply",
+    )
+    assert migration["status"] == "ready", migration
+    identity_path = project / ".pf/data/execution-storage.json"
+    identity_bytes = identity_path.read_bytes()
+    _, repeated = run(
+        "15-storage-resume",
+        core / "tools/migrate-storage.py",
+        *migration_args,
+        "--resume",
+    )
+    assert (
+        repeated["status"] == "ready" and identity_path.read_bytes() == identity_bytes
+    )
+    assert all(path.read_bytes() == raw for path, raw in legacy_sources.items())
+    run(
+        "16-worker-prepare",
         old_cli,
         "worker-run",
         "prepare",
-        "--project-root",
-        project,
-        "--task",
-        work["assignment_id"],
+        *worker,
         "--driver",
-        "codex-exec",
-        expected=None,
+        "test-echo-worker",
     )
-    report["project_migration"] = {"exit_code": migration_code, "result": migration}
-    report["worker_prepare_exit_code"] = prepare_code
-    report["full_t06_qualified"] = False
-    report["limit"] = (
-        "No native adoption, SQL cutover or worker start/status/collect is inferred."
+    run(
+        "17-worker-start",
+        old_cli,
+        "worker-run",
+        "start",
+        *worker,
+        "--driver",
+        "test-echo-worker",
+        "--wait",
     )
+    run("18-worker-collect", old_cli, "worker-run", "collect", *worker)
+    assert (project / ".pf/artifacts/retained/report.md").is_file()
+    binding = json.loads(identity_bytes)
+    database = project / ".pf" / binding["target_relative_path"]
+    with sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True) as sql:
+        assert sql.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+        assert sql.execute("SELECT COUNT(*) FROM execution_current").fetchone()[0] == 0
+        attempt = sql.execute(
+            "SELECT phase,outcome,collection FROM execution_attempts WHERE task_id=?",
+            (work["assignment_id"],),
+        ).fetchone()
+        assert attempt == ("absent", "completed", "collected"), attempt
+    report["project_migration"] = {"status": "ready", "source_bytes_preserved": True}
+    report["retained_worker"] = {"status": "completed", "collection": "collected"}
+    report["full_t06_qualified"] = True
     report["seconds"] = round(time.monotonic() - started, 3)
     save("results.json", report)
     print(

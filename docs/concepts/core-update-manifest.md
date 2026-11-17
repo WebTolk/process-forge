@@ -39,28 +39,36 @@ python bin/pf.py core-update repair --core-root <core>
 
 `plan` is read-only. `apply` requires `--confirm`.
 
-### Existing file-only installations
+### Stop, update, validate, restart
 
-For an existing installation without native enrollment, extract the verified
-development/release ZIP outside the installed Core and run that archive's
-`bin/pf.py core-update plan|apply` with the installed target and original ZIP.
-Use the explicit Workplace root when the installation serves one. Stop its
-known App Server first; explicit Windows `server stop --force` from the external
-archive can recover an authenticated exact owner that rejects shutdown.
+In Garage, the operator stops PF and other writers before replacement. In Forge,
+the updater owns the single PF executor and its stop/update/start lifecycle.
+The file update operation requires an offline target; it does not discover or
+exclude every historical process. A known live Workplace App Server blocks apply.
 
-The file updater retains backups, progress/failure journals, private data and
-manifest-last verification. It refuses overlapping installer/target roots,
-unknown native-enrollment state and Workplace migration operations. Any native
-markers, including partial enrollment, keep the target on its qualified native
-update route. The file updater creates no native authority and does not claim
-that its cooperating-writer mutex fences every independently running host.
+Extract the verified release ZIP outside the installed Core and run that
+archive's `bin/pf.py core-update plan|apply` with the installed target and original
+ZIP. Pass the Workplace root explicitly when the installation serves one.
+Use the existing `server stop --workplace <workplace>` operation for that server
+and verify successful shutdown before replacement.
 
-Public 1.2.0 shipped three Core-owned startup templates under its own .pf/:
-AGENTS.md, hooks.yaml and process-forge.yaml. The external file updater retains
-their actual preimages or absence before removing old-only paths. This historical
-allowance applies only to the installed 1.2.0 manifest; new archives still exclude
-private .pf data. Core replacement does not establish project migration authority.
-See the [public upgrade qualification boundary](../audits/issue-19-public-upgrade.md).
+Backups, progress/failure journals, private data and manifest-last verification
+are preserved. Installer and target roots must not overlap. Historical native
+enrollment markers are neither required nor interpreted as update authority;
+they remain untouched. The cooperating file mutex prevents simultaneous update
+operations, not arbitrary independently running writers.
+
+An installed manifest may own the old Core startup templates
+`.pf/AGENTS.md`, `.pf/hooks.yaml` and `.pf/process-forge.yaml`. The updater
+backs up their actual preimages or records absence before removing old-only
+paths. This compatibility rule depends on manifest ownership, not a product
+version. New archives cannot claim private `.pf` data.
+
+Core replacement does not migrate project journals. Existing projects with
+legacy journals remain blocked until their explicit
+[journal migration](sqlite-journal-maintenance.md); fresh projects start on SQL.
+Run `doctor-workplace --root <workplace>` after replacement and before restarting
+the intended PF. See the [public upgrade evidence](../audits/issue-19-public-upgrade.md).
 
 ## Compatible Workplace Migration
 
@@ -88,8 +96,8 @@ Before a migration write, the updater copies the affected Workplace files into
 the Core update backup directory and records the operation in the update
 journal. When the post-Core Workplace migration cannot finish, the Core remains
 at its new manifest and `core-update repair` reports a manual-repair state with
-the backup location. A successful apply automatically runs the short
-`doctor-workplace` check and stores its result in `last-apply.json`.
+the backup location. Run `doctor-workplace --root <workplace>` explicitly after
+successful apply; the updater does not start another Core to run maintenance.
 
 The updater computes:
 
@@ -162,7 +170,7 @@ python installer/bin/pf.py core-update repair --core-root CORE --resume --archiv
 
 Repeat the original explicit Workplace selection; omit it only when the original
 apply omitted it. Without confirmation, no recovery writes occur. Recovery uses
-the same cooperating file mutex, unmanaged target, nonoverlap and offline guards.
+the same cooperating file mutex, physical-target, nonoverlap and offline guards.
 It checks target/Workplace identity, all pinned control and backup bytes, and
 current touched files against proven initial or exact intended bytes. An
 operation interrupted after replacement but before journal publication can be
@@ -175,8 +183,8 @@ all target-owned bytes, and publishes the manifest last. Another failure retains
 the incomplete journal and evidence. Unknown files remain preserved.
 
 Old journals without versioned proof, incomplete/corrupt backups, drift, wrong
-archive or bindings, native/partial enrollment, and any after-manifest state
+archive or bindings, and any after-manifest state
 refuse this route. Ordinary apply still refuses incomplete updates. This command
-does not roll back files, adopt native installations, change SQL bindings or
+does not roll back files, change SQL bindings or
 downgrade Core after SQL commits; those states require their own supported
 maintenance procedure.

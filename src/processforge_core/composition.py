@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from .evidence.readiness import StageReadinessPolicy
     from .evidence.validation import EvidenceValidationService
     from .maintenance.execution_migration import ExecutionMigrationService
+    from .maintenance.journals import JournalMaintenanceService
     from .maintenance.storage_migration import StorageMigrationHost
     from .prepared.knowledge_resources import (
         PreparedKnowledgeMaterialCapture,
@@ -157,80 +158,6 @@ def build_configuration_provider(
     )
 
 
-def _update_selection(
-    expected: dict[str, Any],
-    device_config_path: Path | None,
-    *,
-    workplace_root: Path | None = None,
-) -> AbstractContextManager[Any]:
-    """Keep frozen domain errors intact while releasing the selection gates."""
-
-    class Selected(AbstractContextManager[Any]):
-        def __enter__(self) -> Any:
-            self.scope = _update_selection_scope(
-                expected, device_config_path, workplace_root=workplace_root
-            )
-            return self.scope.__enter__()
-
-        def __exit__(self, *_exception: Any) -> None:
-            self.scope.__exit__(None, None, None)
-
-    return Selected()
-
-
-@contextmanager
-def _update_selection_scope(
-    expected: dict[str, Any],
-    device_config_path: Path | None,
-    *,
-    workplace_root: Path | None,
-) -> Any:
-    """Re-read external selectors under the existing gates, without SQL."""
-    from contextlib import ExitStack
-
-    from .configuration import ConfigurationProvider, DeviceConfigurationSource
-    from .maintenance.contracts import MaintenanceError
-    from .runtime.execution_admission import ExecutionAdmission
-    from .work.context_documents import ContextContractInputs
-
-    project = Path(expected["project"]) if expected["project"] else None
-    workplace = Path(expected["workplace"]) if expected["workplace"] else None
-    if workplace_root is not None and workplace_root.resolve() != workplace:
-        raise MaintenanceError("storage_enrollment_conflict")
-    device = (device_config_path or DeviceConfigurationSource.default_path()).resolve()
-    admission = ExecutionAdmission()
-    with ExitStack() as gates:
-        gates.enter_context(admission.workplace(workplace))
-        if project is not None:
-            gates.enter_context(admission.project(project))
-        # Never reuse an operation's pinned provider: this is an independent
-        # external-fact check, including inside the child's configuration scope.
-        provider = ConfigurationProvider(
-            device_path=device,
-            workplace_path=workplace / "configuration.yaml" if workplace else None,
-            project_path=ContextContractInputs().locate_flow_root(project)
-            / "configuration.yaml"
-            if project
-            else None,
-        )
-        snapshot = provider.snapshot(refresh=True)
-        if snapshot.errors:
-            raise MaintenanceError("storage_configuration_invalid")
-        host = build_storage_migration_host(
-            project_root=project,
-            workplace_root=workplace,
-            device_config_path=device,
-            configuration=ConfigurationProvider.pinned(snapshot.config),
-        )
-        resolver = host.service._native_selection
-        if resolver is None:
-            raise MaintenanceError("storage_safety_unavailable")
-        selected = resolver()
-        if selected.document() != expected:
-            raise MaintenanceError("storage_enrollment_conflict")
-        yield selected, snapshot.config.to_dict()
-
-
 def build_storage_migration_host(
     *,
     project_root: Path | None,
@@ -238,15 +165,16 @@ def build_storage_migration_host(
     device_config_path: Path | None,
     configuration: ConfigurationProvider,
     evidence_dir: Path | None = None,
+    offline_confirmed: bool = False,
     _allow_fresh_repair: bool = True,
 ) -> StorageMigrationHost:
     """Bind a cold host; resolve metadata and UUID only on explicit operations.
 
     The supplied provider is the operation's full pinned value. No source is
     discovered, read, connected, locked or initialized during construction.
-    Native publication/owner proof remains independent from SQLite selection.
+    Explicit offline maintenance uses operator/updater responsibility and the
+    existing admission locks. Ordinary calls acquire no maintenance authority.
     """
-    import sys
     from typing import Literal
     from uuid import uuid4
 
@@ -269,7 +197,7 @@ def build_storage_migration_host(
         StorageMigrationContext,
         StoreTarget,
     )
-    from .maintenance.execution_migration import ExecutionMigrationService, _read
+    from .maintenance.execution_migration import ExecutionMigrationService, _hash, _read
     from .maintenance.storage_migration import (
         MIGRATION_ID,
         StorageMigrationHost,
@@ -400,16 +328,55 @@ def build_storage_migration_host(
             context.targets
         ).issubset(actual.targets):
             raise MaintenanceError("storage_enrollment_conflict")
-        # Native leaf was captured before Core. Importing/reloading tools here
-        # would invent authority from current-file bytes, so use only that entry.
-        module = sys.modules.get("pf_native_control")
-        current = getattr(module, "current_entry", None)
-        entry = current() if callable(current) else None
-        verifier = getattr(entry, "storage_safety", None)
-        if not callable(verifier):
-            return MigrationSafety("unknown", "", ("native_ownership_unqualified",))
-        state, generation, evidence = verifier(context)
-        return MigrationSafety(state, generation, evidence)
+        if offline_confirmed:
+            if not admission.held(context.project_root, context.workplace_root):
+                return MigrationSafety(
+                    "unknown", "", ("maintenance_admission_required",)
+                )
+            if context.workplace_root is not None:
+                from .runtime.observation_inputs import WorkerObservationInputService
+                from .runtime_service_state import RuntimeServiceStateStore
+
+                # Refuse a known running Runtime. The operator/updater is
+                # responsible for stopping other writers; no history is inferred.
+                runtime = context.workplace_root / "runtime/pf-runtime"
+                for name in ("service.json", "runtime.lock"):
+                    path = _safe(runtime / name)
+                    try:
+                        state = RuntimeServiceStateStore._control(path)
+                    except FileNotFoundError:
+                        continue
+                    except (OSError, ValueError) as error:
+                        raise MaintenanceError(
+                            "storage_runtime_state_invalid"
+                        ) from error
+                    pid = state.get("pid")
+                    if pid is not None:
+                        if type(pid) is not int or pid <= 0:
+                            raise MaintenanceError("storage_runtime_state_invalid")
+                        if WorkerObservationInputService().process_pid_running(pid):
+                            return MigrationSafety("active", "", ("runtime_must_stop",))
+            generation = _hash(
+                {
+                    "maintenance": "operator_offline",
+                    "project": str(context.project_root or ""),
+                    "workplace": str(context.workplace_root or ""),
+                    "device": str(context.device_config_path),
+                    "configuration": configuration.current().to_dict(),
+                    "targets": [
+                        (t.kind, str(t.target), t.scope, t.owner_id)
+                        for t in context.targets
+                    ],
+                }
+            )
+            return MigrationSafety(
+                "proven",
+                generation,
+                ("operator_offline_confirmed", "execution_admission_held"),
+            )
+        return MigrationSafety(
+            "unknown", "", ("operator_offline_confirmation_required",)
+        )
 
     admission = ExecutionAdmission(registry_file_lock)
 
@@ -427,10 +394,6 @@ def build_storage_migration_host(
         initializer = _fresh_initialization(flow)
         if initializer is not None and initializer["state"] == "pending":
             if not _allow_fresh_repair:
-                raise MaintenanceError("execution_storage_not_ready")
-            module = sys.modules.get("pf_native_control")
-            capable = getattr(module, "supports_owned_execution", None)
-            if not callable(capable) or not capable():
                 raise MaintenanceError("execution_storage_not_ready")
             with admission.maintenance(context.project_root, context.workplace_root):
                 proof = safety(context)
@@ -549,84 +512,6 @@ def build_storage_migration_host(
             profile_id=profile_id,
         )
 
-    def native_selection() -> Any:
-        import hashlib
-        import json
-
-        from .runtime_service_state import SERVICE_STATE_MAX_BYTES
-
-        actual = resolve_context()
-        module = sys.modules.get("pf_native_control")
-        selection_type = getattr(module, "ManagedSelection", None)
-        if selection_type is None:
-            raise MaintenanceError("storage_safety_unavailable")
-        instance = ""
-        if actual.workplace_root is not None:
-            state_path = _safe(
-                actual.workplace_root / "runtime/pf-runtime/service.json"
-            )
-            if state_path.exists():
-                with state_path.open("rb") as stream:
-                    raw = stream.read(SERVICE_STATE_MAX_BYTES + 1)
-                if len(raw) > SERVICE_STATE_MAX_BYTES:
-                    raise MaintenanceError("storage_enrollment_conflict")
-                state = json.loads(raw)
-                instance = state.get("instance_id", "")
-                if not isinstance(instance, str):
-                    raise MaintenanceError("storage_enrollment_conflict")
-        route = {
-            "device": str(actual.device_config_path),
-            "configuration": configuration.current().to_dict(),
-            "unqualified": [
-                (kind, str(path)) for kind, path in actual.unqualified_targets
-            ],
-        }
-        revision = hashlib.sha256(
-            json.dumps(route, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
-        owners = sorted({target.owner_id for target in actual.targets})
-        return selection_type(
-            str(actual.project_root or ""),
-            str(actual.workplace_root or ""),
-            ":".join(owners),
-            instance,
-            revision,
-            tuple((t.kind, str(t.target), t.scope, t.owner_id) for t in actual.targets),
-            _device_config_path=str(actual.device_config_path),
-        )
-
-    from contextlib import contextmanager
-
-    @contextmanager
-    def native_operation(
-        context: StorageMigrationContext, deadline: float | None
-    ) -> Any:
-        module = sys.modules.get("pf_native_control")
-        current = getattr(module, "current_entry", None)
-        entry = current() if callable(current) else None
-        if entry is None or getattr(entry, "control", None) is None:
-            # No first-old provider: legacy proof stays unknown; pending refuses.
-            yield
-            return
-        producer_type = getattr(module, "ManagedEnrollmentProducer", None)
-        if module is None or producer_type is None or entry.publication is None:
-            raise MaintenanceError("storage_safety_unavailable")
-        producer = producer_type(entry.root, entry.publication.payload[module.LEAF])
-        try:
-            with producer.operation(
-                entry,
-                resolver=native_selection,
-                admission_held=lambda: admission.held(
-                    context.project_root, context.workplace_root
-                ),
-                deadline=deadline,
-            ):
-                yield
-        except RuntimeError as error:
-            if isinstance(error, getattr(module, "NativeControlError", ())):
-                raise MaintenanceError("execution_activity_unknown") from None
-            raise
-
     # Driver resolution also remains lazy with respect to the supplied provider.
     # The closed default is SQLite; the resolved full snapshot is bound when
     # context is first requested, before any service operation connects.
@@ -686,9 +571,6 @@ def build_storage_migration_host(
         execution_factory=engine,
         driver=SQLiteDriver(),
     )
-    service._native_operation = native_operation
-    # Native-only qualification fixtures/handoffs use the actual resolver; no bool proof.
-    service._native_selection = native_selection
     original_resolve = resolve_context
 
     def bind_context() -> StorageMigrationContext:
@@ -715,11 +597,38 @@ def build_storage_migration_host(
     )
 
 
+def build_journal_maintenance_service(
+    project_root: Path, workplace_root: Path
+) -> JournalMaintenanceService:
+    """Compose the existing explicit operator importer with its storage identities."""
+    from .configuration import ConfigurationProvider
+    from .maintenance.journals import JournalMaintenanceService
+    from .maintenance.storage_migration import _safe
+
+    project = _safe(project_root.absolute())
+    workplace = _safe(workplace_root.absolute())
+    provider = build_configuration_provider(
+        project_root=project, workplace_root=workplace
+    )
+    snapshot = provider.snapshot()
+    configuration = ConfigurationProvider.pinned(
+        snapshot.config, errors=snapshot.errors
+    )
+    host = build_storage_migration_host(
+        project_root=project,
+        workplace_root=workplace,
+        device_config_path=provider.device_path,
+        configuration=configuration,
+        offline_confirmed=True,
+    )
+    return JournalMaintenanceService(configuration=configuration, storage_host=host)
+
+
 def execution_maintenance_scope(
     project_root: Path,
+    offline_confirmed: bool = False,
 ) -> AbstractContextManager[ExecutionMigrationService]:
-    """Hold exact-root configuration and existing native proof for one command."""
-    import sys
+    """Pin exact roots for one explicit execution maintenance command."""
     from contextlib import ExitStack
     from types import TracebackType
 
@@ -732,11 +641,6 @@ def execution_maintenance_scope(
         operation_device_path,
     )
     from .project.metadata import ProjectMetadataReader
-
-    def map_native_error(error: BaseException) -> None:
-        module = sys.modules.get("pf_native_control")
-        if isinstance(error, getattr(module, "NativeControlError", ())):
-            raise MaintenanceError("execution_activity_unknown") from None
 
     class Operation(AbstractContextManager[ExecutionMigrationService]):
         def __init__(self) -> None:
@@ -778,6 +682,7 @@ def execution_maintenance_scope(
                     device_config_path=device,
                     configuration=configuration,
                     _allow_fresh_repair=False,
+                    offline_confirmed=offline_confirmed,
                 )
                 context = host.context
                 targets = [
@@ -787,15 +692,12 @@ def execution_maintenance_scope(
                 ]
                 if len(targets) != 1:
                     raise MaintenanceError("storage_execution_target_conflict")
-                native = host.service._native_operation
                 factory = host.service.execution_factory
-                if native is None or factory is None:
+                if factory is None:
                     raise MaintenanceError("storage_safety_unavailable")
-                self.stack.enter_context(native(context, None))
                 return factory(context, targets[0])
             except BaseException as error:
                 self._close(error)
-                map_native_error(error)
                 raise
 
         def __exit__(
@@ -810,7 +712,6 @@ def execution_maintenance_scope(
             except OSError as error:
                 if error is exception:
                     raise
-                map_native_error(error)
                 raise
 
     return Operation()

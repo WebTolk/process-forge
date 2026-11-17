@@ -269,7 +269,6 @@ def test_unqualified_owner_never_opens_a_process(policy: Any, fault: str) -> Non
         "authentication",
         "process_creation",
         "manifest",
-        "managed_target",
         "same_root",
     ],
 )
@@ -295,10 +294,6 @@ def test_revalidation_failure_never_terminates_policy_process(
         policy.request_side_effect = lambda: policy.script.write_bytes(
             b"replaced entry\n"
         )
-    elif fault == "managed_target":
-        policy.request_side_effect = lambda: (
-            policy.target / "runtime/native-control"
-        ).mkdir(parents=True)
     else:
         policy.entry.root = policy.target
         policy.entry.image.root = policy.target

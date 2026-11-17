@@ -276,7 +276,7 @@ class _WindowsProcess:
 
 
 def _target_core(facts: _ProcessFacts, workplace: Path) -> Path:
-    from processforge_core.maintenance.file_update import require_unmanaged_target
+    from processforge_core.maintenance.file_update import require_update_target
     from processforge_core.maintenance.update import CoreUpdateError
 
     _require(
@@ -317,7 +317,7 @@ def _target_core(facts: _ProcessFacts, workplace: Path) -> Path:
         "runtime_workplace_changed",
     )
     try:
-        target = require_unmanaged_target(script.parent.parent)
+        target = require_update_target(script.parent.parent)
     except CoreUpdateError:
         raise OwnedShutdownError("runtime_target_not_unmanaged") from None
     for path in (script, script.parent):

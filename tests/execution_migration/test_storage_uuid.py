@@ -260,9 +260,7 @@ def test_migrating_flag_does_not_authorize_unqualified_governed_write(
     storage.state = "unknown"
     host = migration.StorageMigrationHost(storage.context, storage.service)
     before = storage.target.target.read_bytes() if existing else None
-    with pytest.raises(
-        MaintenanceError, match="storage_(migration_required|activity_unknown)"
-    ):
+    with pytest.raises(MaintenanceError, match="storage_offline_confirmation_required"):
         with ProcessEventJournal.connection(
             storage.target.target, writable=True, migrating=True, storage_host=host
         ):

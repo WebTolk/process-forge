@@ -1,5 +1,7 @@
 # Storage paths: implementation and recovery qualification
 
+> Historical evidence. The 2026-11-17 owner decision supersedes the historical-manager/cold-exclusion assumptions and automatic migration described below. Current behavior is specified in [execution storage](../concepts/execution-storage.md) and [journal maintenance](../concepts/sqlite-journal-maintenance.md). Existing owned startup templates are handled by manifest shape, independently of product version.
+
 This finite inventory is maintained with the qualification increment for issue
 #17 / T05. Acceptance must identify the exact reviewed revision and OS receipts.
 A row describes an implementation boundary, not a qualified deployment or a PASS.

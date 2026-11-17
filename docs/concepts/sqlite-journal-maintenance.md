@@ -203,34 +203,25 @@ default) and `execution-resume`. Apply needs `--apply --offline-confirmed` and
 They emit one JSON object, with exit 0 for plan/ready, 1 for refusal and argparse 2
 for invalid syntax. Without host composition/verifier they fail closed.
 
-## Native UUID coordinator and automatic hooks
+## Explicit storage migration and stable UUIDs
 
-`StorageMigrationService` is the common native update/first-write/resume service.
-`tools/migrate-storage.py` takes explicit `--project-root` and/or
-`--workplace-root`, optional `--device-config`, and mutually exclusive `--inspect`
-(default), `--apply`, `--resume`. `--json` retains exactly one JSON result;
-exit codes are 0 for planned/ready, 1 for deferred/refused/failed, argparse 2.
-There is no CLI safety override. The host supplies an operation-pinned full
-`ConfigurationProvider` and exact authorized targets; one snapshot is passed to
-all dependencies without another merge. No agent, LLM, network or daemon is used.
+Storage migration is an explicit operator/updater operation.
+`tools/migrate-storage.py` accepts `--project-root` and/or `--workplace-root`,
+optional `--device-config`, and one of `--inspect` (default), `--apply`,
+`--resume`. Apply/resume also require `--offline-confirmed`: the operator has
+stopped PF and all writers in Garage; the Forge updater manages its single PF
+executor. Exit codes are 0 for planned/ready, 1 for blocked/failed, argparse 2.
 
-The host calls `ensure_ready(context, trigger='update'|'first_write')` before a
-mutating operation, before task, target or SQL locks. Active/unknown
-before any pending pin returns a blocked report without minting a storage UUID or
-creating migration files. Its historical `legacy_allowed=true` field describes
-the unmigrated source; it grants no ordinary write or launch permission. Pending
-requires exact recovery. A changed/unavailable safety generation refuses. Pure
-reads, configuration, doctor and the 500 ms guard never call the coordinator.
+Import event/raw journals with the command above, then run:
 
-Work start/transition, continuation creation with apply, continuation resume, and
-worker prepare/start require ready SQL execution storage through the shared Core
-first-write boundary. This precedes retry recovery, scratch finalization, lifecycle
-locks, planning, registration and spawn. After successful migration the boundary
-selects SQL again; a success report alone is insufficient. An identityless project
-refuses with `project_identity_required`. Ordinary start has no file-journal route.
-Explicit stop, cancellation and collection of existing attempts remain available
-for recovery. Collection does not attempt migration after committing its result;
-the next ordinary write performs the readiness check.
+```text
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --apply --offline-confirmed --json
+```
+
+Ordinary Work/worker writes only check readiness and refuse legacy storage with
+`storage_migration_required`. They do not launch automatic import. Pure reads
+create no migration files. Existing stop/cancel/collection remain available for
+recovery; they do not grant readiness for a new attempt.
 
 Recognized existing events/raw/accounting/search stores receive only
 `pf_store_meta`, `pf_schema_versions` and `store_identity@1`. Their original
@@ -273,38 +264,14 @@ SQL authority CAS to the frozen `ExecutionMigrationService`. It does not invent
 history or duplicate that engine. Main resume uses a durable exact plan selector;
 after cutover SQL stays authoritative and projection repair belongs to its owner.
 
-The script consumes `composition.build_configuration_provider` and
-`composition.build_storage_migration_host`. The latter must pin enrollment,
-installed code/capabilities, instance/routing, old writer exclusion, pre-spawn
-publication gaps and complete trees, then inject both storage and execution
-verifiers. Its absence is a bounded `storage_host_factory_unavailable` refusal.
-Script/automatic policy tests with injected fixture proof do not establish real
-host exclusion. Actual W3 composition, installed update/first-write qualification
-and integrated assurance are separate gates; this source slice performs no live
-migration or infrastructure actions.
+The host pins one configuration snapshot, exact roots, stable owners and selected
+targets. Explicit maintenance requires actual admission and rejects a known live
+Runtime. It rechecks the same selection before mutation. This is cooperating
+local maintenance under operator/updater responsibility, not proof that every
+unknown historical process has been technically fenced.
 
-The cold host factory is implemented. Adapter identity access runs the coordinator
-before its identity gate and SQL session. Its low-level compatibility access to an
-unqualified target before pending remains available to migration/recovery callers;
-ordinary Work and worker entrypoints must pass the readiness boundary above.
-Unknown safety creates no storage UUID metadata. Pure reads validate existing pins
-without creating a missing identity guard.
-Installed managed-owner enrollment/exclusion and fresh updater-child qualification
-remain separate requirements; factory availability is not evidence of that proof.
-
-Unpinned access checks the exact legacy schema and actual safety proof before
-requesting a full integrity or row-parity scan. Active or unknown safety defers
-migration without scanning historical rows or creating migration metadata.
-Ordinary entrypoints refuse this state. Pending and unpinned adopted metadata
-still refuse.
-
-Proven migration scans run outside shared execution admission. A retained SQLite
-connection watches `data_version` and physical file identity after its read
-transaction closes. Final admission rechecks the proof generation, store facts
-and witness before publishing the existing plan or ready pin. A concurrent WAL
-commit or replaced file refuses the stale scan. Target gates and SQL transactions
-are released before waiting for admission; a caller retaining outer admission
-cannot run a long migration through a nested scope.
-
-Plans remain bound to exact transform hashes. A changed transform does not rewrite
-or waive an older pending plan's checks; its existing refusal remains authoritative.
+Resume uses the same roots with `--resume --offline-confirmed`. Pending identity,
+source/schema/transform drift, foreign UUIDs, unknown active executions and
+changed recovery evidence still refuse. Plans remain bound to exact transform
+hashes; changed code does not silently rewrite an older pending plan.
+See [execution storage](execution-storage.md#explicit-migration-and-update-responsibility).

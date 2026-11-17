@@ -8,10 +8,14 @@ discovery subscriptions; it retains no Work state, permissions or executing
 business Core.
 
 Each child repeats the native publication/admission checks, request validation
-and existing project/session/Work binding. A new process does not establish
-storage safety by itself. Native adoption, publication identity, epoch and actual
-writer exclusion retain their existing owners. An incomplete or incompatible
-publication can refuse a request even while the transport remains available.
+and existing project/session/Work binding. The child uses the captured Core
+publication and normal writer admission. Historical native adoption is not a
+migration prerequisite. An incomplete or incompatible publication can refuse a
+request even while the transport remains available.
+
+This per-request child transport is not a single-executor Forge topology.
+A Forge connection must route business operations to its sole PF executor;
+retaining these pipes alone does not implement that routing or updater lifecycle.
 
 The transport answers MCP ping locally; transport liveness does not prove Core
 or storage readiness. Invalid protocol is rejected before business Core dispatch.
@@ -52,8 +56,8 @@ reload Python modules in place.
 PF Core installation maintenance and package updates have separate lifecycles.
 An ordinary package update does not request workplace maintenance or require
 every project agent to pause. Package locks, verification, metadata and rollback
-remain with the package owner. A package operation still respects an already
-applicable native fence on shared resources. Neither catalogue refresh nor a
+remain with the package owner. A package operation still respects the existing
+resource locks and writer admission. Neither catalogue refresh nor a
 package update changes an active Work's immutable capsule or pinned permissions.
 
 The source integration tests exercise the real stdio entry on isolated consumer

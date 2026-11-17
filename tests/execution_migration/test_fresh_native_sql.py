@@ -179,7 +179,6 @@ import pf_native_control as native
 entry = native.current_entry()
 assert entry is not None and entry.publication is not None and entry.image is not None
 assert entry.control is None
-assert entry.storage_safety(None)[0] == 'unknown'
 assert native.supports_owned_execution()
 """
     result = run(tmp_path, "source-adapter", "-c", code, str(source / relative))
@@ -408,7 +407,6 @@ import pf_native_control as native
 entry = native.current_entry()
 assert entry is not None and entry.publication is not None and entry.image is not None
 assert entry.control is None
-assert entry.storage_safety(None)[0] == "unknown"
 assert native.leaf_seal(entry.publication.payload[native.LEAF]) is not None
 assert native.supports_owned_execution()
 relative = "src/processforge_core/common/markdown.py"

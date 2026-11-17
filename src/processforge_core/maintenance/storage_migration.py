@@ -17,7 +17,7 @@ from contextlib import AbstractContextManager, ExitStack, closing, contextmanage
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path, PurePosixPath
-from typing import Any, Literal
+from typing import Literal
 from uuid import uuid4
 
 from ..database import (
@@ -473,6 +473,7 @@ def _legacy_facts(
     *,
     parity: bool,
     deadline: float | None,
+    allow_importing: bool = False,
 ) -> JsonObject:
     expected = descriptor["legacy_formats"].get(target.kind)
     if not isinstance(expected, dict):
@@ -484,10 +485,13 @@ def _legacy_facts(
     }
     if actual != expected:
         raise MaintenanceError("storage_schema_unrecognized")
-    if target.kind in {"events", "raw"} and connection.execute(
-        "SELECT value FROM journal_metadata WHERE key='migration_state'"
-    ).fetchone() != ("ready",):
-        raise MaintenanceError("journal_migration_incomplete")
+    if target.kind in {"events", "raw"}:
+        migration = connection.execute(
+            "SELECT value FROM journal_metadata WHERE key='migration_state'"
+        ).fetchone()
+        allowed = {("ready",), ("importing",)} if allow_importing else {("ready",)}
+        if migration not in allowed:
+            raise MaintenanceError("journal_migration_incomplete")
     if target.kind == "search" and connection.execute(
         "SELECT value FROM meta WHERE key='schema_version'"
     ).fetchone() != ("6",):
@@ -529,6 +533,7 @@ def _inspect_target(
     *,
     parity: bool = False,
     deadline: float | None = None,
+    allow_importing: bool = False,
 ) -> JsonObject:
     _safe(target.target)
     if not target.target.exists():
@@ -556,7 +561,12 @@ def _inspect_target(
         return {
             "state": "legacy",
             **_legacy_facts(
-                connection, target, descriptor, parity=parity, deadline=deadline
+                connection,
+                target,
+                descriptor,
+                parity=parity,
+                deadline=deadline,
+                allow_importing=allow_importing,
             ),
         }
 
@@ -619,6 +629,7 @@ def storage_identity_access(
     registry_lock: Callable[..., AbstractContextManager[object]],
     driver: SQLiteDriver | None = None,
     deadline: float | None = None,
+    allow_importing: bool = False,
 ) -> Iterator[str | None]:
     """Hold an adapter's owner gate from before open until after connection close.
 
@@ -675,6 +686,7 @@ def storage_identity_access(
                 descriptor,
                 driver or DatabaseFactory.resolve_driver(),
                 deadline=deadline,
+                allow_importing=allow_importing,
             )
             if facts.get("store_id") != slot["store_id"]:
                 raise MaintenanceError("storage_identity_conflict")
@@ -711,13 +723,6 @@ class StorageMigrationService:
         self.safety, self.execution = safety, execution
         self.driver = driver if driver is not None else DatabaseFactory.resolve_driver()
         self.execution_factory = execution_factory
-        self._native_selection: Callable[[], Any] | None = None
-        self._native_operation: (
-            Callable[
-                [StorageMigrationContext, float | None], AbstractContextManager[object]
-            ]
-            | None
-        ) = None
 
     @contextmanager
     def _admit(
@@ -894,6 +899,9 @@ class StorageMigrationService:
                 raise MaintenanceError("owner_identity_required")
             target = StoreTarget(kind, path, relative, "workplace", "unqualified")
             facts = _inspect_target(target, descriptor, self.driver)
+            if facts["state"] == "absent":
+                # An unused domain has no legacy data or owner to adopt.
+                continue
             if facts.get("store_id") is not None:
                 raise MaintenanceError("owner_identity_required")
             results.append(
@@ -1018,9 +1026,6 @@ class StorageMigrationService:
         self, context: StorageMigrationContext, operation: str, deadline: float | None
     ) -> JsonObject:
         try:
-            if self._native_operation is not None:
-                with self._native_operation(context, deadline):
-                    return self._run_selected(context, operation, deadline)
             return self._run_selected(context, operation, deadline)
         except (
             MaintenanceError,
@@ -1212,18 +1217,10 @@ class StorageMigrationService:
         *,
         _allow_legacy: bool = False,
     ) -> Iterator[str | None]:
-        from contextlib import nullcontext
-
-        operation = (
-            self._native_operation(context, None)
-            if self._native_operation is not None
-            else nullcontext()
-        )
-        with operation:
-            with self._new_store_identity(
-                context, target, _allow_legacy=_allow_legacy
-            ) as store_id:
-                yield store_id
+        with self._new_store_identity(
+            context, target, _allow_legacy=_allow_legacy
+        ) as store_id:
+            yield store_id
 
     @contextmanager
     def _new_store_identity(

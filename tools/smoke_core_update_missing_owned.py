@@ -6,10 +6,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -25,12 +27,11 @@ from processforge_core.maintenance.update import (
 
 # The named Core entry captures native before its library import.
 # isort: split
-import pf_native_control as native
 from smoke_core_update_manifest import (
-    apply_managed_update,
-    managed_target,
-    run_managed_smoke,
+    apply_fixture_update,
+    installed_target,
     run_pf,
+    run_updater_smoke,
     write_native_archive,
 )
 
@@ -105,7 +106,7 @@ def main() -> int:
         assert plan["restored"] == ["same.txt"], plan
         assert not (core / "same.txt").exists(), "plan must remain read-only"
         assert not (core / "runtime").exists(), "plan must not create update state"
-        with managed_target(
+        with installed_target(
             core, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"}
         ) as entry:
             for name in ("same.txt", "changed.txt", "removed.txt"):
@@ -149,29 +150,30 @@ def main() -> int:
         root = Path(raw)
         core = root / "core"
         core.mkdir()
-        with managed_target(
+        with installed_target(
             core, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"}
         ) as entry:
             (core / "same.txt").unlink()
             archive = root / "release.zip"
             write_native_archive(archive, {"same.txt": "same", "changed.txt": "old"})
-            original = native._update_atomic
+            original = os.replace
 
-            def fail_restore(path: Path, raw: bytes) -> None:
+            def fail_restore(staging: Path, path: Path) -> None:
                 if path.name == "same.txt":
                     raise OSError("injected restore failure")
-                original(path, raw)
+                original(staging, path)
 
-            native._update_atomic = fail_restore
+            replacement = patch.object(os, "replace", fail_restore)
+            replacement.start()
             try:
                 try:
-                    apply_managed_update(entry, archive)
+                    apply_fixture_update(entry, archive)
                 except CoreUpdateError as exc:
                     assert exc.code == "file_operation_failed", exc
                 else:
                     raise AssertionError("injected restore failure was accepted")
             finally:
-                native._update_atomic = original
+                replacement.stop()
             progress = core_status(core)["in_progress"]
             assert progress["status"] == "failed", progress
             assert progress["backed_up"]["same.txt"] is None, progress
@@ -204,7 +206,7 @@ def main() -> int:
         root = Path(raw)
         core = root / "core"
         core.mkdir()
-        with managed_target(core, {"dir/same.txt": "same"}) as entry:
+        with installed_target(core, {"dir/same.txt": "same"}) as entry:
             (core / "dir/same.txt").unlink()
             (core / "dir").rmdir()
             (core / "dir").write_text("user obstruction", encoding="utf-8")
@@ -213,7 +215,7 @@ def main() -> int:
             assert build_plan(core, archive)["status"] == "blocked"
             for force in (False, True):
                 try:
-                    apply_managed_update(
+                    apply_fixture_update(
                         entry, archive, force_local_modifications=force
                     )
                 except CoreUpdateError as exc:
@@ -223,7 +225,8 @@ def main() -> int:
                         "missing owned file bypassed its unowned parent"
                     )
             assert (core / "dir").read_text(encoding="utf-8") == "user obstruction"
-            assert not (core / "runtime/core-update").exists()
+            assert not (core / "runtime/core-update/in-progress.json").exists()
+            assert not (core / "runtime/core-update/backups").exists()
 
     with tempfile.TemporaryDirectory(
         prefix="pf-core-update-manifest-failure-", dir=args.root
@@ -231,7 +234,7 @@ def main() -> int:
         root = Path(raw)
         core = root / "core"
         core.mkdir()
-        with managed_target(
+        with installed_target(
             core, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"}
         ) as entry:
             (core / "same.txt").unlink()
@@ -240,23 +243,24 @@ def main() -> int:
                 archive,
                 {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"},
             )
-            original = native._update_atomic
+            original = os.replace
 
-            def fail_manifest(path: Path, raw: bytes) -> None:
+            def fail_manifest(staging: Path, path: Path) -> None:
                 if path.name == CORE_MANIFEST_NAME:
                     raise OSError("injected manifest failure after restored file write")
-                original(path, raw)
+                original(staging, path)
 
-            native._update_atomic = fail_manifest
+            replacement = patch.object(os, "replace", fail_manifest)
+            replacement.start()
             try:
                 try:
-                    apply_managed_update(entry, archive)
+                    apply_fixture_update(entry, archive)
                 except CoreUpdateError as exc:
                     assert exc.code == "file_operation_failed"
                 else:
                     raise AssertionError("expected manifest failure")
             finally:
-                native._update_atomic = original
+                replacement.stop()
             progress = core_status(core)["in_progress"]
             assert progress["backed_up"]["same.txt"] is None
             assert any(
@@ -272,4 +276,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(run_managed_smoke(Path(__file__)))
+    raise SystemExit(run_updater_smoke(Path(__file__)))

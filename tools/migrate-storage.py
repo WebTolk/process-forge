@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run installed native storage maintenance using one full pinned provider."""
+"""Inspect or explicitly migrate storage while the operator/updater keeps PF stopped."""
 
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ def _main_in_operation(
     configuration_builder: Callable[..., ConfigurationProvider] | None = None,
     host_factory: Callable[..., StorageMigrationHost] | None = None,
 ) -> int:
-    """Emit exactly one JSON; no CLI flag supplies a trusted safety verdict.
+    """Emit one JSON report for explicit, admitted storage maintenance.
 
     Factories are native DI seams for host composition and tests. Production
     obtains both cold builders from Core composition, never imports old tools
@@ -107,6 +107,11 @@ def _main_in_operation(
         modes.add_argument("--apply", action="store_true")
         modes.add_argument("--resume", action="store_true")
         parser.add_argument("--json", action="store_true")
+        parser.add_argument(
+            "--offline-confirmed",
+            action="store_true",
+            help="Confirm that you stopped PF and all writers for the selected roots.",
+        )
         args = parser.parse_args(argv)
         if args.project_root is None and args.workplace_root is None:
             parser.error("--project-root or --workplace-root required")
@@ -142,6 +147,7 @@ def _main_in_operation(
                 device_config_path=args.device_config,
                 configuration=pinned,
                 evidence_dir=args.evidence_dir,
+                **({"offline_confirmed": True} if args.offline_confirmed else {}),
             )
             if not isinstance(host, StorageMigrationHost):
                 raise MaintenanceError("storage_host_factory_invalid")

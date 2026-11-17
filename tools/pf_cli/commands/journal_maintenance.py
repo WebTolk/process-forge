@@ -33,11 +33,10 @@ class JournalMaintenanceCommand:
         *,
         backup_factory: Callable[[], BackupPort] = SQLiteBackupService,
         scan_factory: Callable[[], JournalScanPort] = JournalScanService,
-        maintenance_factory: Callable[
-            [], JournalMaintenanceService
-        ] = JournalMaintenanceService,
+        maintenance_factory: Callable[[Path, Path], JournalMaintenanceService]
+        | None = None,
         execution_factory: Callable[
-            [Path], AbstractContextManager[ExecutionMigrationService]
+            [Path, bool], AbstractContextManager[ExecutionMigrationService]
         ]
         | None = None,
     ) -> None:
@@ -99,7 +98,9 @@ class JournalMaintenanceCommand:
             if self._execution_factory is None:
                 raise MaintenanceError("execution_safety_unavailable")
             project = Path(args.maintenance_project_root)
-            with self._execution_factory(project) as service:
+            with self._execution_factory(
+                project, bool(getattr(args, "offline_confirmed", False))
+            ) as service:
                 if operation == "execution-inspect":
                     return service.inspect(project, evidence_dir=args.evidence_dir)
                 if operation == "execution-resume":
@@ -148,9 +149,16 @@ class JournalMaintenanceCommand:
                 evidence_dir=args.evidence_dir,
             )
         if operation == "import":
-            return self._maintenance_factory().migrate(
-                Path(args.maintenance_project_root),
-                Path(args.maintenance_workplace),
+            project = Path(args.maintenance_project_root)
+            workplace = Path(args.maintenance_workplace)
+            journals = (
+                self._maintenance_factory(project, workplace)
+                if self._maintenance_factory is not None
+                else JournalMaintenanceService()
+            )
+            return journals.migrate(
+                project,
+                workplace,
                 apply=args.apply,
                 skip_invalid=args.skip_invalid,
                 evidence_dir=args.evidence_dir,

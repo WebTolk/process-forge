@@ -1,5 +1,7 @@
 # Public 1.2.0 upgrade: Core files and project readiness
 
+> Historical evidence. The 2026-11-17 owner decision supersedes the historical-manager/cold-exclusion assumptions and automatic migration described below. Current behavior is specified in [execution storage](../concepts/execution-storage.md) and [journal maintenance](../concepts/sqlite-journal-maintenance.md). Existing owned startup templates are handled by manifest shape, independently of product version.
+
 The external Core updater accepts the three public startup templates shipped in the installed 1.2.0 ownership manifest: .pf/AGENTS.md, .pf/hooks.yaml and .pf/process-forge.yaml. Their actual preimages or absence are retained before removal when the target no longer owns them. The exception applies only to the installed 1.2.0 manifest. New archives and other private/runtime paths retain the current exclusion policy.
 
 The original defect was observable on the actual published ZIP: plan reported no blockers, but confirmed apply rejected those historical templates as private data. A release checkout or a small synthetic archive did not expose this mismatch. The focused tests cover removal, modified and missing preimages, unowned private siblings and refusal of private target payload.

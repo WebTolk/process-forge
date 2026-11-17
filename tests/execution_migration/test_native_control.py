@@ -688,63 +688,46 @@ except NativeControlError: sys.exit(42)
     assert child.returncode == 0, child.stderr
 
 
-def test_automatic_storage_reselects_between_adapters_but_refuses_stale_proof(
-    native_root: Path, monkeypatch: pytest.MonkeyPatch
+def test_storage_context_reselects_owners_and_rejects_stale_selection(
+    native_root: Path,
 ) -> None:
-    from processforge_core.accounting.composition import WorkplaceAccounting
     from processforge_core.composition import (
         build_configuration_provider,
         build_storage_migration_host,
     )
     from processforge_core.maintenance.contracts import MaintenanceError
-    from processforge_core.process_event_journal import ProcessEventJournal
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
 
-    project = native_root / "project"
-    flow = project / ".pf"
-    flow.mkdir(parents=True)
-    (flow / "process-forge.yaml").write_text("project:\n  id: stable-project\n")
-    workplace = native_root / "workplace"
+    project, workplace = native_root / "project", native_root / "workplace"
+    (project / ".pf").mkdir(parents=True)
+    (project / ".pf/process-forge.yaml").write_text("project:\n  id: stable-project\n")
     workplace.mkdir()
     (workplace / "workplace.yaml").write_text("id: stable-workplace\n")
     device = native_root / "device.yaml"
-    device.write_text("schema_version: 1\n")
-    provider = build_configuration_provider(
-        project_root=project, workplace_root=workplace, device_config_path=device
-    )
     host = build_storage_migration_host(
         project_root=project,
         workplace_root=workplace,
         device_config_path=device,
-        configuration=provider,
+        configuration=build_configuration_provider(
+            project_root=project, workplace_root=workplace, device_config_path=device
+        ),
+        offline_confirmed=True,
     )
-    # Source mode has no managed migration authority, even after reselection.
-    monkeypatch.setattr(p, "current_entry", lambda: None)
     before = host.context
-    journal = ProcessEventJournal(storage_host=host)
-    events = flow / "runtime/events/events.sqlite3"
-    journal.append(events, {"event_id": "before"}, record=True)
-    accounting = WorkplaceAccounting(
-        workplace=workplace,
-        project_root=project,
-        project_id="stable-project",
-        configuration=provider,
-        storage_host=host,
-    )
-    assert accounting.service(create=True) is not None
+    identity = workplace / "data/accounting/identity.json"
+    identity.parent.mkdir(parents=True)
+    identity.write_text('{"origin_id": "accounting-owner"}')
     after = host.context
     assert before != after
     assert any(kind == "accounting" for kind, _path in before.unqualified_targets)
     assert not after.unqualified_targets
-    assert host.service._proof(after).state == "unknown"
-    with pytest.raises(MaintenanceError, match="storage_safety_unavailable"):
-        host.service._proof(before)
-    journal.append(events, {"event_id": "after"}, record=True)
-    assert not (flow / "data/storage-identities.json").exists()
-    assert not (workplace / "data/storage-identities.json").exists()
-    # Re-enrollment still invalidates the captured context during one operation.
-    (workplace / "workplace.yaml").write_text("id: other-workplace\n")
-    with pytest.raises(MaintenanceError, match="storage_safety_unavailable"):
-        host.service._proof(after)
+    with ExecutionAdmission().maintenance(project, workplace):
+        assert host.service._proof(after).state == "proven"
+        with pytest.raises(MaintenanceError, match="storage_safety_unavailable"):
+            host.service._proof(before)
+        (workplace / "workplace.yaml").write_text("id: other-workplace\n")
+        with pytest.raises(MaintenanceError, match="storage_safety_unavailable"):
+            host.service._proof(after)
 
 
 def test_selected_cmd_round_trips_literal_argv_without_injection(
@@ -1199,7 +1182,6 @@ def test_real_packager_freezes_before_zip_and_freshness_replays(
     native_root: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import hashlib
-    import zipfile
 
     import processforge as cli
 
@@ -1271,6 +1253,27 @@ def test_real_packager_rejects_duplicates_before_mapping(native_root: Path) -> N
         )
 
 
+def _fixture_publication(version: str = "1.3.0-alpha6") -> p.Build:
+    source_root = Path(__file__).resolve().parents[2]
+    payload = {}
+    for directory in ("src", "tools", "schemas", "bin"):
+        for path in (source_root / directory).rglob("*"):
+            if (
+                path.is_file()
+                and path.suffix in {".py", ".json", ".yaml", ".txt", ".md"}
+                and "__pycache__" not in path.parts
+            ):
+                payload[path.relative_to(source_root).as_posix()] = path.read_bytes()
+    payload["VERSION"] = (version + "\n").encode()
+    payload[p.INVENTORY] = b""
+    return p.build_publication(
+        payload,
+        version=version,
+        source={"commit": "f" * 40, "dirty": False},
+        generated_at="fixture",
+    )
+
+
 @pytest.mark.parametrize("entry_name", ["cli", "service", "core"])
 def test_actual_trusted_entry_captures_leaf_core_aliases_and_resources(
     native_root: Path,
@@ -1289,8 +1292,8 @@ def test_actual_trusted_entry_captures_leaf_core_aliases_and_resources(
     }
     if entry_name in {"service", "core"}:
         # Exercise the complete existing service/Legacy bridge, not an extracted
-        # preamble with synthetic Core. The helper is shared with adopted tests.
-        payload.update(_adopted_publication().payload)
+        # preamble with synthetic Core.
+        payload.update(_fixture_publication().payload)
     candidate = build(payload)
     for name, raw in candidate.payload.items():
         path = native_root / name
@@ -1467,7 +1470,6 @@ def test_publication_read_exclusion_blocks_an_old_uncooperative_writer(
 def test_fixture_archive_passes_unchanged_validator_and_real_root_freshness(
     native_root: Path,
 ) -> None:
-    import zipfile
 
     import processforge as cli
 
@@ -1543,491 +1545,6 @@ def test_fixture_archive_passes_unchanged_validator_and_real_root_freshness(
 
 # Joint fixtures qualify adopted state only; they do not reconstruct FIRST history.
 assert p.__file__ is not None
-_ADOPTED_SOURCE = Path(p.__file__).absolute().parents[1]
-
-_ADOPTED_PREAMBLE = r"""
-import json,sys,types
-from pathlib import Path
-root=Path(sys.argv[1]);leaf=(root/'tools/pf_native_control.py').read_bytes()
-p=types.ModuleType('pf_native_control');p.__file__=str(root/'tools/pf_native_control.py');p._captured_source=leaf
-sys.modules[p.__name__]=p;exec(compile(leaf,p.__file__,'exec',dont_inherit=True),p.__dict__)
-sys.path[:0]=[str(root/'tools'),str(root/'src')]
-"""
-_ADOPTED_MANAGER = (
-    _ADOPTED_PREAMBLE
-    + r"""
-work=root/'runtime/fixture';work.mkdir(parents=True)
-(work/'gate').write_bytes(b'0');(work/'protocol').write_bytes(b'original')
-publication=p.accept_publication(root,trusted_leaf=leaf)
-boundary=p.LegacyManagedBoundary(root,existing_gate=p.NativeControl(work/'gate',work/'protocol','original'),accepted_archive=publication.payload)
-owner=boundary.launch([sys.executable,'-B','-c','pass'],ingress='worker');assert owner.wait(timeout=5)==0
-entry=p.NativeEntry(root,publication,p.NativeImage.from_publication(root,publication),None)
-entry.image.activate()
-from processforge_core.composition import build_configuration_provider,build_storage_migration_host
-from processforge_core.configuration import ConfigurationProvider
-project=work/'project';flow=project/'.pf';flow.mkdir(parents=True)
-(flow/'process-forge.yaml').write_text('project:\n  id: stable-project\n')
-device=work/'device.yaml';device.write_text('schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 17\n')
-provider=build_configuration_provider(project_root=project,device_config_path=device)
-config=ConfigurationProvider.pinned(provider.snapshot().config)
-host=build_storage_migration_host(project_root=project,workplace_root=None,device_config_path=device,configuration=config)
-producer,entry=p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=host.service._native_selection())
-print(json.dumps({'generation':producer._state()['adoption']}))
-"""
-)
-_ADOPTED_CHILD = (
-    _ADOPTED_PREAMBLE
-    + r"""
-entry=p.bootstrap_entry(root,trusted_leaf=leaf)
-from processforge_core.composition import build_configuration_provider,build_storage_migration_host
-from processforge_core.configuration import ConfigurationProvider
-from processforge_core.project.configuration_inputs import configuration_operation
-from processforge_core.process_event_journal import ProcessEventJournal
-from processforge_core.executions.composition import select_execution_storage
-import processforge as cli
-project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
-provider=build_configuration_provider(project_root=project,device_config_path=device)
-config=ConfigurationProvider.pinned(provider.snapshot().config)
-host=build_storage_migration_host(project_root=project,workplace_root=None,device_config_path=device,configuration=config)
-with entry.operation():
-    journal=ProcessEventJournal(storage_host=host)
-    journal.append(project/'.pf/runtime/events/events.sqlite3',{'event_id':sys.argv[2]},record=True)
-    with configuration_operation(project,None,device_config_path=device,configuration=config):
-        cli._storage_first_write(project)
-    result=host.service.resume(host.context)
-    assert not result['blocked'],result
-    selected=select_execution_storage(project,None,configuration=config)
-    pins=json.loads((project/'.pf/data/storage-identities.json').read_text())
-    assert entry.storage_safety(host.context)[0]=='unknown'
-    print(json.dumps({'generation':p.ManagedEnrollmentProducer(root,leaf)._state()['adoption'],'interval':config.get('runtime.metrics.interval_seconds'),'pins':pins,'result':result,'authority':selected.repository.readiness().authority}))
-"""
-)
-
-
-def _adopted_run(
-    code: str, root: Path, *args: object, timeout: int = 60
-) -> dict[str, Any]:
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", code, str(root), *map(str, args)],
-        env={
-            **os.environ,
-            "LOCALAPPDATA": str(root / "runtime/device"),
-            "PYTHONDONTWRITEBYTECODE": "1",
-        },
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
-    assert result.returncode == 0, result.stdout + "\n" + result.stderr
-    return json.loads(result.stdout)
-
-
-def _adopted_publication(version: str = "1.3.0-alpha6") -> p.Build:
-    payload = {}
-    for directory in ("src", "tools", "schemas", "bin"):
-        for path in (_ADOPTED_SOURCE / directory).rglob("*"):
-            if (
-                path.is_file()
-                and path.suffix in {".py", ".json", ".yaml", ".txt", ".md"}
-                and "__pycache__" not in path.parts
-            ):
-                payload[path.relative_to(_ADOPTED_SOURCE).as_posix()] = (
-                    path.read_bytes()
-                )
-    payload["VERSION"] = (version + "\n").encode()
-    payload[p.INVENTORY] = b""
-    return p.build_publication(
-        payload,
-        version=version,
-        source={"commit": "f" * 40, "dirty": False},
-        generated_at="fixture",
-    )
-
-
-def _adopted_fixture_install(root: Path) -> tuple[Path, p.Build]:
-    root.mkdir(parents=True, exist_ok=True)
-    build = _adopted_publication()
-    for name, raw in {**build.payload, p.MANIFEST: build.manifest}.items():
-        path = root / name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(raw)
-    device = root / "runtime/device/ProcessForge/configuration.yaml"
-    device.parent.mkdir(parents=True)
-    device.write_text("schema_version: 1\n", encoding="utf-8")
-    return root, build
-
-
-def test_real_adopted_factory_after_manager_exit(native_root: Path) -> None:
-    root, _ = _adopted_fixture_install(native_root)
-    bound = _adopted_run(_ADOPTED_MANAGER, root)
-    first = _adopted_run(_ADOPTED_CHILD, root, "one")
-    second = _adopted_run(_ADOPTED_CHILD, root, "two")
-    assert bound["generation"] == first["generation"] == second["generation"]
-    assert first["interval"] == second["interval"] == 17
-    assert first["authority"] == second["authority"] == "sql"
-    assert first["pins"] == second["pins"]
-
-
-_ADOPTED_UPDATE = (
-    _ADOPTED_PREAMBLE
-    + r"""
-entry=p.bootstrap_entry(root,trusted_leaf=leaf)
-from processforge_core.maintenance.update import apply_update
-record=apply_update(root,Path(sys.argv[2]),confirm=True)
-assert record['status']=='applied',record
-print(json.dumps(record))
-"""
-)
-
-
-def test_joint_real_updater_and_independent_successor_child(native_root: Path) -> None:
-    root, old = _adopted_fixture_install(native_root / "target")
-    _adopted_run(_ADOPTED_MANAGER, root)
-    new = _adopted_publication("1.3.0-alpha7")
-    archive = root / "runtime/fixture-release.zip"
-    with zipfile.ZipFile(archive, "w") as bundle:
-        for name, raw in {**new.payload, p.MANIFEST: new.manifest}.items():
-            bundle.writestr(name, raw)
-    before = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
-    management, _ = _adopted_fixture_install(native_root / "independent-management")
-    command = [
-        sys.executable,
-        "-B",
-        str(management / "bin/pf.py"),
-        "core-update",
-        "apply",
-        "--core-root",
-        str(root),
-        "--archive",
-        str(archive),
-        "--confirm",
-    ]
-    applied = subprocess.run(command, capture_output=True, text=True, timeout=240)
-    assert applied.returncode == 0, applied.stdout + applied.stderr
-    record = json.loads(applied.stdout)
-    after = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
-    assert before["adoption"] != after["adoption"]
-    assert after["phase"] == "bound" and len(after["successors"]) == 1
-    assert (root / "VERSION").read_text().strip() == "1.3.0-alpha7"
-    assert (
-        json.loads((root / "runtime/core-update/last-apply.json").read_text()) == record
-    )
-    assert not (root / "runtime/core-update/in-progress.json").exists()
-    # Stale generation loses its epoch even if the payload is replaced again with identical bytes.
-    result = _adopted_run(_ADOPTED_CHILD, root, "after-update")
-    assert result["generation"] == after["adoption"]
-    (root / "VERSION").write_bytes(b"local second preimage")
-    second = subprocess.run(command, capture_output=True, text=True, timeout=240)
-    assert second.returncode == 0, second.stdout + second.stderr
-    second_record = json.loads(second.stdout)
-    assert (
-        Path(second_record["backup_dir"]) / "files/VERSION"
-    ).read_bytes() == b"local second preimage"
-    latest = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
-    assert len(latest["successors"]) == 2 and latest["adoption"] != after["adoption"]
-    assert latest["successors"][-1]["maintenance"]["manifest_sha256"] == p.digest(
-        new.manifest
-    )
-
-
-@pytest.mark.parametrize(
-    "case",
-    [
-        "missing",
-        "local",
-        "unchanged-local",
-        "manifest",
-        "epoch",
-        "selection",
-        "unbound-cli",
-        "public-cli",
-        "configuration",
-        "owner",
-        "excluded-leaf",
-        "excluded-inventory",
-        "malformed",
-        "unknown",
-    ],
-)
-def test_real_updater_retained_target_repair_force_and_authority(
-    native_root: Path, case: str
-) -> None:
-    management, _ = _adopted_fixture_install(native_root / "management")
-    if case == "unbound-cli":
-        # The target is unbound, while the public CLI caller must be managed.
-        # A never-enrolled external installer now has its own file-only route.
-        adopted = _adopted_run(_ADOPTED_MANAGER, management)
-        assert isinstance(adopted["generation"], str) and adopted["generation"]
-    result = _adopted_run(
-        _ADOPTED_PREAMBLE
-        + r"""
-entry=p.bootstrap_entry(root,trusted_leaf=leaf)
-import zipfile
-from smoke_core_update_manifest import managed_target,write_native_archive,apply_managed_update
-from processforge_core.maintenance.update import CoreUpdateError,apply_update,build_plan
-case=sys.argv[2];target=root.parent/'target';archive=root.parent/'new.zip'
-files={'same.txt':'same','changed.txt':'old','removed.txt':'gone'}
-with managed_target(target,files) as retained:
-    write_native_archive(archive,{'same.txt':'same','changed.txt':'new'},version='1.3.0-alpha7')
-    with zipfile.ZipFile(archive) as bundle: expected_leaf=bundle.read(p.LEAF)
-    (target/'unknown.txt').write_bytes(b'preserve')
-    authority=('runtime/managed-ingress/baseline.json','runtime/managed-ingress/adoption.json','runtime/native-control/epoch')
-    def snapshot():
-        return {name:(target/name).read_bytes() for name in (*authority,p.MANIFEST,'changed.txt','unknown.txt') if (target/name).is_file()}
-    before_generation=json.loads((target/authority[0]).read_text())['adoption']
-    if case=='missing':
-        for name in files: (target/name).unlink()
-        plan=build_plan(target,archive)
-        assert plan['missing_owned']==['changed.txt','removed.txt','same.txt'],plan
-        assert plan['restored']==['same.txt'],plan
-    elif case in {'local','unchanged-local','public-cli'}:
-        (target/('same.txt' if case=='unchanged-local' else 'changed.txt')).write_bytes(b'local-preimage')
-        assert not (target/'runtime/core-update').exists()
-    elif case=='manifest':
-        raw=json.loads((target/p.MANIFEST).read_text())
-        (target/p.MANIFEST).write_text(json.dumps(raw))
-    elif case=='epoch':
-        (target/authority[2]).write_bytes(b'stale-target-epoch')
-    elif case=='selection':
-        raw=json.loads((target/authority[0]).read_text());raw['selection']['owner']='another-owner'
-        (target/authority[0]).write_text(json.dumps(raw))
-    if case=='unbound-cli':
-        # A truly never-adopted sibling retains the negative CLI control.
-        target=root.parent/'never-adopted';target.mkdir()
-        for name,raw in {**retained.publication.payload,p.MANIFEST:retained.publication.manifest}.items():
-            path=target/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(raw)
-        (target/'changed.txt').write_bytes(b'local-preimage')
-    if case=='configuration':
-        device=Path(json.loads((target/authority[0]).read_text())['retirement']['baseline']['maintenance']['device_config_path'])
-        device.write_text('schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 18\n')
-    if case=='owner':
-        project=Path(json.loads((target/authority[0]).read_text())['selection']['project'])
-        (project/'.pf/process-forge.yaml').write_text('project:\n  id: external-owner\n')
-    if case in {'excluded-leaf','excluded-inventory'}:
-        raw=json.loads((target/p.MANIFEST).read_text());name=p.LEAF if case=='excluded-leaf' else p.INVENTORY
-        next(row for row in raw['files'] if row['relative_path']==name)['sha256']='0'*64
-        assert p.digest(p.projection(json.dumps(raw).encode()))==retained.publication.projection_sha256
-        (target/p.MANIFEST).write_text(json.dumps(raw))
-    if case in {'malformed','unknown'}:
-        raw=json.loads((target/authority[0]).read_text())
-        raw['retirement']['baseline']['maintenance']={'manifest_sha256':p.digest((target/p.MANIFEST).read_bytes()),'device_config_path':'relative'} if case=='malformed' else {'unknown':'authority'}
-        (target/authority[0]).write_text(json.dumps(raw))
-    if case in {'manifest','epoch','selection','unbound-cli','configuration','owner','excluded-leaf','excluded-inventory','malformed','unknown'}:
-        before=snapshot()
-        if case=='unbound-cli':
-            assert isinstance(entry,p.NativeEntry)
-            assert isinstance(entry.control,p.NativeControl)
-            assert entry.publication is not None and entry.image is not None
-            assert p.ManagedEnrollmentProducer(root,leaf)._state()['phase']=='bound'
-            import subprocess
-            refused=subprocess.run([sys.executable,'-B',str(root/'bin/pf.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm','--force-local-modifications'],capture_output=True,text=True,timeout=30)
-            assert refused.returncode!=0,refused.stdout
-            assert json.loads(refused.stdout)['error']['code']=='plan_blocked',refused.stdout+refused.stderr
-        else:
-            for force in (False,True):
-                try: apply_managed_update(retained,archive,force_local_modifications=force)
-                except CoreUpdateError as error: assert error.code=='plan_blocked',error
-                else: raise AssertionError('force bypassed target authority')
-                import subprocess
-                command=[sys.executable,'-B',str(root/'bin/pf.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm']
-                if force: command.append('--force-local-modifications')
-                refused=subprocess.run(command,capture_output=True,text=True,timeout=30)
-                assert refused.returncode!=0,refused.stdout
-                assert json.loads(refused.stdout)['error']['code']=='plan_blocked',refused.stdout+refused.stderr
-        assert snapshot()==before
-        assert not (target/'runtime/core-update').exists()
-        print(json.dumps({'case':case,'refused':True}))
-    else:
-        if case=='public-cli':
-            import subprocess
-            applied=subprocess.run([sys.executable,'-B',str(root/'bin/pf.py'),'core-update','apply','--core-root',str(target),'--archive',str(archive),'--confirm','--force-local-modifications'],capture_output=True,text=True,timeout=240)
-            assert applied.returncode==0,applied.stdout+applied.stderr
-            record=json.loads(applied.stdout)
-        else:
-            record=apply_managed_update(retained,archive,force_local_modifications=False)
-        assert record['status']=='applied',record
-        assert (target/'same.txt').read_bytes()==b'same'
-        assert (target/'changed.txt').read_bytes()==b'new'
-        assert not (target/'removed.txt').exists()
-        assert (target/'unknown.txt').read_bytes()==b'preserve'
-        if case=='missing':
-            assert record['backed_up']['same.txt'] is None
-            assert record['backed_up']['changed.txt'] is None
-            assert record['backed_up']['removed.txt'] is None
-        else:
-            assert (Path(record['backup_dir'])/'files'/('same.txt' if case=='unchanged-local' else 'changed.txt')).read_bytes()==b'local-preimage'
-        state=json.loads((target/authority[0]).read_text())
-        assert state['phase']=='bound' and len(state['successors'])==1,state
-        assert state['adoption']!=before_generation
-        assert not (target/'runtime/core-update/in-progress.json').exists()
-        assert (target/p.LEAF).read_bytes()==expected_leaf
-        accepted=p.accept_publication(target,trusted_leaf=expected_leaf)
-        assert accepted is not None
-        print(json.dumps({'case':case,'refused':False,'status':record['status']}))
-""",
-        management,
-        case,
-        timeout=300,
-    )
-    assert result["case"] == case
-    assert result["refused"] is (
-        case not in {"missing", "local", "unchanged-local", "public-cli"}
-    )
-
-
-@pytest.mark.parametrize("drift", ["configuration", "owner"])
-def test_real_adopted_factory_refuses_changed_selection(
-    native_root: Path, drift: str
-) -> None:
-    root, _ = _adopted_fixture_install(native_root)
-    _adopted_run(_ADOPTED_MANAGER, root)
-    project = root / "runtime/fixture/project"
-    if drift == "configuration":
-        (root / "runtime/fixture/device.yaml").write_text(
-            "schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 18\n"
-        )
-    else:
-        (project / ".pf/process-forge.yaml").write_text(
-            "project:\n  id: another-owner\n"
-        )
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", _ADOPTED_CHILD, str(root), "refused"],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    assert result.returncode != 0
-    assert "execution_activity_unknown" in result.stderr
-    assert not (project / ".pf/data/storage-identities.json").exists()
-    assert not (project / ".pf/runtime/events/events.sqlite3").exists()
-
-
-def test_real_updater_rejected_plan_does_not_publish_pending(native_root: Path) -> None:
-    root, _ = _adopted_fixture_install(native_root)
-    _adopted_run(_ADOPTED_MANAGER, root)
-    build = _adopted_publication("1.3.0-alpha7")
-    payload = dict(build.payload)
-    payload["docs/new-owned.txt"] = b"accepted new bytes"
-    build = p.build_publication(
-        payload, version="1.3.0-alpha7", source={}, generated_at="fixture"
-    )
-    target = root / "docs/new-owned.txt"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(b"unowned collision")
-    archive = root / "runtime/fixture-release.zip"
-    with zipfile.ZipFile(archive, "w") as bundle:
-        for name, raw in {**build.payload, p.MANIFEST: build.manifest}.items():
-            bundle.writestr(name, raw)
-    baseline = (root / "runtime/managed-ingress/baseline.json").read_bytes()
-    head = (root / "runtime/managed-ingress/adoption.json").read_bytes()
-    epoch = (root / "runtime/native-control/epoch").read_bytes()
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", _ADOPTED_UPDATE, str(root), str(archive)],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    assert result.returncode != 0 and "plan_blocked" in result.stderr
-    assert (root / "runtime/managed-ingress/baseline.json").read_bytes() == baseline
-    assert (root / "runtime/managed-ingress/adoption.json").read_bytes() == head
-    assert (root / "runtime/native-control/epoch").read_bytes() == epoch
-    assert not (root / "runtime/core-update").exists()
-
-
-_ADOPTED_FRESH_CRASH = (
-    _ADOPTED_PREAMBLE
-    + r"""
-entry=p.bootstrap_entry(root,trusted_leaf=leaf)
-from processforge_core.composition import build_configuration_provider,build_storage_migration_host
-from processforge_core.configuration import ConfigurationProvider
-from processforge_core.executions.composition import _initialize_fresh_execution_storage
-from processforge_core.maintenance import journal_scan
-import os
-project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
-provider=build_configuration_provider(project_root=project,device_config_path=device)
-config=ConfigurationProvider.pinned(provider.snapshot().config)
-host=build_storage_migration_host(project_root=project,workplace_root=None,device_config_path=device,configuration=config)
-write=journal_scan._exclusive_bytes
-def crash_before_binding(path,raw):
-    if path.name=='execution-storage.json': os._exit(0)
-    return write(path,raw)
-journal_scan._exclusive_bytes=crash_before_binding
-with host.service._native_operation(host.context,None):
-    with host.service.admission.maintenance(project,None):
-        assert host.service.safety(host.context).state=='proven'
-        _initialize_fresh_execution_storage(project,None,configuration=config)
-raise AssertionError('crash hook not reached')
-"""
-)
-
-
-def test_real_adopted_first_write_repairs_marker_before_binding(
-    native_root: Path,
-) -> None:
-    root, _ = _adopted_fixture_install(native_root)
-    _adopted_run(_ADOPTED_MANAGER, root)
-    crash = subprocess.run(
-        [sys.executable, "-B", "-c", _ADOPTED_FRESH_CRASH, str(root)],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    assert crash.returncode == 0, crash.stderr
-    flow = root / "runtime/fixture/project/.pf"
-    marker = json.loads(
-        (flow / "maintenance/execution-initialization.json").read_text()
-    )
-    assert marker["state"] == "pending"
-    assert not (flow / "data/execution-storage.json").exists()
-    repaired = _adopted_run(_ADOPTED_CHILD, root, "repair")
-    assert repaired["authority"] == "sql"
-    assert (
-        json.loads((flow / "data/execution-storage.json").read_text())
-        == marker["binding"]
-    )
-    assert (
-        json.loads((flow / "maintenance/execution-initialization.json").read_text())[
-            "state"
-        ]
-        == "ready"
-    )
-
-
-_ADOPTED_COLLECT = (
-    _ADOPTED_PREAMBLE
-    + r"""
-entry=p.bootstrap_entry(root,trusted_leaf=leaf)
-from processforge_core.composition import build_configuration_provider
-from processforge_core.configuration import ConfigurationProvider
-from processforge_core.project.configuration_inputs import configuration_operation
-from unittest.mock import patch
-from argparse import Namespace
-import contextlib,io
-import processforge as cli
-project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
-provider=build_configuration_provider(project_root=project,device_config_path=device)
-config=ConfigurationProvider.pinned(provider.snapshot().config)
-# Named collection-policy seam only. Proof, factory, admission and migration are real.
-with patch.object(type(cli._worker_assignment_service),'load',return_value={'id':'fixture-task','run_id':'fixture-run'}), patch.object(cli,'_collect_worker_run_locked',return_value=0):
-    with configuration_operation(project,None,device_config_path=device,configuration=config):
-        with contextlib.redirect_stdout(io.StringIO()):
-            code=cli.command_worker_run_collect(Namespace(project_root=str(project),task='fixture-task'))
-assert code==0
-binding=json.loads((project/'.pf/data/execution-storage.json').read_text())
-print(json.dumps({'binding':binding,'generation':p.ManagedEnrollmentProducer(root,leaf)._state()['adoption']}))
-"""
-)
-
-
-def test_real_adopted_collect_callback_migrates_after_lifecycle_unlock(
-    native_root: Path,
-) -> None:
-    root, _ = _adopted_fixture_install(native_root)
-    adopted = _adopted_run(_ADOPTED_MANAGER, root)
-    first = _adopted_run(_ADOPTED_COLLECT, root)
-    repeated = _adopted_run(_ADOPTED_COLLECT, root)
-    assert first == repeated
-    assert first["generation"] == adopted["generation"]
 
 
 @pytest.mark.parametrize("minor", [11, 12, 13])
@@ -2035,7 +1552,6 @@ def test_real_adopted_collect_callback_migrates_after_lifecycle_unlock(
     "relative",
     [
         "tools/pf_native_control.py",
-        "tools/pf_native_maintenance.py",
         "tools/prepared_executor.py",
     ],
 )
@@ -2052,18 +1568,6 @@ def test_bootstrap_python_grammar_floor(relative: str, minor: int) -> None:
 def test_image_relative_refuses_nonpaths(value: Any) -> None:
     image = p.NativeImage.__new__(p.NativeImage)
     assert image.relative(value) is None
-
-
-@pytest.mark.parametrize("raw", [b"{", b"\xff", b"[" * 1100])
-def test_maintenance_document_preserves_invalid_json_refusal(raw: bytes) -> None:
-    import pf_native_maintenance as maintenance
-
-    root = Path(__file__).resolve().parents[2]
-    assert (
-        Path(maintenance.__file__).resolve() == root / "tools/pf_native_maintenance.py"
-    )
-    with pytest.raises(maintenance.Rejected, match="^invalid_json$"):
-        maintenance.document(raw, 4096)
 
 
 @pytest.mark.parametrize("failure", [OSError, RuntimeError, ValueError])
@@ -2212,16 +1716,9 @@ except Captured as result:
         row['relative_path']: entry.image.read(row['relative_path'])
         for row in module.parse_manifest(entry.publication.manifest)['files']
     }
-    assert entry.storage_safety(object()) == ('unknown', '', ('managed_exclusion_not_held',))
     assert module.supports_owned_execution() is False
     with entry.operation():
         assert module._CONTROL_LEASE.get() is None
-    try:
-        module.replace_core(entry, root/'absent.zip', lambda: (_ for _ in ()).throw(AssertionError('planner called')), workplace_root=None)
-    except module.NativeControlError:
-        pass
-    else:
-        raise AssertionError('snapshot granted update authority')
     # No disk fallback after capture, including direct alias and resources.
     with module._PHYSICAL_OPEN(root/'src/fixture_core.py', 'wb') as stream:
         stream.write(b"raise AssertionError('disk fallback')\n")
@@ -2307,8 +1804,8 @@ def test_portable_snapshot_binds_actual_whole_entries(
         assert not (root / "runtime").exists()
 
 
-@pytest.mark.parametrize("fault", ["pending", "bound", "updating", "guard", "epoch"])
-def test_portable_snapshot_cannot_bypass_control_state(fault: str) -> None:
+@pytest.mark.parametrize("fault", ["guard", "epoch"])
+def test_portable_snapshot_refuses_incomplete_existing_lease(fault: str) -> None:
     candidate = _portable_candidate()
     root = fixture_root(candidate)
     if fault in {"guard", "epoch"}:
@@ -2409,660 +1906,3 @@ def test_portable_snapshot_reader_retains_nofollow_descriptors(
     assert all(flags & 0x200 for _, flags, _ in opened[:-1])
     if fault != "alias":
         assert opened[-1][1] & 0x400
-
-
-_INSPECT_CHILD = (
-    _ADOPTED_PREAMBLE
-    + r"""
-import io,hashlib
-from contextlib import redirect_stdout
-entry=p.bootstrap_entry(root,trusted_leaf=leaf)
-from processforge_core.project.configuration_inputs import configuration_operation
-import processforge as cli
-project=root/'runtime/fixture/project';device=root/'runtime/fixture/device.yaml'
-def inventory():
-    return {str(f.relative_to(project)):hashlib.sha256(f.read_bytes()).hexdigest() for f in project.rglob('*') if f.is_file() and f.suffix != '.lock'}
-before=inventory(); observed=[]
-original=p.NativeEntry.storage_safety
-def verify(self,context):
-    result=original(self,context);observed.append(result[0]);return result
-p.NativeEntry.storage_safety=verify
-with entry.operation():
-    with configuration_operation(project,None,device_config_path=device):
-        args=cli.build_parser().parse_args(['journal-maintenance','execution-inspect','--project-root',str(project)])
-        output=io.StringIO()
-        with redirect_stdout(output):
-            code=args.func(args)
-        result=json.loads(output.getvalue())
-        assert len(output.getvalue().splitlines())==1
-        assert code==0,result
-        assert result['status']=='planned',result
-assert observed and set(observed)=={'proven'},observed
-assert inventory()==before
-assert entry.storage_safety(None)[0]=='unknown'
-print(json.dumps({'result':result,'proof':observed,'unchanged':True}))
-"""
-)
-
-
-@pytest.mark.parametrize("drift", [False, True])
-def test_registered_inspect_real_managed_scope(native_root: Path, drift: bool) -> None:
-    root, _ = _adopted_fixture_install(native_root)
-    _adopted_run(_ADOPTED_MANAGER, root)
-    script = _INSPECT_CHILD
-    if drift:
-        script = script.replace(
-            "before=inventory(); observed=[]",
-            "before=inventory(); observed=[]; device.write_text('schema_version: 1\\nruntime: {metrics: {interval_seconds: 18}}\\n')",
-        )
-        script = script.replace("assert code==0,result", "assert code==1,result")
-        script = script.replace(
-            "assert result['status']=='planned',result",
-            "assert result['error']['code']=='execution_activity_unknown',result",
-        )
-        script = script.replace(
-            "assert observed and set(observed)=={'proven'},observed",
-            "assert 'proven' not in observed,observed",
-        )
-    first = _adopted_run(script, root)
-    second = _adopted_run(script, root)
-    assert (
-        first["proof"]
-        == second["proof"]
-        == (["unknown"] if drift else ["proven", "unknown"])
-    )
-    assert first["unchanged"] and second["unchanged"]
-
-
-def test_stable_mcp_connection_survives_real_managed_core_update(
-    native_root: Path,
-) -> None:
-    from mcp_bridge.test_stdio_bridge import IDENTITY_URI, WireClient
-
-    root, _ = _adopted_fixture_install(native_root / "target")
-    _adopted_run(_ADOPTED_MANAGER, root)
-    workplace = root / "runtime/fixture/mcp-workplace"
-    workplace.mkdir()
-    (workplace / "workplace.yaml").write_text(
-        "schema_version: 1\nid: managed-mcp-fixture\n", encoding="utf-8"
-    )
-    client = WireClient(root, workplace)
-    try:
-        initial, _ = client.exchange("initialize")
-        assert initial["result"]["serverInfo"]["version"] == "1.3.0-alpha6"
-        client.exchange("resources/subscribe", {"uri": IDENTITY_URI})
-        pid = client.process.pid
-        before = json.loads(
-            (root / "runtime/managed-ingress/baseline.json").read_text()
-        )
-
-        successor = _adopted_publication("1.3.0-alpha7")
-        archive = root / "runtime/mcp-successor.zip"
-        with zipfile.ZipFile(archive, "w") as bundle:
-            for name, raw in {
-                **successor.payload,
-                p.MANIFEST: successor.manifest,
-            }.items():
-                bundle.writestr(name, raw)
-        management, _ = _adopted_fixture_install(native_root / "management")
-        command = [
-            sys.executable,
-            "-B",
-            str(management / "bin/pf.py"),
-            "core-update",
-            "apply",
-            "--core-root",
-            str(root),
-            "--archive",
-            str(archive),
-            "--confirm",
-        ]
-        applied = subprocess.run(command, capture_output=True, text=True, timeout=240)
-        assert applied.returncode == 0, applied.stdout + applied.stderr
-        assert json.loads(applied.stdout)["status"] == "applied"
-        after = json.loads((root / "runtime/managed-ingress/baseline.json").read_text())
-        assert before["adoption"] != after["adoption"]
-        assert after["phase"] == "bound"
-
-        current, notices = client.exchange("resources/read", {"uri": IDENTITY_URI})
-        identity = json.loads(current["result"]["contents"][0]["text"])
-        assert identity["version"] == "1.3.0-alpha7"
-        assert client.process.pid == pid and client.process.poll() is None
-        assert any(
-            notice.get("method") == "notifications/resources/updated"
-            and notice.get("params", {}).get("uri") == IDENTITY_URI
-            for notice in notices
-        )
-    finally:
-        client.close()
-
-
-# Bounded T05 fixtures describe their own original managed installation.
-# They do not reconstruct arbitrary deployment history or retirement proof.
-_RECOVERY_MANAGER = (
-    _ADOPTED_PREAMBLE
-    + r'''
-import os,subprocess,time
-work=root/'runtime/fixture';work.mkdir(parents=True)
-(work/'gate').write_bytes(b'0');(work/'protocol').write_bytes(b'original')
-publication=p.accept_publication(root,trusted_leaf=leaf)
-boundary=p.LegacyManagedBoundary(root,existing_gate=p.NativeControl(work/'gate',work/'protocol','original'),accepted_archive=publication.payload)
-entry=p.NativeEntry(root,publication,p.NativeImage.from_publication(root,publication),None)
-entry.image.activate()
-from processforge_core.composition import build_configuration_provider,build_storage_migration_host
-from processforge_core.configuration import ConfigurationProvider
-project=work/'project';flow=project/'.pf';flow.mkdir(parents=True)
-(flow/'process-forge.yaml').write_text('project:\n  id: stable-project\n')
-device=work/'device.yaml';device.write_text('schema_version: 1\nruntime:\n  metrics:\n    interval_seconds: 17\n')
-workplace=None
-if sys.argv[2]=='workplace':
-    workplace=work/'workplace';workplace.mkdir()
-    (workplace/'workplace.yaml').write_text('schema_version: 1\nid: stable-workplace\n')
-    identity=workplace/'data/accounting/identity.json';identity.parent.mkdir(parents=True)
-    identity.write_text('{"origin_id":"old-origin"}')
-provider=build_configuration_provider(project_root=project,workplace_root=workplace,device_config_path=device)
-config=ConfigurationProvider.pinned(provider.snapshot().config)
-host=build_storage_migration_host(project_root=project,workplace_root=workplace,device_config_path=device,configuration=config)
-selection=host.service._native_selection()
-owner=None
-def refuse_old():
-    for ingress in sorted(boundary.INGRESS):
-        try:
-            boundary.launch([sys.executable,'-B','-c',"raise AssertionError('old ingress ran')"],ingress=ingress)
-        except p.NativeControlError:
-            pass
-        else:
-            raise AssertionError('old ingress admitted: '+ingress)
-def refuse_active():
-    with boundary.held():
-        assert boundary.facts()[0]=='active'
-    try:
-        p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=selection)
-    except p.NativeControlError:
-        pass
-    else:
-        raise AssertionError('live legacy tree adopted')
-    assert not (root/'runtime/managed-ingress').exists()
-    assert not (root/'runtime/native-control').exists()
-    assert sorted(str(path.relative_to(flow)) for path in flow.rglob('*'))==['process-forge.yaml']
-try:
-    if sys.argv[2]=='active':
-        writer = r"""
-import os,sys,time,subprocess
-from pathlib import Path
-work=Path(sys.argv[1])
-child="import os,sys,time;from pathlib import Path;work=Path(sys.argv[1]);stream=(work/'old-child.log').open('ab',buffering=0);(work/'old-child.pid').write_text(str(os.getpid()));\nwhile True: stream.write(b'child\\n');os.fsync(stream.fileno());time.sleep(0.02)"
-subprocess.Popen([sys.executable,'-B','-c',child,str(work)],creationflags=subprocess.DETACHED_PROCESS|subprocess.CREATE_NEW_PROCESS_GROUP)
-with (work/'old-writer.log').open('ab',buffering=0) as stream:
-    while True:
-        stream.write(b'writer\n');os.fsync(stream.fileno());time.sleep(0.02)
-"""
-        owner=boundary.launch([sys.executable,'-B','-c',writer,str(work)],ingress='worker')
-        job=owner.native_job
-        deadline=time.monotonic()+10
-        while not (work/'old-child.pid').is_file() or not (work/'old-writer.log').is_file():
-            assert time.monotonic()<deadline,'old writer tree did not start'
-            time.sleep(0.01)
-        assert job.active()>=2
-        refuse_active()
-        owner.terminate();owner.wait(timeout=5)
-        assert job.active()>=1
-        refuse_active()
-        assert job.stop(deadline=time.monotonic()+5) and job.active()==0
-    else:
-        owner=boundary.launch([sys.executable,'-B','-c','pass'],ingress='worker')
-        assert owner.wait(timeout=5)==0
-    with boundary.held():
-        assert boundary.facts()[0]=='proven'
-    pending=[]
-    class PendingObserved(Exception): pass
-    def checkpoint(phase):
-        if phase=='pending':
-            raise PendingObserved()
-    if sys.argv[2]=='active':
-        try:
-            p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=selection,checkpoint=checkpoint)
-        except PendingObserved:
-            pending.append(boundary.producer._state()['adoption'])
-        else:
-            raise AssertionError('pending checkpoint not reached')
-        assert boundary.producer._state()['phase']=='pending'
-        refuse_old()
-    producer,entry=p.ManagedEnrollmentProducer.from_legacy_manager(boundary,entry,selection=selection)
-    assert producer._state()['phase']=='bound'
-    if pending:
-        assert pending==[producer._state()['adoption']]
-    refuse_old()
-    print(json.dumps({'generation':producer._state()['adoption'],'active_refusals':2 if pending else 0,'pending_refusal':bool(pending)}))
-finally:
-    if owner is not None:
-        owner.native_job.stop(deadline=time.monotonic()+5)
-        owner.wait(timeout=5)
-        owner.native_job.close()
-    boundary.anchor.close()
-'''
-)
-
-_RECOVERY_HOST = (
-    _ADOPTED_PREAMBLE
-    + r"""
-import os
-entry=p.bootstrap_entry(root,trusted_leaf=leaf)
-from processforge_core.composition import build_configuration_provider,build_storage_migration_host
-from processforge_core.configuration import ConfigurationProvider
-project=root/'runtime/fixture/project';flow=project/'.pf'
-device=root/'runtime/fixture/device.yaml'
-workplace=root/'runtime/fixture/workplace'
-if not workplace.exists(): workplace=None
-provider=build_configuration_provider(project_root=project,workplace_root=workplace,device_config_path=device)
-config=ConfigurationProvider.pinned(provider.snapshot().config)
-host=build_storage_migration_host(project_root=project,workplace_root=workplace,device_config_path=device,configuration=config)
-"""
-)
-
-
-def _recovery_process(code: str, root: Path, *args: object) -> None:
-    """Require physical child exit at the named post-commit seam."""
-    result = subprocess.run(
-        [sys.executable, "-B", "-c", code, str(root), *map(str, args)],
-        env={
-            **os.environ,
-            "LOCALAPPDATA": str(root / "runtime/device"),
-            "PYTHONDONTWRITEBYTECODE": "1",
-        },
-        capture_output=True,
-        text=True,
-        timeout=90,
-    )
-    assert result.returncode == 86, result.stdout + "\n" + result.stderr
-    assert result.stdout == ""
-
-
-def _recovery_hashes(directory: Path) -> dict[str, str]:
-    import hashlib
-
-    return {
-        path.relative_to(directory).as_posix(): hashlib.sha256(
-            path.read_bytes()
-        ).hexdigest()
-        for path in directory.rglob("*")
-        if path.is_file()
-    }
-
-
-def test_real_legacy_manager_refuses_active_tree_then_retires(
-    native_root: Path,
-) -> None:
-    root, _ = _adopted_fixture_install(native_root)
-    bound = _adopted_run(_RECOVERY_MANAGER, root, "active", timeout=90)
-    assert bound["active_refusals"] == 2 and bound["pending_refusal"]
-    first = _adopted_run(_ADOPTED_CHILD, root, "after-retirement")
-    second = _adopted_run(_ADOPTED_CHILD, root, "independent-successor")
-    assert first["authority"] == second["authority"] == "sql"
-    assert bound["generation"] == first["generation"] == second["generation"]
-    assert first["pins"] == second["pins"]
-
-
-_EXECUTION_DEATH = (
-    _RECOVERY_HOST
-    + r"""
-from processforge_core.database import SchemaManager
-from processforge_core.maintenance.execution_migration import ExecutionMigrationService
-target=next(target for target in host.context.targets if target.kind=='main')
-with host.service._native_operation(host.context,None):
-    with host.service.admission.maintenance(project,workplace):
-        assert host.service.safety(host.context).state=='proven'
-        engine=host.service.execution_factory(host.context,target)
-        # A real generic SQL envelope makes backup a required, non-null pin.
-        SchemaManager().initialize(engine.database,())
-    plan=engine.plan(project)
-    assert plan['status']=='planned' and plan['counts']['import_units']==257,plan
-    assert plan['target_existed']
-    evidence=flow/'maintenance/native-import'
-    if sys.argv[2]=='batch':
-        batches=ExecutionMigrationService._batches
-        def die_after_batch(self,plan,evidence):
-            for batch in batches(self,plan,evidence):
-                yield batch
-                # Another batch is requested AFTER the previous transaction
-                # committed records and checkpoint together.
-                if sys._getframe(1).f_code.co_name=='_import' and batch[0]==256:
-                    os._exit(86)
-        ExecutionMigrationService._batches=die_after_batch
-    else:
-        cutover=ExecutionMigrationService._cutover
-        def die_after_cutover(self,plan):
-            cutover(self,plan)
-            os._exit(86)
-        ExecutionMigrationService._cutover=die_after_cutover
-    result=engine.apply(project,plan,evidence_dir=evidence,offline_confirmed=True)
-    raise AssertionError(result)
-"""
-)
-
-_EXECUTION_RESUME = (
-    _RECOVERY_HOST
-    + r"""
-evidence=flow/'maintenance/native-import'
-plan=json.loads((evidence/'plan.json').read_text(encoding="utf-8"))
-assert (plan['migration_id'],plan['plan_checksum'])==(sys.argv[2],sys.argv[3])
-target=next(target for target in host.context.targets if target.kind=='main')
-with host.service._native_operation(host.context,None):
-    engine=host.service.execution_factory(host.context,target)
-    assert engine.database.target.identity.store_id==plan['store_id']
-    assert engine.profile_id==json.loads((flow/'data/execution-storage.json').read_text(encoding="utf-8"))['profile_id']
-    result=engine.resume(project,migration_id=sys.argv[2],plan_checksum=sys.argv[3],evidence_dir=evidence,offline_confirmed=True)
-    assert result['status']=='ready',result
-    assert engine.repository.readiness().authority=='sql'
-print(json.dumps({'result':result,'generation':p.ManagedEnrollmentProducer(root,leaf)._state()['adoption']}))
-"""
-)
-
-
-@pytest.mark.parametrize("point", ["batch", "cutover"])
-def test_real_managed_execution_import_process_death_resume(
-    native_root: Path, point: str
-) -> None:
-    import hashlib
-    import sqlite3
-    from contextlib import closing
-
-    from .test_migration import payload
-
-    root, _ = _adopted_fixture_install(native_root)
-    bound = _adopted_run(_RECOVERY_MANAGER, root, "idle")
-    flow = root / "runtime/fixture/project/.pf"
-    sources = []
-    # Put a real snapshot on each side of the 256-unit checkpoint. Directory
-    # floors supply the other units without duplicating the freeze-I/O scale test.
-    for index in (0, 256):
-        task = f"task-{index:04}"
-        source = flow / "runtime/agent-runs/run" / task / "status.json"
-        source.parent.mkdir(parents=True)
-        source.write_text(
-            json.dumps(payload(task), ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        (source.parent / "attempts/19").mkdir(parents=True)
-        sources.append(source)
-    for index in range(1, 256):
-        (flow / f"runtime/agent-runs/run/task-{index:04}/attempts/19").mkdir(
-            parents=True
-        )
-    original = {source: source.read_bytes() for source in sources}
-    _recovery_process(_EXECUTION_DEATH, root, point)
-    evidence = flow / "maintenance/native-import"
-    plan_bytes = (evidence / "plan.json").read_bytes()
-    plan = json.loads(plan_bytes)
-    binding_bytes = (flow / "data/execution-storage.json").read_bytes()
-    binding = json.loads(binding_bytes)
-    database = flow / plan["target_relative_path"]
-    frozen = _recovery_hashes(evidence / "sources")
-    backup = _recovery_hashes(evidence / "backup")
-    manifest_bytes = (evidence / "manifest.ndjson").read_bytes()
-    assert len(frozen) == 2 and backup
-    assert plan["counts"]["imported"] == 2
-    assert plan["counts"]["floor_only"] == 255
-    assert {path.name for path in (evidence / "sources").iterdir()} == {
-        hashlib.sha256(raw).hexdigest() for raw in original.values()
-    }
-    assert binding["store_id"] == plan["store_id"]
-    assert plan["safety_generation"] == bound["generation"]
-    assert plan["project_id"] == binding["project_id"] == "stable-project"
-    assert plan["target_relative_path"] == binding["target_relative_path"]
-    assert not (evidence / "report.json").exists()
-    with closing(sqlite3.connect(database)) as connection:
-        connection.row_factory = sqlite3.Row
-        marker = dict(
-            connection.execute("SELECT * FROM execution_migrations").fetchone()
-        )
-        state = dict(connection.execute("SELECT * FROM execution_state").fetchone())
-        expected = 256 if point == "batch" else 257
-        assert marker["checkpoint"] == expected
-        assert marker["state"] == ("importing" if point == "batch" else "ready")
-        assert marker["plan_checksum"] == plan["plan_checksum"]
-        assert marker["store_id"] == plan["store_id"]
-        assert marker["manifest_checksum"] == plan["manifest_checksum"]
-        assert marker["backup_manifest_checksum"] == "sha256:" + backup["manifest.json"]
-        assert (marker["source_generation"], marker["target_generation"]) == (0, 1)
-        assert (
-            marker["evidence_relative_path"]
-            == evidence.relative_to(flow.parent).as_posix()
-        )
-        assert connection.execute("SELECT count(*) FROM execution_attempts").fetchone()[
-            0
-        ] == (1 if point == "batch" else 2)
-        assert [
-            row[0]
-            for row in connection.execute(
-                "SELECT task_id FROM execution_attempts ORDER BY task_id"
-            )
-        ] == (["task-0000"] if point == "batch" else ["task-0000", "task-0256"])
-        assert (
-            connection.execute(
-                "SELECT count(*) FROM execution_allocation_floors"
-            ).fetchone()[0]
-            == 255
-        )
-        assert marker["migration_id"] == plan["migration_id"]
-        assert (
-            connection.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
-            == plan["store_id"]
-        )
-        assert state["authority"] == ("legacy" if point == "batch" else "sql")
-        assert state["generation"] == (0 if point == "batch" else 1)
-        interrupted_revision = state["revision"]
-    assert original == {source: source.read_bytes() for source in sources}
-    if point == "cutover":
-        sources[0].write_text('{"invalid":"changed after cutover"}', encoding="utf-8")
-    first = _adopted_run(
-        _EXECUTION_RESUME, root, plan["migration_id"], plan["plan_checksum"]
-    )
-    assert first["generation"] == bound["generation"]
-    assert first["result"]["checkpoint"] == 257
-    with closing(sqlite3.connect(database)) as connection:
-        revision = connection.execute(
-            "SELECT revision FROM execution_state"
-        ).fetchone()[0]
-        if point == "cutover":
-            assert revision == interrupted_revision
-        assert (
-            connection.execute("SELECT count(*) FROM execution_attempts").fetchone()[0]
-            == 2
-        )
-        assert (
-            connection.execute("SELECT count(*) FROM execution_current").fetchone()[0]
-            == 0
-        )
-        assert connection.execute(
-            "SELECT DISTINCT next_attempt FROM execution_allocation_floors"
-        ).fetchall() == [(20,)]
-        assert connection.execute(
-            "SELECT DISTINCT next_attempt FROM execution_heads"
-        ).fetchall() == [(20,)]
-        rows = connection.execute(
-            "SELECT task_id,payload_json,history_seq FROM execution_attempts "
-            "ORDER BY task_id"
-        ).fetchall()
-        assert len({row[2] for row in rows}) == 2
-        for task, raw, _ in rows:
-            assert json.loads(raw) == payload(task)
-        provenance = connection.execute(
-            "SELECT task_id,source_checksum FROM execution_attempts"
-        ).fetchall()
-        for task, checksum in provenance:
-            source = flow / "runtime/agent-runs/run" / task / "status.json"
-            assert checksum == "sha256:" + hashlib.sha256(original[source]).hexdigest()
-        assert connection.execute(
-            "SELECT checkpoint,state FROM execution_migrations"
-        ).fetchall() == [(257, "ready")]
-        assert connection.execute(
-            "SELECT generation,authority,readiness FROM execution_state"
-        ).fetchall() == [(1, "sql", "ready")]
-        assert connection.execute("PRAGMA integrity_check").fetchall() == [("ok",)]
-    sources[0].write_text('{"invalid":"must never reimport"}', encoding="utf-8")
-    second = _adopted_run(
-        _EXECUTION_RESUME, root, plan["migration_id"], plan["plan_checksum"]
-    )
-    assert second["result"]["status"] == "ready"
-    assert second["generation"] == bound["generation"]
-    with closing(sqlite3.connect(database)) as connection:
-        assert (
-            connection.execute("SELECT revision FROM execution_state").fetchone()[0]
-            == revision
-        )
-        assert (
-            connection.execute("SELECT count(*) FROM execution_attempts").fetchone()[0]
-            == 2
-        )
-    assert (evidence / "plan.json").read_bytes() == plan_bytes
-    assert (flow / "data/execution-storage.json").read_bytes() == binding_bytes
-    assert (evidence / "manifest.ndjson").read_bytes() == manifest_bytes
-    assert _recovery_hashes(evidence / "sources") == frozen
-    assert _recovery_hashes(evidence / "backup") == backup
-    assert (
-        json.loads((evidence / "report.json").read_text(encoding="utf-8"))["status"]
-        == "ready"
-    )
-
-
-_DOMAIN_RECOVERY = (
-    _RECOVERY_HOST
-    + r"""
-from processforge_core.maintenance import storage_migration as migration
-target=next(target for target in host.context.targets if (target.kind,target.scope)==(sys.argv[3],sys.argv[4]))
-owner=migration.storage_owner_root(host.context,target)
-if sys.argv[2]=='inventory':
-    print(json.dumps({'target':str(target.target),'owner':str(owner),'owner_id':target.owner_id}))
-else:
-    if sys.argv[2]=='die':
-        inspect=migration._inspect_target
-        def die_after_metadata(target_,*args,**kwargs):
-            facts=inspect(target_,*args,**kwargs)
-            if target_==target and facts.get('store_id') is not None and sys._getframe(1).f_code.co_name=='_apply_target':
-                os._exit(86)
-            return facts
-        migration._inspect_target=die_after_metadata
-    result=host.service.resume(host.context)
-    assert result['status']=='ready',result
-    slot=migration._slot(owner,target)
-    plan=json.loads((host.service._journal(owner,slot['plan_checksum'])/'plan.json').read_text(encoding="utf-8"))
-    assert slot['store_id']==plan['store_id']
-    assert plan['safety_generation']==p.ManagedEnrollmentProducer(root,leaf)._state()['adoption']
-    print(json.dumps({'slot':slot,'plan':plan,'result':result}))
-"""
-)
-
-
-@pytest.mark.parametrize(
-    "kind,scope",
-    [
-        ("events", "project"),
-        ("raw", "project"),
-        ("raw", "workplace"),
-        ("accounting", "workplace"),
-        ("search", "workplace"),
-        ("search", "project"),
-    ],
-)
-def test_real_managed_uuid_adoption_process_death_resume(
-    native_root: Path, kind: str, scope: str
-) -> None:
-    import sqlite3
-    from contextlib import closing
-
-    from processforge_core.maintenance.backup import SQLiteBackupService
-
-    from .test_storage_uuid import create_legacy
-
-    root, _ = _adopted_fixture_install(native_root)
-    mode = "idle" if (kind, scope) == ("search", "project") else "workplace"
-    bound = _adopted_run(_RECOVERY_MANAGER, root, mode)
-    resolved = _adopted_run(_DOMAIN_RECOVERY, root, "inventory", kind, scope)
-    target, owner = Path(resolved["target"]), Path(resolved["owner"])
-    create_legacy(target, kind)
-
-    def domain(path: Path) -> tuple[object, ...]:
-        # Include original DDL, opaque rows, FTS shadow tables and pragmas.
-        with closing(sqlite3.connect(path)) as connection:
-            schema = connection.execute(
-                "SELECT type,name,tbl_name,sql FROM sqlite_schema WHERE name NOT IN "
-                "('pf_store_meta','pf_schema_versions','sqlite_autoindex_pf_store_meta_1',"
-                "'sqlite_autoindex_pf_schema_versions_1') ORDER BY type,name"
-            ).fetchall()
-            tables = [row[1] for row in schema if row[0] == "table"]
-            data = [
-                (
-                    table,
-                    connection.execute(
-                        'SELECT * FROM "' + table.replace('"', '""') + '"'
-                    ).fetchall(),
-                )
-                for table in tables
-            ]
-            return (
-                schema,
-                data,
-                connection.execute("PRAGMA application_id").fetchone(),
-                connection.execute("PRAGMA user_version").fetchone(),
-            )
-
-    before = domain(target)
-    _recovery_process(_DOMAIN_RECOVERY, root, "die", kind, scope)
-    pins = json.loads(
-        (owner / "data/storage-identities.json").read_text(encoding="utf-8")
-    )
-    slot = next(
-        row
-        for row in pins["slots"]
-        if row["target_relative_path"] == target.relative_to(owner).as_posix()
-    )
-    assert slot["state"] == "pending"
-    directory = (
-        owner / "data/storage-migrations/r02-storage-v1" / slot["plan_checksum"][7:]
-    )
-    plan_bytes = (directory / "plan.json").read_bytes()
-    plan = json.loads(plan_bytes)
-    journal = json.loads((directory / "journal.json").read_text(encoding="utf-8"))
-    backup = _recovery_hashes(directory / "backup")
-    assert journal["state"] == "importing"
-    assert journal["backup_manifest_checksum"] is not None and backup
-    assert not (directory / "report.json").exists()
-    assert plan["safety_generation"] == bound["generation"]
-    assert plan["owner_id"] == resolved["owner_id"]
-    assert plan["store_id"] == slot["store_id"]
-    with closing(sqlite3.connect(target)) as connection:
-        assert connection.execute(
-            "SELECT store_id,scope,owner_id FROM pf_store_meta"
-        ).fetchall() == [(slot["store_id"], scope, resolved["owner_id"])]
-    assert domain(target) == before
-    assert domain(directory / "backup/database.sqlite3") == before
-    first = _adopted_run(_DOMAIN_RECOVERY, root, "resume", kind, scope)
-    second = _adopted_run(_DOMAIN_RECOVERY, root, "resume", kind, scope)
-    assert first["slot"] == second["slot"] == {**slot, "state": "ready"}
-    assert first["plan"] == second["plan"] == plan
-    assert domain(target) == before
-    assert (directory / "plan.json").read_bytes() == plan_bytes
-    assert _recovery_hashes(directory / "backup") == backup
-    assert (
-        json.loads((directory / "journal.json").read_text(encoding="utf-8"))[
-            "backup_manifest_checksum"
-        ]
-        == journal["backup_manifest_checksum"]
-    )
-    service = SQLiteBackupService()
-    adopted_bundle = root / "runtime/fixture/adopted-backup"
-    service.create(target, adopted_bundle)
-    assert service.verify(adopted_bundle)["verified"] is True
-    restored = root / "runtime/fixture/restored.sqlite3"
-    service.restore(adopted_bundle, restored)
-    assert domain(restored) == before
-    with closing(sqlite3.connect(restored)) as connection:
-        assert connection.execute(
-            "SELECT store_id,scope,owner_id FROM pf_store_meta"
-        ).fetchall() == [(slot["store_id"], scope, resolved["owner_id"])]
-    if kind == "search":
-        with closing(sqlite3.connect(target)) as connection:
-            assert connection.execute(
-                "SELECT title FROM documents_fts WHERE documents_fts MATCH 'Unicode'"
-            ).fetchall() == [("title",)]

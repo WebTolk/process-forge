@@ -450,8 +450,6 @@ def test_confirmed_public_repair_preserves_preimages_and_failure(
         "workplace",
         "after_manifest",
         "manifest_bytes",
-        "native-control",
-        "managed-ingress",
         "incomplete_backup",
         "proof_link",
     ],
@@ -489,8 +487,6 @@ def test_recovery_refusals_preserve_all_bytes(fixture: Harness, fault: str) -> N
             (fixture.target / "processforge-core.manifest.json").write_bytes(
                 bundle.read("processforge-core.manifest.json")
             )
-    elif fault in {"native-control", "managed-ingress"}:
-        (fixture.target / "runtime" / fault).mkdir()
     elif fault == "incomplete_backup":
         progress["backed_up"].pop("changed.txt")
     elif fault == "proof_link":
@@ -612,7 +608,7 @@ def fail(source,destination):
     return original_replace(source,destination)
 file_update.os.replace=fail
 try:
-    result=invoke()
+    result=invoke(force_local_modifications=True)
 finally:
     file_update.os.replace=original_replace
 result['status']=core_status(target)
@@ -640,7 +636,7 @@ emit(result)
 
 @pytest.mark.parametrize("name", ["native-control", "managed-ingress"])
 @pytest.mark.parametrize("kind", ["empty_directory", "partial_file"])
-def test_complete_or_partial_managed_markers_never_fall_back(
+def test_historical_enrollment_markers_are_preserved_without_adoption(
     fixture: Harness, name: str, kind: str
 ) -> None:
     marker = fixture.target / "runtime" / name
@@ -648,15 +644,11 @@ def test_complete_or_partial_managed_markers_never_fall_back(
     marker.mkdir() if kind == "empty_directory" else marker.write_bytes(
         b"partial metadata"
     )
-    before = fixture.snapshot()
-    result = fixture.run("""
-def forbidden(*args,**kwargs):raise AssertionError('managed target entered compatibility updater')
-file_update.apply_file_update=forbidden
-emit(invoke())
-""")
-    assert result["code"] == "plan_blocked"
-    fixture.assert_no_apply(before)
+    result = fixture.run("emit(invoke())")
+    assert result["ok"] and result["result"]["status"] == "applied", result
     assert marker.exists()
+    if kind == "partial_file":
+        assert marker.read_bytes() == b"partial metadata"
 
 
 def test_managed_caller_cannot_fall_back_to_unbound_target(fixture: Harness) -> None:
@@ -666,8 +658,6 @@ from dataclasses import replace
 guard,epoch=case/'gate',case/'epoch'
 guard.write_bytes(b'0');epoch.write_bytes(b'fixture')
 native._ENTRY=replace(entry,control=native.NativeControl(guard,epoch,'fixture'))
-def forbidden(*args,**kwargs):raise AssertionError('managed caller entered compatibility updater')
-file_update.apply_file_update=forbidden
 emit(invoke(force_local_modifications=True))
 """)
     assert result["code"] == "plan_blocked"
@@ -731,19 +721,23 @@ def test_invalid_archive_preserves_target(fixture: Harness, fault: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "relative",
+    ("which", "relative"),
     [
-        "processes/user/private.yaml",
-        "processes/custom/private.yaml",
-        ".pf/runs/private.yaml",
-        ".pf/AGENTS.md",
-        ".pf/hooks.yaml",
-        ".pf/process-forge.yaml",
-        "runtime/private.txt",
-        "Processes/USER/private.yaml",
+        (which, relative)
+        for which in ("old", "new")
+        for relative in (
+            "processes/user/private.yaml",
+            "processes/custom/private.yaml",
+            ".pf/runs/private.yaml",
+            "runtime/private.txt",
+            "Processes/USER/private.yaml",
+        )
+    ]
+    + [
+        ("new", relative)
+        for relative in (".pf/AGENTS.md", ".pf/hooks.yaml", ".pf/process-forge.yaml")
     ],
 )
-@pytest.mark.parametrize("which", ["old", "new"])
 def test_manifest_cannot_claim_private_or_runtime_paths(
     fixture: Harness, sealed: Any, relative: str, which: str
 ) -> None:
@@ -765,8 +759,9 @@ def test_manifest_cannot_claim_private_or_runtime_paths(
 
 
 @pytest.mark.parametrize("missing", [False, True])
-def test_public120_entry_templates_are_backed_up_and_removed(
-    fixture: Harness, missing: bool
+@pytest.mark.parametrize("version", ["1.2.0", "2.7.9"])
+def test_old_owned_entry_templates_are_backed_up_and_removed(
+    fixture: Harness, missing: bool, version: str
 ) -> None:
     released = {
         ".pf/AGENTS.md": b"public startup template\n",
@@ -778,9 +773,9 @@ def test_public120_entry_templates_are_backed_up_and_removed(
         put(fixture.target, relative, raw)
     if missing:
         (fixture.target / ".pf/hooks.yaml").unlink()
-    original = old_manifest({**OLD, **released}, version="1.2.0")
+    original = old_manifest({**OLD, **released}, version=version)
     (fixture.target / "processforge-core.manifest.json").write_bytes(original)
-    result = fixture.run("emit(invoke())")
+    result = fixture.run("emit(invoke(force_local_modifications=True))")
     assert result["ok"], result
     receipt = result["result"]
     backup = Path(receipt["backup_dir"])
@@ -1045,10 +1040,9 @@ emit(json.loads(result.stdout)['error'])
 
 
 @pytest.mark.parametrize("name", ["native-control", "managed-ingress"])
-def test_unreadable_managed_marker_is_not_treated_as_absent(
+def test_update_does_not_consult_retired_enrollment_metadata(
     fixture: Harness, name: str
 ) -> None:
-    before = fixture.snapshot()
     result = fixture.run(
         """
 original=Path.lstat
@@ -1061,9 +1055,7 @@ finally:Path.lstat=original
 emit(result)
 """.replace("MARKER", repr(name))
     )
-    assert result["code"] == "plan_blocked"
-    assert "inspect" in result["message"]
-    fixture.assert_no_apply(before)
+    assert result["ok"] and result["result"]["status"] == "applied", result
 
 
 @pytest.mark.parametrize("collision", ["frozen_archive", "staging"])

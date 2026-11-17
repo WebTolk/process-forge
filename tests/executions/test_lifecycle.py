@@ -1270,7 +1270,6 @@ def test_terminal_rejection_precedes_storage_and_provider(
     import processforge as core
 
     from processforge_core.prepared import input as prepared_input
-    from processforge_core.prepared import resources
 
     root, _repository, args, _driver = sql_cli_fixture
     task = core._worker_assignment_service.load(root, args.task)
@@ -1289,7 +1288,6 @@ def test_terminal_rejection_precedes_storage_and_provider(
     monkeypatch.setattr(core, "_storage_first_write", forbidden)
     monkeypatch.setattr(core, "prepare_worker_run", forbidden)
     monkeypatch.setattr(prepared_input, "load", forbidden)
-    monkeypatch.setattr(resources, "native_start_preflight", forbidden)
     monkeypatch.setattr(subprocess, "Popen", forbidden)
     before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
     assert getattr(core, "command_worker_run_" + operation)(args) == 1

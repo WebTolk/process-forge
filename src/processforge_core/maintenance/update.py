@@ -14,7 +14,7 @@ import shutil
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, BinaryIO, Callable, Iterable
 
 import processforge_core.common.clock as _core_common_clock
 
@@ -542,7 +542,7 @@ def backup_workplace_target(
 
 
 def apply_workplace_migration(
-    archive_path: Path,
+    archive_path: Path | BinaryIO,
     workplace_root: Path,
     migration_plan: dict[str, Any],
     backup_dir: Path,
@@ -844,19 +844,8 @@ def apply_update(
         raise CoreUpdateError(
             "confirm_required", "core update apply requires explicit confirmation"
         )
-    # The CLI dispatch bypasses invocation/diagnostic scopes. Direct native
-    # callers must unwind theirs too: never pop somebody else's live scope.
+    # Apply from a separate, verified installer after PF has stopped.
     from contextvars import copy_context
-
-    from pf_native_control import (
-        NativeControlError,
-        NativeUpdateError,
-        _read_update_plan_file,
-        _sha256_update_plan_file,
-        _update_entry,
-        _update_selection_inputs,
-        replace_core,
-    )
 
     for variable, value in copy_context().items():
         if (
@@ -867,70 +856,14 @@ def apply_update(
             raise CoreUpdateError(
                 "plan_blocked", "core update requires unwound operation scopes"
             )
-    from .file_update import apply_file_update, file_update_candidate
+    from .file_update import apply_file_update
 
-    if file_update_candidate(core_root):
-        return apply_file_update(core_root, archive_path, workplace_root=workplace_root)
-    try:
-        entry = _update_entry(core_root)
-    except (NativeControlError, OSError, ValueError, KeyError, TypeError) as error:
-        raise CoreUpdateError(
-            "plan_blocked", "core update requires qualified installation exclusion"
-        ) from error
-
-    def prepare_plan() -> dict[str, Any]:
-        plan = _build_plan(
-            core_root,
-            archive_path,
-            workplace_root=workplace_root,
-            read_installed=lambda: json.loads(
-                _read_update_plan_file(core_root.resolve() / CORE_MANIFEST_NAME)
-            ),
-            sha256_owned=_sha256_update_plan_file,
-        )
-        blockers = [
-            item
-            for item in plan["blockers"]
-            if item.get("code") != "locally_modified" or not force_local_modifications
-        ]
-        if blockers:
-            raise CoreUpdateError("plan_blocked", "core update plan has blockers")
-        from ..composition import _update_selection
-        from ..maintenance.contracts import MaintenanceError
-
-        selection, locator = _update_selection_inputs()
-        try:
-            with _update_selection(
-                selection,
-                Path(locator) if locator else None,
-                workplace_root=workplace_root,
-            ) as (actual, configuration):
-                plan["_native_device_config_path"] = actual._device_config_path
-                plan["_native_configuration"] = configuration
-        except (MaintenanceError, OSError, ValueError, KeyError, TypeError) as error:
-            raise CoreUpdateError(
-                "plan_blocked", "core update selection is invalid"
-            ) from error
-        return plan
-
-    def prepare() -> dict[str, Any]:
-        try:
-            return prepare_plan()
-        except CoreUpdateError as error:
-            # Generator-based native scopes assign __traceback__ while
-            # unwinding. Carry plain native data until every scope releases;
-            # restore the frozen public error only at the outer boundary.
-            raise NativeUpdateError(error.code, error.message) from error
-
-    try:
-        return replace_core(entry, archive_path, prepare, workplace_root=workplace_root)
-    except (NativeControlError, OSError, ValueError, KeyError, TypeError) as error:
-        raise CoreUpdateError(
-            "plan_blocked", "core update requires qualified installation exclusion"
-        ) from error
-    except NativeUpdateError as error:
-        # Pure value translation; no old Core writes/error diagnostics/finally.
-        raise CoreUpdateError(error.code, error.message) from error
+    return apply_file_update(
+        core_root,
+        archive_path,
+        workplace_root=workplace_root,
+        force_local_modifications=force_local_modifications,
+    )
 
 
 def resume_file_update(
