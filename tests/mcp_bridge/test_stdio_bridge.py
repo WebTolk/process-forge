@@ -294,6 +294,157 @@ class StdioBridgeTest(unittest.TestCase):
         self.assertTrue(mismatch["result"]["isError"])
         self.assertIn("session_mismatch", mismatch["result"]["content"][0]["text"])
 
+    def test_forge_clients_share_runtime_and_reconnect_without_local_fallback(
+        self,
+    ) -> None:
+        workplace = self.root / "forge-workplace"
+
+        def cli(*args: object) -> dict[str, Any]:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    str(self.source / "bin/pf.py"),
+                    *(str(value) for value in args),
+                ],
+                cwd=self.source,
+                capture_output=True,
+                encoding="utf-8",
+                timeout=60,
+            )
+            self.assertEqual(
+                completed.returncode, 0, completed.stdout + completed.stderr
+            )
+            return (
+                json.loads(completed.stdout)
+                if completed.stdout.lstrip().startswith("{")
+                else {}
+            )
+
+        cli(
+            "workplace-init",
+            "--workplace",
+            workplace,
+            "--profile",
+            "software-development",
+            "--apply",
+        )
+        cli(
+            "workplace-mode",
+            "set",
+            "--workplace",
+            workplace,
+            "--director-enabled",
+            "true",
+            "--director-office-enabled",
+            "true",
+            "--json",
+        )
+
+        def runtime(*args: object) -> dict[str, Any]:
+            return cli("runtime", *args, "--workplace", workplace)
+
+        project = self.root / "forge-project"
+        project.mkdir()
+        cli(
+            "project-init",
+            "--project-root",
+            project,
+            "--workplace",
+            workplace,
+            "--type",
+            "processforge-development",
+            "--process",
+            "software-feature-development",
+            "--apply",
+        )
+        first = runtime("start", "--interval", "3600", "--timeout", "30", "--json")
+        self.addCleanup(runtime, "stop", "--timeout", "30")
+        runtime(
+            "session-register",
+            "--session",
+            "bridge-fixture-session",
+            "--agent",
+            "bridge-fixture",
+            "--project-root",
+            project,
+            "--json",
+        )
+        state_path = workplace / "runtime/pf-runtime/service.json"
+        state = json.loads(state_path.read_bytes())
+        clients = [
+            WireClient(self.source, workplace, backend_timeout_seconds=5)
+            for _ in range(2)
+        ]
+        for client in clients:
+            self.addCleanup(client.close)
+            response, _ = client.exchange("initialize")
+            self.assertNotIn("error", response)
+            self.assertEqual(
+                response["result"]["_meta"]["processforge/backend"]["runtime"],
+                {"instance_id": state["instance_id"], "pid": first["pid"]},
+            )
+            self.assertNotEqual(client.process.pid, first["pid"])
+            scoped, _ = client.exchange(
+                "tools/call", {"name": "pf.session_context", "arguments": {}}
+            )
+            self.assertFalse(scoped["result"].get("isError"), scoped)
+            outside, _ = client.exchange(
+                "tools/call",
+                {
+                    "name": "pf.session_context",
+                    "arguments": {"project_root": str(self.root)},
+                },
+            )
+            self.assertTrue(outside["result"]["isError"])
+            self.assertIn("project", outside["result"]["content"][0]["text"])
+            mismatch, _ = client.exchange(
+                "tools/call",
+                {
+                    "name": "pf.work.state",
+                    "arguments": {"session_id": "another-session"},
+                },
+            )
+            self.assertTrue(mismatch["result"]["isError"])
+            self.assertIn("session_mismatch", mismatch["result"]["content"][0]["text"])
+
+        # The instance selector is checked by the server, not trusted from disk.
+        stale = dict(state, instance_id="different-runtime-instance")
+        state_path.write_text(json.dumps(stale), encoding="utf-8")
+        try:
+            rejected, _ = clients[0].exchange("tools/list")
+            self.assertEqual(rejected["error"]["code"], -32603)
+        finally:
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+        runtime("stop", "--timeout", "30")
+        stopped = runtime("status", "--json")
+        self.assertEqual(stopped["status"], "stopped")
+        unavailable, _ = clients[0].exchange(
+            "tools/call", {"name": "pf.work.start", "arguments": {"apply": True}}
+        )
+        self.assertTrue(unavailable["result"]["isError"])
+        failure = json.loads(unavailable["result"]["content"][0]["text"])["error"]
+        self.assertEqual(failure["code"], "mcp_backend_unavailable")
+        self.assertFalse(failure["automatic_retry"])
+        for client in clients:
+            unavailable, _ = client.exchange("resources/read", {"uri": IDENTITY_URI})
+            self.assertEqual(unavailable["error"]["code"], -32603)
+            ping, _ = client.exchange("ping")
+            self.assertEqual(ping["result"], {})
+
+        # Existing host pipes reconnect to the restarted sole executor.
+        restarted = runtime("start", "--interval", "3600", "--timeout", "30", "--json")
+        current = json.loads(state_path.read_bytes())
+        self.assertNotEqual(current["instance_id"], state["instance_id"])
+        for client in clients:
+            identity, _ = client.exchange("resources/read", {"uri": IDENTITY_URI})
+            self.assertNotIn("error", identity)
+            self.assertEqual(
+                identity["result"]["_meta"]["processforge/backend"]["runtime"],
+                {"instance_id": current["instance_id"], "pid": restarted["pid"]},
+            )
+
     def test_uncertain_backend_does_not_replay_and_recovers_on_next_request(
         self,
     ) -> None:

@@ -1,4 +1,4 @@
-"""Keep host-owned MCP pipes while each request uses a fresh native Core."""
+"""Keep host-owned MCP pipes and route Forge requests to its existing Runtime."""
 
 from __future__ import annotations
 
@@ -11,6 +11,10 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
+from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
+
+import yaml  # type: ignore[import-untyped]
 
 from pf_runtime.mcp_transport import configure_utf8
 
@@ -19,6 +23,109 @@ BACKEND_META = "processforge/backend"
 
 class BackendUnavailable(Exception):
     """The backend did not return a complete, correlated protocol response."""
+
+
+def _read_mapping(path: Path, *, yaml_document: bool = False) -> dict[str, Any]:
+    with path.open("rb") as stream:
+        raw = stream.read(1024 * 1024 + 1)
+    if len(raw) > 1024 * 1024:
+        raise BackendUnavailable()
+    try:
+        value = yaml.safe_load(raw) if yaml_document else json.loads(raw)
+    except (ValueError, yaml.YAMLError) as error:
+        raise BackendUnavailable() from error
+    if not isinstance(value, dict):
+        raise BackendUnavailable()
+    return value
+
+
+def _forge_workplace(workplace: str) -> bool:
+    try:
+        manifest = _read_mapping(Path(workplace) / "workplace.yaml", yaml_document=True)
+    except FileNotFoundError:
+        return False
+    coordination = manifest.get("coordination", {})
+    if not isinstance(coordination, dict):
+        raise BackendUnavailable()
+    return bool(coordination.get("director_enabled", False))
+
+
+class _NoRedirect(HTTPRedirectHandler):
+    def redirect_request(
+        self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
+    ) -> None:
+        return None
+
+
+def _runtime_exchange(
+    line: str, workplace: str, session_id: str, timeout_seconds: float
+) -> bytes:
+    """Send once to the selected local Runtime; uncertain writes are never replayed."""
+    runtime = Path(workplace) / "runtime/pf-runtime"
+    state = _read_mapping(runtime / "service.json")
+    token = _read_mapping(runtime / "token.json").get("token")
+    endpoint = state.get("endpoint")
+    instance = state.get("instance_id")
+    if (
+        state.get("status") != "ready"
+        or not isinstance(endpoint, str)
+        or not isinstance(instance, str)
+        or not instance
+        or not isinstance(token, str)
+        or not token
+        or not token.isascii()
+    ):
+        raise BackendUnavailable()
+    selected = urlsplit(endpoint)
+    if (
+        selected.scheme != "http"
+        or selected.hostname != "127.0.0.1"
+        or not selected.port
+        or selected.username is not None
+        or selected.password is not None
+        or selected.path not in {"", "/"}
+        or selected.query
+        or selected.fragment
+    ):
+        raise BackendUnavailable()
+    payload = json.dumps(
+        {
+            "request": _request_value(line),
+            "session_id": session_id,
+            "expected_instance_id": instance,
+        },
+        ensure_ascii=True,
+    ).encode("utf-8")
+    request = Request(
+        endpoint.rstrip("/") + "/mcp",
+        data=payload,
+        method="POST",
+        headers={
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
+        },
+    )
+    # Local credentials must not enter a proxy or follow a redirect.
+    with build_opener(ProxyHandler({}), _NoRedirect()).open(
+        request, timeout=timeout_seconds
+    ) as response:
+        raw = response.read(8 * 1024 * 1024 + 1)
+    if len(raw) > 8 * 1024 * 1024:
+        raise BackendUnavailable()
+    try:
+        envelope = json.loads(raw)
+    except ValueError as error:
+        raise BackendUnavailable() from error
+    if (
+        not isinstance(envelope, dict)
+        or envelope.get("instance_id") != instance
+        or not isinstance(envelope.get("messages"), list)
+    ):
+        raise BackendUnavailable()
+    return b"\n".join(
+        json.dumps(message, ensure_ascii=True).encode("utf-8")
+        for message in envelope["messages"]
+    )
 
 
 def _reject_constant(value: str) -> Any:
@@ -55,7 +162,18 @@ def _request_id(request: Any) -> Any:
 def exchange(
     line: str, workplace: str, session_id: str, timeout_seconds: float = 120.0
 ) -> list[dict[str, Any]]:
-    """Invoke the fixed native entry exactly once; never retry an uncertain write."""
+    """Use the sole Forge executor, or the existing operator-owned Garage entry."""
+    workplace = str(Path(workplace).expanduser().resolve())
+    if _forge_workplace(workplace):
+        stdout = _runtime_exchange(line, workplace, session_id, timeout_seconds)
+    else:
+        stdout = _garage_exchange(line, workplace, session_id, timeout_seconds)
+    return _validated_messages(line, stdout)
+
+
+def _garage_exchange(
+    line: str, workplace: str, session_id: str, timeout_seconds: float
+) -> bytes:
     entry = Path(__file__).absolute().with_name("mcp_server.py")
     completed = subprocess.run(
         [
@@ -76,13 +194,17 @@ def exchange(
     )
     if completed.returncode:
         raise BackendUnavailable()
+    return completed.stdout
+
+
+def _validated_messages(line: str, stdout: bytes) -> list[dict[str, Any]]:
     request = _request_value(line)
     messages: list[dict[str, Any]] = []
     responses = 0
     try:
         # Only LF frames messages. Unicode line separators are JSON string data.
         # Stderr is deliberately opaque: its encoding cannot invalidate stdout.
-        for raw in completed.stdout.decode("utf-8").split("\n"):
+        for raw in stdout.decode("utf-8").split("\n"):
             if not raw.strip():
                 continue
             message = json.loads(raw, parse_constant=_reject_constant)
@@ -308,7 +430,13 @@ def main() -> int:
                     line, args.workplace, args.session, args.backend_timeout_seconds
                 ),
             )
-        except (OSError, UnicodeError, subprocess.TimeoutExpired, BackendUnavailable):
+        except (
+            OSError,
+            UnicodeError,
+            ValueError,
+            subprocess.TimeoutExpired,
+            BackendUnavailable,
+        ):
             response = _unavailable(request)
             messages = [] if response is None else [response]
         for message in messages:
