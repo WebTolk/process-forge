@@ -9,7 +9,6 @@ from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text
 from processforge_subprocess import run_command as run_processforge_command
-from smoke_sql_project import initialize_sql_project
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
@@ -27,16 +26,7 @@ def pf(*args: str, expect: int = 0) -> CommandResult:
 
 
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="pf-runtime-driver-project-") as raw:
-        root = Path(raw).resolve()
-        workplace, project = root / "workplace", root / "project"
-        pf("workplace-init", "--workplace", str(workplace), "--apply")
-        initialize_sql_project(project, workplace)
-        return exercise(project)
-
-
-def exercise(project: Path) -> int:
-    listed = pf("runtime-driver", "list", "--project-root", str(project)).stdout
+    listed = pf("runtime-driver", "list").stdout
     for driver_id in [
         "manual",
         "generic-shell",
@@ -50,8 +40,6 @@ def exercise(project: Path) -> int:
             not_ready = pf(
                 "runtime-driver",
                 "validate",
-                "--project-root",
-                str(project),
                 "--driver",
                 driver_id,
                 expect=1,
@@ -63,8 +51,6 @@ def exercise(project: Path) -> int:
             pf(
                 "runtime-driver",
                 "validate",
-                "--project-root",
-                str(project),
                 "--driver",
                 driver_id,
                 "--executable",
@@ -74,16 +60,12 @@ def exercise(project: Path) -> int:
             pf(
                 "runtime-driver",
                 "validate",
-                "--project-root",
-                str(project),
                 "--driver",
                 driver_id,
             )
         described = pf(
             "runtime-driver",
             "describe",
-            "--project-root",
-            str(project),
             "--driver",
             driver_id,
         ).stdout
@@ -112,8 +94,6 @@ security:
         output = pf(
             "runtime-driver",
             "validate",
-            "--project-root",
-            str(project),
             "--driver",
             str(invalid),
             expect=1,
@@ -148,8 +128,6 @@ security:
         output = pf(
             "runtime-driver",
             "validate",
-            "--project-root",
-            str(project),
             "--driver",
             str(reserved_env),
             expect=1,
