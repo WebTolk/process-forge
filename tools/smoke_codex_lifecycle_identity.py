@@ -84,10 +84,9 @@ def main() -> int:
         assert not results[1]["deduplicated"]
         assert results[2]["deduplicated"]
 
-        from processforge_core.work.consistency import RunTaskInputReader
+        from smoke_hook_sqlite_support import events as stored_events
 
-        events_path, _ = RunTaskInputReader().event_runtime_paths(project)
-        events = [event for _sequence, event, _error in runtime.core.iter_process_events(events_path)]
+        events = stored_events(project)
         lifecycle = [
             event
             for event in events

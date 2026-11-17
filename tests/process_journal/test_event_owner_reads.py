@@ -69,6 +69,9 @@ def test_unbound_journal_read_keeps_bytes_schema_and_no_uuid(tmp_path: Path) -> 
     settle(path)
     before = files(tmp_path)
     assert recorder.latest_process_event(tmp_path) == event
+    assert list(recorder.event_journal_for_project(tmp_path).records(path)) == [
+        (1, event, None)
+    ]
     assert files(tmp_path) == before
     assert not (tmp_path / ".pf/runtime/.storage-identity.lock.guard").exists()
 
@@ -99,6 +102,8 @@ def test_refused_read_preserves_storage_and_cause(tmp_path: Path, damage: str) -
         recorder.latest_process_event(tmp_path)
     if damage == "corrupt":
         assert caught.value.__cause__ is not None
+    with pytest.raises(JournalError, match=code):
+        list(recorder.event_journal_for_project(tmp_path).records(path))
     assert files(tmp_path) == before
 
 
@@ -147,6 +152,9 @@ def test_configured_owner_reads_bound_journal_without_adoption(tmp_path: Path) -
         "event_id": "bound-event",
         "event_type": "fixture.observed",
     }
+    assert list(recorder.event_journal_for_project(tmp_path).records(path)) == [
+        (1, {"event_id": "bound-event", "event_type": "fixture.observed"}, None)
+    ]
     assert files(tmp_path) == before
 
 
@@ -177,4 +185,6 @@ def test_bound_owner_refusals_preserve_bytes_and_identity(
     }[damage]
     with pytest.raises(expected, match=code):
         recorder.latest_process_event(tmp_path)
+    with pytest.raises(expected, match=code):
+        list(recorder.event_journal_for_project(tmp_path).records(path))
     assert files(tmp_path) == before
