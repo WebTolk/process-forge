@@ -17,10 +17,12 @@ host-owned: Codex starts the Python process from Codex MCP configuration and
 owns the stdin/stdout pipes. It is not registered as a Windows scheduled task or
 detached background service.
 
-The optional **pf-app-server** is the separate workplace Runtime service for
-scheduling and orchestration. This stdio facade calls shared Core services;
-Garage context and governed Work do not require a running app-server. Use the
-existing CLI when no MCP connection is available. See
+The **pf-app-server** is the workplace Runtime service for scheduling and
+orchestration. Garage context and governed Work do not require a running
+app-server. In Forge, the stdio facade sends requests to that existing service,
+which executes them using its loaded Core. An unavailable Runtime causes a
+backend error and never a local Core fallback. See
+[MCP connections and Core updates](mcp-updates.md),
 [Garage Core](garage-core.md) and [requirements](../requirements.md).
 
 ## Implementation reference: stdio transport

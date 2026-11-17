@@ -17,10 +17,12 @@
 stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
 detached background service.
 
-Необязательный **pf-app-server** — отдельная служба Runtime для планирования
-и координации workplace. Stdio-фасад использует общий Core; контекст Garage
-и управляемая Work не требуют работающего app-server. При отсутствии MCP
-используйте существующий CLI. См. [Garage Core](garage-core.md) и
+**pf-app-server** — служба Runtime для планирования и координации workplace.
+Контекст Garage и управляемая Work не требуют работающего app-server.
+В Forge stdio-фасад передаёт запросы этой существующей службе, которая исполняет
+их на своём загруженном Core. При недоступном Runtime возвращается ошибка
+backend, без перехода на локальный Core. См.
+[MCP-соединения и обновление Core](mcp-updates.md), [Garage Core](garage-core.md) и
 [требования](../requirements.md).
 
 ## Справка по реализации: транспорт stdio
