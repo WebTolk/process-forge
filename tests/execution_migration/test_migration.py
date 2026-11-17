@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -187,6 +188,150 @@ class Harness:
 def harness() -> Harness:
     """Use an owned, inherited-permission directory; do not alter any ACL."""
     return Harness(Path(os.environ["PF_W4_TEST_ROOT"]) / uuid4().hex)
+
+
+def collection_files(project: Path, status: Path, project_id: str) -> tuple[Path, Path]:
+    """Write the metadata produced by a completed legacy collect."""
+    state = json.loads(status.read_bytes())
+    directory = status.parent / "attempts" / str(state["attempt"])
+    directory.mkdir(parents=True, exist_ok=True)
+    reference = {
+        "path": (directory / "prepared-input.json").relative_to(project).as_posix(),
+        "checksum": "sha256:" + "a" * 64,
+    }
+    state["prepared_input"] = reference
+    status.write_text(json.dumps(state), encoding="utf-8")
+    receipt = {
+        "schema_version": 1,
+        "identity": {
+            "kind": "work",
+            "project_id": project_id,
+            "run_id": state["run_id"],
+            "assignment_id": state["task_id"],
+            "context_id": "old-context",
+            "attempt": state["attempt"],
+        },
+        "prepared_input": reference,
+        "outputs": [
+            {
+                "path": "old-report.md",
+                "required": True,
+                "status": "present",
+                "checksum": "sha256:" + "b" * 64,
+                "size": 10,
+            }
+        ],
+    }
+    receipt["receipt_id"] = (
+        "sha256:" + hashlib.sha256(canonical_json(receipt).encode("utf-8")).hexdigest()
+    )
+    receipt_path = directory / "collection-receipt.json"
+    complete_path = directory / "collection-complete.json"
+    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    complete_path.write_text(
+        json.dumps({"schema_version": 1, "receipt_id": receipt["receipt_id"]}),
+        encoding="utf-8",
+    )
+    return receipt_path, complete_path
+
+
+@pytest.mark.parametrize("completed", [False, True])
+def test_collection_history_survives_cutover_and_resume(
+    harness: Harness, completed: bool
+) -> None:
+    status = harness.status("task")
+    receipt, complete = collection_files(harness.project, status, "exact-project")
+    if not completed:
+        complete.unlink()
+    originals = {
+        path: path.read_bytes() for path in (status, receipt, complete) if path.exists()
+    }
+    plan = harness.service.plan(harness.project)
+    assert plan["status"] == "planned", plan
+    # Resume after rows/checkpoint have committed, before verification/cutover.
+    with patch.object(harness.service, "_verify", side_effect=InterruptedError):
+        assert harness.apply(plan)["blocked"]
+    assert harness.resume(plan)["status"] == "ready"
+    record = harness.repository.load(ExecutionKey("exact-project", "run", "task", 1))
+    assert record is not None and record.outcome == "completed"
+    assert record.collection == ("collected" if completed else "pending")
+    assert harness.resume(plan)["status"] == "ready"
+    assert harness.repository.load(record.key) == record
+    assert {path: path.read_bytes() for path in originals} == originals
+
+
+@pytest.mark.parametrize("change", ["add", "remove", "rewrite"])
+def test_collection_completion_is_frozen(harness: Harness, change: str) -> None:
+    status = harness.status("task")
+    _, complete = collection_files(harness.project, status, "exact-project")
+    raw = complete.read_bytes()
+    if change == "add":
+        complete.unlink()
+    plan = harness.service.plan(harness.project)
+    if change == "remove":
+        complete.unlink()
+    else:
+        complete.write_bytes(raw + b" ")
+    assert harness.apply(plan)["error"]["code"] == "execution_manifest_changed"
+    assert not harness.database.target.path.exists()
+
+
+@pytest.mark.parametrize(
+    "damage",
+    [
+        "invalid_json",
+        "missing_receipt",
+        "completion_id",
+        "receipt_hash",
+        "project_id",
+        "run_id",
+        "assignment_id",
+        "attempt",
+        "prepared_input",
+    ],
+)
+def test_invalid_collection_never_becomes_accepted(
+    harness: Harness, damage: str
+) -> None:
+    status = harness.status("task")
+    receipt_path, complete = collection_files(harness.project, status, "exact-project")
+    receipt = json.loads(receipt_path.read_bytes())
+    if damage == "invalid_json":
+        complete.write_bytes(b"{")
+    elif damage == "missing_receipt":
+        receipt_path.unlink()
+    elif damage == "completion_id":
+        complete.write_text(
+            json.dumps({"schema_version": 1, "receipt_id": "sha256:" + "c" * 64}),
+            encoding="utf-8",
+        )
+    else:
+        if damage == "receipt_hash":
+            receipt["outputs"] = []
+        else:
+            if damage == "prepared_input":
+                receipt["prepared_input"]["checksum"] = "sha256:" + "c" * 64
+            else:
+                receipt["identity"][damage] = 2 if damage == "attempt" else "other"
+            receipt.pop("receipt_id")
+            receipt["receipt_id"] = (
+                "sha256:"
+                + hashlib.sha256(canonical_json(receipt).encode("utf-8")).hexdigest()
+            )
+            complete.write_text(
+                json.dumps({"schema_version": 1, "receipt_id": receipt["receipt_id"]}),
+                encoding="utf-8",
+            )
+        receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    result = harness.service.plan(harness.project)
+    expected = (
+        "execution_source_invalid"
+        if damage
+        in {"invalid_json", "missing_receipt", "completion_id", "receipt_hash"}
+        else "execution_identity_conflict"
+    )
+    assert result["blocked"] and result["error"]["code"] == expected, result
+    assert not harness.database.target.path.exists()
 
 
 @pytest.mark.parametrize("count", [0, 1, 257])

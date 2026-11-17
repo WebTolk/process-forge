@@ -175,6 +175,14 @@ are bounded to 64 KiB; stdout/stderr, reports and prepared inputs are never read
 Only positively historical invalid snapshots with full host quiescence proof may
 be skipped; exact bytes, hashes and provenance remain in evidence.
 
+For an imported attempt, a valid `collection-complete.json` and matching
+`collection-receipt.json` preserve `collection_state=collected`. The importer
+checks their schema, receipt checksum, project/Work/attempt identity and the
+prepared-input reference saved in the status. It reads historical metadata only,
+without reopening outputs or executing collection again. Without a completion
+file the state remains `pending`; damaged or conflicting proof blocks import.
+Both receipt files enter the frozen source inventory and remain unchanged.
+
 Apply publishes a pending `data/execution-storage.json` binding under admission
 before database mutation. An existing store receives one verified WAL-aware
 recovery backup. A source unit is one snapshot with its floor, or one floor-only

@@ -899,6 +899,7 @@ class ExecutionMigrationService:
                             snapshot_key,
                             key.attempt,
                             False,
+                            item["collected"],
                         )
                         records.append(
                             snapshot.record(int(cast(int, plan["target_generation"])))

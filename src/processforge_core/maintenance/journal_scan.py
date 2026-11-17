@@ -36,6 +36,7 @@ class ExecutionSnapshot:
     key: ExecutionKey
     next_attempt: int
     invalid_historical: bool
+    collected: bool = False
 
     def record(self, generation: int) -> ExecutionRecord:
         """Map only observable latest state, with no invented overwritten history."""
@@ -48,7 +49,7 @@ class ExecutionSnapshot:
             generation,
             "prepared" if prepared else "absent",
             None if prepared else status,
-            "pending",
+            "collected" if self.collected else "pending",
             None,
             None if prepared else 1,
             canonical_json(self.payload),
@@ -128,6 +129,63 @@ def execution_json(raw: bytes) -> JsonObject:
         raise MaintenanceError("execution_source_invalid") from None
 
 
+def _execution_collected(
+    project: Path, task: Path, key: ExecutionKey, payload: JsonObject
+) -> bool:
+    """Read historical collection metadata without reopening produced outputs."""
+    directory = task / "attempts" / str(key.attempt)
+    completion_path = directory / "collection-complete.json"
+    _check_links(completion_path, "migration_source_symlink")
+    if not completion_path.exists():
+        return False
+    receipt_path = directory / "collection-receipt.json"
+    _check_links(receipt_path, "migration_source_symlink")
+    if not receipt_path.exists():
+        raise MaintenanceError("execution_source_invalid")
+    completion = execution_json(execution_bytes(completion_path))
+    receipt = execution_json(execution_bytes(receipt_path))
+    reference = payload.get("prepared_input")
+    identity = receipt.get("identity")
+    if (
+        set(completion) != {"schema_version", "receipt_id"}
+        or type(completion["schema_version"]) is not int
+        or completion["schema_version"] != 1
+        or set(receipt)
+        != {"schema_version", "identity", "prepared_input", "outputs", "receipt_id"}
+        or type(receipt["schema_version"]) is not int
+        or receipt["schema_version"] != 1
+        or not isinstance(receipt["outputs"], list)
+        or receipt["receipt_id"]
+        != "sha256:"
+        + hashlib.sha256(
+            canonical_json(
+                {k: v for k, v in receipt.items() if k != "receipt_id"}
+            ).encode("utf-8")
+        ).hexdigest()
+        or completion["receipt_id"] != receipt["receipt_id"]
+    ):
+        raise MaintenanceError("execution_source_invalid")
+    if (
+        not isinstance(reference, dict)
+        or set(reference) != {"path", "checksum"}
+        or reference["path"]
+        != (directory / "prepared-input.json").relative_to(project).as_posix()
+        or not isinstance(reference["checksum"], str)
+        or len(reference["checksum"]) != 71
+        or not reference["checksum"].startswith("sha256:")
+        or any(c not in "0123456789abcdef" for c in reference["checksum"][7:])
+        or receipt["prepared_input"] != reference
+        or not isinstance(identity, dict)
+        or identity.get("project_id") != key.project_id
+        or identity.get("run_id") != key.run_id
+        or identity.get("assignment_id") != key.task_id
+        or type(identity.get("attempt")) is not int
+        or identity["attempt"] != key.attempt
+    ):
+        raise MaintenanceError("execution_identity_conflict")
+    return True
+
+
 def execution_snapshots(
     project: Path, flow: Path, project_id: str, *, skip_terminal_invalid: bool
 ) -> Iterator[tuple[JsonObject, ExecutionSnapshot | None, bytes | None]]:
@@ -186,7 +244,13 @@ def execution_snapshots(
                     None,
                     None,
                 )
-                for name in ("exit.json", "heartbeat.json", "process.json"):
+                for name in (
+                    "collection-complete.json",
+                    "collection-receipt.json",
+                    "exit.json",
+                    "heartbeat.json",
+                    "process.json",
+                ):
                     receipt = attempt / name
                     _check_links(receipt, "migration_source_symlink")
                     if receipt.exists():
@@ -275,6 +339,7 @@ def execution_snapshots(
                 key,
                 max(floor, number + 1),
                 invalid,
+                not invalid and _execution_collected(project, task, key, payload),
             )
             item = fact(status_path, raw)
             item.update(
@@ -282,6 +347,7 @@ def execution_snapshots(
                 + hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest(),
                 next_attempt=snapshot.next_attempt,
                 skipped=invalid,
+                collected=snapshot.collected,
                 allocation_floor={
                     "run_id": run.name,
                     "task_id": task.name,
