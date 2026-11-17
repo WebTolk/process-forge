@@ -25,6 +25,182 @@ from processforge_core.maintenance.original_manager_update import (
 from processforge_core.maintenance.update import CoreUpdateError
 
 
+def test_project_required_before_any_storage_host_or_configuration_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from processforge_core.maintenance.original_manager_update import (
+        finish_original_update,
+    )
+
+    def forbidden(**kwargs: Any) -> Any:
+        pytest.fail("projectless update reached configuration/storage")
+
+    monkeypatch.setattr(
+        "processforge_core.composition.build_configuration_provider", forbidden
+    )
+    monkeypatch.setattr(
+        "processforge_core.composition.build_storage_migration_host", forbidden
+    )
+    with pytest.raises(native.NativeUpdateError, match="existing project"):
+        finish_original_update({"selection": {"project": "", "owner": ""}})
+
+
+def test_actual_retained_child_requires_whole_job_retirement(original_boundary) -> None:
+    ready = original_boundary.root / "child-ready"
+    descendant = (
+        "import pathlib,time;pathlib.Path("
+        + repr(str(ready))
+        + ").touch();time.sleep(30)"
+    )
+    parent = (
+        'import subprocess,sys;subprocess.Popen([sys.executable,"-B","-c",'
+        + repr(descendant)
+        + "])"
+    )
+    process = original_boundary.launch(
+        [sys.executable, "-B", "-c", parent], ingress="worker"
+    )
+    assert process.wait(timeout=10) == 0
+    attempt = native.OriginalUpdateChild(process, dict(process.native_facts))
+    deadline = time.monotonic() + 5
+    while not ready.exists() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert ready.exists()
+    assert not attempt.retired()
+    assert process.native_job.stop(deadline=time.monotonic() + 5)
+    assert attempt.retired()
+    attempt.facts["birth_id"] = "1"
+    assert not attempt.retired()
+
+
+def test_effective_workplace_is_resolved_from_real_configuration_before_plan(
+    tmp_path: Path,
+) -> None:
+    from processforge_core.composition import (
+        build_configuration_provider,
+        build_storage_migration_host,
+    )
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.maintenance.original_manager_update import (
+        resolve_original_selection,
+    )
+
+    project, workplace, device = (
+        tmp_path / n for n in ("project", "workplace", "device.yaml")
+    )
+    flow = project / ".pf"
+    flow.mkdir(parents=True)
+    workplace.mkdir()
+    device.write_text("schema_version: 1\n", encoding="utf-8")
+    (workplace / "workplace.yaml").write_text(
+        "id: stable-workplace\n", encoding="utf-8"
+    )
+    (flow / "process-forge.yaml").write_text(
+        "project:\n  id: stable-project\nworkplace:\n  manifest: "
+        + (workplace / "workplace.yaml").as_posix()
+        + "\n",
+        encoding="utf-8",
+    )
+    provider = build_configuration_provider(
+        project_root=project, workplace_root=workplace, device_config_path=device
+    )
+    host = build_storage_migration_host(
+        project_root=project,
+        workplace_root=workplace,
+        device_config_path=device,
+        configuration=provider,
+    )
+    assert host.service._native_selection is not None
+    expected = host.service._native_selection()
+    before = {str(p): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+    implicit = resolve_original_selection(expected, None)
+    explicit = resolve_original_selection(expected, workplace)
+    assert implicit == explicit
+    assert implicit[2] == workplace
+    with pytest.raises(MaintenanceError, match="storage_enrollment_conflict"):
+        resolve_original_selection(expected, tmp_path / "wrong-workplace")
+    assert all(Path(name).read_bytes() == raw for name, raw in before.items())
+    assert not list(tmp_path.rglob("*.sqlite*"))
+
+
+def test_projectless_selection_refuses_before_configuration(
+    tmp_path: Path,
+) -> None:
+    from processforge_core.maintenance.original_manager_update import (
+        resolve_original_selection,
+    )
+
+    with pytest.raises(CoreUpdateError, match="existing project"):
+        resolve_original_selection(
+            native.ManagedSelection("", str(tmp_path), "", "", "", ()), None
+        )
+    assert not list(tmp_path.iterdir())
+
+
+def test_delayed_descendant_creation_never_looks_retired(
+    original_boundary,
+    tmp_path: Path,
+) -> None:
+    boundary = original_boundary
+    started = tmp_path / "spawned"
+    child = (
+        "import pathlib,time;pathlib.Path("
+        + repr(str(started))
+        + ").touch();time.sleep(30)"
+    )
+    parent = (
+        'import subprocess,sys,time;time.sleep(0.3);subprocess.Popen([sys.executable,"-B","-c",'
+        + repr(child)
+        + "])"
+    )
+    process = boundary.launch([sys.executable, "-B", "-c", parent], ingress="worker")
+    attempt = native.OriginalUpdateChild(process, dict(process.native_facts))
+    with boundary.held():
+        assert boundary.facts()[0] == "active"
+    assert not attempt.retired()
+    assert process.wait(timeout=10) == 0
+    deadline = time.monotonic() + 5
+    while not started.exists() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert started.exists()
+    assert not attempt.retired()
+    assert process.native_job.stop(deadline=time.monotonic() + 5)
+    assert attempt.retired()
+    assert not (boundary.root / "runtime").exists()
+
+
+def test_ci_provisioner_refuses_workstation_before_any_side_effect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from pf_controlled_upgrade_ci import provision
+
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    with pytest.raises(RuntimeError, match="disposable_github_hosted"):
+        provision(None)
+
+
+def test_terminal_response_with_wrong_child_identity_cannot_resume(
+    original_boundary,
+) -> None:
+    boundary = original_boundary
+    process = boundary.launch([sys.executable, "-B", "-c", "pass"], ingress="worker")
+    assert process.wait(timeout=10) == 0
+    attempt = native.OriginalUpdateChild(
+        process,
+        dict(process.native_facts),
+        {
+            "_update_error": {"code": "storage_resume_required"},
+            "_original_terminal": {},
+        },
+    )
+    boundary.update_children.append(attempt)
+    boundary.update_handoff = {}
+    attempt.facts["birth_id"] = "1"
+    with pytest.raises(native.NativeControlError):
+        native._resume_original_child(boundary, unissued_plan(boundary))
+    assert not (boundary.root / "runtime").exists()
+
+
 def manifest(*names: str, version: str = "1.2.0") -> dict[str, Any]:
     return {
         "schema_version": 1,

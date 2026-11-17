@@ -979,7 +979,10 @@ def resume_file_update(
             raise CoreUpdateError(
                 "plan_blocked", "exact original operation is unavailable"
             )
-        if workplace_root != retained.workplace:
+        if (
+            workplace_root is not None
+            and workplace_root.resolve() != retained.workplace
+        ):
             raise CoreUpdateError("plan_blocked", "original recovery selection differs")
         return original.resume(
             archive_path, update_id=retained.update_id, confirm=confirm

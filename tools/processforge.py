@@ -16795,6 +16795,12 @@ def command_core_update_apply(args: argparse.Namespace) -> int:
     print(json.dumps(payload, indent=2, sort_keys=True))
     if payload.get("maintenance_mode") == "file_only":
         return 0
+    if payload.get("maintenance_mode") == "original_manager":
+        from processforge_core.maintenance.original_manager_update import (
+            original_update_succeeded,
+        )
+
+        return 0 if original_update_succeeded(payload) else 2
     return (
         0
         if not args.workplace_root or payload["post_update_doctor"]["status"] == "pass"
@@ -16839,6 +16845,12 @@ def command_core_update_repair(args: argparse.Namespace) -> int:
         )
         return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
+    if payload.get("maintenance_mode") == "original_manager":
+        from processforge_core.maintenance.original_manager_update import (
+            original_update_succeeded,
+        )
+
+        return 0 if original_update_succeeded(payload) else 2
     return 0 if payload.get("status") != "manual_repair_required" else 2
 
 

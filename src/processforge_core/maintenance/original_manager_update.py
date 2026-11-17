@@ -152,6 +152,42 @@ class OriginalManagerUpdateService:
         finally:
             _ROUTE.reset(token)
 
+    def public_cli(
+        self,
+        command: str,
+        archive_path: Path,
+        *,
+        confirm: bool = False,
+        workplace_root: Path | None = None,
+    ) -> int:
+        """Fixed CLI dispatch inside the retained manager, including exit contract."""
+        import argparse
+
+        import processforge
+
+        handlers = {
+            "plan": processforge.command_core_update_plan,
+            "apply": processforge.command_core_update_apply,
+            "repair": processforge.command_core_update_repair,
+        }
+        if command not in handlers:
+            raise CoreUpdateError(
+                "plan_blocked", "unknown original manager CLI operation"
+            )
+        args = argparse.Namespace(
+            core_root=str(self.boundary.root),
+            archive=str(archive_path),
+            confirm=confirm,
+            force_local_modifications=False,
+            workplace_root=str(workplace_root) if workplace_root else None,
+            resume=True,
+        )
+        token = _ROUTE.set(self)
+        try:
+            return handlers[command](args)
+        finally:
+            _ROUTE.reset(token)
+
     def plan(
         self, archive_path: Path, *, workplace_root: Path | None = None
     ) -> LegacyUpdatePlan:
@@ -229,6 +265,11 @@ class OriginalManagerUpdateService:
                             return None
                         return _read_regular(root, relative, MAX_FILE)
 
+                    # Resolve the effective root BEFORE the delta/package plan.
+                    selection, configuration, workplace_root = (
+                        resolve_original_selection(self.selection, workplace_root)
+                    )
+
                     plan = _build_plan(
                         root,
                         archive_path,
@@ -247,18 +288,8 @@ class OriginalManagerUpdateService:
                             "plan_blocked",
                             "original bridge requires no package migration",
                         )
-                    # The selected project/owner/routing is resolved from current configuration.
-                    from ..composition import _update_selection
-
-                    with _update_selection(
-                        self.selection.document(),
-                        Path(self.selection._device_config_path),
-                        workplace_root=workplace_root,
-                    ) as (selection, configuration):
-                        plan["_native_device_config_path"] = (
-                            selection._device_config_path
-                        )
-                        plan["_native_configuration"] = configuration
+                    plan["_native_device_config_path"] = selection._device_config_path
+                    plan["_native_configuration"] = configuration
                     profile = self.boundary.original_profile()
                     roots = [
                         selection.project,
@@ -338,6 +369,27 @@ class OriginalManagerUpdateService:
                         workplace=workplace_root,
                         selection_files=MappingProxyType(selection_files),
                     )
+                    # Pin the same resolved inputs used by the delta planner,
+                    # including changes between resolution and snapshot capture.
+                    checked, checked_configuration, checked_workplace = (
+                        resolve_original_selection(selection, workplace_root)
+                    )
+                    if (
+                        checked != selection
+                        or checked_configuration != configuration
+                        or checked_workplace != workplace_root
+                    ):
+                        raise NativeControlError()
+                    for selection_name, selected_raw in selection_files.items():
+                        path = Path(selection_name)
+                        if path.exists():
+                            if (
+                                _read_regular(path.parent, path.name, MAX_MANIFEST)
+                                != selected_raw
+                            ):
+                                raise NativeControlError()
+                        elif selected_raw is not None:
+                            raise NativeControlError()
                     self.boundary.prepared_update = prepared
                     return prepared
                 except (CoreUpdateError, MaintenanceError) as error:
@@ -402,6 +454,28 @@ class OriginalManagerUpdateService:
             ) from error
 
 
+def resolve_original_selection(
+    expected: ManagedSelection, workplace_root: Path | None
+) -> tuple[ManagedSelection, dict[str, Any], Path | None]:
+    """Resolve project identity and the one effective Workplace without mutation."""
+    from ..composition import _update_selection
+
+    if not expected.project or not expected.owner:
+        raise CoreUpdateError(
+            "project_identity_required", "original upgrade requires an existing project"
+        )
+    with _update_selection(
+        expected.document(),
+        Path(expected._device_config_path),
+        workplace_root=workplace_root,
+    ) as (selected, configuration):
+        return (
+            selected,
+            configuration,
+            Path(selected.workplace) if selected.workplace else None,
+        )
+
+
 def finish_original_update(data: dict[str, Any]) -> dict[str, Any]:
     """Execute only in the fresh captured child, under its actual native lease."""
     from pf_native_control import NativeUpdateError, _update_json, _update_now
@@ -412,6 +486,10 @@ def finish_original_update(data: dict[str, Any]) -> dict[str, Any]:
     project = (
         Path(data["selection"]["project"]) if data["selection"]["project"] else None
     )
+    if project is None or not data["selection"].get("owner"):
+        raise NativeUpdateError(
+            "project_identity_required", "original upgrade requires an existing project"
+        )
     workplace = Path(data["workplace_root"]) if data["workplace_root"] else None
     device = Path(data["device_config_path"])
     configuration = build_configuration_provider(
@@ -429,10 +507,6 @@ def finish_original_update(data: dict[str, Any]) -> dict[str, Any]:
     if migrated["blocked"]:
         raise NativeUpdateError(
             "storage_resume_required", "original upgrade storage migration is blocked"
-        )
-    if project is None:
-        raise NativeUpdateError(
-            "project_identity_required", "original upgrade requires an existing project"
         )
     selected = select_execution_storage(project, workplace, configuration=configuration)
     if (
@@ -461,3 +535,15 @@ def finish_original_update(data: dict[str, Any]) -> dict[str, Any]:
     _update_json(root / "runtime/core-update/last-apply.json", record)
     (root / "runtime/core-update/in-progress.json").unlink()
     return record
+
+
+def original_update_succeeded(result: dict[str, Any]) -> bool:
+    """CLI success requires the validated fresh-child SQL/migration result."""
+    migration = result.get("storage_migration")
+    return (
+        result.get("status") == "applied"
+        and result.get("execution_authority") == "sql"
+        and isinstance(migration, dict)
+        and migration.get("blocked") is False
+        and migration.get("status") == "ready"
+    )

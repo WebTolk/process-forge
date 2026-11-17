@@ -223,3 +223,44 @@ public upgrade has passed. Positive public-archive migration/worker, actual
 copy-failure recovery, independent review and applicable OS qualification remain
 required. A later manager cannot qualify an installation with unknown historical
 writers. This Windows slice adds no Linux controller or historical cold route.
+
+The CLI treats original-manager success as an applied result with a real
+`storage_migration.status=ready`, `blocked=false` and verified SQL execution
+authority. It does not invent a doctor result. The selected project identity is
+required before planning any replacement, and the effective Workplace resolved
+from configuration is retained in plan, child handoff and repair. An omitted
+optional Workplace uses this selection; an explicit different root refuses.
+
+A confirmed terminal fresh-child failure can be reconciled by the same live
+manager. The manager retains the exact process handle, birth identity and Job;
+root exit alone is insufficient. A structured response must match the durable
+failed journal, transaction, archive, generation and epoch. Recovery revalidates
+the copied publication, control files, backups and selection, then starts a new
+qualified child to use the existing SQL checkpoint/resume protocol. It never
+copies Core again or replays an unknown domain mutation. Missing handles,
+nonterminal trees, malformed/missing responses and unknown outcomes still refuse.
+
+`smoke_public_core_upgrade.py --controlled-original` is an executable CI-only
+fixture entry. It requires a new GitHub-hosted Windows runner namespace. Before
+the first old writer it creates a disposable ordinary account, protects only its
+new namespace, probes effective access through that account, copies and qualifies
+the interpreter/dependencies and loaded Windows modules, and captures the accepted
+manager through the public entry bootstrap. Passwords travel only in private
+pipes. It never provisions the developer workstation.
+
+Its principal model is a fixed trusted-workload broker: old/current commands,
+MCP request bodies and the echo worker are source-defined trusted code running
+under the maintenance principal. Ordinary callers have neither fixture access
+nor a request endpoint. This model is not isolation for arbitrary worker code.
+The genuine old launcher may create its own Python child without propagating
+`-I`; the fixed environment, empty protected user profile, disabled bytecode/user
+site and copied startup closure cover that child too. Windows OS code remains
+part of the runner trust boundary.
+
+The separate Windows workflow job uses one frozen candidate for fresh positive,
+copy-share-lock/retry and post-SQL finalization-share-lock/resume fixtures. It
+checks public CLI exits, retained ingress retirement, preimage/selection refusals,
+owner/history/store identities, SQL readiness, worker prepare/start/status/collect
+and stdio MCP with exact Work selectors. Its existence does not mean it has passed.
+Pending/guard/epoch crash matrices, historical/cross-boot/device and Linux
+qualification remain separately required; no broad release acceptance follows.

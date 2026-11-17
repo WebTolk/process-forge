@@ -2407,6 +2407,8 @@ class LegacyManagedBoundary:
         self.update_journal: bytes | None = None
         self.update_directory_identity: tuple[int, int] | None = None
         self.update_child_started = False
+        self.update_children: list[OriginalUpdateChild] = []
+        self.update_handoff: dict[str, Any] | None = None
         self._original_gate: dict[str, Any] | None = None
         self._original_profile = (
             canonical_json(original_profile) if original_profile is not None else None
@@ -4152,7 +4154,7 @@ def resume_legacy_core(
         if (
             prepared is None
             or prepared.update_id != update_id
-            or boundary.update_child_started
+            or (boundary.update_child_started and not boundary.update_children)
         ):
             raise NativeControlError()
         with _PHYSICAL_OPEN(archive_path, "rb") as stream:
@@ -4160,6 +4162,8 @@ def resume_legacy_core(
         if raw != prepared.archive:
             raise NativeControlError()
         _legacy_validate(boundary, prepared)
+        if boundary.update_child_started:
+            return _resume_original_child(boundary, prepared)
         if boundary.update_journal is None:
             _initialize_legacy_core(boundary, prepared)
         prefix = f"runtime/core-update/backups/{prepared.update_id}"
@@ -4340,7 +4344,8 @@ def _execute_legacy_core(
     # No old Core import, callback, doctor or storage write follows replacement.
     # Uncertain spawn/child outcome refuses automatic replay in this manager.
     boundary.update_child_started = True
-    return _launch_update_child(handoff)
+    boundary.update_handoff = json.loads(json.dumps(handoff))
+    return _launch_update_child(handoff, original=boundary)
 
 
 def replace_core(
@@ -4575,23 +4580,182 @@ module._run_update_child(data)
 """
 
 
+@dataclass
+class OriginalUpdateChild:
+    """Live process/Job ownership; a PID or serialized receipt cannot rebuild it."""
+
+    process: subprocess.Popen[bytes]
+    facts: dict[str, Any]
+    response: dict[str, Any] | None = None
+    stdout: bytes | None = None
+    stderr: bytes | None = None
+
+    def retired(self) -> bool:
+        job = getattr(self.process, "native_job", None)
+        return (
+            os.name == "nt"
+            and isinstance(job, OwnedJob)
+            and bool(job.handle)
+            and self.process.poll() is not None
+            and getattr(self.process, "native_facts", None) == self.facts
+            and self.facts.get("pid") == self.process.pid
+            and _birth(job.kernel, int(getattr(self.process, "_handle")))
+            == self.facts.get("birth_id")
+            and job.active() == 0
+        )
+
+
+def _resume_original_child(
+    boundary: LegacyManagedBoundary, prepared: LegacyUpdatePlan
+) -> dict[str, Any]:
+    """Forward-only SQL checkpoint reconciliation, never another file copy."""
+    handoff = boundary.update_handoff
+    attempt = boundary.update_children[-1]
+    if handoff is None or not attempt.retired() or attempt.response is None:
+        raise NativeControlError()
+    terminal = attempt.response.get("_original_terminal")
+    if not isinstance(terminal, dict) or "_update_error" not in attempt.response:
+        raise NativeControlError()
+    root = boundary.root
+    journal = _read_regular(root, "runtime/core-update/in-progress.json", MAX_MANIFEST)
+    if terminal != {
+        "update_id": prepared.update_id,
+        "epoch": handoff["epoch"],
+        "generation": handoff["generation"],
+        "archive_sha256": digest(prepared.archive),
+        "journal_sha256": digest(journal),
+    }:
+        raise NativeControlError()
+    progress = json.loads(journal)
+    expected = handoff["progress"]
+    if (
+        progress.get("status") != "failed"
+        or progress.get("pending_operations")
+        or progress.get("error") != attempt.response["_update_error"]
+        or progress.get("failure_history")
+        != expected["failure_history"]
+        + [
+            {
+                "failed_at": progress.get("failed_at"),
+                **attempt.response["_update_error"],
+            }
+        ]
+        or {
+            k: v
+            for k, v in progress.items()
+            if k not in {"status", "error", "failed_at", "failure_history"}
+        }
+        != {
+            k: v
+            for k, v in expected.items()
+            if k not in {"status", "error", "failed_at", "failure_history"}
+        }
+    ):
+        raise NativeControlError()
+    prefix = f"runtime/core-update/backups/{prepared.update_id}"
+    directory = _update_target(root, prefix)
+    info = directory.stat()
+    if (info.st_dev, info.st_ino) != boundary.update_directory_identity:
+        raise NativeControlError()
+    for name, raw in {
+        "old-manifest": prepared.old_manifest,
+        "new-manifest": prepared.frozen.manifest,
+        "plan": prepared.plan,
+    }.items():
+        if (
+            _read_regular(root, prefix + "/control/" + name + ".json", MAX_MANIFEST)
+            != raw
+        ):
+            raise NativeControlError()
+    for name, saved in progress["backed_up"].items():
+        initial = prepared.initial[name]
+        if saved != ("files/" + name if initial is not None else None):
+            raise NativeControlError()
+        if saved and _read_regular(root, prefix + "/" + saved, MAX_FILE) != initial:
+            raise NativeControlError()
+    plan = json.loads(prepared.plan)
+    for name, raw in {
+        **prepared.frozen.payload,
+        MANIFEST: prepared.frozen.manifest,
+    }.items():
+        if (
+            _read_regular(root, name, MAX_MANIFEST if name == MANIFEST else MAX_FILE)
+            != raw
+        ):
+            raise NativeControlError()
+    for name in plan["removed"]:
+        if _legacy_current(root, name) is not None:
+            raise NativeControlError()
+    producer = boundary.producer
+    if producer is None:
+        raise NativeControlError()
+    state = producer._state()
+    if (
+        state["phase"] != "bound"
+        or state["adoption"] != handoff["generation"]
+        or state["selection"] != handoff["selection"]
+        or producer._epoch(state) != handoff["epoch"]
+    ):
+        raise NativeControlError()
+    resumed = json.loads(json.dumps(handoff))
+    resumed["progress"] = progress
+    resumed["resume_journal_sha256"] = digest(journal)
+    boundary.update_handoff = json.loads(json.dumps(resumed))
+    return _launch_update_child(resumed, original=boundary)
+
+
 def _launch_update_child(
-    handoff: dict[str, Any], *, timeout: float = 210
+    handoff: dict[str, Any],
+    *,
+    timeout: float = 210,
+    original: LegacyManagedBoundary | None = None,
 ) -> dict[str, Any]:
     try:
-        child = subprocess.run(
-            [sys.executable, "-I", "-B", "-c", _UPDATE_CHILD_BOOTSTRAP],
-            input=json.dumps(handoff),
-            text=True,
-            encoding="utf-8",
-            errors="strict",
-            capture_output=True,
-            shell=False,
-            timeout=timeout,
-        )
-        result = json.loads(child.stdout)
-        if child.returncode != 0 or not isinstance(result, dict):
+        argv = [sys.executable, "-I", "-B", "-c", _UPDATE_CHILD_BOOTSTRAP]
+        retained = None
+        if original is None:
+            child = subprocess.run(
+                argv,
+                input=json.dumps(handoff),
+                text=True,
+                encoding="utf-8",
+                errors="strict",
+                capture_output=True,
+                shell=False,
+                timeout=timeout,
+            )
+            output, returncode = child.stdout, child.returncode
+        else:
+            process = spawn_owned(
+                argv,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=False,
+            )
+            retained = OriginalUpdateChild(
+                process, dict(getattr(process, "native_facts"))
+            )
+            original.update_children.append(retained)
+            try:
+                stdout, stderr = process.communicate(
+                    json.dumps(handoff).encode("utf-8"), timeout=timeout
+                )
+            except subprocess.TimeoutExpired as timeout_error:
+                retained.stdout, retained.stderr = (
+                    timeout_error.output,
+                    timeout_error.stderr,
+                )
+                raise
+            retained.stdout, retained.stderr = stdout, stderr
+            output, returncode = stdout.decode("utf-8"), process.returncode
+            if not retained.retired():
+                raise NativeControlError()
+        result = json.loads(output)
+        if returncode != 0 or not isinstance(result, dict):
             raise ValueError("post-update child refused")
+        if retained is not None:
+            retained.response = result
         if "_update_error" in result:
             error = result["_update_error"]
             raise NativeUpdateError(error["code"], error["message"])
@@ -4645,9 +4809,29 @@ def _run_update_child(data: dict[str, Any]) -> None:
                     root, "runtime/core-update/in-progress.json", MAX_MANIFEST
                 )
             )
-            if (
-                progress.get("update_id") != data["progress"]["update_id"]
-                or progress.get("status") != "applying"
+            if progress.get("update_id") != data["progress"][
+                "update_id"
+            ] or progress.get("status") != (
+                "failed" if data.get("resume_journal_sha256") else "applying"
+            ):
+                raise NativeControlError()
+            if data.get("resume_journal_sha256"):
+                if (
+                    data.get("phase") != "original-storage"
+                    or digest(
+                        _read_regular(
+                            root, "runtime/core-update/in-progress.json", MAX_MANIFEST
+                        )
+                    )
+                    != data["resume_journal_sha256"]
+                    or progress != data["progress"]
+                    or progress["pending_operations"]
+                ):
+                    raise NativeControlError()
+            if data.get("phase") == "original-storage" and (
+                progress != data["progress"]
+                or progress.get("archive_sha256") != data["archive_sha256"]
+                or progress.get("pending_operations")
             ):
                 raise NativeControlError()
         if _read_regular(root, LEAF, MAX_FILE) != trusted_leaf:
@@ -4691,11 +4875,17 @@ def _run_update_child(data: dict[str, Any]) -> None:
             except Exception as error:
                 failure = {
                     "code": getattr(error, "code", "file_operation_failed"),
-                    "message": getattr(error, "message", str(error)),
+                    "message": getattr(
+                        error, "message", "post-update finalization failed"
+                    ),
                 }
                 data["progress"].update(
                     status="failed", failed_at=_update_now(), error=failure
                 )
+                if data.get("phase") == "original-storage":
+                    data["progress"]["failure_history"].append(
+                        {"failed_at": data["progress"]["failed_at"], **failure}
+                    )
                 try:
                     _update_json(
                         root / "runtime/core-update/in-progress.json", data["progress"]
@@ -4703,6 +4893,19 @@ def _run_update_child(data: dict[str, Any]) -> None:
                 except OSError:
                     pass
                 result = {"_update_error": failure}
+                if data.get("phase") == "original-storage":
+                    # Only a durable exact journal permits same-manager retry.
+                    saved = _read_regular(
+                        root, "runtime/core-update/in-progress.json", MAX_MANIFEST
+                    )
+                    if json.loads(saved) == data["progress"]:
+                        result["_original_terminal"] = {
+                            "update_id": data["progress"]["update_id"],
+                            "epoch": data["epoch"],
+                            "generation": data["generation"],
+                            "archive_sha256": data["archive_sha256"],
+                            "journal_sha256": digest(saved),
+                        }
         print(json.dumps(result, indent=2, sort_keys=True))
 
 

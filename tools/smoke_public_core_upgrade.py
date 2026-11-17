@@ -348,12 +348,29 @@ def main() -> int:
         parser.add_argument("--" + name, type=Path, required=True)
     parser.add_argument("--commit", required=True)
     parser.add_argument("--sha256", required=True)
+    controlled = parser.add_mutually_exclusive_group()
+    controlled.add_argument(
+        "--controlled-original",
+        action="store_true",
+        help="Provision a new disposable Windows CI original-manager fixture.",
+    )
+    controlled.add_argument(
+        "--controlled-original-run", action="store_true", help=argparse.SUPPRESS
+    )
+    parser.add_argument(
+        "--controlled-fault", choices=["none", "copy", "finalize"], default="none"
+    )
     parser.add_argument(
         "--file-recovery",
         action="store_true",
         help="Run bounded real OS-failure and public CLI recovery qualification only.",
     )
     args = parser.parse_args()
+    if args.controlled_original or args.controlled_original_run:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pf_controlled_upgrade_ci import provision, run_suite
+
+        return provision(args) if args.controlled_original else run_suite(args)
     if args.file_recovery:
         return file_recovery(args)
     root, out = args.root.resolve(), args.out.resolve()

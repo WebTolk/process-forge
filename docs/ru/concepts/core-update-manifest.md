@@ -206,3 +206,43 @@ forward recovery; bridge не разрешает downgrade.
 независимый review и применимая OS qualification остаются обязательными.
 Новый manager не квалифицирует неизвестную историю установки. Этот Windows slice
 не добавляет Linux controller или historical cold route.
+
+CLI считает original-manager apply успешным только при applied result,
+настоящих `storage_migration.status=ready`, `blocked=false` и проверенном SQL
+execution authority. Фиктивный doctor PASS не создаётся. Project identity
+обязательна до планирования replacement. Effective Workplace из разрешённой
+selection сохраняется в плане, handoff и repair; пропущенный аргумент использует
+этот root, явно несовпадающий root отклоняется.
+
+После подтверждённого terminal failure свежего child тот же живой manager может
+продолжить точную transaction. Сохраняются реальные process handle, birth identity
+и Job; завершения root PID недостаточно. Структурированный ответ сверяется с
+durable failed journal, archive, generation и epoch. После проверки publication,
+control files, backups и selection новый qualified child вызывает существующий
+SQL checkpoint/resume protocol. Core повторно не копируется; неизвестная domain
+mutation не воспроизводится. Потерянные handles, активное дерево, отсутствующий
+либо повреждённый ответ и unknown outcome по-прежнему запрещают replay.
+
+`smoke_public_core_upgrade.py --controlled-original` реализует CI-only fixture.
+До первого old writer в новом namespace GitHub-hosted Windows runner он создаёт
+одноразовый ordinary account, защищает только собственный новый namespace,
+проверяет effective access этим token, копирует и проверяет interpreter,
+dependencies и загруженные Windows modules. Accepted manager захватывается
+настоящим public entry bootstrap. Пароль передаётся только через private pipes.
+Provisioning рабочей станции этот маршрут не выполняет.
+
+Principal model — fixed trusted-workload broker: конечные old/current команды,
+MCP bodies и echo worker являются доверенным кодом под maintenance principal.
+Ordinary caller не имеет доступа к fixture и request endpoint. Это не изоляция
+произвольного worker code. Genuine old launcher создаёт Python child без
+наследования `-I`; его также ограничивают фиксированный environment, пустой
+защищённый user profile, отключённые user site/bytecode и скопированный startup
+closure. Windows OS входит в доверенную границу runner.
+
+Отдельный Windows workflow использует один frozen candidate для новых positive,
+copy-share-lock/retry и post-SQL finalization-share-lock/resume fixtures. Он
+проверяет public CLI exit, retirement ingress, отказы preimage/selection,
+owner/history/store identities, SQL readiness, worker prepare/start/status/collect
+и stdio MCP с точными Work selectors. Наличие workflow не означает PASS.
+Полная pending/guard/epoch crash matrix, historical/cross-boot/device и Linux
+qualification остаются самостоятельными требованиями; release GO не выводится.

@@ -112,6 +112,48 @@ def test_managed_doctor_result_and_exact_mode_selection(
     assert captured.err == ""
 
 
+@pytest.mark.parametrize("workplace", [True, False])
+@pytest.mark.parametrize("operation", ["apply", "repair"])
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        ({}, 0),
+        ({"status": "failed"}, 2),
+        ({"execution_authority": "legacy"}, 2),
+        ({"storage_migration": {"blocked": True}}, 2),
+        ({"storage_migration": {}}, 2),
+        ({"storage_migration": None}, 2),
+    ],
+)
+def test_original_manager_validates_migration_and_sql_without_fake_doctor(
+    cli: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    workplace: bool,
+    operation: str,
+    changes: dict[str, Any],
+    expected: int,
+) -> None:
+    payload = {
+        "status": "applied",
+        "maintenance_mode": "original_manager",
+        "execution_authority": "sql",
+        "storage_migration": {"blocked": False, "status": "ready"},
+        **changes,
+    }
+    service = Mock(return_value=payload)
+    monkeypatch.setattr(
+        "processforge_core.maintenance.update."
+        + ("apply_update" if operation == "apply" else "resume_file_update"),
+        service,
+    )
+    args = arguments(workplace=workplace)
+    args.resume = True
+    handler = getattr(cli, "command_core_update_" + operation)
+    assert handler(args) == expected
+    assert json.loads(capsys.readouterr().out) == payload
+
+
 def test_without_workplace_preserves_success_without_doctor(
     cli: ModuleType, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
