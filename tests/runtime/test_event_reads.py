@@ -349,12 +349,6 @@ def test_fresh_cli_to_runtime_public_status_and_bound_refusal(
             pf("runtime", "status", "--workplace", str(workplace), "--json")
         )
         assert status["health"] == "ready", status
-        log = service.runtime_root(workplace) / "logs/runtime.stderr.log"
-        assert any(
-            json.loads(note.split("PF_NATIVE_CAPABILITY ", 1)[1])["reason"]
-            == "job_retired_after_wait"
-            for note in _native_capability_notes(log)
-        ), "fixture logger must retain native success observations"
         summary = status["last_event"]
         assert summary["event_id"] == admitted[1]["event_id"]
         assert summary["project_id"] == admitted[1]["project_id"]

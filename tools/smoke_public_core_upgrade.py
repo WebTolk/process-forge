@@ -559,6 +559,15 @@ def main() -> int:
         "--json",
     )
     assert work["action"] == "created_new"
+    retained_documents = {
+        path: path.read_bytes()
+        for path in (
+            project / ".pf/assignments" / (work["assignment_id"] + ".yaml"),
+            project
+            / ".pf/contexts/assignment-capsules"
+            / (work["assignment_id"] + ".capsule.yaml"),
+        )
+    }
     (core / "LICENSE").write_bytes(b"local Core edit\n")
     (core / "NOTICE").unlink()
     sentinels = {
@@ -698,6 +707,16 @@ def main() -> int:
     )
     assert all(path.read_bytes() == raw for path, raw in legacy_sources.items())
     run(
+        "16-context-refresh",
+        old_cli,
+        "project-context-refresh",
+        "--project-root",
+        project,
+        "--workplace",
+        workplace,
+    )
+    assert all(path.read_bytes() == raw for path, raw in retained_documents.items())
+    run(
         "16-worker-prepare",
         old_cli,
         "worker-run",
@@ -724,7 +743,8 @@ def main() -> int:
         assert sql.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert sql.execute("SELECT COUNT(*) FROM execution_current").fetchone()[0] == 0
         attempt = sql.execute(
-            "SELECT phase,outcome,collection FROM execution_attempts WHERE task_id=?",
+            "SELECT phase,outcome,collection FROM execution_attempts "
+            "WHERE task_id=? ORDER BY attempt DESC LIMIT 1",
             (work["assignment_id"],),
         ).fetchone()
         assert attempt == ("absent", "completed", "collected"), attempt
