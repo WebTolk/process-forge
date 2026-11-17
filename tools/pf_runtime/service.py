@@ -1344,7 +1344,50 @@ class RuntimeProcess:
             def handle_post(self) -> None:
                 try:
                     payload = self.read_body()
-                    if self.path == "/event":
+                    if self.path == "/mcp":
+                        from pf_runtime.mcp_server import respond
+                        from processforge_core.bootstrap import RuntimeBootstrap
+
+                        session = payload.get("session_id", "")
+                        if (
+                            set(payload)
+                            - {"request", "session_id", "expected_instance_id"}
+                            or not isinstance(session, str)
+                            or payload.get("expected_instance_id")
+                            != runtime.instance_id
+                        ):
+                            self.send_json(409, {"error": "runtime_instance_mismatch"})
+                            return
+                        bootstrap = RuntimeBootstrap(
+                            repo_root=Path(__file__).resolve().parents[2],
+                            core=runtime.core,
+                            host=host,
+                            service=sys.modules[__name__],
+                        )
+                        response = respond(
+                            payload.get("request"),
+                            runtime.workplace_root,
+                            session,
+                            bootstrap,
+                            backend_metadata=True,
+                        )
+                        if response is not None and isinstance(
+                            response.get("result"), dict
+                        ):
+                            response["result"].setdefault("_meta", {}).setdefault(
+                                "processforge/backend", {}
+                            )["runtime"] = {
+                                "instance_id": runtime.instance_id,
+                                "pid": os.getpid(),
+                            }
+                        self.send_json(
+                            200,
+                            {
+                                "instance_id": runtime.instance_id,
+                                "messages": [] if response is None else [response],
+                            },
+                        )
+                    elif self.path == "/event":
                         result = host.ingest_event(
                             payload, runtime.workplace_root, runtime.core
                         )

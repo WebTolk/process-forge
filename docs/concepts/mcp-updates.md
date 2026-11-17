@@ -1,8 +1,8 @@
 # MCP connections and Core updates
 
 The stdio entry is `tools/pf_runtime/mcp_server.py`. Its transport process keeps
-the host's pipes open and invokes the fixed native entry in a fresh child for
-each backend request. A compatible replacement of the Core can therefore serve
+the host's pipes open. In Garage it invokes the fixed native entry in a fresh
+child for each backend request. A compatible replacement of the Core can serve
 the next request without replacing the host's connection. The transport retains
 discovery subscriptions; it retains no Work state, permissions or executing
 business Core.
@@ -13,9 +13,16 @@ publication and normal writer admission. Historical native adoption is not a
 migration prerequisite. An incomplete or incompatible publication can refuse a
 request even while the transport remains available.
 
-This per-request child transport is not a single-executor Forge topology.
-A Forge connection must route business operations to its sole PF executor;
-retaining these pipes alone does not implement that routing or updater lifecycle.
+In Forge (`coordination.director_enabled: true` in `workplace.yaml`), the
+transport sends requests to the existing Runtime's authenticated loopback
+`/mcp` endpoint. Runtime executes the same dispatcher using its loaded Core;
+all connected MCP clients use that executor. The request and response carry
+the selected Runtime instance id. Proxies and redirects are disabled.
+An unavailable or stopped Runtime produces a backend error; the bridge never
+falls back to a local child. After an operator/updater restart, the next explicit
+request uses the new Runtime through the same host pipes. Routing does not
+start, stop, update or migrate anything automatically. Direct administrative CLI
+and the updater lifecycle require their own qualification.
 
 The transport answers MCP ping locally; transport liveness does not prove Core
 or storage readiness. Invalid protocol is rejected before business Core dispatch.
