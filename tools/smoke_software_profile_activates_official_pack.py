@@ -9,7 +9,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "bin" / "pf.py"
 PACK_ID = "processforge.official.software-development"
@@ -32,7 +31,7 @@ def run_pf(*args: str) -> str:
 
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="pf-software-profile-") as tmp:
-        root = Path(tmp)
+        root = Path(tmp).resolve()
         workplace = root / "workplace"
         project = root / "project"
         project.mkdir()
@@ -55,7 +54,14 @@ def main() -> None:
         assert PACK_ID in active, active
         assert "software-feature-development" in active, active
         assert "bug-fix" in active, active
-        run_pf("project-init", "--project-root", str(project), "--workplace", str(workplace), "--apply")
+        run_pf(
+            "project-init",
+            "--project-root",
+            str(project),
+            "--workplace",
+            str(workplace),
+            "--apply",
+        )
         resolved = json.loads(
             run_pf(
                 "context-resolve",
