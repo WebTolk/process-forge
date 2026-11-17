@@ -43,7 +43,7 @@ process_forge:
   runner_required: false
   backend_required: false
 project:
-  id: context-lock-demo
+  id: {project.name}
   name: Context Lock Demo
 coordination:
   mode: {"organized" if organized else "simple"}

@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 from context_lock_smoke_helpers import make_project, refresh, require_ok, run_pf, write_yaml
+from smoke_sql_project import initialize_sql_project
 
 
 def read_yaml(path: Path) -> dict:
@@ -19,8 +20,10 @@ def read_yaml(path: Path) -> dict:
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-worker-workspace-access-") as temp:
         root = Path(temp)
-        project = make_project(root)
         workplace = root / "workplace"
+        require_ok(run_pf("workplace-init", "--workplace", str(workplace), "--apply"))
+        initialize_sql_project(root / "project", workplace)
+        project = make_project(root)
         shared_docs = workplace / "docs" / "joomla-core" / "5.4.5"
         shared_docs.mkdir(parents=True)
         (shared_docs / "README.md").write_text("# Shared docs\n", encoding="utf-8")

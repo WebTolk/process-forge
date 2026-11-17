@@ -1542,13 +1542,16 @@ def _snapshot_origin(
         "tools/codex_exec_worker.py",
         "src/processforge_core/__init__.py",
     ):
-        path = str(root / relative)
+        path = root / relative
         raw = publication.payload.get(relative)
+        filename = caller.f_code.co_filename
+        entry_file = caller.f_globals.get("__file__")
         if (
             raw is not None
-            and caller.f_globals.get("__file__") == path
-            and caller.f_code.co_filename == path
-            and caller.f_code == compile(raw, path, "exec", dont_inherit=True)
+            and isinstance(entry_file, str)
+            and Path(entry_file) == path
+            and Path(filename) == path
+            and caller.f_code == compile(raw, filename, "exec", dont_inherit=True)
         ):
             return
     raise NativeControlError()

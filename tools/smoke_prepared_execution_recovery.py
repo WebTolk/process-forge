@@ -26,8 +26,9 @@ from processforge_core.prepared.input import private_file
 from processforge_core.prepared.collection import CapturedAttemptReader, CollectionRecoveryStore
 from processforge_core.process_execution import ProcessExecutionService
 from smoke_garage_mode_not_promoted_by_session import call_mcp
+from smoke_hook_sqlite_support import events as event_rows
 from smoke_prepared_execution_context import (
-    ROOT, RUN_ID, call, create_task, event_rows, make_shell_driver,
+    ROOT, RUN_ID, call, create_task, make_shell_driver,
     pf, require, setup_basic_project,
 )
 
@@ -198,7 +199,7 @@ def terminal_worker_admission() -> None:
                     ),
                 )
 
-        def admitted(task_status, marker, operation):
+        def retry_dispatch(task_status, marker, operation):
             task = records(task_status, marker=marker)
             paths = {
                 "status": project / "status.json",
@@ -292,8 +293,8 @@ def terminal_worker_admission() -> None:
                 )
                 stack.enter_context(patch.object(prepared_input, "load", provider))
                 stack.enter_context(patch.object(core.subprocess, "Popen", launch))
-                # This branch isolates the legacy/manual retry contract; genuine
-                # SQL and pre-pending first-write retries have separate CLI tests.
+                # A forced non-SQL route must refuse start before the mocked
+                # preparation/launch ports. Real SQL retries have CLI coverage.
                 from processforge_core.executions.composition import ExecutionStorage
 
                 stack.enter_context(
@@ -331,8 +332,13 @@ def terminal_worker_admission() -> None:
                     "admission": admission_failure,
                 }
 
-            assert code == 0 and prepare.call_count == 1, diagnostics()
-            assert provider.call_count == (1 if operation == "start" else 0), diagnostics()
+            if operation == "start":
+                assert code == 1 and "execution_storage_not_ready" in stdout.getvalue(), diagnostics()
+                assert prepare.call_count == 0, diagnostics()
+            else:
+                # This only checks dispatch to the injected preparation port.
+                assert code == 0 and prepare.call_count == 1, diagnostics()
+            assert provider.call_count == 0, diagnostics()
             assert not launch.called and after == before, diagnostics()
 
         for status, marker in [
@@ -346,7 +352,7 @@ def terminal_worker_admission() -> None:
             for operation in ("prepare", "start"):
                 check(
                     f"retry/{marker}/{status}/{operation}",
-                    lambda s=status, m=marker, o=operation: admitted(s, m, o),
+                    lambda s=status, m=marker, o=operation: retry_dispatch(s, m, o),
                 )
 
         def cancellation_priority(operation):
@@ -766,25 +772,21 @@ def governed_continuation() -> None:
         code, output = call(project, started["assignment_id"], "prepare", driver="manual")
         require(code != 0 and "worker_report_undeclared" in output, output)
 
-        class ScopedFixtureService(ProcessExecutionService):
-            def _write_capsule(self, run, assignment, pin):
-                # Declare scope before immutable context creation. Do not rewrite
-                # a persisted capsule or its pins to obtain a positive fixture.
-                report = ".pf/artifacts/governed-worker.md"
-                assignment.update(
-                    allowed_files=[report], expected_report={"artifact": report},
-                    required_outputs=[{"id": "worker-report", "path": report, "required": True}],
-                    allowed_read_files=['.pf/artifacts/capture-input.txt'],
-                    required_sources=['.pf/artifacts/capture-input.txt'],
-                )
-                return super()._write_capsule(run, assignment, pin)
-
         objective = "Governed prepared executor recovery fixture"
         source = project / '.pf/artifacts/capture-input.txt'
         source.parent.mkdir(parents=True, exist_ok=True)
         source.write_bytes(b'capture input\n')
-        service = ScopedFixtureService(project, workplace, core)
-        work = service.start(objective=objective, process_id="declarative-smoke")
+        service = ProcessExecutionService(project, workplace, core)
+        report = ".pf/artifacts/governed-worker.md"
+        work = service.start(
+            objective=objective, process_id="declarative-smoke",
+            scope_intent={"schema_version": 1, "assignment": {
+                "allowed_files": [report], "expected_report": {"artifact": report},
+                "required_outputs": [{"id": "worker-report", "path": report, "required": True}],
+                "allowed_read_files": [".pf/artifacts/capture-input.txt"],
+                "required_sources": [".pf/artifacts/capture-input.txt"],
+            }},
+        )
         require(work["action"] == "created_new", work)
         task = work["assignment_id"]
         driver = make_shell_driver(project)

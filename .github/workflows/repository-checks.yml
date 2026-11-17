@@ -425,6 +425,7 @@ jobs:
               "tests/process_journal/test_event_owner_reads.py",
               "tests/runtime/test_event_reads.py",
               "tests/native_control/test_capability_retirement.py",
+              "tests/native_control/test_source_origin.py",
           ], env=environment, check=True)
           subprocess.run([
               sys.executable, "-B", "tools/smoke_runtime_scheduler_failure_isolation.py",
@@ -433,6 +434,12 @@ jobs:
               "smoke_central_event_ingress.py", "smoke_central_event_replay.py",
               "smoke_provider_adapter_admission.py", "smoke_runtime_host_poc.py",
               "smoke_session_identity_roundtrip.py", "smoke_codex_lifecycle_identity.py",
+              "smoke_completion_intent_validation_service.py",
+              "smoke_project_snapshot_read_composition.py",
+              "smoke_work_transition_commit_service.py",
+              "smoke_worker_workspace_access.py", "smoke_codex_exec_worker.py",
+              "smoke_diagnostics.py", "smoke_diagnostics_process_invariance.py",
+              "smoke_prepared_execution_recovery.py",
           ):
               print("RUN " + smoke, flush=True)
               subprocess.run([sys.executable, "-B", "tools/" + smoke],
