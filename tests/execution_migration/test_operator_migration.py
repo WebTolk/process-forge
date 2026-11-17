@@ -16,7 +16,7 @@ from processforge_core.executions.composition import select_execution_storage
 from processforge_core.executions.model import ExecutionKey
 from processforge_core.runtime.execution_admission import ExecutionAdmission
 
-from .test_migration import payload
+from .test_migration import collection_files, payload
 
 SOURCE = Path(__file__).resolve().parents[2]
 
@@ -76,6 +76,37 @@ def test_public_offline_import_preserves_snapshot_and_repeat_identity(legacy: Pa
     assert child.returncode == 0 and report["status"] == "ready", report
     assert binding.read_bytes() == identity
     assert source.read_bytes() == before
+
+
+@pytest.mark.parametrize("completion", ["present", "absent", "previous_attempt"])
+def test_public_migration_preserves_completed_collection(
+    legacy: Path, completion: str
+) -> None:
+    status = legacy / ".pf/runtime/agent-runs/run/task/status.json"
+    receipt, complete = collection_files(legacy, status, "operator-project")
+    if completion == "absent":
+        complete.unlink()
+    elif completion == "previous_attempt":
+        state = json.loads(status.read_bytes())
+        state["attempt"] = 4
+        state["prepared_input"]["path"] = state["prepared_input"]["path"].replace(
+            "/attempts/3/", "/attempts/4/"
+        )
+        status.write_text(json.dumps(state), encoding="utf-8")
+    before = {p: p.read_bytes() for p in (status, receipt, complete) if p.exists()}
+    child, report = invoke(legacy, "--apply", "--offline-confirmed")
+    assert child.returncode == 0 and report["status"] == "ready", report
+    route = select_execution_storage(
+        legacy, configuration=ConfigurationProvider.pinned(PFConfig())
+    )
+    assert route.repository is not None
+    record = route.repository.load_latest("run", "task")
+    assert record is not None and record.outcome == "completed"
+    assert record.collection == ("collected" if completion == "present" else "pending")
+    child, report = invoke(legacy, "--resume", "--offline-confirmed")
+    assert child.returncode == 0 and report["status"] == "ready", report
+    assert route.repository.load_latest("run", "task") == record
+    assert {p: p.read_bytes() for p in before} == before
 
 
 def test_no_confirmation_does_not_start_legacy_migration(legacy: Path):

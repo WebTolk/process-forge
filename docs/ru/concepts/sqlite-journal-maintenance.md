@@ -174,6 +174,14 @@ stdout/stderr, report и prepared-input не читаются. Skip допуск
 положительно исторический invalid snapshot при полном host proof; точные bytes,
 checksum и provenance остаются в evidence.
 
+Для переносимой попытки корректный `collection-complete.json` и соответствующий
+`collection-receipt.json` сохраняют `collection_state=collected`. Импортёр
+проверяет формат, checksum receipt, идентичность проекта/Work/попытки и ссылку
+prepared-input из сохранённого статуса. Он читает только исторические метаданные,
+не открывая результаты и не выполняя сбор повторно. Без файла завершения
+сохраняется `pending`; повреждение или несовпадение подтверждения блокирует импорт.
+Оба файла входят в зафиксированный перечень источников и остаются неизменными.
+
 Apply под admission публикует pending `data/execution-storage.json` до mutation.
 Для существующей БД создаётся одна проверенная WAL-aware recovery backup. Batch
 содержит до 256 source units: snapshot вместе с floor либо отдельный floor-only
