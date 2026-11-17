@@ -254,4 +254,11 @@ def test_external_sealed_cli_with_offline_workplace_exits_successfully() -> None
     assert not (target / "runtime/native-control").exists()
     assert not (target / "runtime/managed-ingress").exists()
     assert (workplace / "workplace.yaml").read_bytes() == workplace_manifest
-    assert not (workplace / "runtime").exists()
+    # The persistent singleton guard serializes future startup with apply.
+    # It is synchronization metadata, not a started Runtime or project migration.
+    runtime_files = {
+        path.relative_to(workplace).as_posix()
+        for path in (workplace / "runtime").rglob("*")
+        if path.is_file()
+    }
+    assert runtime_files == {"runtime/pf-runtime/.runtime.lock.lock.guard"}
