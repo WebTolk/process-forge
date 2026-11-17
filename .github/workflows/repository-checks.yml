@@ -201,6 +201,7 @@ jobs:
           environment = dict(os.environ)
           environment['PYTHONPATH'] = os.pathsep.join(str(root / name) for name in ('src', 'tools', 'tests'))
           environment['W3_FIXTURE_ROOT'] = str(scratch)
+          environment['W332_SOURCE'] = str(root)
           print(platform.platform(), sys.version, flush=True)
           subprocess.run([
               sys.executable, '-m', 'pytest', '-q', '-ra', '-p', 'no:cacheprovider',
