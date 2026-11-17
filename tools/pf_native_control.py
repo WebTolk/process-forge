@@ -24,7 +24,7 @@ from collections.abc import Callable, Iterator, Mapping
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from contextvars import ContextVar
 from ctypes import wintypes
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from types import FrameType, MappingProxyType
 from typing import TYPE_CHECKING, Any, BinaryIO
@@ -2143,39 +2143,6 @@ def _atomic(path: Path, value: dict[str, Any] | str) -> None:
                 os.close(fd)
     finally:
         temporary.unlink(missing_ok=True)
-
-
-@dataclass(frozen=True)
-class ManagedSelection:
-    """Exact owner/routing/instance/target facts resolved under existing gates.
-
-    The host resolver must read actual deployment/configuration facts; a request
-    payload must never supply this object as an assertion of safety.
-    """
-
-    project: str
-    workplace: str
-    owner: str
-    runtime_instance: str
-    routing_revision: str
-    targets: tuple[tuple[str, str, str, str], ...]
-    _device_config_path: str = field(default="", compare=False, repr=False)
-
-    def document(self) -> dict[str, Any]:
-        return {
-            "project": self.project,
-            "workplace": self.workplace,
-            "owner": self.owner,
-            "runtime_instance": self.runtime_instance,
-            "routing_revision": self.routing_revision,
-            "targets": [list(row) for row in self.targets],
-        }
-
-
-@dataclass
-class _LeaseLife:
-    pid: int
-    thread: int
 
 
 def _bootstrap_control(
