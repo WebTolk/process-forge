@@ -143,7 +143,7 @@ class CoreUpdateCommandParser:
         core_update_apply = core_update_sub.add_parser("apply", help="Apply a manifest-based core update from an explicit archive.")
         core_update_apply.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
         core_update_apply.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
-        core_update_apply.add_argument("--workplace-root", help="Existing Workplace to migrate with the Core update.")
+        core_update_apply.add_argument("--workplace-root", help="Existing Workplace whose Runtime must be stopped for file replacement.")
         core_update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for file changes.")
         core_update_apply.add_argument("--force-local-modifications", action="store_true", help="Allow replacing locally modified PF-owned files after backup.")
         core_update_apply.set_defaults(func=self._core_update_apply)
@@ -167,3 +167,12 @@ class CoreUpdateCommandParser:
             help="Required confirmation for recovery file changes.",
         )
         core_update_repair.set_defaults(func=self._core_update_repair)
+        for parser in (core_update_apply, core_update_repair):
+            parser.add_argument(
+                "--manage-runtime", action="store_true",
+                help="Guardedly stop Runtime, update Core files, then start the target Core; never migrate projects.",
+            )
+            parser.add_argument(
+                "--runtime-timeout", type=float, default=10.0,
+                help="Use the normal Runtime start/stop timeout in seconds (default: 10).",
+            )

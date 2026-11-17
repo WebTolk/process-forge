@@ -16544,6 +16544,12 @@ def command_core_update_apply(args: argparse.Namespace) -> int:
     from processforge_core.maintenance.update import CoreUpdateError, apply_update
 
     try:
+        if getattr(args, "manage_runtime", False):
+            from pf_cli.core_update_lifecycle import managed_core_update
+
+            payload, exit_code = managed_core_update(args, sys.modules[__name__])
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return exit_code
         payload = apply_update(
             Path(args.core_root).expanduser().resolve(),
             Path(args.archive).expanduser().resolve(),
@@ -16580,6 +16586,14 @@ def command_core_update_repair(args: argparse.Namespace) -> int:
     )
 
     try:
+        if getattr(args, "manage_runtime", False):
+            if not args.resume:
+                raise CoreUpdateError("resume_required", "Runtime management requires --resume")
+            from pf_cli.core_update_lifecycle import managed_core_update
+
+            payload, exit_code = managed_core_update(args, sys.modules[__name__], resume=True)
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return exit_code
         if args.resume:
             if not args.archive:
                 raise CoreUpdateError(

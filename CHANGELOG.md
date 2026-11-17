@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Route Forge MCP clients through the existing Runtime and shared Core, retaining
+  session/project checks and reconnecting the same pipes after Runtime restart.
+- Add explicit updater-owned Runtime stop/apply/start with `--manage-runtime`;
+  preserve file-update recovery and verify the loaded target Core. Project
+  journal migration remains an explicit agent action after
+  `storage_migration_required`; new projects use SQL journals.
+- Preserve historically collected legacy results when their completion and
+  collection evidence match. Remove the historical-manager adoption machinery
+  from ordinary updates and journal migration.
+- Hold the existing Runtime singleton mutex during Core replacement and retain
+  a confirmed old-process exit until its lifecycle records change, so PID reuse
+  cannot interrupt an admitted update.
 - Honor Core Runtime job periods and retain failed job health until retry.
   Reuse YAML loader policies within the existing cache limit, and read active
   assignments through Core without retaining completed assignment histories.
@@ -15,8 +27,8 @@
   interrupted publication with the same objective, scope, Work identity and
   capsule; refuse execution while publication remains pending.
 - Keep full journal integrity and row-parity checks outside shared admission.
-  Defer unproved legacy adoption before those scans, and revalidate store changes
-  before migration publication and Work-start's final journal open.
+  Revalidate store changes before migration publication and Work-start's final
+  journal open.
 
 ## 1.3.0-beta3 - 2026-11-02
 

@@ -754,6 +754,86 @@ def main() -> int:
         assert attempt == ("absent", "completed", "collected"), attempt
     report["project_migration"] = {"status": "ready", "source_bytes_preserved": True}
     report["retained_worker"] = {"status": "completed", "collection": "collected"}
+    # Keep native orchestration coverage in the same OS/archive CI job. The
+    # first replacement above remains the strict offline data-parity check.
+    # This round trip exercises managed replacement with a real running owner.
+    run(
+        "19-forge-mode",
+        old_cli,
+        "workplace-mode",
+        "set",
+        "--workplace",
+        workplace,
+        "--director-enabled",
+        "true",
+        "--director-office-enabled",
+        "true",
+        "--json",
+    )
+    try:
+        _, running = run(
+            "19-runtime-start",
+            old_cli,
+            "runtime",
+            "start",
+            "--workplace",
+            workplace,
+            "--interval",
+            "3600",
+            "--timeout",
+            "30",
+            "--json",
+        )
+        before_instance = json.loads(
+            (workplace / "runtime/pf-runtime/service.json").read_bytes()
+        )["instance_id"]
+        _, managed = run(
+            "20-managed-apply",
+            cli,
+            "core-update",
+            "apply",
+            *update,
+            "--confirm",
+            "--manage-runtime",
+            "--runtime-timeout",
+            "30",
+        )
+        lifecycle = managed["runtime_lifecycle"]
+        assert managed["status"] == "applied" and lifecycle["stop"] == "stopped"
+        assert lifecycle["start"]["status"] == "started"
+        assert lifecycle["instance_id"] != before_instance
+        _, observed = run(
+            "21-managed-runtime-status",
+            old_cli,
+            "runtime",
+            "status",
+            "--workplace",
+            workplace,
+            "--json",
+        )
+        assert observed["status"] == "ready"
+        assert observed["core_identity"]["loaded"]["source_commit"] == args.commit
+        assert observed["pid"] == lifecycle["start"]["pid"]
+        report["managed_runtime"] = {
+            "status": "passed",
+            "old_pid": running["pid"],
+            "new_pid": observed["pid"],
+            "instance_id": lifecycle["instance_id"],
+            "source_commit": args.commit,
+        }
+    finally:
+        cleanup, _ = run(
+            "22-managed-runtime-stop",
+            old_cli,
+            "runtime",
+            "stop",
+            "--workplace",
+            workplace,
+            "--timeout",
+            "30",
+            expected=None,
+        )
+        assert cleanup == 0, "Fixture Runtime did not stop cleanly"
     report["full_t06_qualified"] = True
     report["seconds"] = round(time.monotonic() - started, 3)
     save("results.json", report)

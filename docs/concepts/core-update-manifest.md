@@ -52,6 +52,21 @@ ZIP. Pass the Workplace root explicitly when the installation serves one.
 Use the existing `server stop --workplace <workplace>` operation for that server
 and verify successful shutdown before replacement.
 
+For updater-owned Forge lifecycle, add `--manage-runtime` to the external
+installer's `core-update apply --confirm --workplace-root WORKPLACE`.
+It preflights the archive, uses the existing guarded `server stop` without
+force, applies the file update, then invokes `runtime start` from the updated
+target. Startup uses the normal Runtime defaults and persisted configuration;
+one-off launch flags from the old process are not inferred. The
+`--runtime-timeout` option uses the normal start/stop default of 10 seconds.
+Missing confirmation or a blocked preflight does not stop Runtime. A busy stop
+prevents file replacement. A failed file update does not attempt startup.
+For before-manifest recovery, repeat `--manage-runtime` on the existing
+`core-update repair --resume --archive ORIGINAL.zip --confirm --workplace-root WORKPLACE`.
+Successful file replacement with failed or unverified startup returns exit 2
+and a separate `runtime_lifecycle` result; inspect Runtime before explicitly
+retrying its start. This option never imports project journals.
+
 Backups, progress/failure journals, private data and manifest-last verification
 are preserved. Installer and target roots must not overlap. Historical native
 enrollment markers are neither required nor interpreted as update authority;
@@ -74,37 +89,26 @@ version. New archives cannot claim private `.pf` data.
 Core replacement does not migrate project journals. Existing projects with
 legacy journals remain blocked until their explicit
 [journal migration](sqlite-journal-maintenance.md); fresh projects start on SQL.
-Run `doctor-workplace --root <workplace>` after replacement and before restarting
-the intended PF. See the [public upgrade evidence](../audits/issue-19-public-upgrade.md).
+For a manual restart, run `doctor-workplace --root <workplace>` after replacement.
+Managed startup uses the normal Runtime configuration validation and verifies the
+loaded Core identity. See the [public upgrade evidence](../audits/issue-19-public-upgrade.md).
 
-## Compatible Workplace Migration
+## Workplace and project data
 
-An archive may carry a declarative Workplace migration under
-`updates/migrations/`. For an existing Workplace, include its root in the same
-Core-update transaction:
+The current file-only apply/resume route uses `--workplace-root` to select the
+Runtime exclusion and optional lifecycle. It does not execute Workplace or
+project data migration. Historical archive migration descriptions and a plan's
+compatibility assessment do not make those operations part of file replacement.
+Workplace configuration maintenance remains a separate explicit operation;
+`workplace-init` remains a first-time initialization command.
 
-```text
-python bin/pf.py core-update plan --core-root <core> --archive <processforge.zip> --workplace-root <workplace>
-python bin/pf.py core-update apply --core-root <core> --archive <processforge.zip> --workplace-root <workplace> --confirm
-```
+When PF reports `storage_migration_required` for a project, its agent runs the
+documented migration during work on that project. Core replacement does not
+enumerate projects or run their migration commands. A restarted Runtime can
+produce normal service observations and SQLite sidecars; that is not journal
+import or execution-history migration.
 
-The plan lists only archive-declared operations. Apply is serial: it replaces
-the Core files and writes the Core manifest first, then applies the compatible
-Workplace migration. Project `.pf` changes are assessed and applied later,
-inside each project's own governed work. Concurrent independent Core or
-Workplace applies are unsupported.
-
-The 1.0.2-to-1.1.0 migration
-adds the built-in `codex-exec` driver and its registry entry only when missing;
-existing files and registry entries are preserved. It does not invoke
-`workplace-init`, which remains a first-time initialization command.
-
-Before a migration write, the updater copies the affected Workplace files into
-the Core update backup directory and records the operation in the update
-journal. When the post-Core Workplace migration cannot finish, the Core remains
-at its new manifest and `core-update repair` reports a manual-repair state with
-the backup location. Run `doctor-workplace --root <workplace>` explicitly after
-successful apply; the updater does not start another Core to run maintenance.
+## File replacement
 
 The updater computes:
 

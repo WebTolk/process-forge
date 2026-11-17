@@ -162,6 +162,7 @@ jobs:
           assert report["full_t06_qualified"] is True
           assert report["project_migration"]["status"] == "ready"
           assert report["retained_worker"]["collection"] == "collected"
+          assert report["managed_runtime"]["status"] == "passed"
           recovery_out = root / ".pf/artifacts/t06-file-recovery"
           subprocess.run([
               sys.executable, "-B", "tools/smoke_public_core_upgrade.py", "--file-recovery",
