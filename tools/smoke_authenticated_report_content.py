@@ -106,7 +106,10 @@ def main() -> int:
             )
             assert expected_output in output, output
         rows = transcript(project, session)
-        assert len(rows) == 1 and rows[0]["message"]["content"] == content, rows
+        assert len(rows) == 1, rows
+        message = rows[0]["message"]
+        assert isinstance(message, dict), rows
+        assert message["content"] == content, rows
         assert not host._is_safe_automatic_content(content), (
             "native host path filtering changed"
         )
