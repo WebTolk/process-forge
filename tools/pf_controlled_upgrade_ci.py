@@ -719,8 +719,6 @@ def run_suite(args: Any) -> int:
                 str(core / "tools/pf_runtime/mcp_server.py"),
                 "--workplace",
                 str(workplace),
-                "--session",
-                "controlled-worker",
             ]
         ],
         "updater": [cli + ["core-update", "status", "--core-root", str(core)]],
@@ -732,8 +730,6 @@ def run_suite(args: Any) -> int:
                 str(core / "tools/pf_runtime/mcp_server.py"),
                 "--workplace",
                 str(workplace),
-                "--session",
-                "controlled",
             ]
         ],
     }
@@ -852,6 +848,8 @@ def run_suite(args: Any) -> int:
         report["old_work"] = old_work
         # Genuine old public MCP worker APIs carry exact returned selectors.
         # Bodies are finite trusted requests; no caller supplies driver/code.
+        # The transport is unbound: a supplied session would require a real
+        # Agent Ledger binding, not a fixture label.
         for operation in ("prepare", "start", "collect", "status"):
             arguments = {
                 "project_root": str(project),
@@ -1183,8 +1181,6 @@ def run_suite(args: Any) -> int:
                 str(core / "tools/pf_runtime/mcp_server.py"),
                 "--workplace",
                 str(workplace),
-                "--session",
-                "controlled",
             ],
             cwd=root,
             env=environment,
