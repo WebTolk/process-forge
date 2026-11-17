@@ -8,7 +8,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "bin" / "pf.py"
 PROCESS_ID = "software-feature-development"
@@ -45,6 +44,20 @@ def main() -> None:
     assert "\tcore\t" not in kernel, kernel
 
     with tempfile.TemporaryDirectory(prefix="pf-official-show-workplace-") as tmp:
+        consumer = Path(tmp) / "uninitialized-project"
+        consumer.mkdir()
+        available = run_pf(
+            "process-list",
+            "--origin",
+            "official",
+            "--available",
+            "--project-root",
+            str(consumer),
+        )
+        assert PROCESS_ID in available, available
+        described = run_pf("process-show", PROCESS_ID, "--project-root", str(consumer))
+        assert PACK_ID in described, described
+        assert not list(consumer.iterdir()), "Catalog reads initialized project state"
         neutral_workplace = Path(tmp) / "neutral-workplace"
         run_pf("workplace-init", "--workplace", str(neutral_workplace), "--apply")
         direct = run_pf(
