@@ -100,6 +100,32 @@ def file_update_candidate(core_root: Path) -> bool:
     return (root / CORE_MANIFEST_NAME).is_file()
 
 
+def checked_owned_paths(
+    root: Path, manifest: dict[str, Any], *, installed_legacy: bool = False
+) -> None:
+    """Historical private entries authorize only their exact backup/removal."""
+    from pf_native_control import _update_target
+
+    policy = ReleaseSourcePolicy()
+    historical = {".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"}
+    for relative in manifest_file_map(manifest):
+        folded = relative.casefold()
+        legacy_entry = (
+            installed_legacy
+            and manifest.get("version") == "1.2.0"
+            and relative in historical
+        )
+        if (
+            folded.startswith("runtime/")
+            or (folded.startswith(".pf/") and not legacy_entry)
+            or (not legacy_entry and policy.release_path_is_forbidden(folded))
+        ):
+            raise CoreUpdateError(
+                "plan_blocked", "manifest claims private or runtime data"
+            )
+        _update_target(root, relative)
+
+
 class _Failure(Exception):
     """Carry errors through generator scopes without frozen exception mutation."""
 
@@ -219,26 +245,7 @@ def apply_file_update(
     def checked_paths(
         manifest: dict[str, Any], *, installed_legacy: bool = False
     ) -> None:
-        policy = ReleaseSourcePolicy()
-        public_pf = {".pf/agents.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"}
-        for relative in manifest_file_map(manifest):
-            folded = relative.casefold()
-            # Public 1.2.0 shipped these Core-owned entry templates. Permit
-            # their existing backup/removal, never private target payload.
-            legacy_entry = (
-                installed_legacy
-                and manifest.get("version") == "1.2.0"
-                and folded in public_pf
-            )
-            if (
-                folded.startswith("runtime/")
-                or (folded.startswith(".pf/") and not legacy_entry)
-                or (not legacy_entry and policy.release_path_is_forbidden(folded))
-            ):
-                raise CoreUpdateError(
-                    "plan_blocked", "manifest claims private or runtime data"
-                )
-            _update_target(root, relative)
+        checked_owned_paths(root, manifest, installed_legacy=installed_legacy)
 
     def pin(raw: bytes) -> dict[str, Any]:
         return {"sha256": hashlib.sha256(raw).hexdigest(), "size": len(raw)}

@@ -180,3 +180,46 @@ refuse this route. Ordinary apply still refuses incomplete updates. This command
 does not roll back files, adopt native installations, change SQL bindings or
 downgrade Core after SQL commits; those states require their own supported
 maintenance procedure.
+
+## Original-manager bridge qualification boundary
+
+The Windows original-manager source bridge is restricted to a genuine public
+1.2.0 installation controlled by its original trusted launcher before its first
+writer. Its Core owner is `OriginalManagerUpdateService`; the native adapter
+retains the original gate, sentinel and complete Job set. A finite issuer-bound
+profile pins the unchanged old ZIP/sidecar, physical roots, protected runtime
+closure, environment and exact argv for all six ingress classes. The source
+does not provide a public option to assert or reconstruct this profile.
+
+The fixed manager route calls the existing plan/apply/confirmed repair contracts
+from a separate accepted current installation. It uses the existing owned-file
+delta, pins actual preimages and absence, and refuses active configuration/data
+overlap with Core. Only the three exact historical 1.2.0 entry templates may be
+backed up/removed; new payloads cannot claim private ownership. File-only update
+continues to refuse every complete or partial managed marker.
+
+Before copying, the original manager publishes a permanent replacement intent.
+The native adapter backs up owned preimages, copies atomically and publishes the
+manifest last. It then uses the existing legacy-manager pending/guard/epoch/bound/
+head handoff. The new child captures the accepted new publication under its own
+lease, invokes the existing storage coordinator and checks the SQL execution
+repository. The old parent performs no subsequent Core imports or storage writes.
+
+Copy/adoption recovery requires the exact retained operation, archive, selection,
+preimages, physical bindings and journal in the same live manager. A receipt
+cannot recover lost original handles. Manager loss before bound, an uncertain
+child outcome, substituted roots/guards, corrupt backups and foreign selection
+refuse automatic replay. Preserve history and backups. Once SQL has committed,
+use its supported forward recovery; this bridge does not authorize downgrade.
+
+If intent/control publication fails before the first journal, the same live
+manager revalidates original payload and completes only its retained control
+bytes and the physical backup directory it created. Conflicting control bytes
+or a substituted directory refuse. This does not reconstruct a manager from
+files or permit replay after an uncertain child outcome.
+
+This is an implementation/qualification boundary, not a statement that the full
+public upgrade has passed. Positive public-archive migration/worker, actual
+copy-failure recovery, independent review and applicable OS qualification remain
+required. A later manager cannot qualify an installation with unknown historical
+writers. This Windows slice adds no Linux controller or historical cold route.

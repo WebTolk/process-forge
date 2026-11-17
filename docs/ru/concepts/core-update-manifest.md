@@ -166,3 +166,43 @@ Recovery продолжает исходный план, не обходя incom
 отказывают. Обычный apply по-прежнему отказывает при incomplete update. Команда
 не выполняет rollback файлов, native adoption, переключение SQL binding или
 downgrade Core после SQL commits: для них нужен собственный supported maintenance.
+
+## Граница квалификации original-manager bridge
+
+Исходный Windows bridge ограничен настоящей публичной 1.2.0, которая находилась
+под первоначальным доверенным launcher до первого writer. Core service
+`OriginalManagerUpdateService` строит план; native adapter сохраняет исходные
+gate, sentinel и полный набор Jobs. Конечный issuer-bound profile закрепляет
+неизменённые ZIP/sidecar, физические roots, защищённое runtime closure, environment
+и точные argv всех шести классов ingress. Публичного флага для утверждения либо
+восстановления этого profile нет. Сам по себе hash не создаёт authority.
+
+Фиксированный маршрут manager вызывает существующие plan/apply/confirmed repair
+из отдельной accepted current installation. Используются штатный owned-file delta,
+фактические preimages и absence facts. Пересечение действующей конфигурации или
+данных с Core отклоняется. Только три точных historical entry templates 1.2.0
+допускаются к backup/removal; новый payload не получает private ownership.
+File-only update продолжает отказывать при любом полном или частичном managed marker.
+
+До copy manager публикует постоянный replacement intent. Native adapter сохраняет
+owned preimages, заменяет файлы атомарно и публикует manifest последним. Затем
+используется существующий handoff legacy-manager → pending/guard/epoch/bound/head.
+Свежий child захватывает новую accepted publication под собственным lease,
+вызывает storage coordinator и проверяет реальный SQL execution repository.
+Старый parent после overwrite не импортирует Core и не изменяет storage.
+
+Recovery требует точных operation/archive/selection/preimages, физических bindings
+и журнала в том же живом manager. Если публикация intent/control files прервалась
+до первого журнала, manager повторно проверяет исходные bytes и продолжает только
+свои control files и созданный им физический backup directory. Чужие либо
+изменённые control bytes и подмена directory отклоняются. Receipt не восстанавливает
+утраченные handles. Потеря manager до bound, uncertain child outcome, подмена
+root/guard, повреждённый backup или чужой selection запрещают автоматический replay.
+Сохраните историю и backups. После SQL commits используется поддерживаемое
+forward recovery; bridge не разрешает downgrade.
+
+Это граница реализации и проверки, а не подтверждённый полный public upgrade.
+Положительные public-archive migration/worker, реальный copy failure/recovery,
+независимый review и применимая OS qualification остаются обязательными.
+Новый manager не квалифицирует неизвестную историю установки. Этот Windows slice
+не добавляет Linux controller или historical cold route.

@@ -1873,6 +1873,25 @@ def _accepted_maintenance(state: dict[str, Any]) -> dict[str, str] | None:
 def _issued_maintenance(
     publication: Publication, selection: ManagedSelection
 ) -> dict[str, str] | None:
+    original = _LEGACY_UPDATE_HELD.get()
+    if original is not None:
+        boundary, prepared = original
+        if (
+            boundary.update_plan is not prepared
+            or not any(
+                owner is boundary and life.live() for owner, life in _LEGACY_HELD.get()
+            )
+            or prepared.selection.document() != selection.document()
+            or publication.manifest != prepared.frozen.manifest
+        ):
+            raise NativeControlError()
+        _legacy_validate(boundary, prepared, verify_archive=False)
+        return _maintenance_record(
+            {
+                "manifest_sha256": publication.manifest_sha256,
+                "device_config_path": prepared.selection._device_config_path,
+            }
+        )
     # Old private/synthetic issuers remain old-form, without repair authority.
     # Real host selections carry their actual source locator, never a digest-derived guess.
     if not selection._device_config_path:
@@ -2363,6 +2382,7 @@ class LegacyManagedBoundary:
         *,
         existing_gate: NativeControl,
         accepted_archive: Mapping[str, bytes],
+        original_profile: Mapping[str, Any] | None = None,
     ) -> None:
         if not accepted_archive or os.name != "nt":
             raise NativeControlError()
@@ -2381,13 +2401,106 @@ class LegacyManagedBoundary:
         self.poisoned = False
         self.installed_verified = False
         self.producer: ManagedEnrollmentProducer | None = None
+        self.prepared_update: LegacyUpdatePlan | None = None
+        self.update_plan: LegacyUpdatePlan | None = None
+        self.update_progress: dict[str, Any] = {}
+        self.update_journal: bytes | None = None
+        self.update_directory_identity: tuple[int, int] | None = None
+        self.update_child_started = False
+        self._original_gate: dict[str, Any] | None = None
+        self._original_profile = (
+            canonical_json(original_profile) if original_profile is not None else None
+        )
+        self._original_pid = os.getpid()
+        self._original_objects: dict[str, tuple[int, int]] = {}
         with self.held():
+            if original_profile is not None:
+                self._check_original_profile(initial=True)
             # This verifies initial installed/archive identity at the trusted
             # manager's existing deployment boundary, before any managed starts.
             for path, expected in self.archive.items():
                 if _read_regular(self.root, safe_path(path), len(expected)) != expected:
                     raise NativeControlError()
             self.installed_verified = True
+
+    def _check_original_profile(self, *, initial: bool = False) -> dict[str, Any]:
+        """Verify the issuer's immutable first-writer deployment binding.
+
+        The issuer owns completeness of the protected runtime closure and finite
+        route set. These values are accepted BEFORE history, never self-issued
+        from an existing installation or recovered from a disk receipt.
+        """
+        if self._original_profile is None or self._original_pid != os.getpid():
+            raise NativeControlError()
+        profile = json.loads(self._original_profile)
+        if (
+            set(profile)
+            != {
+                "release_sha256",
+                "sidecar_sha256",
+                "profile",
+                "runtime",
+                "routes",
+                "environment",
+                "roots",
+                "cwd",
+            }
+            or set(profile["routes"]) != self.INGRESS
+            or not profile["profile"]
+            or not profile["runtime"]
+            or not profile["roots"]
+        ):
+            raise NativeControlError()
+        gate = _exclusive_lease_identity(self.gate)
+        if initial:
+            self._original_gate = gate
+        elif self._original_gate != gate:
+            raise NativeControlError()
+        paths = [self.root, Path(profile["cwd"]), *map(Path, profile["roots"])]
+        for row in profile["runtime"]:
+            path = Path(row["path"])
+            if (
+                not path.is_absolute()
+                or digest(_read_regular(path.parent, path.name, MAX_FILE))
+                != row["sha256"]
+            ):
+                raise NativeControlError()
+            paths.append(path)
+        executable = profile["runtime"][0]["path"]
+        for commands in profile["routes"].values():
+            if not commands:
+                raise NativeControlError()
+            for command in commands:
+                if len(command) < 4 or command[:3] != [executable, "-I", "-B"]:
+                    raise NativeControlError()
+                script = Path(command[3])
+                if (
+                    not script.is_absolute()
+                    or not script.is_relative_to(self.root)
+                    or script.relative_to(self.root).as_posix() not in self.archive
+                    or script.suffix != ".py"
+                ):
+                    raise NativeControlError()
+        for path in paths:
+            if not path.is_absolute():
+                raise NativeControlError()
+            for node in (path, *path.parents):
+                info = node.lstat()
+                if (
+                    stat.S_ISLNK(info.st_mode)
+                    or getattr(info, "st_file_attributes", 0) & 0x400
+                ):
+                    raise NativeControlError()
+            info = path.stat()
+            identity = (info.st_dev, info.st_ino)
+            if initial:
+                self._original_objects[str(path)] = identity
+            elif self._original_objects.get(str(path)) != identity:
+                raise NativeControlError()
+        return profile
+
+    def original_profile(self) -> dict[str, Any]:
+        return self._check_original_profile()
 
     @contextmanager
     def held(self) -> Iterator[None]:
@@ -2447,8 +2560,22 @@ class LegacyManagedBoundary:
         if ingress not in self.INGRESS:
             raise NativeControlError()
         with self.held():
-            if (self.root / "runtime/managed-ingress/legacy-replacement.json").exists():
+            if (
+                self.update_plan is not None
+                or (
+                    self.root / "runtime/managed-ingress/legacy-replacement.json"
+                ).exists()
+            ):
                 raise NativeControlError()
+            if self._original_profile is not None:
+                profile = self.original_profile()
+                if (
+                    argv not in profile["routes"][ingress]
+                    or options.get("env") != profile["environment"]
+                    or str(options.get("cwd")) != profile["cwd"]
+                    or set(options) - {"env", "cwd", "stdin", "stdout", "stderr"}
+                ):
+                    raise NativeControlError()
             if self.producer is not None:
                 # Bound/pending enrollment permanently refuses old starts.
                 return self.producer.launch_legacy(
@@ -3810,6 +3937,412 @@ def _freeze_update_archive(raw: bytes, plan: Mapping[str, Any]) -> Build:
     return Build(MappingProxyType(payload), manifest, seal[1])
 
 
+@dataclass(frozen=True)
+class LegacyUpdatePlan:
+    """Immutable service data retained by one LIVE original manager."""
+
+    root: Path
+    archive: bytes
+    frozen: Build
+    old_manifest: bytes
+    plan: bytes
+    initial: Mapping[str, bytes | None]
+    selection: ManagedSelection
+    profile: bytes
+    workplace: Path | None
+    selection_files: Mapping[str, bytes | None]
+    update_id: str = field(default_factory=lambda: "core-update-" + uuid4().hex)
+
+
+_LEGACY_UPDATE_HELD: ContextVar[
+    tuple[LegacyManagedBoundary, LegacyUpdatePlan] | None
+] = ContextVar("original_update_held", default=None)
+
+
+def _legacy_current(root: Path, relative: str, limit: int = MAX_FILE) -> bytes | None:
+    target = _update_target(root, relative)
+    try:
+        target.lstat()
+    except FileNotFoundError:
+        return None
+    return _read_regular(root, relative, limit)
+
+
+def _legacy_validate(
+    boundary: LegacyManagedBoundary,
+    prepared: LegacyUpdatePlan,
+    *,
+    verify_archive: bool = True,
+) -> dict[str, Any]:
+    """No Core imports or storage access, including during exact recovery."""
+    if (
+        prepared.root != boundary.root
+        or boundary.facts()[0] != "proven"
+        or canonical_json(boundary.original_profile()) != prepared.profile
+    ):
+        raise NativeControlError()
+    for name, expected in prepared.selection_files.items():
+        path = Path(name)
+        if _legacy_current(path.parent, path.name, MAX_MANIFEST) != expected:
+            raise NativeControlError()
+    plan = json.loads(prepared.plan)
+    if verify_archive and prepared.frozen != _freeze_update_archive(
+        prepared.archive, {"new_manifest": plan["new_manifest"]}
+    ):
+        raise NativeControlError()
+    return plan
+
+
+def replace_legacy_core(
+    boundary: LegacyManagedBoundary, prepared: LegacyUpdatePlan
+) -> dict[str, Any]:
+    """Consume the original manager's exact service plan, never caller JSON."""
+    with boundary.held():
+        if (
+            boundary.prepared_update is not prepared
+            or boundary.update_plan is not None
+            or boundary.producer is not None
+        ):
+            raise NativeControlError()
+        plan = _legacy_validate(boundary, prepared)
+        if (
+            _read_regular(boundary.root, MANIFEST, MAX_MANIFEST)
+            != prepared.old_manifest
+        ):
+            raise NativeControlError()
+        for name, expected in prepared.initial.items():
+            if _legacy_current(boundary.root, name) != expected:
+                raise NativeControlError()
+        prefix = f"runtime/core-update/backups/{prepared.update_id}"
+        # Never overwrite an existing control directory or another update journal.
+        if (
+            _update_target(boundary.root, prefix).exists()
+            or (boundary.root / "runtime/core-update/in-progress.json").exists()
+            or (
+                boundary.root / "runtime/managed-ingress/legacy-replacement.json"
+            ).exists()
+        ):
+            raise NativeControlError()
+        backup = sorted(
+            set(plan["removed"]) | set(plan["changed"]) | set(plan["restored"])
+        )
+        writes = sorted(
+            set(plan["added"]) | set(plan["changed"]) | set(plan["restored"])
+        )
+        operations = (
+            [{"op": "backup", "path": p} for p in backup]
+            + [{"op": "delete", "path": p} for p in plan["removed"]]
+            + [{"op": "write", "path": p} for p in writes]
+            + [{"op": "write_manifest", "path": MANIFEST}]
+        )
+        progress = {
+            "schema_version": 1,
+            "update_id": prepared.update_id,
+            "status": "applying",
+            "maintenance_mode": "original_manager",
+            "archive_sha256": digest(prepared.archive),
+            "core_root": str(boundary.root),
+            "backup_dir": str(_update_target(boundary.root, prefix)),
+            "counts": plan["counts"],
+            "backed_up": {},
+            "completed_operations": [],
+            "pending_operations": operations,
+            "failure_history": [],
+        }
+        boundary.update_plan = prepared
+        boundary.update_progress = progress
+        boundary.update_child_started = False
+        _initialize_legacy_core(boundary, prepared)
+        return _execute_legacy_core(boundary, prepared)
+
+
+def _initialize_legacy_core(
+    boundary: LegacyManagedBoundary, prepared: LegacyUpdatePlan
+) -> None:
+    """Finish pre-copy publication only in the same retained live operation.
+
+    A failure here has not changed payload. Retained memory identifies the
+    directory this manager created; existence alone never authorizes its reuse.
+    """
+    root = boundary.root
+    prefix = f"runtime/core-update/backups/{prepared.update_id}"
+    if (root / "runtime/core-update/in-progress.json").exists():
+        raise NativeControlError()
+    _legacy_validate(boundary, prepared)
+    for name, expected in {**prepared.initial, MANIFEST: prepared.old_manifest}.items():
+        if (
+            _legacy_current(root, name, MAX_MANIFEST if name == MANIFEST else MAX_FILE)
+            != expected
+        ):
+            raise NativeControlError()
+    try:
+        _publish_legacy_controls(boundary, prepared, prefix)
+        _legacy_save(boundary)
+    except OSError as error:
+        boundary.update_progress["failure_history"].append(
+            {
+                "failed_at": _update_now(),
+                "code": getattr(error, "code", "file_operation_failed"),
+                "errno": error.errno,
+                "winerror": getattr(error, "winerror", None),
+            }
+        )
+        boundary.update_progress["status"] = "failed"
+        raise NativeUpdateError(
+            "file_operation_failed", "original manager control publication failed"
+        ) from error
+
+
+def _publish_legacy_controls(
+    boundary: LegacyManagedBoundary, prepared: LegacyUpdatePlan, prefix: str
+) -> None:
+    # The replacement fence is published BEFORE backup/copy and never removed.
+    fence = _update_target(
+        boundary.root, "runtime/managed-ingress/legacy-replacement.json"
+    )
+    fence.parent.mkdir(parents=True, exist_ok=True)
+    expected_fence = {
+        "legacy_archive": boundary.archive_pin,
+        "destination": prepared.frozen.projection_sha256,
+    }
+    if fence.exists():
+        if _read(fence, 4096) != expected_fence:
+            raise NativeControlError()
+    else:
+        _atomic(fence, expected_fence)
+    directory = _update_target(boundary.root, prefix)
+    if boundary.update_directory_identity is None:
+        directory.mkdir(parents=True, exist_ok=False)
+        info = directory.stat()
+        boundary.update_directory_identity = (info.st_dev, info.st_ino)
+    else:
+        info = directory.stat()
+        if (
+            not stat.S_ISDIR(info.st_mode)
+            or (info.st_dev, info.st_ino) != boundary.update_directory_identity
+        ):
+            raise NativeControlError()
+    for name, raw in {
+        "old-manifest": prepared.old_manifest,
+        "new-manifest": prepared.frozen.manifest,
+        "plan": prepared.plan,
+    }.items():
+        relative = prefix + "/control/" + name + ".json"
+        existing = _legacy_current(boundary.root, relative, MAX_MANIFEST)
+        if existing is None:
+            _update_atomic(_update_target(boundary.root, relative), raw)
+        elif existing != raw:
+            raise NativeControlError()
+
+
+def _legacy_save(boundary: LegacyManagedBoundary) -> None:
+    raw = (
+        json.dumps(boundary.update_progress, indent=2, sort_keys=True) + "\n"
+    ).encode()
+    _update_atomic(boundary.root / "runtime/core-update/in-progress.json", raw)
+    boundary.update_journal = raw
+
+
+def resume_legacy_core(
+    boundary: LegacyManagedBoundary, archive_path: Path, *, update_id: str
+) -> dict[str, Any]:
+    """Exact forward recovery under the SAME live original manager."""
+    with boundary.held():
+        prepared = boundary.update_plan
+        if (
+            prepared is None
+            or prepared.update_id != update_id
+            or boundary.update_child_started
+        ):
+            raise NativeControlError()
+        with _PHYSICAL_OPEN(archive_path, "rb") as stream:
+            raw = stream.read(MAX_TOTAL + MAX_MANIFEST + 1)
+        if raw != prepared.archive:
+            raise NativeControlError()
+        _legacy_validate(boundary, prepared)
+        if boundary.update_journal is None:
+            _initialize_legacy_core(boundary, prepared)
+        prefix = f"runtime/core-update/backups/{prepared.update_id}"
+        directory = _update_target(boundary.root, prefix)
+        info = directory.stat()
+        if (
+            not stat.S_ISDIR(info.st_mode)
+            or (info.st_dev, info.st_ino) != boundary.update_directory_identity
+        ):
+            raise NativeControlError()
+        for name, expected in {
+            "old-manifest": prepared.old_manifest,
+            "new-manifest": prepared.frozen.manifest,
+            "plan": prepared.plan,
+        }.items():
+            if (
+                _read_regular(
+                    boundary.root, prefix + "/control/" + name + ".json", MAX_MANIFEST
+                )
+                != expected
+            ):
+                raise NativeControlError()
+        journal = _read_regular(
+            boundary.root, "runtime/core-update/in-progress.json", MAX_MANIFEST
+        )
+        if journal != boundary.update_journal:
+            raise NativeControlError()
+        # Preserve every prior failure receipt, including typed OS failure details.
+        _update_atomic(
+            _update_target(
+                boundary.root, prefix + "/control/resume-" + uuid4().hex + ".json"
+            ),
+            journal,
+        )
+        return _execute_legacy_core(boundary, prepared)
+
+
+def _execute_legacy_core(
+    boundary: LegacyManagedBoundary, prepared: LegacyUpdatePlan
+) -> dict[str, Any]:
+    import base64
+
+    root = boundary.root
+    plan = _legacy_validate(boundary, prepared)
+    progress = boundary.update_progress
+    prefix = f"runtime/core-update/backups/{prepared.update_id}"
+    fence = {
+        "legacy_archive": boundary.archive_pin,
+        "destination": prepared.frozen.projection_sha256,
+    }
+    if _read(root / "runtime/managed-ingress/legacy-replacement.json", 4096) != fence:
+        raise NativeControlError()
+    completed = {(op["op"], op["path"]) for op in progress["completed_operations"]}
+    pending = progress["pending_operations"]
+    next_operation = (pending[0]["op"], pending[0]["path"]) if pending else None
+    # Journal may lag one atomic operation; no later operation is permitted.
+    for name, initial in {**prepared.initial, MANIFEST: prepared.old_manifest}.items():
+        action = (
+            ("write_manifest", name)
+            if name == MANIFEST
+            else (("delete", name) if name in plan["removed"] else ("write", name))
+        )
+        intended = (
+            prepared.frozen.manifest
+            if name == MANIFEST
+            else prepared.frozen.payload.get(name)
+        )
+        expected = intended if action in completed else initial
+        actual = _legacy_current(
+            root, name, MAX_MANIFEST if name == MANIFEST else MAX_FILE
+        )
+        if actual != expected and not (action == next_operation and actual == intended):
+            raise NativeControlError()
+    for name, saved in progress["backed_up"].items():
+        expected = prepared.initial[name]
+        if saved != ("files/" + name if expected is not None else None):
+            raise NativeControlError()
+        if (
+            saved is not None
+            and _read_regular(root, prefix + "/" + saved, MAX_FILE) != expected
+        ):
+            raise NativeControlError()
+
+    progress["status"] = "applying"
+    _legacy_save(boundary)
+    try:
+        while pending:
+            _legacy_validate(boundary, prepared, verify_archive=False)
+            operation = pending[0]
+            kind, name = operation["op"], operation["path"]
+            if kind == "backup":
+                raw = prepared.initial[name]
+                destination = prefix + "/files/" + name
+                if raw is not None:
+                    existing = _legacy_current(root, destination)
+                    if existing is not None and existing != raw:
+                        raise NativeControlError()
+                    if existing is None:
+                        _update_atomic(_update_target(root, destination), raw)
+                    if _read_regular(root, destination, MAX_FILE) != raw:
+                        raise NativeControlError()
+                progress["backed_up"][name] = (
+                    "files/" + name if raw is not None else None
+                )
+            elif kind == "delete":
+                _update_target(root, name).unlink(missing_ok=True)
+            elif kind == "write":
+                _update_atomic(
+                    _update_target(root, name), prepared.frozen.payload[name]
+                )
+            elif kind == "write_manifest":
+                for relative, raw in prepared.frozen.payload.items():
+                    if _read_regular(root, relative, MAX_FILE) != raw:
+                        raise NativeControlError()
+                for relative in plan["removed"]:
+                    if _legacy_current(root, relative) is not None:
+                        raise NativeControlError()
+                _update_atomic(root / MANIFEST, prepared.frozen.manifest)
+            else:
+                raise NativeControlError()
+            progress["completed_operations"].append(
+                {**operation, "completed_at": _update_now()}
+            )
+            pending.pop(0)
+            _legacy_save(boundary)
+        publication = accept_publication(
+            root, trusted_leaf=prepared.frozen.payload[LEAF]
+        )
+        if publication is None or publication.manifest != prepared.frozen.manifest:
+            raise NativeControlError()
+        entry = NativeEntry(
+            root, publication, NativeImage.from_publication(root, publication), None
+        )
+        token = _LEGACY_UPDATE_HELD.set((boundary, prepared))
+        try:
+            producer, adopted = ManagedEnrollmentProducer.from_legacy_manager(
+                boundary, entry, selection=prepared.selection
+            )
+        finally:
+            _LEGACY_UPDATE_HELD.reset(token)
+        state = producer._state()
+        handoff = {
+            "schema_version": 1,
+            "phase": "original-storage",
+            "root": str(root),
+            "epoch": producer._epoch(state),
+            "generation": state["adoption"],
+            "selection": prepared.selection.document(),
+            "manifest_sha256": digest(prepared.frozen.manifest),
+            "leaf_sha256": digest(prepared.frozen.payload[LEAF]),
+            "leaf": base64.b64encode(prepared.frozen.payload[LEAF]).decode("ascii"),
+            "archive": base64.b64encode(prepared.archive).decode("ascii"),
+            "archive_sha256": digest(prepared.archive),
+            "workplace_root": str(prepared.workplace) if prepared.workplace else None,
+            "device_config_path": plan["_native_device_config_path"],
+            "configuration": plan["_native_configuration"],
+            "progress": progress,
+        }
+        if adopted.control is None:
+            raise NativeControlError()
+    except Exception as error:
+        failure = {
+            "code": getattr(error, "code", "file_operation_failed"),
+            "errno": getattr(error, "errno", None),
+            "winerror": getattr(error, "winerror", None),
+        }
+        progress["failure_history"].append({"failed_at": _update_now(), **failure})
+        progress["status"] = "failed"
+        try:
+            _legacy_save(boundary)
+        except OSError as cleanup:
+            error.add_note(
+                "original update journal publication failed: " + type(cleanup).__name__
+            )
+        raise NativeUpdateError(
+            "file_operation_failed", "original manager update failed"
+        ) from error
+    # No old Core import, callback, doctor or storage write follows replacement.
+    # Uncertain spawn/child outcome refuses automatic replay in this manager.
+    boundary.update_child_started = True
+    return _launch_update_child(handoff)
+
+
 def replace_core(
     entry: NativeEntry | _MaintenanceTarget,
     archive_path: Path,
@@ -4175,6 +4708,12 @@ def _run_update_child(data: dict[str, Any]) -> None:
 
 def _finish_update_child(data: dict[str, Any], archive_raw: bytes) -> dict[str, Any]:
     """Run only new Core code under the child's live operation lease."""
+    if data.get("phase") == "original-storage":
+        from processforge_core.maintenance.original_manager_update import (
+            finish_original_update,
+        )
+
+        return finish_original_update(data)
     from processforge_core.maintenance.update import apply_workplace_migration
 
     progress = data["progress"]

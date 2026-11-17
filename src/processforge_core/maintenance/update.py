@@ -654,6 +654,13 @@ def unowned_path_blocker(
 def build_plan(
     core_root: Path, archive_path: Path, *, workplace_root: Path | None = None
 ) -> dict[str, Any]:
+    from .original_manager_update import current_original_manager
+
+    original = current_original_manager(core_root)
+    if original is not None:
+        return json.loads(
+            original.plan(archive_path, workplace_root=workplace_root).plan
+        )
     return _build_plan(
         core_root,
         archive_path,
@@ -868,6 +875,13 @@ def apply_update(
                 "plan_blocked", "core update requires unwound operation scopes"
             )
     from .file_update import apply_file_update, file_update_candidate
+    from .original_manager_update import current_original_manager
+
+    original = current_original_manager(core_root)
+    if original is not None:
+        return original.apply(
+            archive_path, confirm=confirm, workplace_root=workplace_root
+        )
 
     if file_update_candidate(core_root):
         return apply_file_update(core_root, archive_path, workplace_root=workplace_root)
@@ -956,6 +970,20 @@ def resume_file_update(
             raise CoreUpdateError(
                 "plan_blocked", "file recovery requires unwound operation scopes"
             )
+    from .original_manager_update import current_original_manager
+
+    original = current_original_manager(core_root)
+    if original is not None:
+        retained = original.boundary.update_plan
+        if retained is None:
+            raise CoreUpdateError(
+                "plan_blocked", "exact original operation is unavailable"
+            )
+        if workplace_root != retained.workplace:
+            raise CoreUpdateError("plan_blocked", "original recovery selection differs")
+        return original.resume(
+            archive_path, update_id=retained.update_id, confirm=confirm
+        )
     from .file_update import apply_file_update
 
     return apply_file_update(
