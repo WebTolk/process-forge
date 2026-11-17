@@ -52,6 +52,21 @@ ZIP. Pass the Workplace root explicitly when the installation serves one.
 Use the existing `server stop --workplace <workplace>` operation for that server
 and verify successful shutdown before replacement.
 
+For updater-owned Forge lifecycle, add `--manage-runtime` to the external
+installer's `core-update apply --confirm --workplace-root WORKPLACE`.
+It preflights the archive, uses the existing guarded `server stop` without
+force, applies the file update, then invokes `runtime start` from the updated
+target. Startup uses the normal Runtime defaults and persisted configuration;
+one-off launch flags from the old process are not inferred. The
+`--runtime-timeout` option uses the normal start/stop default of 10 seconds.
+Missing confirmation or a blocked preflight does not stop Runtime. A busy stop
+prevents file replacement. A failed file update does not attempt startup.
+For before-manifest recovery, repeat `--manage-runtime` on the existing
+`core-update repair --resume --archive ORIGINAL.zip --confirm --workplace-root WORKPLACE`.
+Successful file replacement with failed or unverified startup returns exit 2
+and a separate `runtime_lifecycle` result; inspect Runtime before explicitly
+retrying its start. This option never imports project journals.
+
 Backups, progress/failure journals, private data and manifest-last verification
 are preserved. Installer and target roots must not overlap. Historical native
 enrollment markers are neither required nor interpreted as update authority;
