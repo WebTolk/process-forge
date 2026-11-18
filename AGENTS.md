@@ -5,6 +5,11 @@ These are mandatory repository instructions for every coding agent. Read
 [CONTRIBUTING.ru.md](CONTRIBUTING.ru.md). Apply this workflow across sessions and
 devices without asking the user to repeat it.
 
+Read the [architecture decisions](docs/architecture/README.md)
+([Russian](docs/ru/architecture/README.md)) for the source revision you are
+changing or reviewing. Its reconciliation report explains which historical
+decisions have been replaced and which implementation gaps are still open.
+
 For a new device, follow [contributor agent setup](docs/contributors/agent-setup.md)
 ([Russian](docs/ru/contributors/agent-setup.md)) for the shared knowledge profile,
 verified package installation, Python QA and MCP configuration. Use the pinned
