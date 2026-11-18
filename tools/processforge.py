@@ -4278,6 +4278,7 @@ def command_release_pack(args: argparse.Namespace) -> int:
     manifest_path.write_text(
         ensure_trailing_newline(json.dumps(manifest, indent=2, sort_keys=True)),
         encoding="utf-8",
+        newline="\n",
     )
     consumer_checks = inspect_release_archive(output, manifest_path)
     consumer_failures = [item for item in consumer_checks if item.level == "FAIL"]
