@@ -124,17 +124,14 @@ def run_updater_smoke(script: Path) -> int:
         device = management / "runtime/device/ProcessForge/configuration.yaml"
         device.parent.mkdir(parents=True)
         device.write_text("schema_version: 1\n", encoding="utf-8")
-        code = """import importlib.util,sys,types
+        code = """import importlib
+import sys
 from pathlib import Path
-root=Path(sys.argv[1]);script=sys.argv[2];sys.argv=[script,*sys.argv[3:]]
-leaf=(root/'tools/pf_native_control.py').read_bytes()
-p=types.ModuleType('pf_native_control');p.__file__=str(root/'tools/pf_native_control.py');p._captured_source=leaf
-sys.modules[p.__name__]=p;exec(compile(leaf,p.__file__,'exec',dont_inherit=True),p.__dict__)
-p.bootstrap_entry(root,trusted_leaf=leaf)
-sys.path[:0]=[str(root/'tools'),str(root/'src')]
-spec=importlib.util.spec_from_file_location('_pf_updater_smoke',root/'tools'/script)
-module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
-raise SystemExit(module.main())
+root = Path(sys.argv[1])
+script = Path(sys.argv[2])
+sys.argv = [str(script), *sys.argv[3:]]
+sys.path[:0] = [str(root / 'tools'), str(root / 'src')]
+raise SystemExit(importlib.import_module(script.stem).main())
 """
         return subprocess.run(
             [

@@ -170,6 +170,28 @@ def stop_runtime(workplace: Path) -> None:
     pf("runtime", "stop", "--workplace", str(workplace), timeout=30)
 
 
+def check_doctor_versions(workplace: Path, client_root: Path) -> None:
+    from contextlib import redirect_stdout
+    from io import StringIO
+    from unittest.mock import patch
+
+    from processforge_core.common.properties import CoreProperties
+
+    pf("runtime", "doctor", "--workplace", str(workplace))
+    client_root.mkdir()
+    version = "0.0.0-mismatch"
+    (client_root / "VERSION").write_text(version + "\n", encoding="utf-8")
+    client = CoreProperties.from_distribution(client_root)
+    if client.installed().version != version:
+        raise AssertionError("doctor fixture could not read the alternative client version")
+    output = StringIO()
+    with patch("processforge_core.composition.build_core_properties", return_value=client):
+        with redirect_stdout(output):
+            status = processforge.main(["runtime", "doctor", "--workplace", str(workplace)])
+    if status != 1 or "FAIL: runtime core version compatible" not in output.getvalue():
+        raise AssertionError(f"doctor missed a running core version mismatch: {output.getvalue()}")
+
+
 def assert_runtime_ready(workplace: Path) -> dict[str, object]:
     status = json.loads(pf("runtime", "status", "--workplace", str(workplace), "--json").stdout)
     if status.get("status") != "ready" or status.get("health") != "ready":
@@ -352,10 +374,7 @@ def main() -> int:
             if "tick" not in director_results or "skipped_simple" not in director_results:
                 raise AssertionError(f"runtime scheduler did not distinguish organized/simple projects: {tick}")
 
-            old_state = service_state(workplace)
-            old_state["processforge_core_version"] = "0.0.0-mismatch"
-            (runtime_dir(workplace) / "service.json").write_text(json.dumps(old_state, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            pf("runtime", "doctor", "--workplace", str(workplace), expect=1)
+            check_doctor_versions(workplace, root / "other-client")
 
             stop_runtime(workplace)
             runtime_started = False
