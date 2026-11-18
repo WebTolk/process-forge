@@ -446,6 +446,35 @@ def test_dispatch_failure_keeps_pending_delivery_and_exact_retry(case, monkeypat
     assert case.recorder.journal.pending_dispatch(path) == []
 
 
+def test_standalone_retry_delivers_the_committed_event(case, monkeypatch):
+    recorder = case.recorder
+    path = recorder.inputs.event_runtime_paths(case.root)[0]
+    event = {"event_id": "receipt-retry", "data": {"value": "original"}}
+    monkeypatch.setattr(
+        HookDispatchPolicy, "selected_hooks", lambda *_: [{"id": "hook"}]
+    )
+
+    def interrupt(self, project, pending, **options):
+        assert recorder.journal.pending_dispatch(path) == [event]
+        raise OSError("after durable admission")
+
+    monkeypatch.setattr(RuntimeHookDispatcher, "dispatch_hooks", interrupt)
+    with pytest.raises(OSError, match="after durable admission"):
+        recorder.admit_process_event(case.root, event)
+
+    delivered = []
+    monkeypatch.setattr(HookDispatchPolicy, "selected_hooks", lambda *_: [])
+    monkeypatch.setattr(
+        RuntimeHookDispatcher,
+        "dispatch_hooks",
+        lambda self, project, pending, **options: delivered.append(pending),
+    )
+    retry = {**event, "data": {"value": "retry"}}
+    assert not recorder.admit_process_event(case.root, retry)
+    assert delivered == [event]
+    assert recorder.journal.pending_dispatch(path) == []
+
+
 def test_corrupt_intent_cannot_bypass_pending_readiness(case):
     case.fail_target, case.fail_when = "process-execution-state.json", "before"
     with pytest.raises(OSError):

@@ -122,6 +122,37 @@ class ProcessEventJournal:
                     for event in events
                 )
 
+    def append_for_dispatch(
+        self,
+        path: Path,
+        event: dict[str, Any],
+        *,
+        event_id_value: Callable[[dict[str, Any]], str],
+        record: bool,
+        queue_dispatch: bool,
+    ) -> tuple[bool, list[dict[str, Any]]]:
+        """Admit the event and read its pending delivery in the same transaction."""
+        with self.connection(
+            path, writable=True, driver=self.driver, storage_host=self.storage_host
+        ) as connection:
+            with transaction(connection):
+                inserted = self._append(
+                    connection,
+                    event,
+                    event_id_value,
+                    record,
+                    queue_dispatch=queue_dispatch,
+                )
+                pending = self._pending_for_event(connection, event_id_value(event))
+        return inserted, pending
+
+    @staticmethod
+    def _pending_for_event(connection, event_id: str) -> list[dict[str, Any]]:
+        rows = connection.execute(
+            "SELECT record FROM pending_dispatch WHERE event_id = ?", (event_id,)
+        )
+        return [json.loads(row[0]) for row in rows]
+
     @staticmethod
     def _append(
         connection, event, event_id_value, record, migrating=False, queue_dispatch=False
@@ -200,16 +231,11 @@ class ProcessEventJournal:
             with self.connection(
                 path, driver=self.driver, storage_host=self.storage_host
             ) as connection:
-                if event_id is None:
-                    rows = connection.execute(
-                        "SELECT record FROM pending_dispatch ORDER BY seq LIMIT ?",
-                        (limit,),
-                    ).fetchall()
-                else:
-                    rows = connection.execute(
-                        "SELECT record FROM pending_dispatch WHERE event_id = ?",
-                        (event_id,),
-                    ).fetchall()
+                if event_id is not None:
+                    return self._pending_for_event(connection, event_id)
+                rows = connection.execute(
+                    "SELECT record FROM pending_dispatch ORDER BY seq LIMIT ?", (limit,)
+                )
                 return [json.loads(row[0]) for row in rows]
         except FileNotFoundError:
             return []
