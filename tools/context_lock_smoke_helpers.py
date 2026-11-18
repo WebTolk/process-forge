@@ -8,6 +8,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from project_storage_smoke_helpers import (
+    create_fixture_flow,
+    initialize_fixture_storage,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PF = ROOT / "bin" / "pf.py"
@@ -30,7 +34,7 @@ def write_yaml(path: Path, text: str) -> None:
 
 def make_project(root: Path, *, organized: bool = False) -> Path:
     project = root / "project"
-    flow = project / ".pf"
+    flow = create_fixture_flow(project)
     write_yaml(
         flow / "process-forge.yaml",
         f"""
@@ -103,6 +107,11 @@ coordination:
     process_id: agent-director-supervision
 """,
         )
+        manifest = (project / "workplace.yaml").resolve().as_posix()
+        write_yaml(
+            flow / "process-forge.local.yaml",
+            f"schema_version: 1\nworkplace:\n  manifest: {json.dumps(manifest)}",
+        )
         for relative in [
             ".pf/director",
             ".pf/director/inbox",
@@ -112,6 +121,7 @@ coordination:
         ]:
             (project / relative).mkdir(parents=True, exist_ok=True)
     write_package(project, core_versions=["5.4.5"], articles_generation="A")
+    initialize_fixture_storage(project, project if organized else None)
     return project
 
 

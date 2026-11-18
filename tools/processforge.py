@@ -7486,7 +7486,8 @@ def process_definition_path(project_root: Path, process_or_path: str) -> Path:
 def command_builtin_process_catalog_doctor(args: argparse.Namespace) -> int:
     root_arg = getattr(args, "root", None) or getattr(args, "project_root", None) or "."
     root = Path(root_arg).expanduser().resolve()
-    _run_task_inputs.require_flow_root(root)
+    if root != _builtin_process_catalog_audit_service.distribution_root:
+        _run_task_inputs.require_flow_root(root)
     report = _builtin_process_catalog_audit_service.report(root, public=bool(getattr(args, "public", False)))
     failed = [item for item in report["checks"] if item["level"] == "FAIL"]
     if getattr(args, "write_report", None):
