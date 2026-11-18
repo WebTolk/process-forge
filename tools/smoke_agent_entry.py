@@ -424,15 +424,26 @@ def windows_acl_checks(base):
         return
     import ctypes
     from ctypes import wintypes as w
+
     import processforge_core.agent_entry.migration as migration
-    from processforge_core.egress.windows import current_sid, verify_private
+    from processforge_core.egress.windows import (
+        apis,
+        current_sid,
+        sid_text,
+        verify_private,
+    )
     from processforge_platforms.file_security import native_file_security
 
     adapter = native_file_security()
     adv = ctypes.WinDLL("advapi32", use_last_error=True)
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     convert = adv.ConvertStringSecurityDescriptorToSecurityDescriptorW
-    convert.argtypes = [w.LPCWSTR, w.DWORD, ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(w.DWORD)]
+    convert.argtypes = [
+        w.LPCWSTR,
+        w.DWORD,
+        ctypes.POINTER(ctypes.c_void_p),
+        ctypes.POINTER(w.DWORD),
+    ]
     convert.restype = w.BOOL
     control = adv.SetSecurityDescriptorControl
     control.argtypes = [ctypes.c_void_p, w.WORD, w.WORD]
@@ -462,7 +473,36 @@ def windows_acl_checks(base):
     parent.mkdir()
     # Read access for a second principal distinguishes it from private staging.
     configure(parent, f"O:{sid}G:{sid}D:PAI(A;OICI;FA;;;{sid})(A;OICI;FR;;;WD)")
-    for label, flags in (("inherited", 0x0400), ("protected", 0x1000), ("protected-ai", 0x1400)):
+    probe = parent / "default-owner-probe"
+    probe.write_bytes(b"")
+    owner, acl, descriptor_ptr = ctypes.c_void_p(), ctypes.c_void_p(), ctypes.c_void_p()
+    owner_kernel, owner_api = apis()
+    assert (
+        owner_api.GetNamedSecurityInfoW(
+            str(probe),
+            1,
+            5,
+            ctypes.byref(owner),
+            None,
+            ctypes.byref(acl),
+            None,
+            ctypes.byref(descriptor_ptr),
+        )
+        == 0
+    )
+    try:
+        print(
+            "Windows default file owner matches user:",
+            sid_text(owner, owner_kernel, owner_api) == sid,
+        )
+    finally:
+        owner_kernel.LocalFree(descriptor_ptr)
+        probe.unlink()
+    for label, flags in (
+        ("inherited", 0x0400),
+        ("protected", 0x1000),
+        ("protected-ai", 0x1400),
+    ):
         root = parent / label
         root.mkdir()
         target = root / "AGENTS.md"
@@ -471,6 +511,7 @@ def windows_acl_checks(base):
             prefix = "PAI" if flags & 0x0400 else "P"
             configure(target, f"O:{sid}G:{sid}D:{prefix}(A;;FA;;;{sid})(A;;FR;;;WD)")
         original, descriptor = targets(root), adapter.descriptor(target)
+        assert descriptor is not None
         assert int.from_bytes(descriptor[2:4], "little") & 0x1400 == flags
         readonly = tree(root)
         planned = plan_entry(root)
@@ -505,20 +546,35 @@ def windows_acl_checks(base):
         assert journal["payload"]["transaction"] == receipt["transaction"]
         assert journal["sha256"] == digest(encoded(journal["payload"]))
         assert plan_entry(root)["status"] == "current"
-        assert rollback_entry(root, receipt["transaction"], apply=True)["action"] == "rolled_back"
+        assert (
+            rollback_entry(root, receipt["transaction"], apply=True)["action"]
+            == "rolled_back"
+        )
         assert targets(root) == original and adapter.descriptor(target) == descriptor
 
         def interrupt(point, transaction):
             if point == "replaced_data:AGENTS.md":
                 raise OSError("interrupted between data and security restoration")
+
         interrupted = apply_entry(root, plan_entry(root), apply=True, _fault=interrupt)
         assert interrupted["action"] == "incomplete", interrupted
-        assert rollback_entry(root, interrupted["transaction"], apply=True)["action"] == "rolled_back"
+        assert (
+            rollback_entry(root, interrupted["transaction"], apply=True)["action"]
+            == "rolled_back"
+        )
         assert targets(root) == original and adapter.descriptor(target) == descriptor
         receipt = apply_entry(root, plan_entry(root), apply=True)
         assert receipt["action"] == "applied", receipt
-        assert rollback_entry(root, receipt["transaction"], apply=True, _fault=interrupt)["action"] == "incomplete"
-        assert rollback_entry(root, receipt["transaction"], apply=True)["action"] == "rolled_back"
+        assert (
+            rollback_entry(root, receipt["transaction"], apply=True, _fault=interrupt)[
+                "action"
+            ]
+            == "incomplete"
+        )
+        assert (
+            rollback_entry(root, receipt["transaction"], apply=True)["action"]
+            == "rolled_back"
+        )
         assert targets(root) == original and adapter.descriptor(target) == descriptor
 
     root = parent / "concurrent-acl"
@@ -526,25 +582,64 @@ def windows_acl_checks(base):
     target = root / "AGENTS.md"
     target.write_bytes(b"preserve concurrent owner change")
     original, descriptor = targets(root), adapter.descriptor(target)
+    assert descriptor is not None
     planned = plan_entry(root)
     changed = configure(target, f"O:{sid}G:{sid}D:P(A;;FA;;;{sid})")
     reject("plan_stale", lambda: apply_entry(root, planned, apply=True))
     adapter.restore(target, descriptor)
+
     def concurrent_change(point, transaction):
         if point == "staged":
             adapter.restore(target, changed)
+
     receipt = apply_entry(root, plan_entry(root), apply=True, _fault=concurrent_change)
-    assert receipt["action"] == "incomplete" and receipt["reason"] == "precondition_changed", receipt
+    assert (
+        receipt["action"] == "incomplete"
+        and receipt["reason"] == "precondition_changed"
+    ), receipt
     assert targets(root) == original and adapter.descriptor(target) == changed
-    reject("rollback_conflict", lambda: rollback_entry(root, receipt["transaction"], apply=True))
+    reject(
+        "rollback_conflict",
+        lambda: rollback_entry(root, receipt["transaction"], apply=True),
+    )
     assert adapter.descriptor(target) == changed
     adapter.restore(target, descriptor)  # undo only the fixture's injected edit
-    assert rollback_entry(root, receipt["transaction"], apply=True)["action"] == "rolled_back"
-    with patch.object(migration, "_set_acl", side_effect=EntryError("unsupported_acl")):
+    assert (
+        rollback_entry(root, receipt["transaction"], apply=True)["action"]
+        == "rolled_back"
+    )
+    set_acl = migration._set_acl
+
+    def refuse_original_acl(path: Path, raw: bytes) -> None:
+        if raw == descriptor:
+            raise EntryError("unsupported_acl")
+        set_acl(path, raw)
+
+    # Keep this fault at restoration of the user's ACL during the preflight;
+    # creation of private journals has its own earlier security boundary.
+    with patch.object(migration, "_set_acl", side_effect=refuse_original_acl):
         receipt = apply_entry(root, plan_entry(root), apply=True)
-    assert receipt["action"] == "incomplete" and receipt["reason"] == "unsupported_acl", receipt
+    assert (
+        receipt["action"] == "incomplete" and receipt["reason"] == "unsupported_acl"
+    ), receipt
     assert targets(root) == original and adapter.descriptor(target) == descriptor
-    assert rollback_entry(root, receipt["transaction"], apply=True)["action"] == "rolled_back"
+    assert (
+        rollback_entry(root, receipt["transaction"], apply=True)["action"]
+        == "rolled_back"
+    )
+    before_private_refusal = tree(root / JOURNALS)
+    with patch.object(migration, "_set_acl", side_effect=EntryError("unsupported_acl")):
+        reject(
+            "unsupported_acl", lambda: apply_entry(root, plan_entry(root), apply=True)
+        )
+    assert targets(root) == original and adapter.descriptor(target) == descriptor
+    after_private_refusal = tree(root / JOURNALS)
+    assert all(
+        after_private_refusal[name] == value
+        for name, value in before_private_refusal.items()
+    )
+    created = after_private_refusal.keys() - before_private_refusal.keys()
+    assert created and all(after_private_refusal[name][0] == b"" for name in created)
 
 
 def process_checks(base):
@@ -613,7 +708,9 @@ def main():
             Path(sys.argv[3]).write_text("locked", encoding="utf-8")
             time.sleep(30)
         return 0
-    with tempfile.TemporaryDirectory(prefix="pf-agent-entry-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="pf-agent-entry-", dir=os.environ.get("PF_TEST_SCRATCH_ROOT")
+    ) as temporary:
         base = Path(temporary)
         contract, source = source_checks(base)
         ownership_checks(base, contract)

@@ -79,10 +79,13 @@ def _transaction_temporaries(root: Path):
                 folder = _directory(root, JOURNALS + "/cleanup", private=True)
                 path = folder / (resource.resource_id + ".json")
                 with atomic_staging(path) as temporary:
-                    temporary.write_bytes(
-                        encoded({"schema_version": 1, **asdict(receipt)})
+                    _durable_file(
+                        temporary,
+                        encoded({"schema_version": 1, **asdict(receipt)}),
+                        exclusive=False,
                     )
                     temporary.replace(path)
+                _sync_dir(folder)
                 if receipt.result not in {"deleted", "already_absent"}:
                     raise OSError("temporary_cleanup:" + receipt.result)
             except Exception as error:
@@ -745,9 +748,13 @@ def entry_lock(root: Path):
                 fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
 
 
-def _durable_file(path: Path, raw: bytes):
-    with path.open("xb") as stream:
-        if sys.platform != "win32":
+def _durable_file(path: Path, raw: bytes, *, exclusive: bool = True) -> None:
+    with path.open("xb" if exclusive else "wb") as stream:
+        if sys.platform == "win32":
+            # A token's default owner can differ from its user. Preserve the
+            # parent's explicit security before publishing any file content.
+            _set_acl(path, _acl(path.parent))
+        else:
             os.fchmod(stream.fileno(), 0o600)
         stream.write(raw)
         stream.flush()

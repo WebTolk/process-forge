@@ -64,6 +64,7 @@ jobs:
           import sys
 
           for script in (
+              'smoke_agent_entry.py',
               'smoke_agent_entry_release.py',
               'smoke_remediation_checksum_surface.py',
               'smoke_public_cleanliness.py',
