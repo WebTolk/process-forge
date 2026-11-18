@@ -317,6 +317,43 @@ assert result.returncode==0,result.stdout+result.stderr
     assert not (fixture.target / "runtime/managed-ingress").exists()
 
 
+@pytest.mark.parametrize("locally_modified", [False, True])
+def test_removed_owned_file_becomes_directory(
+    fixture: Harness, sealed: Any, locally_modified: bool
+) -> None:
+    ancestor = fixture.target / "removed.txt"
+    if locally_modified:
+        ancestor.write_bytes(b"local ancestor bytes\n")
+    preimage = ancestor.read_bytes()
+    relative = "removed.txt/child.txt"
+    fixture.archive.write_bytes(
+        archive_bytes(sealed["incoming"]({relative: b"new child\n"}))
+    )
+
+    result = fixture.run("emit(invoke())")
+
+    assert result["ok"], result
+    assert (fixture.target / relative).read_bytes() == b"new child\n"
+    backup = Path(result["result"]["backup_dir"])
+    assert (backup / "files/removed.txt").read_bytes() == preimage
+    proof = json.loads((backup / "control/recovery-proof.json").read_bytes())
+    assert proof["initial"][relative] is None
+    for name, raw in PRIVATE.items():
+        assert (fixture.target / name).read_bytes() == raw
+
+
+def test_unowned_file_cannot_become_directory(fixture: Harness, sealed: Any) -> None:
+    fixture.archive.write_bytes(
+        archive_bytes(sealed["incoming"]({"unknown.txt/child.txt": b"new child\n"}))
+    )
+    before = fixture.snapshot()
+
+    result = fixture.run("emit(invoke())")
+
+    assert not result["ok"] and result["code"] == "plan_blocked", result
+    fixture.assert_no_apply(before)
+
+
 @pytest.mark.parametrize("direct", [False, True])
 def test_same_root_file_update_refuses_without_writes(
     fixture: Harness, direct: bool

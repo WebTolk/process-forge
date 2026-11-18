@@ -235,7 +235,9 @@ def apply_file_update(
         target = _update_target(root, relative)
         try:
             target.lstat()
-        except FileNotFoundError:
+        except (FileNotFoundError, NotADirectoryError):
+            # A child of an owned file is absent until the planned removal
+            # permits its parent directory. Other inspection errors still fail.
             return None
         return read(relative)
 
