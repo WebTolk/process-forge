@@ -50,7 +50,9 @@ def main() -> int:
         packed = run("release-pack", "--root", str(ROOT), "--output", str(archive))
         assert packed.returncode == 0, packed.stdout + packed.stderr
         manifest_path = archive.with_suffix(".manifest.json")
-        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_bytes = manifest_path.read_bytes()
+        assert b"\r\n" not in manifest_bytes
+        data = json.loads(manifest_bytes.decode("utf-8"))
         assert data["schema_version"] == 1
         assert data["name"] == "processforge"
         assert data["version"] == (ROOT / "VERSION").read_text(encoding="utf-8").strip()

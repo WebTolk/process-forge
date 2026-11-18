@@ -1220,6 +1220,9 @@ def test_real_packager_freezes_before_zip_and_freshness_replays(
     )
     with zipfile.ZipFile(archive) as opened:
         assert opened.read("docs/example.txt") == b"before\n"
+        assert {
+            (item.create_system, item.external_attr >> 16) for item in opened.infolist()
+        } == {(3, 0o100644)}
         for row in rows:
             assert row["sha256"] == hashlib.sha256(opened.read(row["path"])).hexdigest()
     # Freshness is a deterministic rebuild, including both generated entries.
