@@ -51,12 +51,20 @@ def load_native() -> Any:
 
 
 @pytest.fixture
-def sealed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
+def sealed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest
+) -> Any:
     native = load_native()
-    image = native.NativeImage.__new__(native.NativeImage)
-    image.root = tmp_path.resolve()
-    image.files = {"tools/source.py": b"captured", "schema.json": b"{}"}
-    image._active = False
+    payload = {"tools/source.py": b"captured", "schema.json": b"{}"}
+    payload.update(getattr(request, "param", {}))
+    for name, body in payload.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(body)
+    expected = {name: native.digest(body) for name, body in payload.items()}
+    image = native.NativeImage(tmp_path, expected)
+    # Sealed reads use the captured bytes even after the loose source is gone.
+    (tmp_path / "tools/source.py").unlink()
     # Preserve host import machinery; exercise the actual activate/captured_open.
     monkeypatch.setattr(sys, "meta_path", list(sys.meta_path))
     monkeypatch.setattr(sys, "dont_write_bytecode", True)
@@ -184,10 +192,14 @@ def test_schema_only_no_clean_finalizes(sealed: Any, code: int) -> None:
     assert report["result"] == ("FAIL" if code else "PASS")
 
 
+@pytest.mark.parametrize(
+    "sealed",
+    [{".pf/runtime/release-test/latest-report.json": b"protected"}],
+    indirect=True,
+)
 def test_report_write_error_propagates(sealed: Any) -> None:
     native, image = sealed
     ns = release_namespace()
-    image.files[".pf/runtime/release-test/latest-report.json"] = b"protected"
     with pytest.raises(native.NativeControlError):
         ns["write_release_test_report"](
             image.root,
@@ -528,12 +540,19 @@ def test_release_selection_public_notes(
     spec.loader.exec_module(validator)
     notes = {
         f"release/{version}/{name}"
-        for version in ("1.3.0-alpha5", "1.3.0-beta1", "1.3.0-beta2", "1.3.0-beta3")
+        for version in (
+            "1.3.0-alpha5",
+            "1.3.0-beta1",
+            "1.3.0-beta2",
+            "1.3.0-beta3",
+            "1.3.0-beta4",
+        )
         for name in ("notes.md", "notes.ru.md")
     }
     excluded = {
         "release/1.3.0-beta1/private-notes.md",
         "release/1.3.0-beta1/processforge-1.3.0-beta1.manifest.json",
+        "release/1.3.0-beta4/processforge-v1.3.0-beta4.manifest.json",
         "release/1.3.0-alpha5/processforge-1.3.0-alpha5.manifest.json",
         "release/1.2.0/notes.md",
         "release/updates/processforge-stable.json",

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.3.0-beta4 - 2026-11-18
+
+See the [release notes](release/1.3.0-beta4/notes.md) and
+[примечания к выпуску](release/1.3.0-beta4/notes.ru.md).
+
 - Route Forge MCP clients through the existing Runtime and shared Core, retaining
   session/project checks and reconnecting the same pipes after Runtime restart.
 - Add explicit updater-owned Runtime stop/apply/start with `--manage-runtime`;
@@ -29,6 +34,11 @@
 - Keep full journal integrity and row-parity checks outside shared admission.
   Revalidate store changes before migration publication and Work-start's final
   journal open.
+- Handle an owned file becoming a directory during Core update and preserve
+  its preimage for recovery. Set Windows journal and cleanup receipt ownership
+  before writing agent-entry data.
+- Include the [architecture decision register](docs/architecture/README.md)
+  and the English and Russian migration and MCP guidance.
 
 ## 1.3.0-beta3 - 2026-11-02
 
