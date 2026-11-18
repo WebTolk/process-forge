@@ -440,8 +440,6 @@ jobs:
               "smoke_worker_workspace_access.py", "smoke_codex_exec_worker.py",
               "smoke_diagnostics.py", "smoke_diagnostics_process_invariance.py",
               "smoke_prepared_execution_recovery.py",
-              "smoke_work_capsule_contract_parity.py",
-              "smoke_worker_run_shell.py", "smoke_director_inspector_boundary.py",
           ):
               print("RUN " + smoke, flush=True)
               subprocess.run([sys.executable, "-B", "tools/" + smoke],
@@ -477,6 +475,52 @@ jobs:
             runtime-public-event-reads.xml
             runtime-public-native-observations.jsonl
           if-no-files-found: error
+
+  worker-lifecycle:
+    name: Worker lifecycle (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check actual worker observation, collection and process drain
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import platform
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / ".pf" / "tmp" / "worker-lifecycle"
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(
+              str(root / name) for name in (".", "src", "tools", "tests"))
+          for name in ("W3_FIXTURE_ROOT", "PF_TEST_SCRATCH_ROOT", "PF_W4_TEST_ROOT",
+                       "TMPDIR", "TEMP", "TMP"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          print(platform.platform(), sys.version, flush=True)
+          for smoke in ("smoke_work_capsule_contract_parity.py",
+                        "smoke_worker_run_shell.py", "smoke_director_inspector_boundary.py"):
+              print("RUN " + smoke, flush=True)
+              subprocess.run([sys.executable, "-B", "tools/" + smoke],
+                             env=environment, check=True, timeout=300)
 
   mcp-declarations:
     name: MCP declarations (${{ matrix.os }})
