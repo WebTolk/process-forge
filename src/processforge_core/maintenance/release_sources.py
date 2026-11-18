@@ -49,6 +49,8 @@ RELEASE_ROOT_FILES = [
     "release/1.3.0-beta2/notes.ru.md",
     "release/1.3.0-beta3/notes.md",
     "release/1.3.0-beta3/notes.ru.md",
+    "release/1.3.0-beta4/notes.md",
+    "release/1.3.0-beta4/notes.ru.md",
 ]
 
 RELEASE_FORBIDDEN_DIR_PARTS = {
