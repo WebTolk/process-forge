@@ -198,6 +198,7 @@ jobs:
           import json
           import os
           from pathlib import Path
+          import shutil
           import subprocess
           import sys
 
@@ -223,15 +224,16 @@ jobs:
           ], env=environment)
           failures = []
           records = set(commands.glob("*/result.json")) - previous
+          report = root / ".pf/artifacts/full-archive"
+          report.mkdir(parents=True, exist_ok=True)
           for path in sorted(records):
               child = json.loads(path.read_bytes())
+              shutil.copytree(path.parent, report / "commands" / path.parent.name)
               if child["returncode"] != 0 or child["timed_out"]:
                   script = next((Path(arg).name for arg in child["args"] if arg.endswith(".py")),
                                 Path(child["args"][0]).name)
                   failures.append({"command": script, "returncode": child["returncode"],
                                    "timed_out": child["timed_out"]})
-          report = root / ".pf/artifacts/full-archive"
-          report.mkdir(parents=True, exist_ok=True)
           (report / "result.json").write_text(json.dumps({
               "source_commit": os.environ["SOURCE_COMMIT"], "archive_sha256": digest,
               "returncode": result.returncode, "recorded_commands": len(records),
