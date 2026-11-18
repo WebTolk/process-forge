@@ -17,8 +17,8 @@ from ..database import DatabaseFactory
 from ..process_event_journal import ProcessEventJournal
 from ..project.configuration_inputs import (
     ProjectConfigurationReader,
+    journal_operation_host,
     operation_device_path,
-    operation_storage_host,
     project_configuration_reader,
 )
 from ..sqlite_storage import JournalError
@@ -141,7 +141,11 @@ class ProcessEventRecorder:
                 selected_workplace = workplace_root or (
                     declared.parent if declared else None
                 )
-                host = operation_storage_host(events_path.with_name("events.sqlite3"))
+                host = journal_operation_host(
+                    events_path.with_name("events.sqlite3"),
+                    project_root,
+                    selected_workplace,
+                )
                 host = host or build_storage_migration_host(
                     project_root=project_root,
                     workplace_root=selected_workplace,

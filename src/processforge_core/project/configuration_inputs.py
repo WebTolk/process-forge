@@ -158,6 +158,24 @@ def _first_write_storage_host(
     return host
 
 
+def verify_operation_legacy_read(host: StorageMigrationHost) -> bool:
+    """Qualify a read without project identity against its active operation."""
+    current = _OPERATION.get()
+    if current is None or host is not _STORAGE_OPERATION.get():
+        return False
+    _identityless_legacy(current[0][0], current[0][1], current[1])
+    return True
+
+
+def journal_operation_host(
+    path: Path, project: Path | None, workplace: Path | None
+) -> StorageMigrationHost | None:
+    """Borrow the exact operation's live host. The journal selects on each open."""
+    if operation_configuration(project, workplace) is not None:
+        return _STORAGE_OPERATION.get()
+    return operation_storage_host(path)
+
+
 def operation_storage_host(
     path: Path, *, writable: bool = False
 ) -> StorageMigrationHost | None:
@@ -170,13 +188,11 @@ def operation_storage_host(
     try:
         context = host.context
     except MaintenanceError as error:
-        current = _OPERATION.get()
         if (
             not writable
             and error.code == "project_identity_required"
-            and current is not None
+            and verify_operation_legacy_read(host)
         ):
-            _identityless_legacy(current[0][0], current[0][1], current[1])
             return None
         raise
     return (

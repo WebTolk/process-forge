@@ -254,6 +254,9 @@ def adapter_identity_access(
     except MaintenanceError as error:
         if writable or error.code != "project_identity_required":
             raise
+        from .project.configuration_inputs import verify_operation_legacy_read
+
+        verify_operation_legacy_read(storage_host)
         # Missing stable identity prevents adoption, while the original
         # adapter still refuses any already-adopted envelope without its host.
         yield None

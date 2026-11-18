@@ -279,9 +279,9 @@ class RawIngressKernel:
         storage = self.storage
         retain_raw = self.record_raw
         from processforge_core.project.configuration_inputs import (
+            journal_operation_host,
             operation_configuration,
             operation_device_path,
-            operation_storage_host,
         )
 
         configuration = self.configuration or operation_configuration(
@@ -292,8 +292,8 @@ class RawIngressKernel:
             if storage.storage_host is None:
                 from processforge_core.composition import build_storage_migration_host
 
-                host = operation_storage_host(
-                    self.database
+                host = journal_operation_host(
+                    self.database, self.project_root, self.workplace_root
                 ) or build_storage_migration_host(
                     project_root=self.project_root,
                     workplace_root=self.workplace_root,

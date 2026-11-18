@@ -75,6 +75,37 @@ def http_json(method: str, url: str, *, bearer: str | None = None, payload: dict
             return exc.code, {"error": text}
 
 
+def check_concurrent_registrations(endpoint: str, bearer: str, project_a: Path, project_b: Path) -> None:
+    projects = [project_a, project_b] * 6
+
+    def register(item: tuple[int, Path]) -> float:
+        index, project = item
+        session = f"parallel-{index}"
+        started = time.monotonic()
+        try:
+            code, body = http_json(
+                "POST", endpoint + "/session/register", bearer=bearer,
+                payload={"session_id": session, "agent_id": f"parallel-agent-{index}", "project_root": str(project)},
+            )
+        except OSError as exc:
+            raise AssertionError(f"{session} failed after {time.monotonic() - started:.3f}s: {exc}") from exc
+        if code != 200 or body.get("session_id") != session:
+            raise AssertionError(f"{session} registration returned HTTP {code}: {body.get('error')}")
+        return time.monotonic() - started
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        durations = list(executor.map(register, enumerate(projects)))
+    for index, expected_project in enumerate(projects):
+        session = f"parallel-{index}"
+        code, body = http_json(
+            "POST", endpoint + "/project-state", bearer=bearer, payload={"session_id": session}
+        )
+        project = body.get("project")
+        if code != 200 or not isinstance(project, dict) or Path(str(project.get("project_root"))) != expected_project:
+            raise AssertionError(f"{session} did not resolve to its registered project (HTTP {code})")
+    print(f"PASS: 12 session registrations with six clients, slowest response {max(durations):.3f}s", flush=True)
+
+
 def declared_oversized_request(endpoint: str, bearer: str) -> tuple[int, dict[str, object]]:
     """Assert header-based body rejection without racing a Windows socket close.
 
@@ -251,18 +282,7 @@ def main() -> int:
 
             pf("runtime", "session-register", "--workplace", str(workplace), "--session", "sess-a", "--agent", "codex-a", "--project-root", str(project_a), "--json")
             pf("runtime", "session-register", "--workplace", str(workplace), "--session", "sess-b", "--agent", "codex-b", "--project-root", str(project_b), "--json")
-            registrations = [
-                {"session_id": f"parallel-{index}", "agent_id": f"parallel-agent-{index}", "project_root": str(project_a if index % 2 == 0 else project_b)}
-                for index in range(12)
-            ]
-            with ThreadPoolExecutor(max_workers=6) as executor:
-                results = list(executor.map(lambda payload: http_json("POST", endpoint + "/session/register", bearer=token(workplace), payload=payload), registrations))
-            if any(code != 200 for code, _body in results):
-                raise AssertionError(f"concurrent session registration failed: {results}")
-            parallel_a = json.loads(pf("runtime", "project-state", "--workplace", str(workplace), "--session", "parallel-0", "--json").stdout)
-            parallel_b = json.loads(pf("runtime", "project-state", "--workplace", str(workplace), "--session", "parallel-1", "--json").stdout)
-            if parallel_a["project"]["project_id"] == parallel_b["project"]["project_id"]:
-                raise AssertionError("concurrent session registration mixed project bindings")
+            check_concurrent_registrations(endpoint, token(workplace), project_a, project_b)
 
             event_a = write_event(
                 root / "event-a.json",
