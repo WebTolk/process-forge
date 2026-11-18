@@ -48,11 +48,18 @@ python tools/smoke_worker_awareness_of_director.py
 python tools/smoke_error_workflow.py
 python tools/smoke_process_run_task_batch.py
 python bin/pf.py release-test --root . --public --fail-fast
-python bin/pf.py dev-test --root . --suite supervisor-stress
 python bin/pf.py release-pack --root . --output .pf/tmp/release-check/processforge.zip
 python bin/pf.py release-archive-test --archive .pf/tmp/release-check/processforge.zip --root . --extracted-test full
 git diff --check
 ```
+
+The public qualification uses the shipped release checks and the applicable
+repository-owned native tests. `dev-test` runs additional local dogfooding through
+`.pf/dogfooding/run_dogfooding_tests.py`; that private runner and its suite names
+are not supplied by a fresh clone or release archive. When a contributor owns
+such a runner, record its selected suites and results separately. Do not require
+another contributor's private state to run the public checks or report a missing
+local suite as passed.
 
 Release output must not include:
 
