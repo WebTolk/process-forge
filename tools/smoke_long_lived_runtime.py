@@ -203,14 +203,22 @@ def pid_liveness_checks() -> None:
                     raise AssertionError(f"PID filter missing: {argv}")
                 if probe.call_args.kwargs.get("text"):
                     raise AssertionError("tasklist must not use the interpreter's locale decoder")
-    with patch.object(core.os, "name", "posix"):
+    with patch.object(core.os, "name", "posix"), patch.object(sys, "platform", "darwin"):
         for outcome, expected in ((None, True), (ProcessLookupError(), False), (PermissionError(), True)):
             with patch.object(core.os, "kill", side_effect=outcome):
                 from processforge_core.runtime.observation_inputs import WorkerObservationInputService
 
                 if WorkerObservationInputService().process_pid_running(4321) is not expected:
                     raise AssertionError("POSIX process probe behavior changed")
-    print("PASS: localized tasklist bytes and exact PID column; POSIX behavior preserved")
+    print("PASS: localized tasklist PID and portable signal probe")
+    if sys.platform.startswith("linux") and hasattr(os, "pidfd_open"):
+        from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+        with subprocess.Popen([sys.executable, "-c", "pass"]) as child:
+            os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
+            if WorkerObservationInputService().process_pid_running(child.pid):
+                raise AssertionError("exited Linux child still counted as running before wait")
+        print("PASS: Linux recognizes an exited process before its parent reaps it")
 
 
 @contextmanager

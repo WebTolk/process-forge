@@ -179,6 +179,7 @@ def registry_file_lock(
     }
     acquired = False
     primary_error: BaseException | None = None
+    retry_delay = 0.001
 
     def remove_owner(primary: BaseException | None = None) -> None:
         try:
@@ -192,7 +193,9 @@ def registry_file_lock(
             )
 
     def wait_for_owner(phase: str) -> None:
-        if time.monotonic() >= deadline:
+        nonlocal retry_delay
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
             error = SystemExit(
                 f"FAIL: registry is locked by another writer: {lock_path}"
             )
@@ -200,7 +203,8 @@ def registry_file_lock(
                 registry_lock_reason="contention_timeout", registry_lock_phase=phase
             )
             raise error
-        time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
+        time.sleep(min(retry_delay, remaining))
+        retry_delay = min(retry_delay * 2, 0.1)
 
     try:
         if sys.platform.startswith("linux"):

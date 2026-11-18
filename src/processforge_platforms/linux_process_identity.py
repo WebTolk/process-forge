@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 import select
+import selectors
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +50,27 @@ def lock_owner_identity() -> dict[str, Any]:
         if "PF_NATIVE_NAMESPACE" in os.environ:
             raise OSError("linux_lock_identity_unavailable") from error
         return {}  # File-only hosts without this capability keep their legacy format.
+
+
+def pid_exited(pid: int) -> bool | None:
+    """Observe kernel exit even while a parent has yet to reap the process."""
+    open_pidfd = getattr(os, "pidfd_open", None)
+    if open_pidfd is None:
+        return None
+    try:
+        descriptor = open_pidfd(pid)
+    except ProcessLookupError:
+        return True
+    except OSError:
+        return None
+    try:
+        with selectors.DefaultSelector() as poller:
+            poller.register(descriptor, selectors.EVENT_READ)
+            return bool(poller.select(0))
+    except (OSError, ValueError):
+        return None
+    finally:
+        os.close(descriptor)
 
 
 def lock_owner_alive(owner: dict[str, Any]) -> bool | None:
