@@ -147,7 +147,8 @@ The execution engine imports observable latest `status.json` snapshots into the
 project main store. It preserves explicit project/run/task/attempt identity,
 unknown compatibility fields and exact original bytes. Numeric attempt directory
 names set allocation floors; their bodies are never used to invent history.
-After independently proven quiescence, directory-only attempts are retained in
+After explicit offline confirmation and accepted maintenance checks, directory-only
+attempts are retained in
 `execution_allocation_floors` without creating execution/head/current/history rows.
 For example, `attempts/7` with no status imports zero executions and reserves 8 for
 the first real allocation. Missing status never proves idle. Frozen provenance
@@ -157,23 +158,31 @@ historical snapshots retain their allocation floor. Historical completeness is
 not claimed. Unknown/current activity, ambiguous names, source drift, foreign schemas
 or an absent explicit manifest `project.id` refuse migration.
 
-`ExecutionMigrationService` takes the frozen database/repository/admission/backup
-dependencies and the private typed `safety` verifier. Its
-`ExecutionMigrationContext` pins authorized project/workplace routing, project and
-store identity, target, generations, plan and whole-inventory checksum. The host
-must exclude old writers, pre-spawn gaps and all owned process trees, and verify
-the exact Runtime instance/routing/capabilities. Freeze, resume and pre-cutover
-proof checks run under admission; stale/missing/exception/active/unknown proof
-fails closed. `offline_confirmed` records operator intent only. No technical
-fencing of arbitrary old binaries is claimed.
+`ExecutionMigrationService` takes the database/repository/admission/backup
+dependencies and a private typed `safety` verifier. Its
+`ExecutionMigrationContext` pins project/workplace routing, project and store
+identity, target, generations, plan and whole-inventory checksum. The supported
+composition in `tools/migrate-storage.py` uses explicit offline maintenance:
+`--offline-confirmed` records that the operator/updater has already stopped PF
+and the other writers. Garage assigns that responsibility to the operator;
+the Forge updater stops its managed PF executor.
+
+The composition requires held maintenance admission, rejects a known live Runtime
+or invalid Runtime state, and rechecks the selected roots, targets and
+configuration before mutation. Freeze, resume and pre-cutover verifier calls
+run under admission; missing, changed, invalid, active or unknown results refuse.
+The retained `MigrationSafety` interface describes these checks. It does not
+prove the absence of every historical writer or fence arbitrary old binaries;
+those remain under operator/updater control.
 
 Inspect/plan do not create a database or binding. Explicit evidence is contained
 under the selected flow root's `maintenance/` directory. The manifest is streamed
 in raw UTF-8 relative-path order; only 256 directory names or import records are
 buffered. Read-only sorting may repeat directory passes for large fanout. Bodies
 are bounded to 64 KiB; stdout/stderr, reports and prepared inputs are never read.
-Only positively historical invalid snapshots with full host quiescence proof may
-be skipped; exact bytes, hashes and provenance remain in evidence.
+Only positively historical invalid snapshots may be skipped, with the selected
+maintenance verifier's checks accepted; exact bytes, hashes and provenance remain
+in evidence. Offline confirmation does not make unknown activity historical.
 
 For an imported attempt, a valid `collection-complete.json` and matching
 `collection-receipt.json` preserve `collection_state=collected`. The importer
@@ -209,7 +218,8 @@ The command/parser adapters add `execution-inspect`, `execution-import` (plan by
 default) and `execution-resume`. Apply needs `--apply --offline-confirmed` and
 `--evidence-dir`; resume additionally requires exact migration/checksum selectors.
 They emit one JSON object, with exit 0 for plan/ready, 1 for refusal and argparse 2
-for invalid syntax. Without host composition/verifier they fail closed.
+for invalid syntax. Without host composition/verifier they fail closed. Use the
+supported storage migration entrypoint below for the composed offline procedure.
 
 ## Explicit storage migration and stable UUIDs
 
