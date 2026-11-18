@@ -962,6 +962,19 @@ def windows_owner_recovery(root):
 def mcp_project_binding(root):
     from pf_runtime import mcp_server, session_read
 
+    # Keep host credentials out of this fixture and exercise a known collision.
+    # Environment secrets are redacted even inside diagnostic request identities.
+    diagnostic_env = {
+        name: value
+        for name, value in os.environ.items()
+        if not d.SECRET_KEY.search(name)
+    }
+    diagnostic_env.update(
+        {
+            "PF_DIAGNOSTICS": json.dumps({"profile": "normal", "sink": "jsonl"}),
+            "PF_DIAGNOSTIC_TEST_SECRET": "root",
+        }
+    )
     cases = [
         ("same-id-foreign", "foreign", "bound", None, False),
         ("argument-session-foreign", "foreign", "", "bound", False),
@@ -1013,7 +1026,7 @@ def mcp_project_binding(root):
         request = {"jsonrpc": "2.0", "id": label, "method": "tools/call",
             "params": {"name": "pf.resolve", "arguments": arguments}}
         expected = mcp_server._respond(request, base, configured, runtime)
-        with patch.dict(os.environ, {"PF_DIAGNOSTICS": json.dumps({"profile": "normal", "sink": "jsonl"})}):
+        with patch.dict(os.environ, diagnostic_env, clear=True):
             actual = mcp_server.respond(request, base, configured, runtime)
         assert actual == expected, (label, actual, expected)
         written, records = [], []
@@ -1027,7 +1040,10 @@ def mcp_project_binding(root):
         assert bool(written) == expected_logging, (label, written)
         if written:
             assert written == ["foreign" if label == "garage-no-session" else "bound"], (label, written)
-            assert records and all(row["identity"]["request_id"] == label for row in records), (label, records)
+            expected_request_id = label.replace("root", "<redacted>")
+            assert records and all(
+                row["identity"]["request_id"] == expected_request_id for row in records
+            ), (label, records)
 
 
 def main():
