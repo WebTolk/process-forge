@@ -147,7 +147,8 @@ shell passthrough нет.
 main store проекта. Сохраняются явные project/run/task/attempt IDs, неизвестные
 поля compatibility DTO и точные исходные bytes. Имена числовых attempt-каталогов
 задают allocation floor; их тела не читаются для выдуманного восстановления
-истории. При независимо доказанном quiescence directory-only факты сохраняются в
+истории. После явного подтверждения остановки и успешных maintenance-проверок
+факты о каталогах без status сохраняются в
 `execution_allocation_floors` без execution/head/current/history rows. Например,
 `attempts/7` без status импортирует ноль executions и резервирует 8 для первой
 реальной allocation. Отсутствие status не доказывает idle. Manifest закрепляет
@@ -157,22 +158,30 @@ floor. Полнота истории не заявляется. Unknown/current 
 неоднозначные имена, drift/foreign schema и отсутствие явного `project.id`
 блокируют перенос.
 
-К замороженным Database/repository/admission/BackupPort добавлен приватный typed
-`safety` verifier. `ExecutionMigrationContext` закрепляет authorized project и
-workplace routing, project/store/target, поколения, plan и checksum всего inventory.
-Host доказывает исключение старых writers, отсутствие pre-spawn gap и всех owned
-process trees, сверяет Runtime instance/routing/capabilities. Freeze, resume и
-проверка перед cutover происходят под admission. Missing/stale/exception/active/
-unknown proof дают отказ; `offline_confirmed` означает только намерение оператора.
-Техническое fencing произвольных старых binaries не заявляется.
+`ExecutionMigrationService` получает Database/repository/admission/BackupPort и
+приватный типизированный `safety` verifier. `ExecutionMigrationContext` закрепляет
+project/workplace routing, project/store/target, поколения, plan и checksum всего
+inventory. Поддерживаемая композиция в `tools/migrate-storage.py` использует явную
+offline maintenance: `--offline-confirmed` подтверждает, что оператор/updater уже
+остановил PF и остальных писателей. В Garage за это отвечает оператор;
+в Forge updater останавливает управляемый им исполнитель PF.
+
+Композиция требует удерживаемый maintenance admission, отклоняет известный живой
+Runtime или некорректное состояние Runtime и перед изменениями повторно проверяет
+выбранные корни, targets и конфигурацию. Вызовы verifier при freeze, resume и перед
+cutover идут под admission. Отсутствующий, изменённый, некорректный, active или
+unknown результат означает отказ. Сохранённый интерфейс `MigrationSafety`
+описывает эти проверки. Он не доказывает отсутствие всех исторических писателей
+и не блокирует произвольные старые binaries; за них отвечает оператор/updater.
 
 Inspect/plan не создают БД или binding. Явный evidence ограничен `maintenance/`
 actual flow root. Manifest потоковый, порядок relative paths — raw UTF-8;
 буфер содержит до 256 имён каталогов или записей import. При большом fanout
 read-only сортировка повторяет проходы каталога. Тела ограничены 64 KiB;
 stdout/stderr, report и prepared-input не читаются. Skip допускает только
-положительно исторический invalid snapshot при полном host proof; точные bytes,
-checksum и provenance остаются в evidence.
+подтверждённо исторический invalid snapshot при успешных проверках выбранного
+maintenance verifier; точные bytes, checksum и provenance остаются в evidence.
+Подтверждение остановки не превращает неизвестную активность в историческую.
 
 Для переносимой попытки корректный `collection-complete.json` и соответствующий
 `collection-receipt.json` сохраняют `collection_state=collected`. Импортёр
@@ -207,7 +216,8 @@ Command/parser добавляют execution-inspect, execution-import (по ум
 execution-resume. Для apply нужны --apply --offline-confirmed и --evidence-dir;
 resume также требует точных migration/checksum selectors. Вывод — один JSON,
 exit 0 для plan/ready, 1 для отказа и argparse 2 для неверного синтаксиса.
-Без host composition/verifier новые операции fail-closed.
+Без host composition/verifier операции дают отказ. Для готовой offline-процедуры
+используйте описанный ниже поддерживаемый entrypoint миграции хранилищ.
 
 ## Явная миграция и UUID
 

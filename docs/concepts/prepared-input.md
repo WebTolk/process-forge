@@ -18,7 +18,7 @@ Atomic publication uses a flushed temporary file and an exclusive hard link in t
 
 T02 resource-material verification retains its own fixed ceilings: 64 resources, 2,048 files and 32 MiB overall; 20,000 visited entries; 256 files and 8 MiB per resource; 1,000,000 bytes per file; and 2,048 generated documents / 32 MiB of generated searchable content. These limits bound resource verification and derived material, not permission to access a directory. They can cause preparation to fail before a worker starts.
 
-A knowledge grant marked `metadata_only` contains navigation metadata and no resolved body path. It does not authorize reading the resource body or its containing root. Full-text knowledge is checked against the pinned binding, current project authorization and stage subset; the private manifest records portable references, provenance and bounded file hashes. Templates, tools and MCP grants are also matched to pinned/current selections and resolved before launch. A registry entry by itself grants nothing.
+A knowledge grant marked `metadata_only` contains navigation metadata and no resolved body path. It does not authorize reading the resource body or its containing root. Full-text knowledge is checked against the pinned binding, current project authorization and stage subset; the private manifest records portable references, provenance and bounded file hashes. Templates and tool grants are also matched to pinned/current selections and resolved before launch. A registry entry by itself grants nothing.
 
 Explicit tool grants use the selected registry ID. The public snapshot keeps
 only its portable `path_ref` (`registry: tools`, `id`) and a
@@ -33,10 +33,18 @@ A file-backed tool retains the existing path containment and existence checks.
 A command-only tool may instead receive `resolution.status: descriptor` with its
 verified `entry`, including a nonempty command, only in the private prepared
 input. This descriptor grants no directory or file-body access and adds no broad
-Codex directory grant. Templates and MCP keep their existing file-backed form.
+Codex directory grant. Templates keep their existing file-backed form.
 Missing references/digests, ambiguous or changed identities, changed definitions
 and revoked records fail closed. Existing immutable snapshots/capsules are not
 upgraded in place: new tool grants require a fresh governed context.
+
+MCP declarations are retained at `input.resources.requested.mcp` as descriptive
+metadata; `input.resources.grants.mcp` is empty. Preparation does not resolve or
+pin MCP connections, check their revocation or probe availability. The coding
+agent's own configuration controls its connections and tool approvals. PF neither
+grants that access nor changes the agent configuration or a running MCP server.
+Capsule, required-source, file/action scope and filesystem checks still apply.
+See [Work context](work-context.md) for this compatibility contract.
 
 ## Driver handoff and execution
 
