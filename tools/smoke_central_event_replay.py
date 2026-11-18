@@ -11,6 +11,9 @@ import tempfile
 from contextlib import closing
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
 import pf_runtime.session_replay as session_replay_module
 from pf_runtime.codex_hooks import runtime_bootstrap
 from pf_runtime.raw_ingress_kernel import NativeAgentEvent, RawIngressKernel
@@ -21,7 +24,6 @@ from smoke_hook_sqlite_support import events, remove_event
 from processforge_core.composition import build_configuration_provider
 from processforge_core.sqlite_storage import transaction
 
-ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
 
 

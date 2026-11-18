@@ -44,7 +44,9 @@ def check_disconnected_responses(workplace):
              for write in (1, 2)]
     cases += [(ConnectionAbortedError, write, "/shutdown") for write in (1, 2)]
     for error, failed_write, path in cases:
-        runtime = service.RuntimeProcess(workplace, core, interval=2)
+        case_root = workplace / f"{error.__name__}-{failed_write}-{path[1:]}"
+        runtime = service.RuntimeProcess(case_root, core, interval=2)
+        service.acquire_singleton(case_root, core, runtime.instance_id)
         runtime.state.update(status="ready", health="ready")
         done, failures, statuses = threading.Event(), [], []
         base = runtime.make_handler()
@@ -87,7 +89,7 @@ def check_disconnected_responses(workplace):
                     pass  # The client cannot receive a response on its lost connection.
                 assert done.wait(3), (error, failed_write, path)
                 assert failures == [], failures
-                assert statuses == [200], statuses
+                assert statuses == [200], (path, error, failed_write, statuses)
                 assert not any(call.args[2] == "request.error" for call in log.call_args_list)
                 assert runtime.active_requests == 0
                 assert ingest.call_count == (1 if path == "/event" else 0)
@@ -97,17 +99,19 @@ def check_disconnected_responses(workplace):
             server.shutdown()
             server.server_close()
             thread.join(3)
+            service.release_singleton(case_root, runtime.instance_id, core)
 
 
 def main():
     with tempfile.TemporaryDirectory(prefix="pf-server spaces-") as temp:
         root = Path(temp)
         wp, project = root / "workplace", root / "project"
-        put(project / ".pf/process-forge.yaml", {})
+        put(project / ".pf/process-forge.yaml", {"project": {"id": "operator-fixture"}})
         cache_path = wp / "runtime/pf-runtime-host/state.json"
         put(cache_path, {"projects": [{"project_root": str(project)}], "sessions": {}})
         worker = project / ".pf/runtime/agent-runs/task/attempt/status.json"
         runtime = service.RuntimeProcess(wp, core, interval=2)
+        service.acquire_singleton(wp, core, runtime.instance_id)
         runtime.state.update(status="ready", health="ready")
         check_disconnected_responses(wp / "disconnected-responses")
         handler_finished = threading.Event()
@@ -160,11 +164,11 @@ def main():
             assert post("/shutdown", guarded)[0] == 409
             runtime.scheduler_active = False
             observed, finish = threading.Event(), threading.Event()
-            def held_guard(*args):
+            def held_guard(*args, **kwargs):
                 observed.set()
                 assert finish.wait(5)
                 return {"counts": {"running": 1}}
-            with patch.object(service.metrics_core(), "shutdown_workers", held_guard):
+            with patch.object(service.metrics_core(), "observe", held_guard):
                 shutdown_response = []
                 shutdown_request = threading.Thread(target=lambda: shutdown_response.append(post("/shutdown", guarded)), daemon=True)
                 shutdown_request.start()
@@ -185,6 +189,7 @@ def main():
             server.shutdown()
             server.server_close()
             thread.join(3)
+            service.release_singleton(wp, runtime.instance_id, core)
         args = argparse.Namespace(command="server", workplace=str(wp), force=False, timeout=1)
         inspection = {"kind": "ready", "state": {"pid": 1, "endpoint": endpoint, "instance_id": "owner"}, "pid": 1}
         with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json") as call:

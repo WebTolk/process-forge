@@ -23,6 +23,7 @@ from processforge_core.work.continuation import ContinuationService
 from processforge_core.process_execution import ProcessExecutionService
 from process_execution_smoke_support import fixture, stage_evidence
 from smoke_garage_mode_not_promoted_by_session import call_mcp, cli
+from smoke_hook_sqlite_support import events
 
 from processforge_core.work.worker_assignment import WorkerAssignmentService
 
@@ -232,13 +233,24 @@ def main():
         with patch.object(ProcessExecutionService,'_atomic_yaml',fail_run):
             assert continuation.request('cancel_work', **cancel, apply=True)['status'] == 'blocked'
         assert service.transition(run_id=selectors['run_id'],assignment_id=selectors['assignment_id'],outcome='completed')['reason'] == 'cancellation_recovery_pending'
+        native_text = ProcessExecutionService._atomic_text
+        def fail_receipt(self, path, content):
+            if path.name.endswith('.applied.json'):
+                raise OSError('injected interruption after cancellation events')
+            native_text(self, path, content)
+        before_events = events(project)
+        with patch.object(ProcessExecutionService, '_atomic_text', fail_receipt):
+            assert continuation.request('cancel_work', **cancel, apply=True)['status'] == 'blocked'
+        recorded = events(project)
+        assert recorded[:len(before_events)] == before_events
+        appended = recorded[len(before_events):]
+        assert [event['event_type'] for event in appended] == ['task.cancelled', 'run.cancelled']
+        assert len({event['event_id'] for event in appended}) == 2
         result = continuation.request('cancel_work', **cancel, apply=True)
         assert result['status'] == 'cancelled', result
-        from processforge_core.work.consistency import RunTaskInputReader
-
-        events = RunTaskInputReader().event_runtime_paths(project)[0].read_bytes()
+        assert events(project) == recorded
         assert continuation.request('cancel_work', **cancel, apply=True)['already_applied']
-        assert RunTaskInputReader().event_runtime_paths(project)[0].read_bytes() == events
+        assert events(project) == recorded
         assert capsule.read_bytes() == capsule_bytes
         task = _worker_assignment_service.load(project,selectors['assignment_id'])
         assert task['stage'] == 'build' and task['stage_status'] != 'completed'
