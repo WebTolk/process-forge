@@ -162,8 +162,14 @@ def main() -> int:
 
         pf("execution-inspector-run", "--project-root", str(project), "--run", "inspector-run", "--interval", "0", "--max-ticks", "2", "--final-drain-timeout", "5", timeout=180)
         runtime_root = project / ".pf" / "runtime" / "agent-runs" / "inspector-run" / "inspected-worker"
-        for name in ["status.json", "command.json", "process.json", "heartbeat.json", "exit.json", "stdout.log", "stderr.log"]:
-            if not (runtime_root / name).is_file():
+        command = read_json(runtime_root / "command.json")
+        paths = command.get("paths", {})
+        for name in ["status", "process", "heartbeat", "exit", "stdout", "stderr"]:
+            relative = paths.get(name)
+            if not isinstance(relative, str) or not relative:
+                raise AssertionError(f"worker command does not declare {name} proof")
+            proof = (project / relative).resolve()
+            if not proof.is_relative_to(runtime_root.resolve()) or not proof.is_file():
                 raise AssertionError(f"execution inspector did not produce runtime proof: {name}")
         status = read_json(runtime_root / "status.json")
         if status.get("status") != "completed":

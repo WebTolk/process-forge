@@ -440,6 +440,8 @@ jobs:
               "smoke_worker_workspace_access.py", "smoke_codex_exec_worker.py",
               "smoke_diagnostics.py", "smoke_diagnostics_process_invariance.py",
               "smoke_prepared_execution_recovery.py",
+              "smoke_work_capsule_contract_parity.py",
+              "smoke_worker_run_shell.py", "smoke_director_inspector_boundary.py",
           ):
               print("RUN " + smoke, flush=True)
               subprocess.run([sys.executable, "-B", "tools/" + smoke],

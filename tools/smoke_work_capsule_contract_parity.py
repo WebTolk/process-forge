@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import sys
 import tempfile
+from unittest.mock import patch
 
 import yaml
 
@@ -181,9 +182,22 @@ def main() -> None:
                 governed_task_for_validation["process_execution"]["assignment_capsule"] = governed_relative
                 governed_task_for_validation["process_execution"]["assignment_capsule_checksum"] = governed_checksum
                 write_yaml(governed_task_path, governed_task_for_validation)
-                core.command_assignment_capsule(argparse.Namespace(
-                    project_root=str(clone_assignment), assignment=str(assignment_task_path), force=False
-                ))
+                # These copies compare capsule construction, not physical SQL identity.
+                # Keep the journal port explicit; the original project still performs
+                # the real governed transition below.
+                with patch.object(core._process_event_recorder, "emit_process_event") as events:
+                    core.command_assignment_capsule(argparse.Namespace(
+                        project_root=str(clone_assignment), assignment=str(assignment_task_path), force=False
+                    ))
+                check([call.args[:2] for call in events.call_args_list] == [
+                    (clone_assignment, "assignment.started"),
+                    (clone_assignment, "assignment.created"),
+                    (clone_assignment, "artifact.created"),
+                ], "assignment capsule did not publish its expected lifecycle events")
+                check(all(call.kwargs["assignment_id_value"] == task["id"] and
+                          call.kwargs["correlation_id"] == f"assignment-{task['id']}"
+                          for call in events.call_args_list),
+                      "assignment capsule event identity changed")
                 assignment_capsule_path = clone_assignment / capsule_relative
                 assignment_capsule = yaml.safe_load(assignment_capsule_path.read_text(encoding="utf-8"))
                 check(governed_capsule["execution_contract"] == assignment_capsule["execution_contract"],
