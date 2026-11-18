@@ -26,6 +26,7 @@ provides explicit paths and choices.
 
 ## For AI Agents
 
+- [Architecture decisions and their revision history](architecture/README.md)
 - [Requirements and optional infrastructure](requirements.md)
 - [Agent command runbook and prompts](getting-started/agent-prompts.md)
 - [Guided workplace setup agent prompt](../prompts/guided-workplace-setup-agent.md)

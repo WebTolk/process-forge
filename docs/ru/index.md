@@ -35,6 +35,7 @@ workplace; репозиторий хранит состояние процесс
 
 ## Для ИИ-агентов
 
+- [Архитектурные решения и их пересмотр](architecture/README.md)
 - [Требования и необязательная инфраструктура](requirements.md)
 - [Командный справочник агента и промпты](getting-started/agent-prompts.md)
 - [Промпт агента для пошаговой настройки workplace](../../prompts/guided-workplace-setup-agent.md)
