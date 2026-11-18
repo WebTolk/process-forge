@@ -404,10 +404,11 @@ class ContinuationService:
             return self._replay_cancel(path, intent)
 
     def _cancellation_replayer(self) -> CancellationReplayService:
-        from processforge_core.work.consistency import RunTaskInputReader
-
+        from ..agents.process_events import ProcessEventRecorder
         from ..composition import build_cancellation_replay_service
+        from .consistency import RunTaskInputReader
 
+        recorder = self.work._process_events or ProcessEventRecorder()
         return build_cancellation_replay_service(
             fingerprint=lambda: canonical_fingerprint,
             error=lambda: ContinuationError,
@@ -417,7 +418,11 @@ class ContinuationService:
             record_loader=lambda: self._load,
             project_root=lambda: self.project,
             event_paths=lambda: RunTaskInputReader().event_runtime_paths,
-            event_reader=lambda: self.core.process_event_exists,
+            event_reader=lambda: (
+                recorder.event_journal_for_project(
+                    self.project, self.workplace
+                ).contains
+            ),
         )
 
     def _replay_cancel(self, path: Path, intent: dict) -> dict:
