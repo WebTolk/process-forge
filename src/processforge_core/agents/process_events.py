@@ -79,24 +79,25 @@ class ProcessEventRecorder:
         ):
             return active.append(event, dispatch=dispatch)
         events_path, config, journal = self._event_journal(project_root, workplace_root)
-        inserted = journal.append(
+        if not dispatch:
+            return journal.append(
+                events_path,
+                event,
+                event_id_value=self.hooks.event_id_value,
+                record=config.logging.events,
+            )
+        inserted, deliveries = journal.append_for_dispatch(
             events_path,
             event,
             event_id_value=self.hooks.event_id_value,
             record=config.logging.events,
-            queue_dispatch=dispatch
-            and bool(self.hooks.selected_hooks(project_root, event)),
+            queue_dispatch=bool(self.hooks.selected_hooks(project_root, event)),
         )
-        if dispatch:
-            for pending in journal.pending_dispatch(
-                events_path, event_id=self.hooks.event_id_value(event)
-            ):
-                self.dispatcher.dispatch_hooks(
-                    project_root, pending, dry_run=False, outbox=True
-                )
-                journal.complete_dispatch(
-                    events_path, self.hooks.event_id_value(pending)
-                )
+        for pending in deliveries:
+            self.dispatcher.dispatch_hooks(
+                project_root, pending, dry_run=False, outbox=True
+            )
+            journal.complete_dispatch(events_path, self.hooks.event_id_value(pending))
         return inserted
 
     def latest_process_event(
