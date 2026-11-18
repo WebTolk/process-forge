@@ -82,6 +82,45 @@ def test_ready_before_first_domain_write_and_lazy_raw(project):
     )
 
 
+@pytest.mark.parametrize("kind", ["events", "raw"])
+@pytest.mark.parametrize("writable", [False, True])
+def test_adapter_selects_once_and_refreshes_owner_on_next_access(
+    project, kind, writable
+):
+    initialize(project)
+    host = host_for(project)
+    target = target_for(host, kind)
+    journal = ProcessEventJournal if kind == "events" else RawHookJournal
+    with journal.connection(target.target, writable=True, storage_host=host):
+        pass
+    original_context = type(host).context.fget
+    selections = []
+
+    def select_context(instance):
+        context = original_context(instance)
+        selections.append(context)
+        return context
+
+    with patch.object(type(host), "context", property(select_context)):
+        with journal.connection(
+            target.target, writable=writable, storage_host=host
+        ) as db:
+            assert db.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
+        assert len(selections) == 1
+
+        # A finished adapter cannot lend its owner selection to the next one.
+        before = target.target.read_bytes()
+        manifest = project / ".pf/process-forge.yaml"
+        manifest.write_text("project:\n  id: another-owner\n", encoding="utf-8")
+        with pytest.raises(MaintenanceError, match="storage_.*conflict"):
+            with journal.connection(
+                target.target, writable=writable, storage_host=host
+            ):
+                pytest.fail("changed owner reused the previous adapter context")
+        assert len(selections) == 2
+        assert target.target.read_bytes() == before
+
+
 @pytest.mark.parametrize("boundary", ["before_schema", "after_schema", "before_ready"])
 def test_domain_interruption_preserves_uuid_and_blocks_read(project, boundary):
     host = host_for(project)

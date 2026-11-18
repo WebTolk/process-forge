@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 import http.client
 import json
 import os
 import signal
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,6 +23,7 @@ from processforge_subprocess import CommandResult, diagnostic_text, run_command 
 # Capture before raw_ingress_kernel imports Core.
 import processforge  # noqa: E402, F401
 from pf_runtime.raw_ingress_kernel import _strip_windows_extended_prefix
+import smoke_worker_run_shell as worker
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -179,6 +182,23 @@ def pid_liveness_checks() -> None:
     print("PASS: localized tasklist bytes and exact PID column; POSIX behavior preserved")
 
 
+@contextmanager
+def smoke_workspace():
+    parent = Path(tempfile.gettempdir()).resolve()
+    root = Path(tempfile.mkdtemp(prefix="pf-long-lived-runtime-", dir=parent))
+    try:
+        yield root
+    except BaseException:
+        # Keep evidence and inputs if a worker or Runtime could not be stopped.
+        print("FAIL: long-lived Runtime fixture retained", file=sys.stderr)
+        raise
+    else:
+        resolved = root.resolve()
+        if resolved.parent != parent or not resolved.name.startswith("pf-long-lived-runtime-"):
+            raise AssertionError("temporary cleanup target escapes the smoke workspace")
+        shutil.rmtree(resolved)
+
+
 def main() -> int:
     pid_liveness_checks()
     # public-cleanliness: allow-private-path-fixture
@@ -189,10 +209,11 @@ def main() -> int:
         raise AssertionError("Win32 extended drive path normalization failed")
     if _strip_windows_extended_prefix(r"\\?\UNC\server\share\runtime") != r"\\server\share\runtime":
         raise AssertionError("Win32 extended UNC path normalization failed")
-    with tempfile.TemporaryDirectory(prefix="pf-long-lived-runtime-", ignore_cleanup_errors=True) as temp:
-        root = Path(temp)
+    with smoke_workspace() as root:
         workplace = root / "workplace"
         runtime_started = False
+        worker_attempted = False
+        worker_task = "runtime-observed-worker"
         pf("workplace-init", "--workplace", str(workplace), "--apply")
         pf("workplace-mode", "set", "--workplace", str(workplace), "--director-enabled", "true", "--director-office-enabled", "true")
         project_a = make_project(root, "project-a", workplace, "organized")
@@ -286,9 +307,15 @@ def main() -> int:
             if code != 403:
                 raise AssertionError(f"cross-project session event returned {code}, expected 403: {body}")
 
-            active_worker = project_a / ".pf" / "runtime" / "agent-runs" / "run-a" / "worker-a" / "status.json"
-            active_worker.parent.mkdir(parents=True, exist_ok=True)
-            active_worker.write_text(json.dumps({"status": "running"}, indent=2) + "\n", encoding="utf-8")
+            pf("run-create", "--project-root", str(project_a), "--id", worker.RUN_ID,
+               "--title", "Runtime observed worker", "--process", "task-batch-execution", "--apply")
+            worker.create_task(project_a, worker_task, title="Runtime observed worker")
+            driver = worker.driver_yaml_path(
+                project_a, "runtime-observed-worker", sleep_seconds=300, timeout_seconds=300
+            )
+            worker_attempted = True
+            worker.start_task(worker_task, project_a, driver=driver)
+            worker.wait_status(project_a, worker_task, "running")
             if int(assert_runtime_ready(workplace).get("active_workers") or 0) < 1:
                 raise AssertionError("runtime status did not report active worker state")
 
@@ -396,8 +423,13 @@ def main() -> int:
             pf("events-validate", "--project-root", str(project_a))
             pf("events-validate", "--project-root", str(project_b))
         finally:
-            if runtime_started:
-                stop_runtime(workplace)
+            try:
+                if worker_attempted:
+                    worker.stop_if_running(project_a, worker_task)
+                    worker.ensure_stopped(project_a, worker_task)
+            finally:
+                if runtime_started:
+                    stop_runtime(workplace)
 
     print("PASS: long-lived runtime smoke")
     return 0
