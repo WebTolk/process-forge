@@ -49,11 +49,19 @@ python tools/smoke_worker_awareness_of_director.py
 python tools/smoke_error_workflow.py
 python tools/smoke_process_run_task_batch.py
 python bin/pf.py release-test --root . --public --fail-fast
-python bin/pf.py dev-test --root . --suite supervisor-stress
 python bin/pf.py release-pack --root . --output .pf/tmp/release-check/processforge.zip
 python bin/pf.py release-archive-test --archive .pf/tmp/release-check/processforge.zip --root . --extracted-test full
 git diff --check
 ```
+
+Публичная квалификация использует поставляемые проверки релиза и применимые
+нативные тесты из репозитория. `dev-test` запускает дополнительные локальные
+dogfooding-проверки через `.pf/dogfooding/run_dogfooding_tests.py`; этот приватный
+runner и имена его наборов не поставляются в свежем клоне или архиве релиза.
+Если участник разработки располагает таким runner, выбранные наборы и их
+результаты следует записать отдельно. Для публичных проверок не требуется
+приватное состояние другого участника; отсутствие локального набора нельзя
+записывать как успешную проверку.
 
 В поставку не должны попадать:
 
