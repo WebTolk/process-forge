@@ -34,7 +34,15 @@ def write_yaml(path: Path, text: str) -> None:
 
 def make_project(root: Path, *, organized: bool = False) -> Path:
     project = root / "project"
-    flow = create_fixture_flow(project)
+    create_fixture_flow(project)
+    write_context_fixture(project, organized=organized)
+    initialize_fixture_storage(project, project if organized else None)
+    return project
+
+
+def write_context_fixture(project: Path, *, organized: bool = False) -> None:
+    """Write the context scenario into a project with an established flow root."""
+    flow = project / ".pf"
     write_yaml(
         flow / "process-forge.yaml",
         f"""
@@ -121,8 +129,6 @@ coordination:
         ]:
             (project / relative).mkdir(parents=True, exist_ok=True)
     write_package(project, core_versions=["5.4.5"], articles_generation="A")
-    initialize_fixture_storage(project, project if organized else None)
-    return project
 
 
 def resource_core(version: str) -> str:
