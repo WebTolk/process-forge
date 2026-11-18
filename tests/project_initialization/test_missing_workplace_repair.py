@@ -140,6 +140,7 @@ class MissingWorkplaceRepairTests(unittest.TestCase):
                 self.core.execute_project_initialization.assert_called_once_with(
                     {
                         "project_root": self.project,
+                        "workplace": self.workplace.resolve(),
                         "project_type": "generic",
                         "force": False,
                         "command": "project-init-repair",

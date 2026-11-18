@@ -9,10 +9,13 @@ import sys
 from pathlib import Path
 
 import yaml  # type: ignore
+from project_storage_smoke_helpers import (
+    create_fixture_flow,
+    initialize_fixture_storage,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PF = ROOT / "bin" / "pf.py"
-sys.path.insert(0, str(ROOT / "src"))
 
 
 def run_pf(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -164,16 +167,8 @@ def write_specialization(
 
 
 def write_project(root: Path, workplace: Path, *, specializations: list[str] | None = None, platform: str = "fixture.platform.child") -> Path:
-    from processforge_core.configuration import ConfigurationProvider, PFConfig
-    from processforge_core.maintenance.fresh_project import (
-        create_project_storage_root,
-        initialize_project_storage,
-    )
-
     project = root / "project"
-    flow = project / ".pf"
-    project.mkdir(parents=True, exist_ok=True)
-    create_project_storage_root(project)
+    flow = create_fixture_flow(project)
     write_yaml(
         flow / "process-forge.yaml",
         {
@@ -191,10 +186,7 @@ def write_project(root: Path, workplace: Path, *, specializations: list[str] | N
         },
     )
     write_yaml(flow / "process-forge.local.yaml", {"schema_version": 1, "workplace": {"manifest": str((workplace / "workplace.yaml").resolve())}})
-    if not initialize_project_storage(
-        project, workplace, configuration=ConfigurationProvider.pinned(PFConfig())
-    ):
-        raise AssertionError("expected a fresh specialization fixture")
+    initialize_fixture_storage(project, workplace)
     (flow / "AGENTS.md").parent.mkdir(parents=True, exist_ok=True)
     (flow / "AGENTS.md").write_text("# AGENTS\n", encoding="utf-8")
     return project
