@@ -708,7 +708,9 @@ def main():
             Path(sys.argv[3]).write_text("locked", encoding="utf-8")
             time.sleep(30)
         return 0
-    with tempfile.TemporaryDirectory(prefix="pf-agent-entry-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="pf-agent-entry-", dir=os.environ.get("PF_TEST_SCRATCH_ROOT")
+    ) as temporary:
         base = Path(temporary)
         contract, source = source_checks(base)
         ownership_checks(base, contract)
