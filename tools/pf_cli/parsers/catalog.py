@@ -41,7 +41,7 @@ class ProcessCatalogCommandParser:
         process_doctor.set_defaults(func=self._process_doctor)
 
         builtin_process_catalog_doctor = add_parser("builtin-process-catalog-doctor", help="Validate the built-in ProcessForge process catalog contract.")
-        builtin_process_catalog_doctor.add_argument("--root", default=".", help="Repository/project root path.")
+        builtin_process_catalog_doctor.add_argument("--root", help="Repository/project root path (default: current directory).")
         builtin_process_catalog_doctor.add_argument("--project-root", help="Compatibility alias for --root.")
         builtin_process_catalog_doctor.add_argument("--public", action="store_true", help="Validate the public catalog surface and skip internal maintenance processes.")
         builtin_process_catalog_doctor.add_argument("--json", action="store_true", help="Print machine-readable JSON report.")
