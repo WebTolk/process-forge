@@ -450,6 +450,7 @@ def repair_project(
             return core.execute_project_initialization(
                 {
                     "project_root": project_root,
+                    "workplace": workplace_manifest,
                     "project_type": project_answers.get("type"),
                     "force": False,
                     "command": "project-init-repair",

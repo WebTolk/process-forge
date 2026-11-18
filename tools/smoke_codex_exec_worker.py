@@ -14,10 +14,10 @@ import tempfile
 from pathlib import Path
 
 from context_lock_smoke_helpers import (
-    make_project,
     refresh,
     require_ok,
     run_pf,
+    write_context_fixture,
     write_yaml,
 )
 from smoke_sql_project import initialize_sql_project
@@ -81,8 +81,9 @@ def main() -> int:
         root = Path(temp)
         workplace = root / "workplace"
         require_ok(run_pf("workplace-init", "--workplace", str(workplace), "--apply"))
-        initialize_sql_project(root / "project", workplace)
-        project = make_project(root)
+        project = root / "project"
+        initialize_sql_project(project, workplace)
+        write_context_fixture(project)
         shared_docs = workplace / "docs" / "joomla-core" / "5.4.5"
         shared_docs.mkdir(parents=True)
         (shared_docs / "README.md").write_text("# Shared docs\n", encoding="utf-8")
