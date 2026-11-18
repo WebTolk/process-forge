@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import errno
 import importlib.util
+import os
 import subprocess
 import sys
+import threading
 import time
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
@@ -86,7 +88,10 @@ def test_short_contention_can_retry_before_the_deadline(
         elapsed += seconds
 
     monkeypatch.setattr(admission_module.time, "monotonic", lambda: elapsed)
-    monkeypatch.setattr(admission_module.time, "sleep", advance)
+    signal = admission_module._registry_guard_signal(
+        os.getpid(), isolated_path / ".short.lock.guard"
+    )
+    monkeypatch.setattr(signal, "wait", advance)
     monkeypatch.setattr(
         admission_module, "_registry_lock_try_os_lock", lambda fd: next(available)
     )
@@ -96,6 +101,36 @@ def test_short_contention_can_retry_before_the_deadline(
         assert len(waits) == 2
         assert 0 < waits[0] < waits[1]
         assert elapsed < 0.025
+
+
+def test_releasing_file_guard_wakes_local_waiter(
+    isolated_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    path = isolated_path / "local"
+    waiting = threading.Event()
+    signal = admission_module._registry_guard_signal(
+        os.getpid(), isolated_path / ".local.lock.guard"
+    )
+    wait = signal.wait
+
+    def wait_for_notification(timeout: float) -> bool:
+        waiting.set()
+        assert wait(3), "local guard release did not notify the waiter"
+        return True
+
+    def contender() -> None:
+        with admission_module.registry_file_lock(path):
+            assert path.with_name(".local.lock").is_file()
+
+    monkeypatch.setattr(signal, "wait", wait_for_notification)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with admission_module.registry_file_lock(path):
+            competing = pool.submit(contender)
+            assert waiting.wait(3)
+            assert not competing.done()
+        competing.result(timeout=3)
 
 
 @pytest.mark.parametrize(

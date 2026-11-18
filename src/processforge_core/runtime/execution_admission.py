@@ -17,6 +17,7 @@ from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -159,6 +160,12 @@ def _registry_lock_read_owner(lock_path: Path) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
 
 
+@lru_cache(maxsize=128)
+def _registry_guard_signal(pid: int, guard_path: Path) -> threading.Condition:
+    """Notify local waiters; an evicted signal falls back to the OS-lock retry."""
+    return threading.Condition(threading.Lock())
+
+
 @contextmanager
 def registry_file_lock(
     path: Path, *, timeout_seconds: float = 30.0, stale_after_seconds: float = 300.0
@@ -168,6 +175,7 @@ def registry_file_lock(
     # Never unlink this guard: all new writers and stale-owner recovery must
     # lock the same inode, including across Windows close-before-unlink.
     guard_path = path.with_name(f".{path.name}.lock.guard")
+    signal = _registry_guard_signal(os.getpid(), guard_path.absolute())
     guard_fd = os.open(str(guard_path), os.O_CREAT | os.O_RDWR, 0o600)
     deadline = time.monotonic() + timeout_seconds
     owner = {
@@ -203,7 +211,11 @@ def registry_file_lock(
                 registry_lock_reason="contention_timeout", registry_lock_phase=phase
             )
             raise error
-        time.sleep(min(retry_delay, remaining))
+        delay = min(retry_delay, remaining)
+        if phase == "guard":
+            signal.wait(delay)
+        else:
+            time.sleep(delay)
         retry_delay = min(retry_delay * 2, 0.1)
 
     try:
@@ -213,8 +225,9 @@ def registry_file_lock(
             )
 
             owner.update(lock_owner_identity())
-        while not _registry_lock_try_os_lock(guard_fd):
-            wait_for_owner("guard")
+        with signal:
+            while not _registry_lock_try_os_lock(guard_fd):
+                wait_for_owner("guard")
         while True:
             try:
                 fd = os.open(
@@ -257,7 +270,9 @@ def registry_file_lock(
             if acquired and _registry_lock_read_owner(lock_path) == owner:
                 remove_owner(primary_error)
         finally:
-            os.close(guard_fd)
+            with signal:
+                os.close(guard_fd)
+                signal.notify()
 
 
 @dataclass
