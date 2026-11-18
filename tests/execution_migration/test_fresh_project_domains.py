@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from contextlib import closing
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing, contextmanager
 from pathlib import Path
+from threading import Barrier
 from unittest.mock import Mock, patch
 
 import pf_native_control as native
@@ -16,6 +18,7 @@ from processforge_core.configuration import ConfigurationProvider, PFConfig
 from processforge_core.database import SchemaManager
 from processforge_core.executions.composition import select_execution_storage
 from processforge_core.maintenance import fresh_project as fresh
+from processforge_core.maintenance import fresh_workplace
 from processforge_core.maintenance.contracts import MaintenanceError
 from processforge_core.maintenance.storage_migration import _slot
 from processforge_core.process_event_journal import ProcessEventJournal
@@ -289,6 +292,120 @@ def test_workplace_search_does_not_inherit_fresh_project_authority(project):
             pytest.fail("workplace inherited fresh project authority")
     assert not search.target.exists()
     assert _slot(workplace, search) is None
+
+
+@pytest.fixture
+def workplace_index(project):
+    workplace = project.parent / "workplace"
+    workplace.mkdir()
+    (workplace / "workplace.yaml").write_text("workplace:\n  id: workspace\n")
+    initialize(project, workplace)
+    host = host_for(project, workplace)
+    return workplace, host, target_for(host, "search", "workplace")
+
+
+@pytest.mark.parametrize("after_sql", [False, True])
+def test_explicit_workplace_index_resumes_its_planned_store(workplace_index, after_sql):
+    workplace, host, target = workplace_index
+    assert not fresh_workplace.initialize_workplace_search(
+        host, target, resume_only=True
+    )
+    assert _slot(workplace, target) is None
+    assert not target.target.exists()
+    initializer = fresh._initialize_domain
+
+    def interrupt(*args):
+        if after_sql:
+            initializer(*args)
+        raise RuntimeError("interrupted")
+
+    with patch.object(fresh, "_initialize_domain", interrupt):
+        with pytest.raises(RuntimeError, match="interrupted"):
+            with adapter_identity_access(
+                target.target, host, writable=True, building_search_index=True
+            ):
+                pytest.fail("index opened before initialization completed")
+    pending = _slot(workplace, target)
+    assert pending["state"] == "pending"
+    assert target.target.is_file() == after_sql
+    with adapter_identity_access(
+        target.target, host, writable=True, building_search_index=True
+    ) as identity:
+        assert identity == (target, pending["store_id"])
+    assert _slot(workplace, target)["state"] == "ready"
+    target.target.unlink()
+    with pytest.raises(MaintenanceError, match="storage_identity_conflict"):
+        with adapter_identity_access(
+            target.target, host, writable=True, building_search_index=True
+        ):
+            pytest.fail("a lost ready store was silently recreated")
+    assert not target.target.exists()
+
+
+def test_first_index_leaves_existing_file_or_migration_to_its_owner(workplace_index):
+    workplace, host, target = workplace_index
+    target.target.parent.mkdir(parents=True)
+    target.target.write_bytes(b"unowned search data")
+    assert not fresh_workplace.initialize_workplace_search(host, target)
+    assert target.target.read_bytes() == b"unowned search data"
+    target.target.unlink()
+    journal = target.target.with_name(target.target.name + "-journal")
+    journal.write_bytes(b"pending recovery")
+    with pytest.raises(MaintenanceError, match="backup_unsafe_sidecar"):
+        fresh_workplace.initialize_workplace_search(host, target)
+    assert journal.read_bytes() == b"pending recovery"
+    journal.unlink()
+    selector = host.service._selector(workplace, target)
+    selector.parent.mkdir(parents=True)
+    selector.write_text("{}")
+    assert not fresh_workplace.initialize_workplace_search(host, target)
+    assert not target.target.exists()
+    assert _slot(workplace, target) is None
+
+
+def test_first_index_leaves_racing_writer_data_intact(workplace_index, monkeypatch):
+    workplace, host, target = workplace_index
+    connect = fresh._connection
+
+    @contextmanager
+    def write_before_open(host, path, *, readonly=False):
+        if not readonly:
+            with closing(sqlite3.connect(path)) as other:
+                other.execute("CREATE TABLE existing_data(value TEXT)")
+                other.execute("INSERT INTO existing_data VALUES ('preserved')")
+                other.commit()
+        with connect(host, path, readonly=readonly) as db:
+            yield db
+
+    monkeypatch.setattr(fresh, "_connection", write_before_open)
+    with pytest.raises(MaintenanceError, match="storage_existing_target"):
+        fresh_workplace.initialize_workplace_search(host, target)
+    with closing(sqlite3.connect(target.target)) as db:
+        assert db.execute("SELECT * FROM existing_data").fetchall() == [("preserved",)]
+        assert db.execute("SELECT name FROM sqlite_schema").fetchall() == [
+            ("existing_data",)
+        ]
+    assert _slot(workplace, target)["state"] == "pending"
+
+
+def test_concurrent_first_workplace_index_has_one_identity(project, workplace_index):
+    workplace, _, target = workplace_index
+    start = Barrier(2)
+
+    def build():
+        host = host_for(project, workplace)
+        start.wait(timeout=15)
+        with adapter_identity_access(
+            target.target, host, writable=True, building_search_index=True
+        ) as identity:
+            return identity[1]
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        builds = [pool.submit(build) for _ in range(2)]
+        ids = [result.result(timeout=45) for result in builds]
+    pin = _slot(workplace, target)
+    assert pin["state"] == "ready"
+    assert ids == [pin["store_id"], pin["store_id"]]
 
 
 def test_lazy_project_search_has_ready_uuid_before_use(project):
