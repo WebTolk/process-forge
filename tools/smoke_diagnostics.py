@@ -19,6 +19,9 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from smoke_hook_sqlite_support import events as stored_events
+from smoke_sql_project import initialize_sql_project
+
 import processforge as core
 from processforge_core.agents.process_events import ProcessEventRecorder
 from processforge_core.composition import bind_process_events, bind_work_summaries
@@ -122,6 +125,11 @@ def levels_config_privacy(root):
 
 
 def failure_correlation_journal(root):
+    workplace, root = root / "journal-workplace", root / "journal-project"
+    subprocess.run([sys.executable, str(ROOT / "bin/pf.py"), "workplace-init",
+                    "--workplace", str(workplace), "--apply"],
+                   check=True, capture_output=True, timeout=60)
+    initialize_sql_project(root, workplace)
     for error in (OSError(errno.ENOSPC, "full"), PermissionError("read-only")):
         def broken(record):
             raise error
@@ -139,7 +147,7 @@ def failure_correlation_journal(root):
         assert stderr.getvalue().count("diagnostic_delivery_failed") == 1
     # Same process event/evidence across every profile, using the actual durable writer.
     events, detail_counts = [], []
-    service = bind_work_summaries(bind_process_events(ProcessExecutionService(root, root, core), ProcessEventRecorder()), WorkSummaryRenderer())
+    service = bind_work_summaries(bind_process_events(ProcessExecutionService(root, None, core), ProcessEventRecorder()), WorkSummaryRenderer())
     for profile in d.PROFILES:
         records = []
         logger = d.Logger(config(profile=profile), sinks=[records.append])
@@ -149,10 +157,7 @@ def failure_correlation_journal(root):
             with d.span("evidence-check"):
                 pass
         detail_counts.append(len(records))
-    from processforge_core.work.consistency import RunTaskInputReader
-
-    path, _ = RunTaskInputReader().event_runtime_paths(root)
-    rows = [row for _sequence, row, _error in core.iter_process_events(path)]
+    rows = [row for row in stored_events(root) if str(row.get("event_id", "")).startswith("profile-")]
     for row in rows:
         events.append({key: row[key] for key in ("event_type", "data", "process", "assignment")})
     assert len(events) == 5 and all(item == events[0] for item in events)
@@ -213,7 +218,8 @@ raise SystemExit(h.main())
     assert locked.stdout.strip() == "{}" and "hook.dispatch" not in locked.stderr
     assert "diagnostics_config_invalid" in locked.stderr and "synthetic-hook-token" not in locked.stderr
     policy.unlink()
-    # Real source CLI and MCP failure paths share concrete freshness reasons.
+    # The native CLI and MCP backend share concrete freshness reasons. Exercise
+    # the backend directly: the stdio bridge captures child stderr separately.
     workplace = root / "workplace"
     workplace.mkdir()
     (workplace / "workplace.yaml").write_text("schema_version: 1\nid: fixture\n", encoding="utf-8")
@@ -228,7 +234,7 @@ raise SystemExit(h.main())
         checks.append(json.loads(cli.stdout))
         cli_rows = [json.loads(line) for line in cli.stderr.splitlines()]
         request = {"jsonrpc": "2.0", "id": "wire-"+profile, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"project_root": str(root), "query": "needle"}}}
-        wire = subprocess.run([sys.executable, "-B", "tools/pf_runtime/mcp_server.py", "--workplace", str(workplace)],
+        wire = subprocess.run([sys.executable, "-B", "tools/pf_runtime/mcp_server.py", "--workplace", str(workplace), "--backend-request"],
                               input=json.dumps(request)+"\n", cwd=ROOT, env=env, text=True, capture_output=True, timeout=30)
         response = json.loads(wire.stdout)
         assert response["id"] == "wire-"+profile and response["result"]["isError"], response
@@ -956,6 +962,19 @@ def windows_owner_recovery(root):
 def mcp_project_binding(root):
     from pf_runtime import mcp_server, session_read
 
+    # Keep host credentials out of this fixture and exercise a known collision.
+    # Environment secrets are redacted even inside diagnostic request identities.
+    diagnostic_env = {
+        name: value
+        for name, value in os.environ.items()
+        if not d.SECRET_KEY.search(name)
+    }
+    diagnostic_env.update(
+        {
+            "PF_DIAGNOSTICS": json.dumps({"profile": "normal", "sink": "jsonl"}),
+            "PF_DIAGNOSTIC_TEST_SECRET": "root",
+        }
+    )
     cases = [
         ("same-id-foreign", "foreign", "bound", None, False),
         ("argument-session-foreign", "foreign", "", "bound", False),
@@ -1007,7 +1026,7 @@ def mcp_project_binding(root):
         request = {"jsonrpc": "2.0", "id": label, "method": "tools/call",
             "params": {"name": "pf.resolve", "arguments": arguments}}
         expected = mcp_server._respond(request, base, configured, runtime)
-        with patch.dict(os.environ, {"PF_DIAGNOSTICS": json.dumps({"profile": "normal", "sink": "jsonl"})}):
+        with patch.dict(os.environ, diagnostic_env, clear=True):
             actual = mcp_server.respond(request, base, configured, runtime)
         assert actual == expected, (label, actual, expected)
         written, records = [], []
@@ -1021,7 +1040,10 @@ def mcp_project_binding(root):
         assert bool(written) == expected_logging, (label, written)
         if written:
             assert written == ["foreign" if label == "garage-no-session" else "bound"], (label, written)
-            assert records and all(row["identity"]["request_id"] == label for row in records), (label, records)
+            expected_request_id = label.replace("root", "<redacted>")
+            assert records and all(
+                row["identity"]["request_id"] == expected_request_id for row in records
+            ), (label, records)
 
 
 def main():

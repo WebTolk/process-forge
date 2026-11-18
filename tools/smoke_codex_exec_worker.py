@@ -20,6 +20,7 @@ from context_lock_smoke_helpers import (
     run_pf,
     write_yaml,
 )
+from smoke_sql_project import initialize_sql_project
 
 MODEL = "chatgpt-5.3-codex-spark"
 WORKER = Path(__file__).with_name("codex_exec_worker.py")
@@ -78,8 +79,10 @@ def optional_text(path: Path) -> str:
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-codex-exec-worker-") as temp:
         root = Path(temp)
-        project = make_project(root)
         workplace = root / "workplace"
+        require_ok(run_pf("workplace-init", "--workplace", str(workplace), "--apply"))
+        initialize_sql_project(root / "project", workplace)
+        project = make_project(root)
         shared_docs = workplace / "docs" / "joomla-core" / "5.4.5"
         shared_docs.mkdir(parents=True)
         (shared_docs / "README.md").write_text("# Shared docs\n", encoding="utf-8")

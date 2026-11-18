@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 from dataclasses import FrozenInstanceError
 from pathlib import Path
@@ -362,6 +363,8 @@ class LifecycleRecoveryTests(unittest.TestCase):
 
     The fixture contains already selected, pinned synthetic records. It does
     not bootstrap a workplace, start Work or qualify managed storage/hooks.
+    Storage preflight is an explicit fixture port; native storage refusal and
+    governed recovery are covered by tests/work and the storage CI jobs.
     Event admission uses the source journal SQL adapter on an owned SQLite
     fixture; external dispatch and device configuration are deliberately absent.
     """
@@ -381,7 +384,8 @@ class LifecycleRecoveryTests(unittest.TestCase):
         from processforge_core.process_execution import canonical_fingerprint
 
         # Match existing owned scratch: inherit Windows access, keep POSIX 0700.
-        resource = create_owned_directory(Path(os.environ["PF_TEST_SCRATCH_ROOT"]))
+        scratch = Path(os.environ.get("PF_TEST_SCRATCH_ROOT", tempfile.gettempdir()))
+        resource = create_owned_directory(scratch)
 
         def cleanup() -> None:
             receipt = dispose_owned(release_owned(resource))
@@ -436,11 +440,18 @@ class LifecycleRecoveryTests(unittest.TestCase):
             self.project / "events.sqlite3", isolation_level=None
         )
         self.addCleanup(self.connection.close)
+        self.connection.execute(
+            "CREATE TABLE journal_metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+        )
+        self.connection.execute(
+            "INSERT INTO journal_metadata VALUES ('history_count', '0')"
+        )
         for statement in SCHEMA:
             self.connection.execute(statement)
 
     def fresh(self):
         owner = ProcessExecutionService(self.project, None, self.core)
+        object.__setattr__(owner, "_storage_write_blocker", lambda: None)
         object.__setattr__(
             owner, "_process_events", SimpleNamespace(emit_process_event=self.record)
         )
@@ -523,11 +534,12 @@ class LifecycleRecoveryTests(unittest.TestCase):
             patch.object(ProcessExecutionService, "state", state),
         ):
             with self.assertRaisesRegex(OSError, f"injected {when} {target}"):
-                self.advance(
+                result = self.advance(
                     owner,
                     notes="original note",
                     evidence=[{"kind": "note", "summary": "original evidence"}],
                 )
+                self.fail(f"Publication fault was not reached: {result}")
         self.assertTrue(captured.get("hit"))
         return captured.get("intent")
 
@@ -543,8 +555,14 @@ class LifecycleRecoveryTests(unittest.TestCase):
         self.assertEqual(assignment["stage_history"][0]["notes"], "original note")
         self.assertEqual(
             assignment["stage_history"][0]["evidence"],
-            [{"kind": "note", "summary": "original evidence"}],
+            intent["final"]["assignment"]["stage_history"][0]["evidence"],
         )
+        evidence = assignment["stage_history"][0]["evidence"]
+        self.assertEqual(len(evidence), 1)
+        self.assertEqual(evidence[0]["kind"], "note")
+        self.assertEqual(evidence[0]["summary"], "original evidence")
+        self.assertEqual(evidence[0]["status"], "ready")
+        self.assertTrue(evidence[0]["recorded_at"])
         self.assertEqual(assignment["stage"], "first" if terminal else "second")
         if intent:
             self.assertEqual(assignment, intent["final"]["assignment"])

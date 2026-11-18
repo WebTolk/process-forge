@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, ast, copy, json, sys, tempfile, types
+import argparse, ast, copy, hashlib, json, sys, tempfile, types
 from pathlib import Path
 from types import SimpleNamespace
 ROOT = next(p for p in Path(__file__).resolve().parents if (p/'src/processforge_core').is_dir())
@@ -22,22 +22,29 @@ def sign(intent):
     return intent
 def documents(root):
     pin={key:key+'-value' for key in ['process_id','process_version','process_fingerprint','snapshot_id','snapshot_checksum']}
-    run={'id':'r','process_execution':copy.deepcopy(pin)}
-    assignment={'id':'a'}
+    run={'id':'r','status':'in_progress','process_execution':copy.deepcopy(pin),'tasks':[{'id':'a','status':'in_progress'}]}
+    assignment={'id':'a','run_id':'r','status':'in_progress','stage':'finish','stage_status':'in_progress','stage_history':[]}
+    completed_at='2026-01-01T00:00:00Z'
+    intent_id='completion-'+hashlib.sha256(f'r:a:{completed_at}:completed'.encode()).hexdigest()[:32]
+    history={'stage_id':'finish','status':'completed','next_stage_id':'','outcome':'completed','completed_at':completed_at}
     journal=root/'.pf/runs/r/completion.yaml'
     final={
-        'run':{'id':'r','status':'completed','process_execution':copy.deepcopy(pin),'tasks':[{'id':'a','status':'done','extra':True}]},
-        'assignment':{'id':'a','run_id':'r','status':'done','unknown':{'keep':True}},
+        'run':{'id':'r','status':'completed','updated_at':completed_at,'process_execution':copy.deepcopy(pin),'tasks':[{'id':'a','status':'done','extra':True}]},
+        'assignment':{**assignment,'status':'done','stage_status':'completed','updated_at':completed_at,'stage_history':[history],'unknown':{'keep':True}},
         'summary':{'path':'.pf/runs/r/summary.md'},'handoff':{'path':'.pf/handoffs/runs/r-handoff.md'},
         'task_index':{'path':'.pf/runs/r/task-index.md'},'projection':{'path':'.pf/artifacts/projections/process-execution-state.json'},
-        'events':[{'event_type':'completed','event_id':'e','extra':True}],
+        'events':[{'event_type':event,'event_id':'evt_'+hashlib.sha256(f'{intent_id}:{event}'.encode()).hexdigest()[:32],
+                   'stage_id':'finish','previous_stage_id':'finish','next_stage_id':'','outcome':'completed'}
+                  for event in ['process.stage.completed','process.stage.transitioned','task.completed',
+                                'assignment.completed','run.completed','run.summary.created']],
     }
     intent={'kind':'pf.process.completion-intent','run_id':'r','assignment_id':'a','process_execution':pin,'journal_path':'.pf/runs/r/completion.yaml','owner':{'run_path':'.pf/runs/r/run.yaml','assignment_path':'.pf/assignments/a.yaml','project_id':'p'},'final':final,'unknown':{'keep':True}}
+    intent.update(intent_id=intent_id,completed_at=completed_at)
     return run,assignment,sign(intent),journal
 def dependencies(root,log,with_project=True):
     def rel(path,base):
         log.append(['rel',path.name]);return path.relative_to(base).as_posix()
-    def effective(value):log.append(['effective']);return {},'pinned'
+    def effective(value):log.append(['effective']);return {'stages':[{'id':'finish'}]},'pinned'
     core=SimpleNamespace(rel=rel)
     if with_project:core.project_id=lambda path:log.append(['project_id']) or 'p'
     return {'core':core,'_effective_process':effective,'_run_path':lambda rid:root/'.pf/runs'/rid/'run.yaml','_assignment_path':lambda aid:root/'.pf/assignments'/(aid+'.yaml'),'_flow_root':lambda:root/'.pf'}

@@ -36,7 +36,9 @@ RUN_ID = "prepared-run"
 SCHEMA_PATH = ROOT / "schemas" / "prepared-input.schema.json"
 
 
-def setup_basic_project(root: Path, name: str) -> tuple[Path, Path]:
+def setup_basic_project(
+    root: Path, name: str, *, garage_hooks: bool = True
+) -> tuple[Path, Path]:
     """Exercise ordinary workers only after supported fresh SQL initialization."""
     workplace, project = root / f"{name}-workplace", root / name
     project.mkdir()
@@ -51,7 +53,7 @@ def setup_basic_project(root: Path, name: str) -> tuple[Path, Path]:
         "--key",
         "runtime.garage_hooks",
         "--value",
-        "true",
+        str(garage_hooks).lower(),
     )
     return workplace, project
 
