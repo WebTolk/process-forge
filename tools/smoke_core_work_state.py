@@ -442,22 +442,25 @@ class AdapterTests(NormalizedTests):
     def test_host_factory_shared_payload_and_denied_guard(self):
         from pf_runtime import host
         service = fixture()
-        root = Path('fixture')
+        scratch = tempfile.TemporaryDirectory(dir=SCRATCH)
+        self.addCleanup(scratch.cleanup)
+        root = Path(scratch.name) / 'fixture'
+        workplace = Path(scratch.name) / 'workplace'
         records = []
         core = SimpleNamespace(event_runtime_paths=lambda path: (path / 'none.ndjson', path / 'outbox'),
                                json_read=lambda path: {}, supervisor_state_path=lambda path: path / 'supervisor',
                                iter_agent_presence=lambda workplace: [], read_current_project_session=lambda path: {},
                                rel=lambda path, project: path.name)
         with d.operation(logger(sinks=[records.append]), 'runtime', 'request', request_id='host-request'), patch.object(host, 'project_for_session', return_value=root), patch.object(host, 'route_project', return_value={'project_id': 'fixture'}), patch.object(host, 'stage_obligations_payload', return_value={}), patch.object(host, 'active_execution_records', return_value=[]), patch.object(host, 'journal_events', return_value=[]), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
-            payload = host.work_state_payload(Path('workplace'), core, session='session')
+            payload = host.work_state_payload(workplace, core, session='session')
             self.assertEqual(payload['current_work_state']['process_execution'], service.state())
-            factory.assert_called_once_with(root, Path('workplace'), core)
+            factory.assert_called_once_with(root, workplace, core)
         completed = next(r for r in records if r['code'] == 'work.state.completed')
         self.assertEqual(completed['identity']['request_id'], 'host-request')
         self.assertEqual(completed['identity']['session_id'], 'session')
         with patch.object(host, 'project_for_session', side_effect=ValueError('denied')), patch('processforge_core.composition.build_process_execution_service', side_effect=AssertionError('guard before factory')):
             with self.assertRaisesRegex(ValueError, 'denied'):
-                host.work_state_payload(Path('workplace'), core)
+                host.work_state_payload(workplace, core)
 
 
 def main():
