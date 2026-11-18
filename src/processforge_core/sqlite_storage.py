@@ -234,6 +234,7 @@ def adapter_identity_access(
     *,
     writable: bool = False,
     migrating: bool = False,
+    building_search_index: bool = False,
 ) -> Iterator[tuple[StoreTarget, str] | None]:
     """Use the actual host-selected target and W4 gate; never discover an owner."""
     if storage_host is None:
@@ -299,6 +300,10 @@ def adapter_identity_access(
             ) as store_id:
                 yield None if store_id is None else (target, store_id)
         return
+    if writable and building_search_index and target.scope == "workplace":
+        from .maintenance.fresh_workplace import initialize_workplace_search
+
+        initialize_workplace_search(storage_host, target)
     if writable:
         from .maintenance.fresh_project import ordinary_identity_access, owns_target
 

@@ -13,6 +13,13 @@ from ..documents.reader import YamlDocumentReader
 PROJECT_FLOW_ROOT = ".pf"
 
 
+def declared_workplace_id(manifest: Path) -> str | None:
+    document = YamlDocumentReader(_parse_simple_yaml).load(manifest)
+    section = document.get("workplace")
+    owner = section.get("id") if isinstance(section, dict) else document.get("id")
+    return owner if isinstance(owner, str) and owner.strip() else None
+
+
 @dataclass(frozen=True)
 class ProjectMetadataReader:
     project_root: Path

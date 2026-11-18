@@ -206,6 +206,14 @@ def _connection(
             )
 
 
+def _empty_database(db: sqlite3.Connection) -> bool:
+    return (
+        db.execute("SELECT 1 FROM sqlite_schema LIMIT 1").fetchone() is None
+        and db.execute("PRAGMA application_id").fetchone()[0] == 0
+        and db.execute("PRAGMA user_version").fetchone()[0] == 0
+    )
+
+
 def _initialize_domain(
     host: StorageMigrationHost, target: StoreTarget, store_id: str
 ) -> None:
@@ -218,12 +226,7 @@ def _initialize_domain(
         # Only a zero-object SQLite file left by this pending initializer may
         # retry DDL. A pre-existing domain without its planned UUID is refused.
         with _connection(host, path, readonly=True) as db:
-            objects = db.execute("SELECT 1 FROM sqlite_schema LIMIT 1").fetchone()
-            empty = (
-                objects is None
-                and db.execute("PRAGMA application_id").fetchone()[0] == 0
-                and db.execute("PRAGMA user_version").fetchone()[0] == 0
-            )
+            empty = _empty_database(db)
         if not empty:
             facts = _inspect_target(
                 target, _descriptor(verify_transforms=False), host.service.driver
@@ -253,6 +256,8 @@ def _initialize_domain(
         with _connection(host, path) as db:
             db.execute("PRAGMA synchronous=FULL")
             with transaction(db):
+                if not _empty_database(db):
+                    raise MaintenanceError("storage_existing_target")
                 _ensure_schema(db)
                 add_store_identity(db, target, store_id)
 
@@ -304,6 +309,17 @@ def _domain_identity(
     item = _domain(document, target)
     store_id = item["store_id"]
     checksum = _hash({"creation_id": document["creation_id"], "domain": item})
+    return initialize_pinned_domain(host, root, target, store_id, checksum)
+
+
+def initialize_pinned_domain(
+    host: StorageMigrationHost,
+    root: Path,
+    target: StoreTarget,
+    store_id: str,
+    checksum: str,
+) -> tuple[StoreTarget, str]:
+    """Create or resume the planned domain while its owner gate is held."""
     slot = _slot(root, target)
     if slot is not None and (
         slot["store_id"] != store_id or slot["plan_checksum"] != checksum

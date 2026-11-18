@@ -1205,8 +1205,14 @@ def _search_database(
     storage_host: StorageMigrationHost | None,
     writable: bool,
     timeout: float,
+    building_search_index: bool = False,
 ) -> Iterator[tuple[sqlite3.Connection, tuple[StoreTarget, str] | None]]:
-    with adapter_identity_access(path, storage_host, writable=writable) as identity:
+    with adapter_identity_access(
+        path,
+        storage_host,
+        writable=writable,
+        building_search_index=building_search_index,
+    ) as identity:
         db = (driver or DatabaseFactory.resolve_driver())._connect(
             path if writable else path.resolve().as_uri() + "?mode=ro",
             uri=not writable,
@@ -1264,7 +1270,12 @@ def build_index(
     stack = ExitStack()
     db, identity = stack.enter_context(
         _search_database(
-            path, driver=driver, storage_host=storage_host, writable=True, timeout=5.0
+            path,
+            driver=driver,
+            storage_host=storage_host,
+            writable=True,
+            timeout=5.0,
+            building_search_index=True,
         )
     )
     try:

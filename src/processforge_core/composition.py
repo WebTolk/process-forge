@@ -253,16 +253,9 @@ def build_storage_migration_host(
                 )
         if workplace_root is not None:
             workplace = _safe(workplace_root)
-            from .common.yaml_io import _parse_simple_yaml
-            from .documents.reader import YamlDocumentReader
+            from .project.metadata import declared_workplace_id
 
-            document = YamlDocumentReader(_parse_simple_yaml).load(
-                _safe(workplace / "workplace.yaml")
-            )
-            section = document.get("workplace")
-            workplace_id = (
-                section.get("id") if isinstance(section, dict) else document.get("id")
-            )
+            workplace_id = declared_workplace_id(_safe(workplace / "workplace.yaml"))
             # No new identity is minted to label an old workplace. An unknown
             # owner is an explicit routing diagnostic, never a root-name ID.
             workplace_targets: tuple[tuple[Literal["raw", "search"], str], ...] = (
@@ -270,7 +263,7 @@ def build_storage_migration_host(
                 ("search", "runtime/search/local-resource-search.sqlite"),
             )
             for workplace_kind, path in workplace_targets:
-                if isinstance(workplace_id, str) and workplace_id.strip():
+                if workplace_id is not None:
                     targets.append(
                         StoreTarget(
                             workplace_kind,
@@ -551,6 +544,18 @@ def build_storage_migration_host(
             # Resume a pinned lazy initializer; leave unused stores absent.
             root = storage_owner_root(context, target)
             slot = _slot(root, target)
+            if (
+                target.scope == "workplace"
+                and target.kind == "search"
+                and slot is not None
+                and slot["state"] == "pending"
+            ):
+                from .maintenance.fresh_workplace import initialize_workplace_search
+
+                if initialize_workplace_search(
+                    StorageMigrationHost(context, self), target, resume_only=True
+                ):
+                    return {"state": "ready"}
             if (
                 target.scope == "project"
                 and slot is not None
