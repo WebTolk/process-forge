@@ -73,6 +73,31 @@ def test_gate_order_and_remaining_budget(isolated_path: Path) -> None:
         assert events[0][1] == project / ".pf/runtime/execution-admission"
 
 
+def test_short_contention_can_retry_before_the_deadline(
+    isolated_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    elapsed = 0.0
+    waits: list[float] = []
+    available = iter((False, False, True))
+
+    def advance(seconds: float) -> None:
+        nonlocal elapsed
+        waits.append(seconds)
+        elapsed += seconds
+
+    monkeypatch.setattr(admission_module.time, "monotonic", lambda: elapsed)
+    monkeypatch.setattr(admission_module.time, "sleep", advance)
+    monkeypatch.setattr(
+        admission_module, "_registry_lock_try_os_lock", lambda fd: next(available)
+    )
+    with admission_module.registry_file_lock(
+        isolated_path / "short", timeout_seconds=0.025
+    ):
+        assert len(waits) == 2
+        assert 0 < waits[0] < waits[1]
+        assert elapsed < 0.025
+
+
 @pytest.mark.parametrize(
     "error_number", [errno.EAGAIN, errno.EACCES, errno.EBADF, errno.EPERM]
 )

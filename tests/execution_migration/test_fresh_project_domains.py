@@ -6,7 +6,7 @@ import json
 import sqlite3
 from contextlib import closing
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pf_native_control as native
 import pytest
@@ -80,6 +80,86 @@ def test_ready_before_first_domain_write_and_lazy_raw(project):
         select_execution_storage(project, configuration=provider()).repository
         is not None
     )
+
+
+@pytest.mark.parametrize("kind", ["events", "raw"])
+@pytest.mark.parametrize("writable", [False, True])
+def test_adapter_selects_once_and_refreshes_owner_on_next_access(
+    project, kind, writable
+):
+    initialize(project)
+    host = host_for(project)
+    target = target_for(host, kind)
+    journal = ProcessEventJournal if kind == "events" else RawHookJournal
+    with journal.connection(target.target, writable=True, storage_host=host):
+        pass
+    original_context = type(host).context.fget
+    selections = []
+
+    def select_context(instance):
+        context = original_context(instance)
+        selections.append(context)
+        return context
+
+    with patch.object(type(host), "context", property(select_context)):
+        with journal.connection(
+            target.target, writable=writable, storage_host=host
+        ) as db:
+            assert db.execute("SELECT store_id FROM pf_store_meta").fetchone()[0]
+        assert len(selections) == 1
+
+        # A finished adapter cannot lend its owner selection to the next one.
+        before = target.target.read_bytes()
+        manifest = project / ".pf/process-forge.yaml"
+        manifest.write_text("project:\n  id: another-owner\n", encoding="utf-8")
+        with pytest.raises(MaintenanceError, match="storage_.*conflict"):
+            with journal.connection(
+                target.target, writable=writable, storage_host=host
+            ):
+                pytest.fail("changed owner reused the previous adapter context")
+        assert len(selections) == 2
+        assert target.target.read_bytes() == before
+
+
+def test_operation_journal_selects_owner_on_open(project):
+    from processforge_core.agents.process_events import ProcessEventRecorder
+    from processforge_core.project.configuration_inputs import (
+        configuration_operation,
+        operation_storage_host,
+    )
+
+    initialize(project)
+    target = target_for(host_for(project), "events")
+    with configuration_operation(project, None, configuration=provider()):
+        host = operation_storage_host(target.target)
+        assert host is not None
+        selected = Mock(wraps=type(host).context.fget)
+        with patch.object(type(host), "context", property(selected)):
+            journal = ProcessEventRecorder().event_journal_for_project(project)
+            selected.assert_not_called()
+            assert journal.count(target.target) == 0
+            selected.assert_called_once()
+
+
+def test_operation_journal_rejects_adopted_read_after_owner_removed(project):
+    from processforge_core.project.configuration_inputs import (
+        configuration_operation,
+        journal_operation_host,
+    )
+
+    initialize(project)
+    target = target_for(host_for(project), "events")
+    before = target.target.read_bytes()
+    with configuration_operation(project, None, configuration=provider()):
+        host = journal_operation_host(target.target, project, None)
+        assert host is not None
+        (project / ".pf/process-forge.yaml").write_text("project:\n  name: legacy\n")
+        with pytest.raises(MaintenanceError, match="project_identity_required"):
+            with ProcessEventJournal.connection(
+                target.target, writable=False, storage_host=host
+            ):
+                pytest.fail("read an adopted store without its project owner")
+    assert target.target.read_bytes() == before
 
 
 @pytest.mark.parametrize("boundary", ["before_schema", "after_schema", "before_ready"])

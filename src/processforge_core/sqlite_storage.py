@@ -244,17 +244,28 @@ def adapter_identity_access(
         yield None
         return
     from .maintenance.contracts import MaintenanceError
-    from .maintenance.storage_migration import storage_identity_access
+    from .maintenance.storage_migration import (
+        StorageMigrationHost,
+        storage_identity_access,
+    )
 
     try:
         selected_context = storage_host.context
     except MaintenanceError as error:
         if writable or error.code != "project_identity_required":
             raise
+        from .project.configuration_inputs import verify_operation_legacy_read
+
+        verify_operation_legacy_read(storage_host)
         # Missing stable identity prevents adoption, while the original
         # adapter still refuses any already-adopted envelope without its host.
         yield None
         return
+    # Each adapter uses one immutable selection. A later adapter must ask the
+    # automatic host again, since the previous operation may establish an owner.
+    storage_host = StorageMigrationHost(
+        selected_context, storage_host.service, _automatic=storage_host.automatic
+    )
     targets = [target for target in selected_context.targets if target.target == path]
     if not targets and any(
         selected == path for _kind, selected in storage_host.context.unqualified_targets

@@ -2100,12 +2100,14 @@ def _ingest_event(
         source_project_ref=source_project_ref,
     )
     settings = configuration.config.logging
-    # Refuse a half-migrated project before admitting new raw work.
+    # Take admission before the journal's identity gate, just as the derived
+    # event writer does. Release both before starting the raw receipt.
     from processforge_core.work.consistency import RunTaskInputReader
 
-    event_journal(project_root).count(
-        RunTaskInputReader().event_runtime_paths(project_root)[0]
-    )
+    with registration_admission(workplace_root, [project_root]):
+        event_journal(project_root).count(
+            RunTaskInputReader().event_runtime_paths(project_root)[0]
+        )
     from processforge_core.configuration import ConfigurationProvider
 
     pinned = ConfigurationProvider.pinned(

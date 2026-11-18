@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import os
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -127,6 +128,12 @@ class WorkerObservationInputService:
                 (result.stdout or b"").decode("ascii", errors="replace").splitlines()
             )
             return any(len(row) > 1 and row[1].strip() == str(pid) for row in rows)
+        if sys.platform.startswith("linux") and pid > 0:
+            from processforge_platforms.linux_process_identity import pid_exited
+
+            exited = pid_exited(pid)
+            if exited is not None:
+                return not exited
         try:
             os.kill(pid, 0)
             return True
