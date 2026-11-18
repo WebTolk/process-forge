@@ -4,6 +4,11 @@ on:
   pull_request:
     branches: [dev, main]
   workflow_dispatch:
+    inputs:
+      full_archive:
+        description: Run the full public suite from the extracted candidate on both platforms
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -76,7 +81,7 @@ jobs:
     name: Core files from public 1.2.0 (${{ matrix.os }})
     needs: candidate
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: ${{ inputs.full_archive && 130 || 20 }}
     strategy:
       fail-fast: false
       matrix:
@@ -182,6 +187,57 @@ jobs:
           assert set(recovery["matrix"]) == required
           assert all(value == "pass" for value in recovery["matrix"].values())
           assert recovery["full_t06_accepted"] is False
+      - name: Validate the full extracted public archive
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_archive }}
+        shell: python
+        env:
+          EXPECTED_SHA256: ${{ needs.candidate.outputs.archive_sha256 }}
+          SOURCE_COMMIT: ${{ needs.candidate.outputs.source_commit }}
+        run: |
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          assets = root / ".pf/tmp/t06-public-core/assets"
+          archive = assets / "processforge-candidate.zip"
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+          assert digest == os.environ["EXPECTED_SHA256"]
+          environment = dict(os.environ)
+          environment.pop("PYTHONPATH", None)
+          scratch = Path(os.environ["RUNNER_TEMP"]) / "pf-full-archive"
+          for name in ("TMPDIR", "TEMP", "TMP", "PF_TEST_SCRATCH_ROOT", "W3_FIXTURE_ROOT",
+                       "PF_W4_TEST_ROOT", "PF_PRIVATE_PROCESS_TEST_ROOT", "PF_RELEASE_REPORT_TEST_ROOT"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          commands = root / ".pf/runtime/release-test/commands"
+          previous = set(commands.glob("*/result.json"))
+          result = subprocess.run([
+              sys.executable, "-B", "bin/pf.py", "release-archive-test",
+              "--archive", str(archive), "--manifest", str(assets / "processforge-candidate.manifest.json"),
+              "--root", str(root), "--extracted-test", "full", "--timeout-scale", "5",
+          ], env=environment)
+          failures = []
+          records = set(commands.glob("*/result.json")) - previous
+          for path in sorted(records):
+              child = json.loads(path.read_bytes())
+              if child["returncode"] != 0 or child["timed_out"]:
+                  script = next((Path(arg).name for arg in child["args"] if arg.endswith(".py")),
+                                Path(child["args"][0]).name)
+                  failures.append({"command": script, "returncode": child["returncode"],
+                                   "timed_out": child["timed_out"]})
+          report = root / ".pf/artifacts/full-archive"
+          report.mkdir(parents=True, exist_ok=True)
+          (report / "result.json").write_text(json.dumps({
+              "source_commit": os.environ["SOURCE_COMMIT"], "archive_sha256": digest,
+              "returncode": result.returncode, "recorded_commands": len(records),
+              "failed_commands": failures,
+          }, indent=2) + "\n", encoding="utf-8")
+          raise SystemExit(result.returncode)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -189,5 +245,6 @@ jobs:
           path: |
             .pf/artifacts/t06-public-core/
             .pf/artifacts/t06-file-recovery/
+            .pf/artifacts/full-archive/
           if-no-files-found: warn
           include-hidden-files: true
