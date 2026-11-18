@@ -4111,6 +4111,7 @@ def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch:
             if content is None:
                 raise SystemExit(f"FAIL: release-pack entry has no content: {archive_path}")
             info = zipfile.ZipInfo(archive_path, date_time=zip_datetime)
+            info.create_system = 3  # Store the Unix file mode consistently on every build host.
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
             archive.writestr(info, content, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
