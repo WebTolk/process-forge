@@ -9508,6 +9508,7 @@ AGENT_RUN_STATUSES = {
 
 AGENT_RUN_FAILURE_TERMINAL_STATUSES = {"failed", "timed_out", "unknown_exit", "lost"}
 AGENT_RUN_START_SKIP_STATUSES = {
+    "starting",
     "running",
     "completed",
     "failed",
@@ -13569,7 +13570,7 @@ def supervisor_pending_drain_task_ids(project_root: Path, run_ids: list[str]) ->
             state = load_agent_run_state(project_root, run_id, task_id)
             status = str(state.get("status") or "")
             task_status = str(item.get("status") or "")
-            if status == "running" or (status == "completed" and task_status not in {"done", "completed"}
+            if status in {"starting", "running"} or (status == "completed" and task_status not in {"done", "completed"}
                                        and not historical_worker_capture(project_root, run_id, task_id)):
                 pending.append(task_id)
     return sorted(set(pending))
@@ -13586,7 +13587,7 @@ def supervisor_final_drain_timeout(project_root: Path, run_ids: list[str], expli
                 continue
             task_id = safe_id(str(item.get("id") or "task"), "task")
             state = load_agent_run_state(project_root, run_id, task_id)
-            if str(state.get("status") or "") == "running":
+            if str(state.get("status") or "") in {"starting", "running"}:
                 timeout_seconds = state.get("timeout_seconds")
                 if isinstance(timeout_seconds, int) and timeout_seconds > 0:
                     worker_timeouts.append(timeout_seconds)
@@ -13640,10 +13641,10 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
             # shell worker's timeout and lifecycle while the process is live.
             driver_id = str(state.get("driver_id") or (worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
             task_rows.append((task_id, task, worker, driver_id))
-            if state.get("status") == "running":
+            if state.get("status") in {"starting", "running"}:
                 observed_state = observe_worker_run(project_root, task, driver_id, state)
                 observed.append(task_id)
-                if observed_state.get("status") == "running":
+                if observed_state.get("status") in {"starting", "running"}:
                     running.append(task_id)
                     running_scopes[task_id] = _context_contract_inputs.assignment_write_scope(task)
                 elif observed_state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:

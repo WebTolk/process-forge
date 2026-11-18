@@ -135,12 +135,19 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     )
 
 
+def observe_status(project: Path, task_id: str) -> dict[str, Any]:
+    if not status_path(project, task_id).is_file():
+        return {}
+    pf("worker-run", "status", "--project-root", str(project), "--task", task_id)
+    return read_json(status_path(project, task_id))
+
+
 def wait_status(
     project: Path, task_id: str, expected_status: str, timeout_seconds: float = 8.0
 ) -> dict[str, Any]:
-    deadline = time.time() + timeout_seconds
-    while time.time() < deadline:
-        state = read_json(status_path(project, task_id))
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        state = observe_status(project, task_id)
         if state.get("status") == expected_status:
             return state
         time.sleep(0.1)
@@ -166,8 +173,8 @@ def read_pid_markers(project: Path, task_id: str) -> list[int]:
 
 
 def stop_if_running(project: Path, task_id: str) -> None:
-    state = read_json(status_path(project, task_id))
-    if state.get("status") == "running":
+    state = observe_status(project, task_id)
+    if state.get("status") in {"starting", "running"}:
         pf(
             "worker-run",
             "stop",
@@ -175,19 +182,19 @@ def stop_if_running(project: Path, task_id: str) -> None:
             str(project),
             "--task",
             task_id,
-            expect=None,
+            expect=0,
         )
-        deadline = time.time() + 8.0
-        while time.time() < deadline:
-            current = read_json(status_path(project, task_id)).get("status")
-            if current != "running":
+        deadline = time.monotonic() + 8.0
+        while time.monotonic() < deadline:
+            current = observe_status(project, task_id).get("status")
+            if current not in {"starting", "running"}:
                 return
             time.sleep(0.1)
         raise AssertionError(f"task {task_id} did not stop in cleanup window")
 
 
 def ensure_stopped(project: Path, task_id: str) -> None:
-    state = read_json(status_path(project, task_id))
+    state = observe_status(project, task_id)
     status = state.get("status")
     if status not in {
         "stopped",
@@ -653,7 +660,6 @@ def smoke_durable_exit_reconciliation(project: Path) -> str:
 
 
 def main() -> int:
-    tasks_for_cleanup: list[str] = []
     temp_parent = Path(tempfile.mkdtemp(prefix="pf-worker-shell-"))
     project = None
     cleanup_roots = []
@@ -665,20 +671,34 @@ def main() -> int:
         project = make_project(temp_root)
 
         smoke_environment_isolation(project)
-        tasks_for_cleanup.append("env-isolation")
 
-        tasks_for_cleanup.append(smoke_duplicate_start_sequential(project))
-        tasks_for_cleanup.append(smoke_duplicate_start_parallel(project))
-        tasks_for_cleanup.append(smoke_prepare_while_running(project))
-        tasks_for_cleanup.append(
-            smoke_direct_path_recovery(project, driver_root=driver_root)
-        )
-        tasks_for_cleanup.append(smoke_durable_exit_reconciliation(project))
+        smoke_duplicate_start_sequential(project)
+        smoke_duplicate_start_parallel(project)
+        smoke_prepare_while_running(project)
+        smoke_direct_path_recovery(project, driver_root=driver_root)
+        smoke_durable_exit_reconciliation(project)
     finally:
+        primary_error = sys.exception()
+        cleanup_errors: list[Exception] = []
         if project is not None:
-            for task_id in tasks_for_cleanup:
-                stop_if_running(project, task_id)
-                ensure_stopped(project, task_id)
+            # Creation can succeed before a scenario raises. Include those workers.
+            for task_path in sorted((project / ".pf/assignments").glob("*.yaml")):
+                try:
+                    stop_if_running(project, task_path.stem)
+                    ensure_stopped(project, task_path.stem)
+                except Exception as error:
+                    cleanup_errors.append(error)
+        if cleanup_errors:
+            if primary_error is not None:
+                for cleanup_error in cleanup_errors:
+                    primary_error.add_note(f"Worker cleanup failed: {cleanup_error}")
+            else:
+                raise ExceptionGroup(
+                    "Worker cleanup failed; fixture retained", cleanup_errors
+                )
+        # Retain failed-scenario receipts; never delete a possibly live worker's input.
+        if primary_error is not None:
+            cleanup_roots = []
         for cleanup_root in cleanup_roots:
             resolved = cleanup_root.resolve()
             if resolved == temp_parent.resolve() or not resolved.is_relative_to(
@@ -694,7 +714,8 @@ def main() -> int:
             or resolved.name != temp_parent.name
         ):
             raise AssertionError("temporary cleanup target escapes the smoke workspace")
-        shutil.rmtree(resolved)
+        if primary_error is None:
+            shutil.rmtree(resolved)
 
     print("PASS: worker-run shell regressions smoke")
     return 0
