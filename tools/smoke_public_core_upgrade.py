@@ -588,6 +588,7 @@ def main() -> int:
         encoding="utf-8",
     )
     environment["PF_CODEX_EXECUTABLE"] = sys.executable
+    environment["PF_CODEX_MODEL"] = "release-fixture"
     old_worker = ("--project-root", project, "--task", historical["assignment_id"])
     worker = ("--project-root", project, "--task", work["assignment_id"])
     for label, selected in (("old-codex", old_worker), ("old-retained", worker)):
@@ -599,11 +600,10 @@ def main() -> int:
             *selected,
             "--driver",
             "codex-exec",
-            "--model",
-            "release-fixture",
         )
         run(f"04-{label}-start", old_cli, "worker-run", "start", *selected, "--wait")
     del environment["PF_CODEX_EXECUTABLE"]
+    del environment["PF_CODEX_MODEL"]
     retained_run = (
         project / ".pf/runtime/agent-runs" / work["run_id"] / work["assignment_id"]
     )
