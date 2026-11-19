@@ -589,19 +589,43 @@ def main() -> int:
     )
     environment["PF_CODEX_EXECUTABLE"] = sys.executable
     old_worker = ("--project-root", project, "--task", historical["assignment_id"])
+    worker = ("--project-root", project, "--task", work["assignment_id"])
+    for label, selected in (("old-codex", old_worker), ("old-retained", worker)):
+        run(
+            f"04-{label}-prepare",
+            old_cli,
+            "worker-run",
+            "prepare",
+            *selected,
+            "--driver",
+            "codex-exec",
+            "--model",
+            "release-fixture",
+        )
+        run(f"04-{label}-start", old_cli, "worker-run", "start", *selected, "--wait")
+    del environment["PF_CODEX_EXECUTABLE"]
+    retained_run = (
+        project / ".pf/runtime/agent-runs" / work["run_id"] / work["assignment_id"]
+    )
+    retained_heartbeat = (retained_run / "heartbeat.json").read_bytes()
     run(
-        "04-old-codex-prepare",
+        "04-old-retained-reprepare",
         old_cli,
         "worker-run",
         "prepare",
-        *old_worker,
+        *worker,
         "--driver",
-        "codex-exec",
-        "--model",
-        "release-fixture",
+        "test-echo-worker",
     )
-    run("04-old-codex-start", old_cli, "worker-run", "start", *old_worker, "--wait")
-    del environment["PF_CODEX_EXECUTABLE"]
+    retained_status = (retained_run / "status.json").read_bytes()
+    prepared = json.loads(retained_status)
+    assert (prepared["attempt"], prepared["status"], prepared["driver_id"]) == (
+        2,
+        "ready",
+        "test-echo-worker",
+    )
+    assert prepared["pid"] is None and prepared["started_at"] is None
+    assert (retained_run / "heartbeat.json").read_bytes() == retained_heartbeat
     old_run = (
         project
         / ".pf/runtime/agent-runs"
@@ -621,6 +645,7 @@ def main() -> int:
     assert (
         old_status["driver_id"] == "codex-exec" and old_status["status"] == "completed"
     )
+    assert retained_heartbeat == old_execution["heartbeat.json"]
     retained_documents = {
         path: path.read_bytes()
         for path in (
@@ -713,7 +738,6 @@ def main() -> int:
     assert retained["context"]["checksum"] == work["context"]["checksum"]
     report["core_file_checks"] = "passed"
     run("11-workplace-doctor", old_cli, "doctor-workplace", "--root", workplace)
-    worker = ("--project-root", project, "--task", work["assignment_id"])
     blocked_code, _ = run(
         "12-legacy-write-blocked",
         old_cli,
@@ -775,6 +799,15 @@ def main() -> int:
     assert all(
         (old_run / name).read_bytes() == raw for name, raw in old_execution.items()
     )
+    assert (retained_run / "heartbeat.json").read_bytes() == retained_heartbeat
+    assert (retained_run / "status.json").read_bytes() == retained_status
+    binding = json.loads(identity_bytes)
+    database = project / ".pf" / binding["target_relative_path"]
+    with sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True) as sql:
+        assert sql.execute(
+            "SELECT attempt,phase,outcome FROM execution_attempts WHERE run_id=? AND task_id=?",
+            (work["run_id"], work["assignment_id"]),
+        ).fetchall() == [(2, "prepared", None)]
     run(
         "16-context-refresh",
         old_cli,
@@ -806,17 +839,15 @@ def main() -> int:
     )
     run("18-worker-collect", old_cli, "worker-run", "collect", *worker)
     assert (project / ".pf/artifacts/retained/report.md").is_file()
-    binding = json.loads(identity_bytes)
-    database = project / ".pf" / binding["target_relative_path"]
     with sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True) as sql:
         assert sql.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert sql.execute("SELECT COUNT(*) FROM execution_current").fetchone()[0] == 0
         attempt = sql.execute(
-            "SELECT phase,outcome,collection FROM execution_attempts "
+            "SELECT attempt,phase,outcome,collection FROM execution_attempts "
             "WHERE task_id=? ORDER BY attempt DESC LIMIT 1",
             (work["assignment_id"],),
         ).fetchone()
-        assert attempt == ("absent", "completed", "collected"), attempt
+        assert attempt == (3, "absent", "completed", "collected"), attempt
         assert sql.execute(
             "SELECT phase,outcome,collection FROM execution_attempts "
             "WHERE run_id=? AND task_id=? AND attempt=?",
@@ -826,6 +857,7 @@ def main() -> int:
         "outcome": "completed",
         "source_bytes_preserved": True,
     }
+    report["public_reprepared_worker"] = {"imported_attempt": 2, "next_attempt": 3}
     report["project_migration"] = {"status": "ready", "source_bytes_preserved": True}
     report["retained_worker"] = {"status": "completed", "collection": "collected"}
     # Keep native orchestration coverage in the same OS/archive CI job. The

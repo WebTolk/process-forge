@@ -46,7 +46,7 @@
     },
     {
       "relative_path": "src/processforge_core/maintenance/journal_scan.py",
-      "sha256": "sha256:a3e27a557931287efdbc7b1b704abb2a05bdc2dacaca4357dbe8f4acea1fd4fa"
+      "sha256": "sha256:dc5e6e2ea6e94a8c27975f2c178b24e5662225389570b16e3e4395a8c8768e41"
     },
     {
       "relative_path": "src/processforge_core/executions/schema.py",
@@ -58,8 +58,8 @@
     },
     {
       "relative_path": "schemas/execution-migration-v1.json",
-      "sha256": "sha256:0b483436588c92d599b38a0d7ad774ce9cbcbf30a42d4b669ce5428b202568f7"
+      "sha256": "sha256:37e6c47e515b05f7119c07fe4b78d293cc82cb9cb08e13da4a8bae43d61fc19a"
     }
   ],
-  "transform_checksum": "sha256:2f7bf47f1e0787586202cde8f0ce62e2220b67fbc376c082241f2392f1b45652"
+  "transform_checksum": "sha256:5925e06e9ec43fe4cbc2e3530f3e03f15ab96ff6bcf233acaa19b6a08a3e4b25"
 }

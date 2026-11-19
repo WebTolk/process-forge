@@ -797,6 +797,26 @@ def test_public_codex_heartbeat_preserved(
     } in [json.loads(row) for row in manifest]
 
 
+@pytest.mark.parametrize("driver", ["codex-exec", "test-echo-worker"])
+def test_public_codex_heartbeat_preserved_after_reprepare(
+    harness: Harness, driver: str
+) -> None:
+    path = harness.status("task", attempt=2, status="ready")
+    status = json.loads(path.read_bytes()) | {"driver_id": driver}
+    path.write_text(json.dumps(status), encoding="utf-8")
+    receipt = path.with_name("heartbeat.json")
+    original = b'{"status":"completed","exit_code":0}\n'
+    receipt.write_bytes(original)
+
+    plan = harness.service.plan(harness.project)
+    assert harness.apply(plan)["status"] == "ready"
+    record = harness.repository.load(ExecutionKey("exact-project", "run", "task", 2))
+    assert record is not None and record.phase == "prepared" and record.outcome is None
+    assert harness.scalar("SELECT count(*) FROM execution_attempts") == 1
+    assert harness.scalar("SELECT next_attempt FROM execution_heads") == 3
+    assert receipt.read_bytes() == original
+
+
 @pytest.mark.parametrize(
     "name,change,error",
     [
@@ -808,6 +828,16 @@ def test_public_codex_heartbeat_preserved(
         ("heartbeat.json", {"run_id": "other"}, "execution_identity_conflict"),
         ("heartbeat.json", {"status": "running"}, "execution_activity_unknown"),
         ("heartbeat.json", {"status": "ready"}, "execution_activity_unknown"),
+        (
+            "heartbeat.json",
+            {"status": "ready", "attempt": 2, "pid": 123},
+            "execution_activity_unknown",
+        ),
+        (
+            "heartbeat.json",
+            {"status": "ready", "attempt": 2, "started_at": "2026-11-19T00:00:00Z"},
+            "execution_activity_unknown",
+        ),
     ],
 )
 def test_public_codex_heartbeat_requires_own_terminal_task(
