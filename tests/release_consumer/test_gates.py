@@ -167,6 +167,29 @@ class PublicReleaseGates(unittest.TestCase):
             )
         return result
 
+    def test_source_release_package_uses_private_scratch(self) -> None:
+        self.run_cli(
+            self.source,
+            "release-test",
+            "--root",
+            str(self.source),
+            "--public",
+            "--only",
+            "release package",
+        )
+        report = json.loads(
+            (self.source / ".pf/runtime/release-test/latest-report.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(report["result"], "PASS")
+        (package_check,) = report["checks"]
+        self.assertEqual(package_check["label"], "release package")
+        archive = Path(package_check["command"][-1])
+        self.assertEqual(archive.parent, self.source / ".pf/tmp/release-test")
+        self.assertTrue(archive.is_file())
+        self.assertTrue(archive.with_suffix(".manifest.json").is_file())
+
     def test_source_and_archive_independent_project_gates(self):
         for root in (self.source, self.extracted):
             inventory = (root / "checksums/processforge.sha256").read_bytes()
