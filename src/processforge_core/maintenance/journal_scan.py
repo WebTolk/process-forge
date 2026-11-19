@@ -243,12 +243,24 @@ def execution_snapshots(
             path.name == "heartbeat.json"
             and "schema_version" not in body
             and task_status is not None
-            and task_status.get("driver_id") == "codex-exec"
             and _public_codex_heartbeat(body)
         ):
-            if task_status.get("status") not in _TERMINAL_STATUSES:
-                raise MaintenanceError("execution_activity_unknown")
-            return raw
+            status = task_status.get("status")
+            attempt = task_status.get("attempt")
+            if (
+                status == "ready"
+                and type(attempt) is int
+                and attempt > 1
+                and task_status.get("pid") is None
+                and task_status.get("started_at") is None
+            ):
+                # Core 1.2.0 kept this receipt when preparing the next attempt,
+                # including when the new attempt selected a different driver.
+                return raw
+            if task_status.get("driver_id") == "codex-exec":
+                if status not in _TERMINAL_STATUSES:
+                    raise MaintenanceError("execution_activity_unknown")
+                return raw
         if type(body.get("schema_version")) is not int or body["schema_version"] != 1:
             raise MaintenanceError("execution_source_invalid")
         expected: dict[str, object] = {

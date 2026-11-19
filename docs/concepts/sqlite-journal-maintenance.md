@@ -28,9 +28,11 @@ Plan each public storage migration from the latest stable public release.
 For the 1.3.0 beta this is 1.2.0. The upgrade check runs the archived release's
 Codex worker before replacing Core, then verifies the imported execution and
 the original receipt bytes. In 1.2.0 the task-level heartbeat had no version.
-A cancelled worker could leave its starting heartbeat behind. The importer
-uses the adjacent terminal execution status for the outcome. Device-specific
-repairs to intermediate betas are recorded separately.
+A cancelled worker could leave its starting heartbeat behind. Preparing
+another attempt could leave the old heartbeat beside the new ready status.
+The importer preserves the heartbeat bytes and uses the versioned task status
+to describe the latest attempt. Device-specific repairs to intermediate betas
+are recorded separately.
 
 ## Backup, verification and restore
 
