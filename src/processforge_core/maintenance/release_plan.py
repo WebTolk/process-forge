@@ -2335,6 +2335,7 @@ class ReleaseCommandPlanBuilder:
             )
             if (root / ".git").exists():
                 version = CoreProperties.from_distribution(root).loaded.version
+                package_dir = root / ".pf" / "tmp" / "release-test"
                 commands.append(
                     ReleaseCommand(
                         "release package",
@@ -2345,7 +2346,7 @@ class ReleaseCommandPlanBuilder:
                             "--root",
                             str(root),
                             "--output",
-                            str(root / "dist" / f"{RELEASE_NAME}-{version}.zip"),
+                            str(package_dir / f"{RELEASE_NAME}-{version}.zip"),
                         ],
                         120,
                     )
