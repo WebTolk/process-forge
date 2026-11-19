@@ -7,6 +7,7 @@ from http.server import ThreadingHTTPServer
 from http.client import HTTPException
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -35,6 +36,59 @@ def wait_until(predicate, timeout=3):
             return True
         threading.Event().wait(0.01)
     return False
+
+
+def check_windows_launchers(root: Path) -> None:
+    from processforge_core.project.runtime_launchers import (
+        ProjectRuntimeLauncherBuilder,
+    )
+
+    fixture = root / "batch launchers with spaces"
+    fixture.mkdir()
+    launchers = [fixture / "pf.bat", fixture / "pf-server.bat"]
+    for entry in launchers:
+        shutil.copyfile(ROOT / "bin" / entry.name, entry)
+
+    flow = fixture / ".pf"
+    project_entry = flow / "runtime" / "bin" / "pf.bat"
+    project_entry.parent.mkdir(parents=True)
+    files = ProjectRuntimeLauncherBuilder().project_runtime_launcher_files(flow)
+    project_entry.write_text(files[project_entry], encoding="utf-8")
+    launchers.append(project_entry)
+
+    python_only = fixture / "python only"
+    python_only.mkdir()
+    (python_only / "python.cmd").write_text(
+        '@"%PF_SMOKE_PYTHON%" %*\n@exit /b %errorlevel%\n', encoding="ascii"
+    )
+    fallback = {
+        **os.environ,
+        "PATH": str(python_only),
+        "PF_SMOKE_PYTHON": sys.executable,
+    }
+    calls = fixture / "calls.jsonl"
+    for entry in launchers:
+        entry.with_suffix(".py").write_text(
+            "import json, sys\n"
+            "with open('calls.jsonl', 'a', encoding='utf-8') as f:\n"
+            "    print(json.dumps(sys.argv[1:]), file=f)\n"
+            "sys.exit(int(sys.argv[-1]))\n",
+            encoding="utf-8",
+        )
+        for env in (None, fallback):
+            for expected in (0, 7, 9009):
+                calls.write_text("", encoding="utf-8")
+                args = ["argument with spaces", str(expected)]
+                result = subprocess.run(
+                    [str(entry), *args],
+                    cwd=fixture,
+                    env=env,
+                    capture_output=True,
+                    timeout=30,
+                )
+                assert result.returncode == expected, (entry.name, expected, result)
+                invocations = calls.read_text(encoding="utf-8").splitlines()
+                assert [json.loads(line) for line in invocations] == [args]
 
 
 def check_disconnected_responses(workplace):
@@ -224,6 +278,8 @@ def main():
         (fixture / "tools/processforge.py").write_text("import json,sys; print(json.dumps(sys.argv[1:]))")
         result = subprocess.run([sys.executable, "-B", str(fixture / "bin/pf-server.py"), "status", "--workplace", str(missing), "--json"], capture_output=True, timeout=30)
         assert json.loads(result.stdout) == ["server", "status", "--workplace", str(missing), "--json"]
+        if os.name == "nt":
+            check_windows_launchers(root)
         parsed = core.build_parser().parse_args(["server", "run", "--workplace", str(wp), "--console"])
         assert parsed.func is core.command_runtime_serve and parsed.console
         broken = root / "invalid configuration"
