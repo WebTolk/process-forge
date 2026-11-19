@@ -350,20 +350,35 @@ class AdapterTests(NormalizedTests):
     def test_cli_factory_and_output_parity(self):
         import processforge as core
         from pf_cli.commands.work import WorkStateCommand
-        service = fixture()
-        manifest = Path('workplace/workplace.yaml')
-        from processforge_core.project.coordination_state import ProjectCoordinationStateService
         from processforge_core.work.consistency import RunTaskInputReader
 
-        with patch.object(ProjectCoordinationStateService, 'resolve_project_workplace_manifest', return_value=manifest), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
-            self.assertIs(core.process_execution_service(Path('fixture')), service)
-            factory.assert_called_once_with(Path('fixture'), manifest.parent, core, events=core._process_event_recorder, summaries=core._work_summary_renderer)
+        service = fixture()
+        project = Path("fixture")
+        with (
+            tempfile.TemporaryDirectory(dir=SCRATCH) as raw,
+            patch(
+                "processforge_core.composition.build_process_execution_service",
+                return_value=service,
+            ) as factory,
+        ):
+            workplace = Path(raw).resolve()
+            (workplace / "workplace.yaml").write_text(
+                "coordination:\n  director_enabled: false\n", encoding="utf-8"
+            )
+            self.assertIs(
+                core.process_execution_service(project, str(workplace)), service
+            )
+            factory.assert_called_once_with(
+                project,
+                workplace,
+                core,
+                events=core._process_event_recorder,
+                summaries=core._work_summary_renderer,
+            )
         output = io.StringIO()
         records = []
         arguments = SimpleNamespace(project_root='fixture', json=True)
         with d.operation(logger(sinks=[records.append]), 'cli', 'request', request_id='cli-request'), patch.object(RunTaskInputReader, 'require_flow_root'), patch.object(core, 'process_execution_service', return_value=service), patch('sys.stdout', output):
-            from processforge_core.work.consistency import RunTaskInputReader
-
             command = WorkStateCommand(
                 execution_factory=core.process_execution_service,
                 require_flow_root=RunTaskInputReader().require_flow_root,
