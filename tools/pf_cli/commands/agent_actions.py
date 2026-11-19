@@ -8,9 +8,11 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pf_cli.forge_work import ForgeWorkError
 from processforge_core.operations.catalogue import ActionCatalog, CatalogRequestError
 
 if TYPE_CHECKING:
+    from pf_cli.forge_work import ForgeWorkClient
     from processforge_core.process_execution import ProcessExecutionService
 
 
@@ -19,7 +21,9 @@ class ActionsCommand:
         self,
         *,
         parser_factory: Callable[[], argparse.ArgumentParser],
-        execution_factory: Callable[[Path, str | None], ProcessExecutionService],
+        execution_factory: Callable[
+            [Path, str | None], ProcessExecutionService | ForgeWorkClient
+        ],
         require_flow_root: Callable[[Path], Path],
         dump_yaml: Callable[[dict[str, Any]], str],
         version: str,
@@ -87,12 +91,15 @@ class ActionsCommand:
                 return blocked("project_root_required")
             project = Path(project_root).expanduser().resolve()
             self._require_flow_root(project)
-            state = self._execution_factory(project, None).state(
-                run_id=run_id,
-                assignment_id=assignment_id,
-                context_id=context_id,
-                session_id="",
-            )
+            try:
+                state = self._execution_factory(project, None).state(
+                    run_id=run_id,
+                    assignment_id=assignment_id,
+                    context_id=context_id,
+                    session_id="",
+                )
+            except ForgeWorkError:
+                return blocked("work_state_unavailable")
             if not isinstance(state, Mapping):
                 return blocked("work_state_unavailable")
             identity = tuple(

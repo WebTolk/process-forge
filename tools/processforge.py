@@ -64,6 +64,8 @@ else:
 
 
 if TYPE_CHECKING:
+    from pf_cli.forge_work import ForgeWorkClient
+
     from processforge_core.configuration import ConfigService, ConfigurationProvider
     from processforge_core.executions.composition import ExecutionStorage
     from processforge_core.executions.model import (
@@ -9465,11 +9467,26 @@ def command_continuation_resume(args: argparse.Namespace) -> int:
 
 
 def continuation_command(args: argparse.Namespace, operation: str, **request: Any) -> int:
+    from pf_cli.forge_work import ForgeWorkClient
+
     from processforge_core.work.continuation import ContinuationService
+
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
-    manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
-    result = ContinuationService(project_root, manifest.parent if manifest else None, sys.modules[__name__], events=_process_event_recorder, summaries=_work_summary_renderer).request(operation, **request)
+    manifest = _project_coordination_state.resolve_project_workplace_manifest(
+        project_root, getattr(args, "workplace", None)
+    )
+    remote = ForgeWorkClient.select(project_root, manifest)
+    if remote is None:
+        result = ContinuationService(
+            project_root,
+            manifest.parent if manifest else None,
+            sys.modules[__name__],
+            events=_process_event_recorder,
+            summaries=_work_summary_renderer,
+        ).request(operation, **request)
+    else:
+        result = remote.continuation(operation, **request)
     print(json.dumps(result, ensure_ascii=False, indent=2) if getattr(args, "json", False) else dump_yaml(result))
     return 1 if result.get("status") == "blocked" else 0
 
@@ -14325,19 +14342,45 @@ def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
     return 0
 
 
-def process_execution_service(project_root: Path, explicit_workplace: str | None = None) -> ProcessExecutionService:
+def process_execution_service(
+    project_root: Path, explicit_workplace: str | None = None
+) -> ProcessExecutionService | ForgeWorkClient:
+    from pf_cli.forge_work import ForgeWorkClient
+
     from processforge_core.composition import build_process_execution_service
 
-    manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, explicit_workplace)
+    manifest = _project_coordination_state.resolve_project_workplace_manifest(
+        project_root, explicit_workplace
+    )
+    remote = ForgeWorkClient.select(project_root, manifest)
+    if remote is not None:
+        return remote
     workplace_root = manifest.parent if manifest is not None else None
-    return build_process_execution_service(project_root, workplace_root, sys.modules[__name__], events=_process_event_recorder, summaries=_work_summary_renderer)
+    return build_process_execution_service(
+        project_root,
+        workplace_root,
+        sys.modules[__name__],
+        events=_process_event_recorder,
+        summaries=_work_summary_renderer,
+    )
 
 
-def work_resource_service(project_root: Path, explicit_workplace: str | None = None) -> WorkResourceService:
+def work_resource_service(
+    project_root: Path, explicit_workplace: str | None = None
+) -> WorkResourceService | ForgeWorkClient:
+    from pf_cli.forge_work import ForgeWorkClient
+
     from processforge_core.work.resources import WorkResourceService
 
-    manifest = _project_coordination_state.resolve_project_workplace_manifest(project_root, explicit_workplace)
-    return WorkResourceService(project_root, manifest.parent if manifest else None, sys.modules[__name__])
+    manifest = _project_coordination_state.resolve_project_workplace_manifest(
+        project_root, explicit_workplace
+    )
+    remote = ForgeWorkClient.select(project_root, manifest)
+    if remote is not None:
+        return remote
+    return WorkResourceService(
+        project_root, manifest.parent if manifest else None, sys.modules[__name__]
+    )
 
 
 def command_run_create(args: argparse.Namespace) -> int:

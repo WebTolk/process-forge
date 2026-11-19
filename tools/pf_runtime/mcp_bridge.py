@@ -39,7 +39,7 @@ def _read_mapping(path: Path, *, yaml_document: bool = False) -> dict[str, Any]:
     return value
 
 
-def _forge_workplace(workplace: str) -> bool:
+def forge_workplace(workplace: str) -> bool:
     try:
         manifest = _read_mapping(Path(workplace) / "workplace.yaml", yaml_document=True)
     except FileNotFoundError:
@@ -61,6 +61,23 @@ def _runtime_exchange(
     line: str, workplace: str, session_id: str, timeout_seconds: float
 ) -> bytes:
     """Send once to the selected local Runtime; uncertain writes are never replayed."""
+    envelope = _post_runtime(
+        workplace,
+        "/mcp",
+        {"request": _request_value(line), "session_id": session_id},
+        timeout_seconds,
+    )
+    if not isinstance(envelope.get("messages"), list):
+        raise BackendUnavailable()
+    return b"\n".join(
+        json.dumps(message, ensure_ascii=True).encode("utf-8")
+        for message in envelope["messages"]
+    )
+
+
+def _post_runtime(
+    workplace: str, path: str, body: dict[str, Any], timeout_seconds: float
+) -> dict[str, Any]:
     runtime = Path(workplace) / "runtime/pf-runtime"
     state = _read_mapping(runtime / "service.json")
     token = _read_mapping(runtime / "token.json").get("token")
@@ -89,15 +106,10 @@ def _runtime_exchange(
     ):
         raise BackendUnavailable()
     payload = json.dumps(
-        {
-            "request": _request_value(line),
-            "session_id": session_id,
-            "expected_instance_id": instance,
-        },
-        ensure_ascii=True,
+        {**body, "expected_instance_id": instance}, ensure_ascii=True
     ).encode("utf-8")
     request = Request(
-        endpoint.rstrip("/") + "/mcp",
+        endpoint.rstrip("/") + path,
         data=payload,
         method="POST",
         headers={
@@ -116,16 +128,60 @@ def _runtime_exchange(
         envelope = json.loads(raw)
     except ValueError as error:
         raise BackendUnavailable() from error
+    if not isinstance(envelope, dict) or envelope.get("instance_id") != instance:
+        raise BackendUnavailable()
+    return envelope
+
+
+def runtime_tool_result(
+    workplace: Path, name: str, arguments: dict[str, Any]
+) -> dict[str, Any]:
+    """Call the existing Runtime tool once and return its native object."""
+    request = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {"name": name, "arguments": arguments},
+    }
+    line = json.dumps(request, ensure_ascii=True)
+    messages = _validated_messages(
+        line, _runtime_exchange(line, str(workplace), "", 120.0)
+    )
+    reply = next(message for message in messages if "id" in message)
+    if "error" in reply:
+        failure = reply["error"]
+        reason = (
+            "invalid_arguments"
+            if isinstance(failure, dict) and failure.get("code") == -32602
+            else "forge_operation_failed"
+        )
+        return {"error": {"code": reason}}
+    result = reply.get("result")
+    if not isinstance(result, dict):
+        raise BackendUnavailable()
+    content = result.get("content")
     if (
-        not isinstance(envelope, dict)
-        or envelope.get("instance_id") != instance
-        or not isinstance(envelope.get("messages"), list)
+        not isinstance(content, list)
+        or len(content) != 1
+        or not isinstance(content[0], dict)
     ):
         raise BackendUnavailable()
-    return b"\n".join(
-        json.dumps(message, ensure_ascii=True).encode("utf-8")
-        for message in envelope["messages"]
-    )
+    body = content[0].get("text")
+    if not isinstance(body, str):
+        raise BackendUnavailable()
+    value = json.loads(body)
+    if not isinstance(value, dict):
+        raise BackendUnavailable()
+    return value
+
+
+def runtime_work_start(workplace: Path, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Carry native Work inputs, including the operator's optional egress binding."""
+    envelope = _post_runtime(str(workplace), "/work/start", arguments, 120.0)
+    result = envelope.get("result")
+    if not isinstance(result, dict):
+        raise BackendUnavailable()
+    return result
 
 
 def _reject_constant(value: str) -> Any:
@@ -164,7 +220,7 @@ def exchange(
 ) -> list[dict[str, Any]]:
     """Use the sole Forge executor, or the existing operator-owned Garage entry."""
     workplace = str(Path(workplace).expanduser().resolve())
-    if _forge_workplace(workplace):
+    if forge_workplace(workplace):
         stdout = _runtime_exchange(line, workplace, session_id, timeout_seconds)
     else:
         stdout = _garage_exchange(line, workplace, session_id, timeout_seconds)
