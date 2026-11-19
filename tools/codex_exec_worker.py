@@ -319,7 +319,7 @@ def write_heartbeat(
 ) -> None:
     if not path:
         return
-    payload = {"status": status, **(extra or {})}
+    payload = {"schema_version": 1, "status": status, **(extra or {})}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"

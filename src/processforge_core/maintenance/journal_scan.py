@@ -186,6 +186,33 @@ def _execution_collected(
     return True
 
 
+_TERMINAL_STATUSES = (
+    "completed",
+    "failed",
+    "timed_out",
+    "cancelled",
+    "unknown_exit",
+    "lost",
+)
+
+
+def _public_codex_heartbeat(body: JsonObject) -> bool:
+    """Recognize the two task heartbeat shapes emitted by public Core 1.2.0."""
+    if set(body) == {"status", "exit_code"}:
+        code = body["exit_code"]
+        return type(code) is int and body["status"] == (
+            "completed" if code == 0 else "failed"
+        )
+    return (
+        set(body) == {"status", "model", "workspace_dirs"}
+        and body["status"] == "starting"
+        and isinstance(body["model"], str)
+        and bool(body["model"])
+        and isinstance(body["workspace_dirs"], list)
+        and all(isinstance(path, str) for path in body["workspace_dirs"])
+    )
+
+
 def execution_snapshots(
     project: Path, flow: Path, project_id: str, *, skip_terminal_invalid: bool
 ) -> Iterator[tuple[JsonObject, ExecutionSnapshot | None, bytes | None]]:
@@ -204,9 +231,24 @@ def execution_snapshots(
             "sha256": "sha256:" + hashlib.sha256(raw).hexdigest(),
         }
 
-    def receipt_bytes(path: Path, expected_attempt: int | None = None) -> bytes:
+    def receipt_bytes(
+        path: Path,
+        expected_attempt: int | None = None,
+        *,
+        task_status: JsonObject | None = None,
+    ) -> bytes:
         raw = execution_bytes(path)
         body = execution_json(raw)
+        if (
+            path.name == "heartbeat.json"
+            and "schema_version" not in body
+            and task_status is not None
+            and task_status.get("driver_id") == "codex-exec"
+            and _public_codex_heartbeat(body)
+        ):
+            if task_status.get("status") not in _TERMINAL_STATUSES:
+                raise MaintenanceError("execution_activity_unknown")
+            return raw
         if type(body.get("schema_version")) is not int or body["schema_version"] != 1:
             raise MaintenanceError("execution_source_invalid")
         expected: dict[str, object] = {
@@ -256,15 +298,17 @@ def execution_snapshots(
                     if receipt.exists():
                         raw = receipt_bytes(receipt, int(attempt.name))
                         yield fact(receipt, raw), None, raw
+            status_path = task / "status.json"
+            _check_links(status_path, "migration_source_symlink")
+            status_raw = execution_bytes(status_path) if status_path.exists() else None
+            payload = execution_json(status_raw) if status_raw is not None else {}
             for name in ("exit.json", "heartbeat.json", "process.json"):
                 receipt = task / name
                 _check_links(receipt, "migration_source_symlink")
                 if receipt.exists():
-                    raw = receipt_bytes(receipt)
+                    raw = receipt_bytes(receipt, task_status=payload)
                     yield fact(receipt, raw), None, raw
-            status_path = task / "status.json"
-            _check_links(status_path, "migration_source_symlink")
-            if not status_path.exists():
+            if status_raw is None:
                 # Missing status proves nothing about activity. The independent
                 # host proof still gates planning/freeze/cutover. Names reserve
                 # allocation only; they never reconstruct missing executions.
@@ -280,8 +324,6 @@ def execution_snapshots(
                     }
                 yield missing, None, None
                 continue
-            raw = execution_bytes(status_path)
-            payload = execution_json(raw)
             number = payload.get("attempt")
             if type(number) is not int or not 1 <= number < 9223372036854775807:
                 raise MaintenanceError("execution_attempt_required")
@@ -294,31 +336,22 @@ def execution_snapshots(
                 or payload.get("project_id", project_id) != project_id
             ):
                 raise MaintenanceError("execution_identity_conflict")
-            if payload.get("status") not in {
+            if payload.get("status") not in (
                 "planned",
                 "ready",
                 "manual_required",
                 "blocked",
-                "completed",
-                "failed",
-                "timed_out",
-                "cancelled",
-                "unknown_exit",
-                "lost",
-            }:
+                *_TERMINAL_STATUSES,
+            ):
                 raise MaintenanceError("execution_activity_unknown")
             invalid = False
             try:
                 compatibility_payload(canonical_json(payload), key)
             except ValueError:
-                if not skip_terminal_invalid or payload["status"] not in {
-                    "completed",
-                    "failed",
-                    "timed_out",
-                    "cancelled",
-                    "unknown_exit",
-                    "lost",
-                }:
+                if (
+                    not skip_terminal_invalid
+                    or payload["status"] not in _TERMINAL_STATUSES
+                ):
                     raise MaintenanceError("execution_source_invalid") from None
                 # Historical classification additionally requires the exact whole
                 # inventory host proof at freeze/cutover. Raw bytes are quarantined.
@@ -334,14 +367,14 @@ def execution_snapshots(
                 raise MaintenanceError("execution_activity_unknown")
             snapshot = ExecutionSnapshot(
                 status_path.relative_to(project).as_posix(),
-                raw,
+                status_raw,
                 cast(JsonObject, payload),
                 key,
                 max(floor, number + 1),
                 invalid,
                 not invalid and _execution_collected(project, task, key, payload),
             )
-            item = fact(status_path, raw)
+            item = fact(status_path, status_raw)
             item.update(
                 semantic_checksum="sha256:"
                 + hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest(),
@@ -354,7 +387,7 @@ def execution_snapshots(
                     "next_attempt": snapshot.next_attempt,
                 },
             )
-            yield item, snapshot, raw
+            yield item, snapshot, status_raw
 
 
 _Signature = tuple[int, int, int, int, int]

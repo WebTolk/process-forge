@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import runpy
 import time
 import tracemalloc
 from collections.abc import Iterator
@@ -757,6 +758,108 @@ def test_manifest_memory_and_result_size_are_bounded(
         ),
         encoding="utf-8",
     )
+
+
+@pytest.mark.parametrize(
+    "heartbeat,outcome",
+    [
+        ({"status": "completed", "exit_code": 0}, "completed"),
+        ({"status": "failed", "exit_code": -9}, "failed"),
+        (
+            {"status": "starting", "model": "m", "workspace_dirs": ["space/é"]},
+            "cancelled",
+        ),
+    ],
+)
+def test_public_codex_heartbeat_preserved(
+    harness: Harness, heartbeat: JsonObject, outcome: str
+) -> None:
+    path = harness.status("task", status=outcome)
+    status = json.loads(path.read_bytes())
+    status["driver_id"] = "codex-exec"
+    path.write_text(json.dumps(status), encoding="utf-8")
+    receipt = path.with_name("heartbeat.json")
+    original = (json.dumps(heartbeat, ensure_ascii=False, indent=2) + "\n").encode()
+    receipt.write_bytes(original)
+    plan = harness.service.plan(harness.project)
+    assert harness.apply(plan)["status"] == "ready"
+    assert harness.resume(plan)["status"] == "ready"
+    record = harness.repository.load(ExecutionKey("exact-project", "run", "task", 1))
+    assert record is not None and record.outcome == outcome
+    assert receipt.read_bytes() == original
+    manifest = (
+        (harness.evidence / "manifest.ndjson").read_text(encoding="utf-8").splitlines()
+    )
+    assert {
+        "relative_path": receipt.relative_to(harness.project).as_posix(),
+        "size": len(original),
+        "sha256": "sha256:" + hashlib.sha256(original).hexdigest(),
+    } in [json.loads(row) for row in manifest]
+
+
+@pytest.mark.parametrize(
+    "name,change,error",
+    [
+        ("attempts/1/heartbeat.json", {}, "execution_source_invalid"),
+        ("exit.json", {}, "execution_source_invalid"),
+        ("process.json", {}, "execution_source_invalid"),
+        ("heartbeat.json", {"driver_id": "other"}, "execution_source_invalid"),
+        ("heartbeat.json", None, "execution_source_invalid"),
+        ("heartbeat.json", {"run_id": "other"}, "execution_identity_conflict"),
+        ("heartbeat.json", {"status": "running"}, "execution_activity_unknown"),
+        ("heartbeat.json", {"status": "ready"}, "execution_activity_unknown"),
+    ],
+)
+def test_public_codex_heartbeat_requires_own_terminal_task(
+    harness: Harness, name: str, change: JsonObject | None, error: str
+) -> None:
+    path = harness.status("task")
+    if change is None:
+        path.unlink()
+    else:
+        status = json.loads(path.read_bytes()) | {"driver_id": "codex-exec"} | change
+        path.write_text(json.dumps(status), encoding="utf-8")
+    receipt = path.parent / name
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    receipt.write_text('{"status":"completed","exit_code":0}', encoding="utf-8")
+    result = harness.service.plan(harness.project, skip_terminal_invalid=True)
+    assert result["error"]["code"] == error
+    assert not harness.database.target.path.exists()
+
+
+@pytest.mark.parametrize(
+    "heartbeat",
+    [
+        {"status": "failed", "exit_code": 0},
+        {"status": "completed", "exit_code": True},
+        {"status": "completed", "exit_code": 0, "run_id": "foreign"},
+        {"schema_version": None, "status": "completed", "exit_code": 0},
+        {"schema_version": 2, "status": "completed", "exit_code": 0},
+        {"status": "starting", "model": "m", "workspace_dirs": [7]},
+        {"status": "starting", "model": 1, "workspace_dirs": []},
+        {"status": "starting", "model": "", "workspace_dirs": []},
+    ],
+)
+def test_unrecognized_codex_heartbeat_blocks(
+    harness: Harness, heartbeat: JsonObject
+) -> None:
+    path = harness.status("task")
+    status = json.loads(path.read_bytes()) | {"driver_id": "codex-exec"}
+    path.write_text(json.dumps(status), encoding="utf-8")
+    path.with_name("heartbeat.json").write_text(json.dumps(heartbeat), encoding="utf-8")
+    result = harness.service.plan(harness.project, skip_terminal_invalid=True)
+    assert result["error"]["code"] == "execution_source_invalid"
+
+
+def test_codex_fallback_versions_new_heartbeat(harness: Harness) -> None:
+    worker = Path(__file__).resolve().parents[2] / "tools/codex_exec_worker.py"
+    path = harness.flow / "heartbeat.json"
+    runpy.run_path(str(worker))["write_heartbeat"](path, "completed", {"exit_code": 0})
+    assert json.loads(path.read_bytes()) == {
+        "schema_version": 1,
+        "status": "completed",
+        "exit_code": 0,
+    }
 
 
 def test_all_inventory_paths_raw_sorted_including_attempt_receipts(
