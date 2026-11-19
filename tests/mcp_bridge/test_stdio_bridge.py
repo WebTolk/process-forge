@@ -17,6 +17,8 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import Any, cast
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[2]
 IDENTITY_URI = "pf://core/identity"
 INVENTORY_SPEC = importlib.util.spec_from_file_location(
@@ -299,7 +301,7 @@ class StdioBridgeTest(unittest.TestCase):
     ) -> None:
         workplace = self.root / "forge-workplace"
 
-        def cli(*args: object) -> dict[str, Any]:
+        def cli(*args: object, expected_exit: int = 0) -> dict[str, Any]:
             completed = subprocess.run(
                 [
                     sys.executable,
@@ -313,7 +315,7 @@ class StdioBridgeTest(unittest.TestCase):
                 timeout=60,
             )
             self.assertEqual(
-                completed.returncode, 0, completed.stdout + completed.stderr
+                completed.returncode, expected_exit, completed.stdout + completed.stderr
             )
             return (
                 json.loads(completed.stdout)
@@ -358,6 +360,42 @@ class StdioBridgeTest(unittest.TestCase):
             "software-feature-development",
             "--apply",
         )
+        scope_file = self.root / "cli-work-scope.json"
+        scope_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "assignment": {
+                        "allowed_actions": ["read", "write_artifact", "write_product"],
+                        "allowed_read_files": ["AGENTS.md"],
+                        "allowed_files": ["fixture.txt", ".pf/artifacts/fixture/**"],
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        def start_work(objective: str, *, expected_exit: int = 0) -> dict[str, Any]:
+            return cli(
+                "work-start",
+                "--project-root",
+                project,
+                "--objective",
+                objective,
+                "--process-id",
+                "software-feature-development",
+                "--scope-file",
+                scope_file,
+                "--json",
+                expected_exit=expected_exit,
+            )
+
+        assignments = project / ".pf/assignments"
+        before = set(assignments.glob("*.yaml"))
+        unavailable_cli = start_work("Work while Forge is offline", expected_exit=1)
+        self.assertEqual(unavailable_cli["reason"], "forge_runtime_unavailable")
+        self.assertEqual(set(assignments.glob("*.yaml")), before)
+
         first = runtime("start", "--interval", "3600", "--timeout", "30", "--json")
         self.addCleanup(runtime, "stop", "--timeout", "30")
         runtime(
@@ -372,6 +410,74 @@ class StdioBridgeTest(unittest.TestCase):
         )
         state_path = workplace / "runtime/pf-runtime/service.json"
         state = json.loads(state_path.read_bytes())
+        work = start_work("Read the scoped Forge CLI fixture")
+        self.assertEqual(work["action"], "created_new", work)
+        selectors = (
+            "--run",
+            work["run_id"],
+            "--assignment",
+            work["assignment_id"],
+            "--context-id",
+            work["context"]["id"],
+        )
+        status = cli("work-state", "--project-root", project, *selectors, "--json")
+        self.assertEqual(status["assignment"]["id"], work["assignment_id"])
+        self.assertEqual(status["context"]["id"], work["context"]["id"])
+        # An operator-bound egress intent stays a native input. The MCP tool
+        # grants no corresponding argument to a connected agent.
+        intent = {
+            "egress": {
+                "policy_id": "cli-fixture",
+                "recipient": "fixture",
+                "purpose": "qualification",
+                "policy_checksum": "sha256:"
+                + hashlib.sha256(b"fixture policy").hexdigest(),
+                "detector_checksum": "sha256:"
+                + hashlib.sha256(b"fixture detector").hexdigest(),
+                "minimum_enforcement": "mediated_session",
+                "limits": {
+                    "unit_bytes": 128,
+                    "envelope_bytes": 256,
+                    "attempt_bytes": 512,
+                    "disclosures": 1,
+                    "json_depth": 2,
+                    "classification_ms": 100,
+                    "token_seconds": 5,
+                },
+            },
+            "allowed_read_files": ["AGENTS.md"],
+        }
+        intent_file = self.root / "operator-intent.json"
+        intent_file.write_text(json.dumps(intent), encoding="utf-8")
+        egress_scope = json.loads(scope_file.read_bytes())
+        egress_scope["assignment"]["allowed_files"] = [
+            "delivery.txt",
+            ".pf/artifacts/delivery/**",
+        ]
+        second_scope = self.root / "second-scope.json"
+        second_scope.write_text(json.dumps(egress_scope), encoding="utf-8")
+        secured = cli(
+            "work-start",
+            "--project-root",
+            project,
+            "--objective",
+            "Qualify the CLI egress binding",
+            "--process-id",
+            "software-feature-development",
+            "--scope-file",
+            second_scope,
+            "--egress-intent",
+            intent_file,
+            "--json",
+        )
+        self.assertEqual(secured["action"], "created_new", secured)
+        capsule = (
+            project
+            / ".pf/contexts/assignment-capsules"
+            / (secured["assignment_id"] + ".capsule.yaml")
+        )
+        contract = yaml.safe_load(capsule.read_bytes())["execution_contract"]
+        self.assertEqual(contract["egress"], intent["egress"])
         clients = [
             WireClient(self.source, workplace, backend_timeout_seconds=5)
             for _ in range(2)
@@ -420,6 +526,10 @@ class StdioBridgeTest(unittest.TestCase):
         runtime("stop", "--timeout", "30")
         stopped = runtime("status", "--json")
         self.assertEqual(stopped["status"], "stopped")
+        prior = set(assignments.glob("*.yaml"))
+        rejected_cli = start_work("Work while Forge is stopped", expected_exit=1)
+        self.assertEqual(rejected_cli["reason"], "forge_runtime_unavailable")
+        self.assertEqual(set(assignments.glob("*.yaml")), prior)
         unavailable, _ = clients[0].exchange(
             "tools/call", {"name": "pf.work.start", "arguments": {"apply": True}}
         )

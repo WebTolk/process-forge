@@ -162,8 +162,44 @@ class _DeferredRuntime:
         return getattr(runtime_bootstrap(), name)
 
 
+def operator_work_start(
+    arguments: dict[str, Any], workplace: Path, runtime: Any
+) -> dict[str, Any]:
+    """Start native CLI Work, including an optional operator-supplied egress binding."""
+    from processforge_core.egress.contracts import EgressError, security_intent
+    from processforge_core.project.metadata import ProjectMetadataReader
+
+    start = {key: value for key, value in arguments.items() if key != "security"}
+    if (
+        not isinstance(start.get("project_root"), str)
+        or set(start) - {"project_root", "objective", "process_id", "scope_intent"}
+        or not isinstance(start.get("objective"), str)
+        or not isinstance(start.get("process_id", ""), str)
+    ):
+        return {"action": "blocked", "reason": "invalid_arguments"}
+    security = None
+    try:
+        if "security" in arguments:
+            security = security_intent(arguments["security"])
+    except EgressError:
+        return {"action": "blocked", "reason": "egress_contract_invalid"}
+    project = runtime.host.resolve_project(start["project_root"], runtime.core)
+    declared = ProjectMetadataReader(project).workplace_manifest()
+    if declared is not None and declared.parent.resolve() != workplace.resolve():
+        return {"action": "blocked", "reason": "configuration_scope_invalid"}
+    return tool_result(
+        "pf.work.start", start, workplace, "", runtime, operator_security=security
+    )
+
+
 def tool_result(
-    name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any
+    name: str,
+    arguments: dict[str, Any],
+    workplace: Path,
+    session_id: str,
+    runtime: Any,
+    *,
+    operator_security: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from contextlib import ExitStack
 
@@ -203,13 +239,26 @@ def tool_result(
                 selected = bound
             if selected is not None:
                 operation.enter_context(configuration_operation(selected, workplace))
-            return _tool_result(name, arguments, workplace, session_id, runtime)
+            return _tool_result(
+                name,
+                arguments,
+                workplace,
+                session_id,
+                runtime,
+                operator_security=operator_security,
+            )
 
     return scoped_request(execute)()
 
 
 def _tool_result(
-    name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any
+    name: str,
+    arguments: dict[str, Any],
+    workplace: Path,
+    session_id: str,
+    runtime: Any,
+    *,
+    operator_security: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     host = runtime.host
     core = runtime.core
@@ -480,6 +529,7 @@ def _tool_result(
             process_id=str(arguments.get("process_id") or "").strip(),
             session_id=supplied_session,
             scope_intent=scope_intent,
+            security=operator_security,
         )
     if name == "pf.work.transition":
         bound_project = resolve_garage_project()
