@@ -5,8 +5,11 @@
 - New projects use SQLite for worker execution state and journals. Indexed
   queries read current executions, and migration preserves the original
   records and the latest observed attempt.
-- In Forge, MCP requests use the Runtime of the selected Workplace. Clients
-  can reconnect after a compatible Core update or Runtime restart.
+- In Forge, the selected Workplace Runtime handles MCP requests, CLI Work
+  commands and continuations with explicit Work selectors. The CLI reports
+  `forge_runtime_unavailable` when it cannot reach Runtime. MCP clients can
+  reconnect after a compatible Core update or Runtime restart. Garage runs
+  these commands locally.
 - The updater verifies the release payload and preserves project and Workplace
   data. It can manage Runtime during replacement and resume an interrupted
   file update from its recorded state.
@@ -19,8 +22,8 @@
 
 Back up the Project and Workplace before replacing Core. Run the verified
 updater from a directory outside the installed Core. Forge can use
-`--manage-runtime` for the managed Runtime. Direct Forge Work commands can
-still run locally, so stop those writers for the maintenance window as well.
+`--manage-runtime` for the managed Runtime. Stop other writers, including
+direct `worker-run` and legacy Run/Task operations, during maintenance.
 [Core update and recovery](../../docs/concepts/update-lifecycle.md)
 
 If an existing Project returns `storage_migration_required`, run the explicit
