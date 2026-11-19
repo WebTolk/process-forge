@@ -17,6 +17,12 @@ See the [release notes](release/1.3.0/notes.md) and
 - Qualify upgrade and recovery from the public 1.2.0 distribution on Windows
   and Linux.
 
+## 1.3.0-rc1 - 2026-11-19
+
+The first release candidate packages the 1.3.0 changes for independent review.
+See the [release notes](release/1.3.0/notes.md) and
+[Russian notes](release/1.3.0/notes.ru.md) for the upgrade procedure.
+
 ## 1.3.0-beta4 - 2026-11-18
 
 See the [release notes](release/1.3.0-beta4/notes.md) and
