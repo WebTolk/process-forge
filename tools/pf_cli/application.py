@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections.abc import Callable
 from contextlib import ExitStack
 from pathlib import Path
 
+from pf_cli.forge_work import ForgeWorkError
 from processforge_core import diagnostics
 from processforge_core.sqlite_storage import JournalError
 
@@ -171,6 +173,20 @@ class CliApplication:
         ):
             try:
                 result = args.func(args)
+            except ForgeWorkError as exc:
+                if getattr(args, "json", False):
+                    print(
+                        json.dumps(
+                            {
+                                "action": "blocked",
+                                "status": "blocked",
+                                "reason": str(exc),
+                            }
+                        )
+                    )
+                else:
+                    print(f"FAIL: {exc}")
+                result = 1
             except JournalError as exc:
                 raise SystemExit("FAIL: " + str(exc)) from None
             if result:

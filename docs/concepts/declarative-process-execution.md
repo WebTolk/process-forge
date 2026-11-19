@@ -17,6 +17,14 @@ If a project authorizes more than one Process, `pf.work.start` can return
 `process_choice_required` candidates; the caller must choose one of the offered
 process ids. `default` is a recommendation only.
 
+In a Forge workplace, the CLI sends `work-start`, `work-state`,
+`work-transition`, `work-cancel`, `work-search`, `work-resolve` and exact Work
+continuation requests to the running Runtime. The CLI reads operator files
+such as `--scope-file`, `--egress-intent` and `--evidence-file` locally. If
+the Runtime is stopped, the CLI reports `forge_runtime_unavailable`. After a
+connection drops during a mutation, inspect the Work state before retrying.
+Garage executes these commands locally and supports offline use.
+
 `pf.work.state` exposes only the current execution contract: Process, Run,
 Assignment, stage, required inputs, obligations, produced artifacts, entry and
 exit gates, allowed outcomes, evidence, and blockers.

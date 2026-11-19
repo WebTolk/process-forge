@@ -16,6 +16,14 @@ context snapshot и immutable Assignment capsule. Изменение Process YAM
 возвращается `process_choice_required`: выберите предложенный `process_id` и
 повторите start. `default` — рекомендация, а не автоматический выбор.
 
+В Workplace с режимом Forge команды CLI `work-start`, `work-state`,
+`work-transition`, `work-cancel`, `work-search`, `work-resolve` и операции
+продолжения с точной привязкой к Work обслуживает запущенный Runtime. CLI
+читает файлы оператора `--scope-file`, `--egress-intent` и `--evidence-file`
+локально. При остановленном Runtime CLI сообщает `forge_runtime_unavailable`.
+Если связь оборвалась во время записи, проверьте состояние Work перед
+повторным запросом. В Garage эти команды работают локально и без сети.
+
 `pf.work.state` возвращает текущий контракт исполнения: Process, Run,
 Assignment, stage, required inputs, obligations, artifacts, gates, blockers и
 allowed outcomes.
