@@ -542,23 +542,85 @@ def main() -> int:
     }
     scope_path = root / "scope.json"
     scope_path.write_text(json.dumps(scope), encoding="utf-8")
-    _, work = run(
-        "04-old-work",
-        old_cli,
-        "work-start",
+    work_args = (
         "--project-root",
         project,
         "--workplace",
         workplace,
-        "--objective",
-        "Retained release qualification",
         "--process-id",
         "software-feature-development",
-        "--scope-file",
-        scope_path,
         "--json",
     )
+    _, work = run(
+        "04-old-work",
+        old_cli,
+        "work-start",
+        *work_args,
+        "--objective",
+        "Retained release qualification",
+        "--scope-file",
+        scope_path,
+    )
     assert work["action"] == "created_new"
+    scope["assignment"]["allowed_files"] = [".pf/artifacts/old-codex/**"]
+    scope["assignment"]["expected_report"]["artifact"] = (
+        ".pf/artifacts/old-codex/report.md"
+    )
+    old_scope = root / "old-codex-scope.json"
+    old_scope.write_text(json.dumps(scope), encoding="utf-8")
+    _, historical = run(
+        "04-old-codex-work",
+        old_cli,
+        "work-start",
+        *work_args,
+        "--objective",
+        "Public Codex worker history",
+        "--scope-file",
+        old_scope,
+    )
+    assert historical["action"] == "created_new"
+    # The released driver invokes "codex exec ... -o REPORT -". Stand in only
+    # for the external model process; PF writes every receipt and status itself.
+    (project / "exec").write_text(
+        "import sys\nfrom pathlib import Path\n"
+        "assert sys.stdin.buffer.read()\n"
+        "Path(sys.argv[sys.argv.index('-o') + 1]).write_text('fixture report', encoding='utf-8')\n",
+        encoding="utf-8",
+    )
+    environment["PF_CODEX_EXECUTABLE"] = sys.executable
+    old_worker = ("--project-root", project, "--task", historical["assignment_id"])
+    run(
+        "04-old-codex-prepare",
+        old_cli,
+        "worker-run",
+        "prepare",
+        *old_worker,
+        "--driver",
+        "codex-exec",
+        "--model",
+        "release-fixture",
+    )
+    run("04-old-codex-start", old_cli, "worker-run", "start", *old_worker, "--wait")
+    del environment["PF_CODEX_EXECUTABLE"]
+    old_run = (
+        project
+        / ".pf/runtime/agent-runs"
+        / historical["run_id"]
+        / historical["assignment_id"]
+    )
+    old_execution = {
+        name: (old_run / name).read_bytes()
+        for name in ("heartbeat.json", "exit.json", "status.json")
+    }
+    assert json.loads(old_execution["heartbeat.json"]) == {
+        "status": "completed",
+        "exit_code": 0,
+    }
+    assert json.loads(old_execution["exit.json"])["schema_version"] == 1
+    old_status = json.loads(old_execution["status.json"])
+    assert (
+        old_status["driver_id"] == "codex-exec" and old_status["status"] == "completed"
+    )
     retained_documents = {
         path: path.read_bytes()
         for path in (
@@ -710,6 +772,9 @@ def main() -> int:
         repeated["status"] == "ready" and identity_path.read_bytes() == identity_bytes
     )
     assert all(path.read_bytes() == raw for path, raw in legacy_sources.items())
+    assert all(
+        (old_run / name).read_bytes() == raw for name, raw in old_execution.items()
+    )
     run(
         "16-context-refresh",
         old_cli,
@@ -752,6 +817,15 @@ def main() -> int:
             (work["assignment_id"],),
         ).fetchone()
         assert attempt == ("absent", "completed", "collected"), attempt
+        assert sql.execute(
+            "SELECT phase,outcome,collection FROM execution_attempts "
+            "WHERE run_id=? AND task_id=? AND attempt=?",
+            (historical["run_id"], historical["assignment_id"], old_status["attempt"]),
+        ).fetchone() == ("absent", "completed", "pending")
+    report["public_codex_history"] = {
+        "outcome": "completed",
+        "source_bytes_preserved": True,
+    }
     report["project_migration"] = {"status": "ready", "source_bytes_preserved": True}
     report["retained_worker"] = {"status": "completed", "collection": "collected"}
     # Keep native orchestration coverage in the same OS/archive CI job. The

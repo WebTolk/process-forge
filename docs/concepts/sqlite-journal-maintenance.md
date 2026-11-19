@@ -22,6 +22,16 @@ help exits `0`. Reports contain operator-selected private source and artifact
 locations. Store them with restricted maintenance evidence before sharing a
 redacted copy publicly. Error codes omit record contents and raw exception text.
 
+## Public migration baseline
+
+Plan each public storage migration from the latest stable public release.
+For the 1.3.0 beta this is 1.2.0. The upgrade check runs the archived release's
+Codex worker before replacing Core, then verifies the imported execution and
+the original receipt bytes. In 1.2.0 the task-level heartbeat had no version.
+A cancelled worker could leave its starting heartbeat behind. The importer
+uses the adjacent terminal execution status for the outcome. Device-specific
+repairs to intermediate betas are recorded separately.
+
 ## Backup, verification and restore
 
 Choose a new bundle directory whose parent already exists:
