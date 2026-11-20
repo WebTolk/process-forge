@@ -63,8 +63,10 @@ own ignored `.pf` state before substantive governed work.
   useful prior failures alongside corrected runs. Starting a reviewer or receiving
   a successful tool exit does not itself prove semantic acceptance.
 - After a permitted merge, mirror the resulting `dev` commit to `gitverse` and
-  read both remote refs back. Use existing token credentials without putting them
-  in URLs, command arguments, logs or committed files. Do not force-push shared
+  read both remote refs back. For the GitVerse HTTPS push, use a non-interactive
+  Git credential helper scoped to `https://gitverse.ru`. The helper reads
+  `GITVERSE_TOKEN` from the environment and supplies it as the password. Keep
+  the token value out of URLs, command arguments, logs and files. Do not force-push shared
   branches. Publish issue summaries according to the selected task mode and
   authorized scope; no automatic issue synchronizer is assumed.
 
