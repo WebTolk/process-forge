@@ -9,7 +9,7 @@ Runtime, MCP, Codex hooks, or a manually opened Agent Ledger session.
 Use Python **3.11+**. The public source checks run on Python 3.11 on Windows
 and Ubuntu. A separate Windows device report records CPython 3.14.3 and its
 SQLite version. These observations cover the combinations actually exercised.
-[CI matrix](../.github/workflows/repository-checks.yml) · [Device report](https://github.com/WebTolk/process-forge/issues/110)
+[CI matrix](https://github.com/WebTolk/process-forge/blob/a4ecea35a83e9c5b8d1f2f683714ee3b3268eba6/.github/workflows/repository-checks.yml) · [Device report](https://github.com/WebTolk/process-forge/issues/110)
 
 | Component | Requirement and purpose |
 | --- | --- |
