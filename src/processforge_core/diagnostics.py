@@ -15,7 +15,7 @@ import threading
 import time
 import uuid
 from collections import OrderedDict, deque
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from itertools import islice
 from pathlib import Path
@@ -931,12 +931,18 @@ def configure_proposal(
         project if identifier is None else document.get(scope, {}).get(identifier, {})
     )
     layers = [("project", project)] + ([(scope, target)] if identifier else [])
+    expires_at = None
+    if profile in {"diagnostic", "trace"}:
+        deadline = now + duration
+        expiry = datetime.fromtimestamp(deadline, timezone.utc)
+        # ISO timestamps have microsecond precision. Keep the deadline inclusive.
+        if expiry.timestamp() > deadline:
+            expiry -= timedelta(microseconds=1)
+        expires_at = expiry.isoformat()
     change = {
         "profile": profile,
         "threshold": PROFILES[profile],
-        "expires_at": datetime.fromtimestamp(now + duration, timezone.utc).isoformat()
-        if profile in {"diagnostic", "trace"}
-        else None,
+        "expires_at": expires_at,
     }
     resolve_config(*layers, ("requested_change", change), now=now)
     if identifier:
