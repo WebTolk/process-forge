@@ -933,11 +933,12 @@ def configure_proposal(
     layers = [("project", project)] + ([(scope, target)] if identifier else [])
     expires_at = None
     if profile in {"diagnostic", "trace"}:
-        deadline = now + duration
-        expiry = datetime.fromtimestamp(deadline, timezone.utc)
-        # ISO timestamps have microsecond precision. Keep the deadline inclusive.
-        if expiry.timestamp() > deadline:
-            expiry -= timedelta(microseconds=1)
+        # Floor the clock to ISO microseconds before adding the requested duration.
+        numerator, denominator = now.as_integer_ratio()
+        elapsed_us = numerator * 1_000_000 // denominator
+        expiry = datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(
+            microseconds=elapsed_us, seconds=duration
+        )
         expires_at = expiry.isoformat()
     change = {
         "profile": profile,

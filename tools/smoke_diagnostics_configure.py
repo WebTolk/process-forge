@@ -16,14 +16,15 @@ from processforge_core import diagnostics as d
 def check_max_duration() -> None:
     # Cover both rounding directions, a whole-second carry and an exact instant.
     for now, expected in (
-        (1_700_000_000.0000007, 1_700_000_900.0),
-        (1_700_000_000.0000002, 1_700_000_900.0),
-        (1_700_000_000.9999998, 1_700_000_900.999999),
-        (1_700_000_000.125, 1_700_000_900.125),
+        (1_700_000_000.0000007, "2023-11-14T22:28:20+00:00"),
+        (1_700_000_000.0000002, "2023-11-14T22:28:20+00:00"),
+        (1_700_000_000.9999998, "2023-11-14T22:28:20.999999+00:00"),
+        (1_700_000_000.125, "2023-11-14T22:28:20.125000+00:00"),
+        (1_700_000_000 + 7 / 4096, "2023-11-14T22:28:20.001708+00:00"),
     ):
         for profile in ("diagnostic", "trace"):
             _, report = d.configure_proposal({}, profile, duration=900, now=now)
-            assert d._epoch(report["change"]["expires_at"]) == expected
+            assert report["change"]["expires_at"] == expected
             assert report["effective"]["values"]["profile"] == profile
 
     beyond_limit = {"profile": "trace", "expires_at": "2023-11-14T22:28:20.000001Z"}
