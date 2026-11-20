@@ -2,20 +2,20 @@
 
 ## Unreleased
 
-## 1.3.0
+## 1.3.0 - 2026-11-20
 
 See the [release notes](release/1.3.0/notes.md) and
 [примечания к выпуску](release/1.3.0/notes.ru.md).
 
-- Use SQLite for worker execution state and journals in new projects. Migrate
-  existing project storage explicitly, with verified backups and resume.
-- Route Forge MCP requests, CLI Work commands and continuations with explicit
-  Work selectors through Workplace Runtime. Support verified Core replacement
-  and recovery with optional managed Runtime stop and start.
-- Preserve known public 1.2.0 worker receipts during migration, including when
-  the latest attempt was prepared again or uses a different driver.
-- Qualify upgrade and recovery from the public 1.2.0 distribution on Windows
-  and Linux.
+- Run the built-in Codex worker in projects with or without Git on Windows and
+  supported Linux systems. PF checks process ownership and retains collected results.
+- Find current worker executions through an index in new projects. Existing
+  projects can migrate their history and resume an interrupted transfer from a checkpoint.
+- Reconnect Forge agents after a compatible Core update or Runtime restart.
+  Concurrent session registration spends less time waiting on a busy service.
+- Continue interrupted Core file updates and keep known 1.2.0 worker records
+  through migration. The public 1.2.0 upgrade and recovery paths were exercised
+  on Windows and Linux.
 
 ## 1.3.0-beta4 - 2026-11-18
 
