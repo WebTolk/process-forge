@@ -9,7 +9,7 @@ PF Runtime, MCP, хуки Codex или вручную открытая сесс�
 Используйте **Python 3.11+**. Проверки публичных исходников выполняются на
 Python 3.11 под Windows и Ubuntu. На другом Windows-устройстве зафиксированы
 CPython 3.14.3 и версия SQLite. Результаты относятся к проверенным сочетаниям.
-[Матрица CI](../../.github/workflows/repository-checks.yml) · [Отчёт устройства](https://github.com/WebTolk/process-forge/issues/110)
+[Матрица CI](https://github.com/WebTolk/process-forge/blob/a4ecea35a83e9c5b8d1f2f683714ee3b3268eba6/.github/workflows/repository-checks.yml) · [Отчёт устройства](https://github.com/WebTolk/process-forge/issues/110)
 
 | Компонент | Требование и назначение |
 | --- | --- |
