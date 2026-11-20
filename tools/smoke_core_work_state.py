@@ -350,6 +350,7 @@ class AdapterTests(NormalizedTests):
     def test_cli_factory_and_output_parity(self):
         import processforge as core
         from pf_cli.commands.work import WorkStateCommand
+
         from processforge_core.work.consistency import RunTaskInputReader
 
         service = fixture()
