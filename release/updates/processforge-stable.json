@@ -4,10 +4,10 @@
     "id": "processforge",
     "name": "ProcessForge"
   },
-  "generated_at": "2026-10-18T14:11:27Z",
+  "generated_at": "2026-11-20T17:25:58Z",
   "channels": {
     "stable": {
-      "latest": "1.2.0"
+      "latest": "1.3.0"
     }
   },
   "subjects": [
@@ -17,21 +17,21 @@
       "name": "ProcessForge",
       "versions": [
         {
-          "version": "1.2.0",
+          "version": "1.3.0",
           "channels": [
             "stable"
           ],
           "stability": "stable",
           "prerelease": false,
-          "released_at": "2026-10-18",
+          "released_at": "2026-11-20",
           "yanked": false,
           "source": {
             "repository": "https://github.com/WebTolk/process-forge",
-            "tag": "v1.2.0",
-            "commit": "b70df739700f1559570f4b65481cd39616ccc1ea"
+            "tag": "v1.3.0",
+            "commit": "804c53a775b963aceddc5759f8d94a8ed4b8d533"
           },
           "release": {
-            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.2.0"
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0"
           },
           "compatibility": {
             "min_project_schema": 1,
@@ -42,37 +42,33 @@
             {
               "type": "distribution",
               "format": "zip",
-              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.zip",
-              "size": 2596329,
-              "sha256": "0cd5c1f48ca0e94ddf5b0298b774a3498baf20e5a64b84dd9c05bbc0f36a2880",
-              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.2.0/processforge-1.2.0.manifest.json"
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0/processforge-1.3.0.zip",
+              "size": 3510960,
+              "sha256": "80a4f15b1f4cfdce66dec44d15fbc9a9cc1fd615d8dc4c9c75ab872be679684a",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0/processforge-1.3.0.manifest.json"
             }
           ],
           "changes": [
             {
-              "area": "documentation",
-              "summary": "Clearer installation, requirements and everyday workflow guides for people and AI agents"
-            },
-            {
-              "area": "projects",
-              "summary": "More responsive project work and clearer continuation guidance"
+              "area": "workers",
+              "summary": "Run the built-in Codex worker in an ordinary project folder on Windows or Linux, including projects without Git."
             },
             {
               "area": "runtime",
-              "summary": "More reliable background status and recovery after interruptions"
+              "summary": "Reconnect to Forge after a restart and collect an accepted worker result again after an interruption."
             },
             {
-              "area": "maintenance",
-              "summary": "Configurable reminders to review old project scratch files; no automatic deletion"
+              "area": "performance",
+              "summary": "Shorter waits when several agents register their sessions at the same time."
             },
             {
               "area": "upgrade",
-              "summary": "A separate guide for preserving and migrating existing journal history"
+              "summary": "Resume interrupted Core updates and carry existing history and worker records forward."
             }
           ],
           "migration": {
             "required": true,
-            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.2.0/docs/releases/1.2.0-migration.md"
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.3.0/docs/concepts/sqlite-journal-maintenance.md"
           }
         }
       ]
