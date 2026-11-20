@@ -313,6 +313,8 @@ class StdioBridgeTest(unittest.TestCase):
             preserved_journal.rename(journal)
 
         # Simulate an unavailable delivery destination after the journal commit.
+        runs = flow / "runs"
+        prior_failures = set(runs.glob("*/start-failure.json"))
         outbox.parent.mkdir(parents=True, exist_ok=True)
         outbox.write_text("fixture obstructs the outbox directory", encoding="utf-8")
         try:
@@ -321,12 +323,25 @@ class StdioBridgeTest(unittest.TestCase):
                 "error" in interrupted or interrupted["result"].get("isError"),
                 interrupted,
             )
+            # A bridge timeout can reach the client while Forge is still writing.
+            # Keep the outbox obstructed until this Work records its own failure.
+            deadline = time.monotonic() + 30
+            while not (
+                failures := set(runs.glob("*/start-failure.json")) - prior_failures
+            ):
+                if time.monotonic() >= deadline:
+                    self.fail("Forge did not record the interrupted Work publication")
+                time.sleep(0.05)
+            (failure_path,) = failures
+            failure = json.loads(failure_path.read_bytes())
+            self.assertEqual(failure["phase"], "event_commit_and_dispatch")
         finally:
             outbox.unlink()
 
         (assignment_path,) = set(assignments.glob("*.yaml")) - before[0]
         interrupted_work = yaml.safe_load(assignment_path.read_text(encoding="utf-8"))
         run_id = interrupted_work["run_id"]
+        self.assertEqual(failure["run_id"], run_id)
         assignment_id = interrupted_work["id"]
         capsule = capsules / f"{assignment_id}.capsule.yaml"
         capsule_bytes = capsule.read_bytes()
@@ -684,7 +699,7 @@ class StdioBridgeTest(unittest.TestCase):
         contract = yaml.safe_load(capsule.read_bytes())["execution_contract"]
         self.assertEqual(contract["egress"], intent["egress"])
         clients = [
-            WireClient(self.source, workplace, backend_timeout_seconds=5)
+            WireClient(self.source, workplace, backend_timeout_seconds=15)
             for _ in range(2)
         ]
         for client in clients:
