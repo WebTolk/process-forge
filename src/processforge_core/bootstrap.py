@@ -8,13 +8,22 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
+    from .agents.process_events import ProcessEventRecorder
+    from .common.properties import CoreProperties
+    from .configuration import ConfigurationProvider, ProjectPFConfig
     from .diagnostics import Logger
-    from .work.records import CurrentWorkService
-    from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
+    from .ports import (
+        ProcessDefinitionReadPort,
+        ProjectSnapshotReadPort,
+        WorkContextReadPort,
+        WorkRecordReadPort,
+    )
+    from .presentation.work_summaries import WorkSummaryRenderer
     from .process_execution import ProcessExecutionService
+    from .work.records import CurrentWorkService
 
 LEGACY_CORE_MODULE_NAME = "processforge_core._legacy_processforge"
 LEGACY_PUBLIC_MODULE_NAME = "processforge"
@@ -26,6 +35,34 @@ class RuntimeBootstrap:
     core: ModuleType
     host: ModuleType
     service: ModuleType
+    # Instance composition preserves the original dataclass field contract.
+    _process_events: ClassVar[ProcessEventRecorder | None] = None
+    _work_summaries: ClassVar[WorkSummaryRenderer | None] = None
+
+    def configuration_provider(
+        self,
+        *,
+        device_config_path: Path | None = None,
+        workplace_root: Path | None = None,
+        project_root: Path | None = None,
+        context_overrides: ProjectPFConfig | None = None,
+    ) -> ConfigurationProvider:
+        """Use the same cold builder without starting Runtime services."""
+        from .composition import build_configuration_provider
+
+        return build_configuration_provider(
+            device_config_path=device_config_path,
+            workplace_root=workplace_root,
+            project_root=project_root,
+            context_overrides=context_overrides,
+        )
+
+    @property
+    def properties(self) -> CoreProperties:
+        """Properties of the same Core distribution loaded by this bootstrap."""
+        from .composition import build_core_properties
+
+        return build_core_properties()
 
     def current_work_service(self, project_root: Path) -> CurrentWorkService:
         from .composition import build_current_work_service
@@ -33,7 +70,11 @@ class RuntimeBootstrap:
         return build_current_work_service(project_root)
 
     def process_execution_service(
-        self, project_root: Path, workplace_root: Path | None, *, observer: Logger | None = None,
+        self,
+        project_root: Path,
+        workplace_root: Path | None,
+        *,
+        observer: Logger | None = None,
         records: WorkRecordReadPort | None = None,
         context: WorkContextReadPort | None = None,
         definitions: ProcessDefinitionReadPort | None = None,
@@ -41,7 +82,18 @@ class RuntimeBootstrap:
     ) -> ProcessExecutionService:
         from .composition import build_process_execution_service
 
-        return build_process_execution_service(project_root, workplace_root, self.core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots)
+        return build_process_execution_service(
+            project_root,
+            workplace_root,
+            self.core,
+            observer=observer,
+            records=records,
+            context=context,
+            definitions=definitions,
+            snapshots=snapshots,
+            events=self._process_events,
+            summaries=self._work_summaries,
+        )
 
 
 def _repo_root_from(caller_file: str | Path) -> Path:
@@ -61,7 +113,10 @@ def _ensure_sys_path(path: Path) -> None:
 def _cached_legacy_core(script_path: Path) -> ModuleType | None:
     for name in (LEGACY_CORE_MODULE_NAME, LEGACY_PUBLIC_MODULE_NAME):
         module = sys.modules.get(name)
-        if isinstance(module, ModuleType) and Path(getattr(module, "__file__", "")).resolve() == script_path:
+        if (
+            isinstance(module, ModuleType)
+            and Path(getattr(module, "__file__", "")).resolve() == script_path
+        ):
             sys.modules[LEGACY_CORE_MODULE_NAME] = module
             sys.modules[LEGACY_PUBLIC_MODULE_NAME] = module
             return module
@@ -90,6 +145,22 @@ def _load_legacy_core(repo_root: Path) -> ModuleType:
     return module
 
 
+def build_runtime_bootstrap(
+    repo_root: Path, core: ModuleType, host: ModuleType, service: ModuleType
+) -> RuntimeBootstrap:
+    """Wire Work publication to the Core already loaded by this entry point."""
+    from .agents.process_events import ProcessEventRecorder
+
+    runtime = RuntimeBootstrap(
+        repo_root=repo_root,
+        core=core,
+        host=host,
+        service=service,
+    )
+    object.__setattr__(runtime, "_process_events", ProcessEventRecorder())
+    return runtime
+
+
 def bootstrap_runtime(caller_file: str | Path) -> RuntimeBootstrap:
     repo_root = _repo_root_from(caller_file)
     _ensure_sys_path(repo_root / "src")
@@ -97,9 +168,8 @@ def bootstrap_runtime(caller_file: str | Path) -> RuntimeBootstrap:
     core = _load_legacy_core(repo_root)
     host = importlib.import_module("pf_runtime.host")
     service = importlib.import_module("pf_runtime.service")
-    return RuntimeBootstrap(
-        repo_root=repo_root,
-        core=core,
-        host=host,
-        service=service,
-    )
+    runtime = build_runtime_bootstrap(repo_root, core, host, service)
+    from .presentation.work_summaries import WorkSummaryRenderer
+
+    object.__setattr__(runtime, "_work_summaries", WorkSummaryRenderer())
+    return runtime

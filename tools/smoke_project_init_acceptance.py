@@ -21,8 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge_core.resources.local_search import maintenance_tick, search
+# Capture the trusted entry before Core imports in this adapter smoke.
 import processforge as core
+from processforge_core.resources.local_search import maintenance_tick, search
 from pf_runtime.session_read import session_context_payload
 
 

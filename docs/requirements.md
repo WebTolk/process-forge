@@ -6,25 +6,35 @@ Runtime, MCP, Codex hooks, or a manually opened Agent Ledger session.
 
 ## Python and libraries
 
-Python **3.11+ is recommended**. Current acceptance evidence uses CPython
-**3.14.3 on Windows**; it does not certify every Python version or operating
-system combination. Parsing the source with an older Python grammar is not a
-substitute for running the relevant tests on that interpreter.
+Use Python **3.11+**. The public source checks run on Python 3.11 on Windows
+and Ubuntu. A separate Windows device report records CPython 3.14.3 and its
+SQLite version. These observations cover the combinations actually exercised.
+[CI matrix](../.github/workflows/repository-checks.yml) · [Device report](https://github.com/WebTolk/process-forge/issues/110)
 
 | Component | Requirement and purpose |
 | --- | --- |
-| PyYAML | `PyYAML>=6.0`, the only external Python dependency in `requirements.txt`; reads and writes YAML configuration and artifacts. |
+| PyYAML | `PyYAML>=6.0`; reads and writes YAML configuration and artifacts. |
+| jsonschema | Runtime JSON Schema validation; install the complete `requirements.txt`. |
 | `sqlite3` | A working standard-library module and SQLite build with UPSERT support. Local event and raw-hook journals use transactions, WAL and `synchronous=FULL`. No separate database server is needed. |
 | SQLite FTS5 | Required for indexed full-text resource search. PF probes this capability; unavailable FTS5 is reported as `degraded` / `fts5_unavailable`. A working journal does not prove FTS5 is available. |
 | `ssl` and CA trust | Required for HTTPS downloads and HTTPS egress. Python must provide SSL support and trust the destination's certificate chain. Windows egress uses operating system certificate stores. |
 | `zlib` and `zipfile` | Needed to read compressed release/update archives and create DEFLATE ZIP packages. A reduced Python build without `zlib` is insufficient for these operations. |
-| `venv` and `pip` | Used to create an isolated environment and install PyYAML. Some OS distributions package these separately; provision them before setup. They are setup tools, not background services. |
+| `venv` and `pip` | Create an isolated environment and install the packages listed in `requirements.txt`. Some distributions package these setup tools separately. |
 | Windows `ctypes` | Required by Windows file-security preservation, process diagnostics and native egress support. Use Python with working Windows standard-library bindings. |
 
 The CLI and MCP/HTTP services use Python's standard library; an external MCP
 SDK, web framework, Node.js, PHP or PowerShell is not a general CLI dependency.
 
 ## Storage and permissions
+
+Linux owned workers additionally require user/PID namespaces, a readable procfs
+in the controller PID namespace, and Python/kernel support for `pidfd_open` and
+`pidfd_send_signal`. Kernel, container, seccomp or AppArmor policy may deny these
+facilities even when installed. PF probes a real owned launch before selecting
+fresh SQL execution storage; unsupported environments remain fail-closed. No PF
+daemon or privileged cgroup setup is required. See
+[Linux owned execution](concepts/linux-owned-execution.md) for the ownership model,
+diagnostics and qualification limits.
 
 Keep three locations separate: the replaceable ProcessForge distribution, the
 mutable workplace, and each project. Use a UTF-8 capable environment. The account
@@ -65,7 +75,7 @@ not create a workplace, project, journal or service:
 
 ```bash
 python --version
-python -m pip show PyYAML
+python -m pip show PyYAML jsonschema
 python -c "import sqlite3, ssl, zlib, venv, yaml; print('PyYAML', yaml.__version__); print('SQLite', sqlite3.sqlite_version); print('SSL', ssl.OPENSSL_VERSION); print('zlib', zlib.ZLIB_VERSION)"
 python -c "import sqlite3; db = sqlite3.connect(':memory:'); db.execute('CREATE TABLE probe (id INTEGER PRIMARY KEY, value TEXT)'); db.execute('INSERT INTO probe VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET value=excluded.value', ('ok',)); db.execute('CREATE VIRTUAL TABLE search_probe USING fts5(content)'); db.close(); print('UPSERT and FTS5 available')"
 python bin/pf.py version

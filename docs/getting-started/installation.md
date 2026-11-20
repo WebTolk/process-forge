@@ -104,6 +104,25 @@ the operator chooses the relevant workflow; ordinary project work does not
 install, start, restart or repair infrastructure. See
 [Runtime and MCP startup](runtime-autostart.md).
 
+## Optional PF App Server window
+
+An operator can run a foreground server from the installed distribution root:
+
+```bash
+python bin/pf-server.py run --workplace ../pf-workplace
+```
+
+On a TTY, the server automatically displays the PF logo, running Core version
+and PID; `--console` is optional. Closing this window stops the foreground
+server. `--minimized` requests minimization only for a verified dedicated window
+on supported Windows classic console or Linux X11 backends. It does not create
+a terminal or launch the separate read-only monitor. `pythonw.exe` is windowless,
+not minimized; detached `runtime start` is another launch mode. Read the
+[server window limitations](runtime-autostart.md#foreground-server-window)
+before configuring autostart. Updating a source checkout does not update an
+already installed Core; check the flags with
+`python bin/pf-server.py run --help` from that installation.
+
 ## Development and release verification
 
 These are broader checks for a source checkout or staged release, rather than

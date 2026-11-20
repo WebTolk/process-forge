@@ -113,9 +113,11 @@ def validate_layout(validator: ModuleType, fixture: Path, *, root_agents: bool) 
         fail("hidden instructions were incorrectly aliased to the missing source root")
 
 
-def validate_private_project_exclusion(validator: ModuleType, release: ModuleType, fixture: Path) -> None:
+def validate_private_project_exclusion(validator: ModuleType, fixture: Path) -> None:
+    from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
     build_fixture(fixture, root_agents=True)
-    policy = release
+    policy = ReleaseSourcePolicy()
     before_inventory = validator.build_inventory(fixture)
     before_sources = policy.release_source_files(fixture)
     for name in ("AGENTS.md", "process-forge.yaml", "hooks.yaml", "processes/custom/private.yaml"):
@@ -168,12 +170,14 @@ def validate_line_ending_canonicalization(validator: ModuleType, release: Module
 
 def validate_current_release_parity(root: Path, validator: ModuleType) -> None:
     release = load_release_module(root)
-    patterns = release.release_ignore_patterns(root)
+    from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+    patterns = ReleaseSourcePolicy().release_ignore_patterns(root)
     shipped_paths = {
         archive_path
-        for archive_path, _source_path in release.release_source_files(root)
-        if not release.release_ignore_match(archive_path, patterns)
-        and not release.release_path_is_forbidden(archive_path)
+        for archive_path, _source_path in ReleaseSourcePolicy().release_source_files(root)
+        if not ReleaseSourcePolicy().release_ignore_match(archive_path, patterns)
+        and not ReleaseSourcePolicy().release_path_is_forbidden(archive_path)
     }
     shipped_paths.discard(validator.PUBLIC_INVENTORY.as_posix())
     checksum_paths = {
@@ -202,7 +206,7 @@ def main() -> int:
         temp_root = Path(temp_dir)
         validate_layout(validator, temp_root / "source-layout", root_agents=False)
         validate_layout(validator, temp_root / "archive-layout", root_agents=True)
-        validate_private_project_exclusion(validator, release, temp_root / "private-project")
+        validate_private_project_exclusion(validator, temp_root / "private-project")
         validate_stale_detection(validator, temp_root / "stale-detection")
         validate_line_ending_canonicalization(validator, release, temp_root / "line-endings")
 

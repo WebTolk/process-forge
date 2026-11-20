@@ -283,11 +283,14 @@ protect the selected payload. Use the native PF sequence:
 ```
 
 Read the changelog and intended destination before applying. Preserve backups
-and verify package resolution afterwards. The tested Core revision `8ebacb61`
-restores package files on `update rollback` but leaves the installed-subject
-version at the newer value. After such a rollback, compare both versions and
-reconcile the exact record before another update check. A newer Core should be
-checked for this limitation rather than assuming it is fixed.
+and verify package resolution afterwards. Package updates save the selected
+installed-subject record beside the payload backup. `update rollback` restores
+that record (including prior absence) while preserving other registry entries.
+Conflicting selected metadata and legacy backups without a metadata preimage
+are refused; preserve those backups for explicit recovery. A failed payload or
+metadata operation is not a completed rollback: retain its receipt and retry
+only through the supported guarded path. Verify both payload and registry versions
+before checking for another update.
 
 Before declaring the device ready, record source/Core revisions, interpreter and
 tool versions, package versions/hashes, actual directories, passed doctor checks,

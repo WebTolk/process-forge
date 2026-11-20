@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 import http.client
 import json
 import os
 import signal
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -18,7 +20,10 @@ import urllib.request
 from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
+# Capture before raw_ingress_kernel imports Core.
+import processforge  # noqa: E402, F401
 from pf_runtime.raw_ingress_kernel import _strip_windows_extended_prefix
+import smoke_worker_run_shell as worker
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,6 +73,37 @@ def http_json(method: str, url: str, *, bearer: str | None = None, payload: dict
             return exc.code, json.loads(text) if text.strip() else {}
         except json.JSONDecodeError:
             return exc.code, {"error": text}
+
+
+def check_concurrent_registrations(endpoint: str, bearer: str, project_a: Path, project_b: Path) -> None:
+    projects = [project_a, project_b] * 6
+
+    def register(item: tuple[int, Path]) -> float:
+        index, project = item
+        session = f"parallel-{index}"
+        started = time.monotonic()
+        try:
+            code, body = http_json(
+                "POST", endpoint + "/session/register", bearer=bearer,
+                payload={"session_id": session, "agent_id": f"parallel-agent-{index}", "project_root": str(project)},
+            )
+        except OSError as exc:
+            raise AssertionError(f"{session} failed after {time.monotonic() - started:.3f}s: {exc}") from exc
+        if code != 200 or body.get("session_id") != session:
+            raise AssertionError(f"{session} registration returned HTTP {code}: {body.get('error')}")
+        return time.monotonic() - started
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        durations = list(executor.map(register, enumerate(projects)))
+    for index, expected_project in enumerate(projects):
+        session = f"parallel-{index}"
+        code, body = http_json(
+            "POST", endpoint + "/project-state", bearer=bearer, payload={"session_id": session}
+        )
+        project = body.get("project")
+        if code != 200 or not isinstance(project, dict) or Path(str(project.get("project_root"))) != expected_project:
+            raise AssertionError(f"{session} did not resolve to its registered project (HTTP {code})")
+    print(f"PASS: 12 session registrations with six clients, slowest response {max(durations):.3f}s", flush=True)
 
 
 def declared_oversized_request(endpoint: str, bearer: str) -> tuple[int, dict[str, object]]:
@@ -134,6 +170,28 @@ def stop_runtime(workplace: Path) -> None:
     pf("runtime", "stop", "--workplace", str(workplace), timeout=30)
 
 
+def check_doctor_versions(workplace: Path, client_root: Path) -> None:
+    from contextlib import redirect_stdout
+    from io import StringIO
+    from unittest.mock import patch
+
+    from processforge_core.common.properties import CoreProperties
+
+    pf("runtime", "doctor", "--workplace", str(workplace))
+    client_root.mkdir()
+    version = "0.0.0-mismatch"
+    (client_root / "VERSION").write_text(version + "\n", encoding="utf-8")
+    client = CoreProperties.from_distribution(client_root)
+    if client.installed().version != version:
+        raise AssertionError("doctor fixture could not read the alternative client version")
+    output = StringIO()
+    with patch("processforge_core.composition.build_core_properties", return_value=client):
+        with redirect_stdout(output):
+            status = processforge.main(["runtime", "doctor", "--workplace", str(workplace)])
+    if status != 1 or "FAIL: runtime core version compatible" not in output.getvalue():
+        raise AssertionError(f"doctor missed a running core version mismatch: {output.getvalue()}")
+
+
 def assert_runtime_ready(workplace: Path) -> dict[str, object]:
     status = json.loads(pf("runtime", "status", "--workplace", str(workplace), "--json").stdout)
     if status.get("status") != "ready" or status.get("health") != "ready":
@@ -158,19 +216,48 @@ def pid_liveness_checks() -> None:
     with patch.object(core.os, "name", "nt"):
         for output, expected, label in cases:
             with patch.object(core.subprocess, "run", return_value=SimpleNamespace(stdout=output, returncode=0)) as probe:
-                if core.process_pid_running(4321) is not expected:
+                from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+                if WorkerObservationInputService().process_pid_running(4321) is not expected:
                     raise AssertionError(f"PID liveness mismatch: {label}")
                 argv = probe.call_args.args[0]
                 if argv != ["tasklist", "/FI", "PID eq 4321", "/FO", "CSV", "/NH"]:
                     raise AssertionError(f"PID filter missing: {argv}")
                 if probe.call_args.kwargs.get("text"):
                     raise AssertionError("tasklist must not use the interpreter's locale decoder")
-    with patch.object(core.os, "name", "posix"):
+    with patch.object(core.os, "name", "posix"), patch.object(sys, "platform", "darwin"):
         for outcome, expected in ((None, True), (ProcessLookupError(), False), (PermissionError(), True)):
             with patch.object(core.os, "kill", side_effect=outcome):
-                if core.process_pid_running(4321) is not expected:
+                from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+                if WorkerObservationInputService().process_pid_running(4321) is not expected:
                     raise AssertionError("POSIX process probe behavior changed")
-    print("PASS: localized tasklist bytes and exact PID column; POSIX behavior preserved")
+    print("PASS: localized tasklist PID and portable signal probe")
+    if sys.platform.startswith("linux") and hasattr(os, "pidfd_open"):
+        from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+        with subprocess.Popen([sys.executable, "-c", "pass"]) as child:
+            os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
+            if WorkerObservationInputService().process_pid_running(child.pid):
+                raise AssertionError("exited Linux child still counted as running before wait")
+        print("PASS: Linux recognizes an exited process before its parent reaps it")
+
+
+@contextmanager
+def smoke_workspace():
+    parent = Path(tempfile.gettempdir()).resolve()
+    root = Path(tempfile.mkdtemp(prefix="pf-long-lived-runtime-", dir=parent))
+    try:
+        yield root
+    except BaseException:
+        # Keep evidence and inputs if a worker or Runtime could not be stopped.
+        print("FAIL: long-lived Runtime fixture retained", file=sys.stderr)
+        raise
+    else:
+        resolved = root.resolve()
+        if resolved.parent != parent or not resolved.name.startswith("pf-long-lived-runtime-"):
+            raise AssertionError("temporary cleanup target escapes the smoke workspace")
+        shutil.rmtree(resolved)
 
 
 def main() -> int:
@@ -183,10 +270,11 @@ def main() -> int:
         raise AssertionError("Win32 extended drive path normalization failed")
     if _strip_windows_extended_prefix(r"\\?\UNC\server\share\runtime") != r"\\server\share\runtime":
         raise AssertionError("Win32 extended UNC path normalization failed")
-    with tempfile.TemporaryDirectory(prefix="pf-long-lived-runtime-", ignore_cleanup_errors=True) as temp:
-        root = Path(temp)
+    with smoke_workspace() as root:
         workplace = root / "workplace"
         runtime_started = False
+        worker_attempted = False
+        worker_task = "runtime-observed-worker"
         pf("workplace-init", "--workplace", str(workplace), "--apply")
         pf("workplace-mode", "set", "--workplace", str(workplace), "--director-enabled", "true", "--director-office-enabled", "true")
         project_a = make_project(root, "project-a", workplace, "organized")
@@ -224,18 +312,7 @@ def main() -> int:
 
             pf("runtime", "session-register", "--workplace", str(workplace), "--session", "sess-a", "--agent", "codex-a", "--project-root", str(project_a), "--json")
             pf("runtime", "session-register", "--workplace", str(workplace), "--session", "sess-b", "--agent", "codex-b", "--project-root", str(project_b), "--json")
-            registrations = [
-                {"session_id": f"parallel-{index}", "agent_id": f"parallel-agent-{index}", "project_root": str(project_a if index % 2 == 0 else project_b)}
-                for index in range(12)
-            ]
-            with ThreadPoolExecutor(max_workers=6) as executor:
-                results = list(executor.map(lambda payload: http_json("POST", endpoint + "/session/register", bearer=token(workplace), payload=payload), registrations))
-            if any(code != 200 for code, _body in results):
-                raise AssertionError(f"concurrent session registration failed: {results}")
-            parallel_a = json.loads(pf("runtime", "project-state", "--workplace", str(workplace), "--session", "parallel-0", "--json").stdout)
-            parallel_b = json.loads(pf("runtime", "project-state", "--workplace", str(workplace), "--session", "parallel-1", "--json").stdout)
-            if parallel_a["project"]["project_id"] == parallel_b["project"]["project_id"]:
-                raise AssertionError("concurrent session registration mixed project bindings")
+            check_concurrent_registrations(endpoint, token(workplace), project_a, project_b)
 
             event_a = write_event(
                 root / "event-a.json",
@@ -280,9 +357,15 @@ def main() -> int:
             if code != 403:
                 raise AssertionError(f"cross-project session event returned {code}, expected 403: {body}")
 
-            active_worker = project_a / ".pf" / "runtime" / "agent-runs" / "run-a" / "worker-a" / "status.json"
-            active_worker.parent.mkdir(parents=True, exist_ok=True)
-            active_worker.write_text(json.dumps({"status": "running"}, indent=2) + "\n", encoding="utf-8")
+            pf("run-create", "--project-root", str(project_a), "--id", worker.RUN_ID,
+               "--title", "Runtime observed worker", "--process", "task-batch-execution", "--apply")
+            worker.create_task(project_a, worker_task, title="Runtime observed worker")
+            driver = worker.driver_yaml_path(
+                project_a, "runtime-observed-worker", sleep_seconds=300, timeout_seconds=300
+            )
+            worker_attempted = True
+            worker.start_task(worker_task, project_a, driver=driver)
+            worker.wait_status(project_a, worker_task, "running")
             if int(assert_runtime_ready(workplace).get("active_workers") or 0) < 1:
                 raise AssertionError("runtime status did not report active worker state")
 
@@ -291,10 +374,7 @@ def main() -> int:
             if "tick" not in director_results or "skipped_simple" not in director_results:
                 raise AssertionError(f"runtime scheduler did not distinguish organized/simple projects: {tick}")
 
-            old_state = service_state(workplace)
-            old_state["processforge_core_version"] = "0.0.0-mismatch"
-            (runtime_dir(workplace) / "service.json").write_text(json.dumps(old_state, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            pf("runtime", "doctor", "--workplace", str(workplace), expect=1)
+            check_doctor_versions(workplace, root / "other-client")
 
             stop_runtime(workplace)
             runtime_started = False
@@ -390,8 +470,13 @@ def main() -> int:
             pf("events-validate", "--project-root", str(project_a))
             pf("events-validate", "--project-root", str(project_b))
         finally:
-            if runtime_started:
-                stop_runtime(workplace)
+            try:
+                if worker_attempted:
+                    worker.stop_if_running(project_a, worker_task)
+                    worker.ensure_stopped(project_a, worker_task)
+            finally:
+                if runtime_started:
+                    stop_runtime(workplace)
 
     print("PASS: long-lived runtime smoke")
     return 0

@@ -17,6 +17,14 @@ If a project authorizes more than one Process, `pf.work.start` can return
 `process_choice_required` candidates; the caller must choose one of the offered
 process ids. `default` is a recommendation only.
 
+In a Forge workplace, the CLI sends `work-start`, `work-state`,
+`work-transition`, `work-cancel`, `work-search`, `work-resolve` and exact Work
+continuation requests to the running Runtime. The CLI reads operator files
+such as `--scope-file`, `--egress-intent` and `--evidence-file` locally. If
+the Runtime is stopped, the CLI reports `forge_runtime_unavailable`. After a
+connection drops during a mutation, inspect the Work state before retrying.
+Garage executes these commands locally and supports offline use.
+
 `pf.work.state` exposes only the current execution contract: Process, Run,
 Assignment, stage, required inputs, obligations, produced artifacts, entry and
 exit gates, allowed outcomes, evidence, and blockers.
@@ -75,9 +83,58 @@ call. Check the Assignment and capsule permissions before writing an artifact.
 For an existing Work, use [continuation](work-continuation.md) rather than
 rewording the objective in another start call. Gate status accepts
 `passed`, `approved`, or justified `not_applicable`; `pass` does not satisfy it.
-Artifact evidence identifies an existing file; gate evidence is an attestation
+Artifact evidence may identify an existing file; gate evidence is an attestation
 of a check actually performed, not independent proof of semantic quality.
 Never invent checks or use `not_applicable` merely to bypass a required gate.
+
+## Evidence guidance
+
+The shared CLI/MCP Work projection includes additive `evidence_guidance`.
+For active Work with valid pinned context and ready permissions it lists
+unsatisfied requirements, exact accepted kinds, ID keys and statuses, examples,
+and explanations of existing diagnostics. Its `transition_template` preserves
+the returned selectors. Replace placeholders and supply truthful evidence only
+after doing the work. With multiple outcomes, choose an offered outcome yourself.
+Terminal, invalid or blocked Work receives no actionable template.
+
+The following IDs are illustrative; use the IDs from your own response:
+
+| Requirement | Positive record | Negative record and reason |
+| --- | --- | --- |
+| Artifact `change` | `{"kind":"artifact","artifact_id":"change","status":"ready"}` | `{"kind":"gate","id":"change","status":"approved"}` has the wrong kind. |
+| Input `brief` | `{"kind":"input","input_id":"brief","status":"present"}` | `{"kind":"input","id":"brief-typo","status":"ready"}` has the wrong ID. |
+| Evidence `review` | `{"kind":"attestation","evidence_id":"review","status":"ready"}` | `{"kind":"attestation","artifact_id":"review","status":"ready"}` uses the wrong ID field. |
+| Gate `build-ready` | `{"kind":"gate","gate_id":"build-ready","status":"approved"}` | `{"kind":"gate","id":"build-ready","status":"pass"}` has an unacceptable status. |
+| Justified exception | `{"kind":"gate","gate_id":"optional-check","status":"not_applicable","reason":"No UI changed","evidence":["reviewed-diff"]}` | The same record without a reason or with an empty supporting `evidence` list is rejected. |
+
+Artifact, input and required-evidence statuses accept `ready`, `present`,
+`passed`, `approved`, and justified `not_applicable`. Gates accept only `passed`,
+`approved`, and justified `not_applicable`. Artifact IDs use `artifact_id` or
+`id`; inputs also accept artifact records and `input_id`, `artifact_id` or
+`id`; required evidence accepts kinds `attestation`/`evidence` and `evidence_id`
+or `id`. Gate matching uses a nonempty `gate_id` before its fallback `id`.
+The latest matching record controls readiness, including a later failing record.
+Inputs/entry gates use accumulated evidence; outputs/exit gates use current-stage
+evidence. A saved supplemental or mismatched record may remain in evidence without
+satisfying a requirement; `unmatched_evidence` is advisory, not a new rejection.
+
+`conditional_next_entry_gates` comes from the pinned process and each offered
+outcome. These gates may already be satisfied by accumulated evidence; guidance
+does not evaluate them or select a route. If a transition reports
+`entry_gate_evidence_missing`, use the corresponding conditional example.
+Required handoff text belongs in `transition.notes`.
+
+A file `path` is optional under the existing evidence contract. If supplied,
+it must identify an existing regular file within the authorized project root;
+`missing.md`, `../outside.md`, a directory, or an absolute path is invalid.
+PF computes the digest from that file, replacing any caller-supplied `sha256`.
+A missing saved digest or a file changed since submission leaves the requirement
+unsatisfied. Review and resubmit the actual file; a hint never repairs or accepts
+it. Normalization failures retain their existing blocker codes and add
+`evidence_guidance.request_errors` explanations with evidence indexes.
+
+Guidance performs no file access, grants no scope, and changes no evidence or
+transition decisions. All examples use the same matcher vocabulary as readiness.
 
 The successful response is `stage_transitioned` here. When the response includes
 the complete current Work projection, use it for the next action. Call
@@ -96,6 +153,60 @@ Manual batch record commands such as `run-create` and `task-complete` serve a
 separate [advanced workflow](../getting-started/task-batch-workflow.md). Do not
 add `run-complete` or `run-summary` to close this governed Work: the final
 transition owns completion. Host session lifecycle remains separate.
+
+## Advisory authoring review
+
+New evidence submissions can include a text artifact and optional declarations:
+
+```json
+{
+  "kind": "artifact",
+  "artifact_id": "test-report",
+  "status": "ready",
+  "path": ".pf/artifacts/current-test-report.md",
+  "authoring": {
+    "required_sections": ["Summary", "Results"],
+    "placeholders": ["{{result}}"]
+  }
+}
+```
+
+PF records `evidence.authoring_review` with advisory findings, coverage and the
+digest of inspected bytes. It replaces any caller-supplied review. For Markdown,
+plain text and rST files up to 1 MiB, it checks strict UTF-8, common artifact-template
+markers and explicit literal placeholders, required Markdown headings/content,
+and simple inline Markdown file links. Declarations accept at most 32 nonempty
+strings of up to 200 characters per list; invalid declarations produce warnings.
+Missing sections and `<summary>` left as content are reported. Fenced, inline and
+indented code are excluded from prose checks; a code-only section can be filled.
+No language or ASCII-percentage heuristic determines quality.
+
+Local link checks probe existence only within the authorized project boundary;
+they do not read targets or fetch external URLs. At most 64 simple inline links
+and 32 findings are retained per submission. `limits_reached` records any reached
+limit even when findings are truncated. The limited Markdown check does not validate
+remote URLs, anchors or reference-style links. Unsupported, oversized,
+changed-during-inspection or unreadable files have
+explicit skipped/partial coverage, never a clean-content claim.
+
+Existing structural `not_applicable` validation remains unchanged. A concrete
+reason with supporting evidence is accepted. Bare `N/A`, `not_applicable` or
+`не применимо` receives a request for context; known unfilled reason/support
+markers also receive warnings. These are advisory observations, not a decision
+about applicability. A document consisting only of generic N/A prose also receives
+a warning; a concrete explanation with evidence is not classified as a bare reply.
+These checks do not establish the truth of the justification. All prior
+path/digest/status rules still
+apply, and authoring warnings add no new transition blocker.
+
+The shared CLI/MCP `authoring_review` projection shows stored observations for
+`current_stage` and `last_completed_stage`, each with stage ID and evidence index.
+Warnings therefore remain visible after a successful transition. Inspection occurs
+only on new submission; reading state does not rescan or rewrite historical files
+or evidence. Legacy records without reviews are `not_recorded`. The inspected
+digest describes submission-time bytes; existing freshness diagnostics separately
+decide whether saved file evidence is still current. Review these warnings before
+submitting a corrected revision; automatic checks do not prove semantic quality.
 
 ## Internal iterations and nested work
 

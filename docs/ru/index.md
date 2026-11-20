@@ -35,6 +35,7 @@ workplace; репозиторий хранит состояние процесс
 
 ## Для ИИ-агентов
 
+- [Архитектурные решения и их пересмотр](architecture/README.md)
 - [Требования и необязательная инфраструктура](requirements.md)
 - [Командный справочник агента и промпты](getting-started/agent-prompts.md)
 - [Промпт агента для пошаговой настройки workplace](../../prompts/guided-workplace-setup-agent.md)
@@ -113,6 +114,7 @@ workplace; репозиторий хранит состояние процесс
 - [Чтение документов и границы кэша](concepts/document-reads.md)
 - [Журналы SQLite и их перенос](concepts/hook-journal-sqlite.md)
 - [Доказательства аудита разработки](audits/canonical-work-selection-20261016.md)
+- [Замеры на двух устройствах и аудит документации ядра, ноябрь 2026](audits/core-measurements-20261120.md)
 - [Проверки (EN)](../validation/validation.md)
 
 ## Порядок слоёв

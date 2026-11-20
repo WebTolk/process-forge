@@ -60,16 +60,30 @@ def install_payload(current: dict[str, Any], adapter: Path) -> tuple[dict[str, A
         groups = hooks.setdefault(event, [])
         if not isinstance(groups, list):
             raise SystemExit(f"FAIL: hooks.{event} is not an array; no changes were made")
-        matching = next((group for group in groups if isinstance(group, dict) and str(group.get("matcher") or "") == ""), None)
-        if matching is None:
-            matching = {"hooks": []}
-            groups.append(matching)
-        handlers = matching.setdefault("hooks", [])
-        if not isinstance(handlers, list):
-            raise SystemExit(f"FAIL: hooks.{event}.hooks is not an array; no changes were made")
-        if not any(is_managed(item, adapter) for item in handlers):
-            handlers.append(managed_handler(adapter, event))
-            changed.append(event)
+        matching = [
+            group
+            for group in groups
+            if isinstance(group, dict) and str(group.get("matcher") or "") == ""
+        ]
+        existing: list[dict[str, Any]] = []
+        for group in matching:
+            handlers = group.get("hooks", [])
+            if not isinstance(handlers, list):
+                raise SystemExit(
+                    f"FAIL: hooks.{event}.hooks is not an array; no changes were made"
+                )
+            existing.extend(item for item in handlers if is_managed(item, adapter))
+        if len(existing) > 1 or any(item.get("type") != "command" for item in existing):
+            raise SystemExit(
+                f"FAIL: hooks.{event} has conflicting ProcessForge handlers; no changes were made"
+            )
+        if existing:
+            continue
+        if not matching:
+            matching.append({"hooks": []})
+            groups.append(matching[0])
+        matching[0].setdefault("hooks", []).append(managed_handler(adapter, event))
+        changed.append(event)
     return result, changed
 
 
@@ -130,8 +144,13 @@ def main() -> int:
         raise SystemExit("FAIL: adapter path does not exist")
     current = load_config(target)
     if args.action == "status":
-        installed = [event for event, groups in current.get("hooks", {}).items() if isinstance(groups, list) and any(isinstance(group, dict) and any(is_managed(item, adapter) for item in group.get("hooks", []) if isinstance(group.get("hooks", []), list)) for group in groups)]
-        print(json.dumps({"status": "ok", "target": str(target), "adapter": str(adapter), "registered_events": sorted(installed), "complete": set(installed) == set(EVENTS)}, ensure_ascii=False))
+        installed = [event for event, groups in current.get("hooks", {}).items() if isinstance(groups, list) and any(isinstance(group, dict) and any(is_managed(item, adapter) and item.get("type") == "command" for item in group.get("hooks", []) if isinstance(group.get("hooks", []), list)) for group in groups)]
+        try:
+            _payload, changed = install_payload(current, adapter)
+            complete = not changed and set(installed) == set(EVENTS)
+        except SystemExit:
+            complete = False
+        print(json.dumps({"status": "ok", "target": str(target), "adapter": str(adapter), "registered_events": sorted(installed), "complete": complete}, ensure_ascii=False))
         return 0
     payload, changed = install_payload(current, adapter) if args.action == "install" else remove_payload(current, adapter)
     result: dict[str, Any] = {"action": args.action, "target": str(target), "adapter": str(adapter), "changed_events": changed, "applied": bool(args.apply)}

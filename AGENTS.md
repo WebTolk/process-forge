@@ -5,6 +5,11 @@ These are mandatory repository instructions for every coding agent. Read
 [CONTRIBUTING.ru.md](CONTRIBUTING.ru.md). Apply this workflow across sessions and
 devices without asking the user to repeat it.
 
+Read the [architecture decisions](docs/architecture/README.md)
+([Russian](docs/ru/architecture/README.md)) for the source revision you are
+changing or reviewing. Its reconciliation report explains which historical
+decisions have been replaced and which implementation gaps are still open.
+
 For a new device, follow [contributor agent setup](docs/contributors/agent-setup.md)
 ([Russian](docs/ru/contributors/agent-setup.md)) for the shared knowledge profile,
 verified package installation, Python QA and MCP configuration. Use the pinned
@@ -58,9 +63,9 @@ own ignored `.pf` state before substantive governed work.
   useful prior failures alongside corrected runs. Starting a reviewer or receiving
   a successful tool exit does not itself prove semantic acceptance.
 - After a permitted merge, mirror the resulting `dev` commit to `gitverse` and
-  read both remote refs back. Use existing token credentials without putting them
-  in URLs, command arguments, logs or committed files. Do not force-push shared
-  branches. Publish issue summaries according to the selected task mode and
+  read both remote refs back. Keep credentials out of URLs, command arguments,
+  logs and committed files. Do not force-push shared branches.
+  Publish issue summaries according to the selected task mode and
   authorized scope; no automatic issue synchronizer is assumed.
 
 More specific `AGENTS.md` files refine source organization and validation; they

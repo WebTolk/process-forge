@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from pf_cli.forge_work import ForgeWorkClient
     from processforge_core.process_execution import ProcessExecutionService
     from processforge_core.work.resources import WorkResourceService
 
@@ -28,7 +29,9 @@ class WorkStartCommand:
     def __init__(
         self,
         *,
-        execution_factory: Callable[[Path, str | None], ProcessExecutionService],
+        execution_factory: Callable[
+            [Path, str | None], ProcessExecutionService | ForgeWorkClient
+        ],
         require_flow_root: Callable[[Path], Path],
         dump_yaml: Callable[[dict[str, Any]], str],
     ) -> None:
@@ -72,7 +75,9 @@ class WorkStateCommand:
     def __init__(
         self,
         *,
-        execution_factory: Callable[[Path, str | None], ProcessExecutionService],
+        execution_factory: Callable[
+            [Path, str | None], ProcessExecutionService | ForgeWorkClient
+        ],
         require_flow_root: Callable[[Path], Path],
         dump_yaml: Callable[[dict[str, Any]], str],
     ) -> None:
@@ -99,7 +104,9 @@ class WorkResourceReadCommand:
     def __init__(
         self,
         *,
-        resource_factory: Callable[[Path, str | None], WorkResourceService],
+        resource_factory: Callable[
+            [Path, str | None], WorkResourceService | ForgeWorkClient
+        ],
         require_flow_root: Callable[[Path], Path],
         dump_yaml: Callable[[dict[str, Any]], str],
     ) -> None:
@@ -124,7 +131,9 @@ class WorkTransitionCommand:
     def __init__(
         self,
         *,
-        execution_factory: Callable[[Path, str | None], ProcessExecutionService],
+        execution_factory: Callable[
+            [Path, str | None], ProcessExecutionService | ForgeWorkClient
+        ],
         require_flow_root: Callable[[Path], Path],
         dump_yaml: Callable[[dict[str, Any]], str],
     ) -> None:

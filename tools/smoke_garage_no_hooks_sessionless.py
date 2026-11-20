@@ -15,17 +15,26 @@ PF = ROOT / "tools" / "processforge.py"
 MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
 sys.path.insert(0, str(ROOT / "tools"))
 
-from garage_search_smoke_support import register_fixture_resource, run_cli, select_fixture_resource
 
-
-def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[str, object]:
-    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
+def call_mcp(
+    workplace: Path, name: str, arguments: dict[str, object]
+) -> dict[str, object]:
+    request = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {"name": name, "arguments": arguments},
+    }
     result = subprocess.run(
         [sys.executable, str(MCP), "--workplace", str(workplace)],
         cwd=ROOT,
+        check=False,
         text=True,
         encoding="utf-8",
-        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
+        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"})
+        + "\n"
+        + json.dumps(request)
+        + "\n",
         capture_output=True,
         timeout=120,
     )
@@ -40,6 +49,12 @@ def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[s
 
 
 def main() -> int:
+    from garage_search_smoke_support import (
+        register_fixture_resource,
+        run_cli,
+        select_fixture_resource,
+    )
+
     with tempfile.TemporaryDirectory(prefix="pf-garage-no-hooks-") as raw:
         root = Path(raw)
         workplace = root / "workplace"
@@ -52,20 +67,64 @@ def main() -> int:
             {"garage.md": "GarageNoHooksNeedle proves sessionless PF search."},
             title="Garage article",
         )
-        run_cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
-        shutil.rmtree(project / ".codex", ignore_errors=True)
-        select_fixture_resource(project, workplace, "fixture.search-nohooks", "garage-article")
+        run_cli(
+            "project-onboard",
+            "--project-root",
+            str(project),
+            "--workplace",
+            str(workplace),
+            "--type",
+            "generic",
+            "--apply",
+        )
+        hook_root = (project / ".codex").resolve()
+        assert hook_root.is_relative_to(project.resolve())
+        shutil.rmtree(hook_root, ignore_errors=True)
+        select_fixture_resource(
+            project, workplace, "fixture.search-nohooks", "garage-article"
+        )
 
         context = call_mcp(workplace, "pf.context", {"project_root": str(project)})
-        if context.get("kind") != "pf.context" or context.get("context", {}).get("status") != "fresh":
+        if (
+            context.get("kind") != "pf.context"
+            or context.get("context", {}).get("status") != "fresh"
+        ):
             raise AssertionError(context)
-        search = call_mcp(workplace, "pf.search", {"project_root": str(project), "query": "GarageNoHooksNeedle"})
-        if search.get("total") != 1 or search.get("results", [{}])[0].get("resource_id") != resource_id:
+        database = workplace / "runtime/search/local-resource-search.sqlite"
+        if database.exists():
+            raise AssertionError("context unexpectedly created the fixture index")
+        pending = call_mcp(
+            workplace,
+            "pf.search",
+            {"project_root": str(project), "query": "GarageNoHooksNeedle"},
+        )
+        if (
+            pending.get("search_status") == "fresh"
+            or pending.get("total") != 0
+            or database.exists()
+        ):
+            raise AssertionError(pending)
+        run_cli("search-index-maintain", "--workplace", str(workplace), "--apply")
+        search = call_mcp(
+            workplace,
+            "pf.search",
+            {"project_root": str(project), "query": "GarageNoHooksNeedle"},
+        )
+        if (
+            search.get("total") != 1
+            or search.get("results", [{}])[0].get("resource_id") != resource_id
+        ):
             raise AssertionError(search)
-        resolved = call_mcp(workplace, "pf.resolve", {"project_root": str(project), "resource_id": resource_id})
+        resolved = call_mcp(
+            workplace,
+            "pf.resolve",
+            {"project_root": str(project), "resource_id": resource_id},
+        )
         if resolved.get("resource", {}).get("status") != "available":
             raise AssertionError(resolved)
-        print("PASS: Garage context/search/resolve work without hooks, session, or daemon")
+        print(
+            "PASS: Garage context/search/resolve work without hooks, session, or daemon"
+        )
     return 0
 
 

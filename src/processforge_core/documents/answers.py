@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Any
 
+from ..common.privacy import SECRET_VALUE_PATTERNS
 from ..common.yaml_io import _parse_simple_yaml
-
-
-SECRET_VALUE_PATTERNS = [
-    re.compile(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}"),
-    re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
-]
 
 
 class AnswersDocumentReader:
@@ -27,9 +21,21 @@ class AnswersDocumentReader:
         if any(pattern.search(text) for pattern in SECRET_VALUE_PATTERNS):
             raise SystemExit("FAIL: answers file appears to contain a secret value")
         try:
-            import yaml  # type: ignore
+            import yaml
 
             data = yaml.safe_load(text)
             return data if isinstance(data, dict) else {}
         except ModuleNotFoundError:
             return _parse_simple_yaml(text)
+
+    def strings(self, value: Any) -> list[str]:
+        strings: list[str] = []
+        if isinstance(value, str):
+            strings.append(value)
+        elif isinstance(value, list):
+            for item in value:
+                strings.extend(self.strings(item))
+        elif isinstance(value, dict):
+            for item in value.values():
+                strings.extend(self.strings(item))
+        return strings

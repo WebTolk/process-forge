@@ -33,9 +33,9 @@ git remote add gitverse https://gitverse.ru/webtolk/process-forge.git
 If the clone came from GitVerse and its only remote is `origin`, rename that
 remote to `gitverse`, then add GitHub as `origin`. Inspect existing remote
 configuration before changing it; do not overwrite a different setup blindly.
-Reuse available GitHub credentials and GitVerse token authentication. Keep tokens
-out of remote URLs, command arguments, logs and files. Missing credentials block
-remote delivery, not local analysis; report the specific missing access.
+Use the credentials configured for each remote. Keep credentials out of remote
+URLs, command arguments, logs and committed files. If a push is refused, report
+which remote needs write access.
 
 ## Branches and delivery
 
@@ -92,6 +92,78 @@ Product promotion to `main`, tags and release artifacts follow the separate
 contributor-instruction backport uses a separate reviewed PR to `main`; it must
 not silently promote unfinished product changes or update release tags/channels.
 After that merge, mirror and verify the resulting `main` ref as well.
+
+## Storage readiness and mandatory migration
+
+These are lasting development rules for subsequent releases as well. They define
+required behavior; recording them does not qualify the current implementation.
+
+- Development strictly follows [Semantic Versioning 2.0.0](https://semver.org/).
+  Assess backward compatibility from the perspective of users and their agents:
+  supported workflows, public CLI/API/MCP contracts, integration behavior, and
+  guarantees for data and identity. Incompatible public-contract changes require
+  MAJOR; backward-compatible functionality requires MINOR; backward-compatible
+  bug fixes require PATCH. This policy follows published contracts as releases
+  evolve; it is not tied to a fixed release number. Unreleased intermediate
+  implementations and their tests do not create additional compatibility contracts.
+- A small supported project migration is not, by itself, a MAJOR change. Internal
+  storage formats may evolve through an explicit migration using the provided
+  tools, provided users and agents retain their supported workflows, public
+  interfaces, and data/identity guarantees without reworking integrations.
+  Document the migration and recovery procedure and verify these guarantees.
+  If a change breaks that user-facing contract, a migration tool does not remove
+  the requirement for MAJOR. Do not retain a legacy-write bypass to avoid migration.
+- Initialize new projects with the current SQL journals and stores. Ordinary
+  execution must not select legacy journals for a new project.
+- Existing projects must complete the supported mandatory migration and validate
+  storage identity, schema and readiness before ordinary mutating Work or worker
+  operations. A pending, failed or indeterminate migration blocks those operations
+  with a stable error code and a supported recovery action. Never fall back to
+  legacy execution to bypass migration or an unavailable bound store.
+- Keep old-format readers and importers within explicit migration and recovery
+  paths. Maintenance authority does not authorize ordinary legacy execution or
+  weaken writer exclusion. Preserve source data and supported recovery until the
+  switch to the validated target is durable.
+- Reconcile existing compatibility branches and tests with this contract. Record
+  remaining gaps and verify executable changes before claiming migration or
+  legacy retirement complete.
+
+## Python OS, filesystem and lock error contracts
+
+- OS, filesystem and lock adapters raise typed exceptions derived from
+  `Exception`, with structured reason codes and relevant `errno`/`winerror`.
+  They must not print a public failure or use `SystemExit`/`sys.exit()` for an
+  operational failure. CLI entry points own exit codes; MCP boundaries own
+  protocol error rendering.
+- Catch the most specific expected exception near the operation whose failure
+  is understood. Distinguish contention, missing resources, permission failures,
+  unsupported operations and corrupt state. Do not classify every `OSError` as
+  contention or convert arbitrary failures into success or an empty result.
+- Keep each `try` block as small as possible. Separate acquisition failures from
+  exceptions in the protected operation or resource release; `ExitStack` can
+  isolate `enter_context()` when needed. Do not swallow `KeyboardInterrupt`,
+  `SystemExit` or other `BaseException` signals. Broad cleanup handlers must
+  re-raise; compatibility translations must recognize the exact classified case.
+- Manage descriptors, locks and partial acquisition with `with`, `finally` or
+  `ExitStack`. Preserve the primary failure when cleanup also fails and retain
+  the cleanup failure as diagnostic evidence.
+- Preserve exception causes for authorized diagnostics, normally with
+  `raise ... from exc`. Public CLI/MCP output uses stable codes and safe messages
+  without private paths or raw tracebacks. Suppressing a displayed cause is a
+  boundary decision, not permission to discard diagnostic evidence.
+- Retry only documented transient failures within an explicit bounded deadline
+  measured by a monotonic clock. Do not automatically replay a mutation whose
+  outcome is unknown. Existence/access checks do not prove that subsequent I/O
+  will succeed or replace required identity and admission guards.
+- Verify affected executable behavior on real Windows and Linux, including
+  positive paths, contention/timeouts, unclassified errors and cleanup/data
+  preservation. Reuse applicable existing scenarios; a mock alone is not native
+  proof. Explain when a documentation-only change has no executable scenarios.
+
+Use [PEP 8 exception guidance](https://peps.python.org/pep-0008/#programming-recommendations),
+the [Python exception hierarchy](https://docs.python.org/3/library/exceptions.html)
+and the [contextlib acquisition recipe](https://docs.python.org/3.11/library/contextlib.html#catching-exceptions-from-enter-methods)
+as the baseline. Platform-specific adapters must preserve the PF contracts above.
 
 ## Setup and validation
 

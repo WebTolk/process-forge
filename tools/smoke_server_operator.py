@@ -4,8 +4,10 @@ from __future__ import annotations
 import argparse
 from contextlib import redirect_stdout
 from http.server import ThreadingHTTPServer
+from http.client import HTTPException
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -19,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
 from pf_runtime import service
+import smoke_server_console
 
 
 def put(path, value):
@@ -35,16 +38,136 @@ def wait_until(predicate, timeout=3):
     return False
 
 
+def check_windows_launchers(root: Path) -> None:
+    from processforge_core.project.runtime_launchers import (
+        ProjectRuntimeLauncherBuilder,
+    )
+
+    fixture = root / "batch launchers with spaces"
+    fixture.mkdir()
+    launchers = [fixture / "pf.bat", fixture / "pf-server.bat"]
+    for entry in launchers:
+        shutil.copyfile(ROOT / "bin" / entry.name, entry)
+
+    flow = fixture / ".pf"
+    project_entry = flow / "runtime" / "bin" / "pf.bat"
+    project_entry.parent.mkdir(parents=True)
+    files = ProjectRuntimeLauncherBuilder().project_runtime_launcher_files(flow)
+    project_entry.write_text(files[project_entry], encoding="utf-8")
+    launchers.append(project_entry)
+
+    python_only = fixture / "python only"
+    python_only.mkdir()
+    (python_only / "python.cmd").write_text(
+        '@"%PF_SMOKE_PYTHON%" %*\n@exit /b %errorlevel%\n', encoding="ascii"
+    )
+    fallback = {
+        **os.environ,
+        "PATH": str(python_only),
+        "PF_SMOKE_PYTHON": sys.executable,
+    }
+    calls = fixture / "calls.jsonl"
+    for entry in launchers:
+        entry.with_suffix(".py").write_text(
+            "import json, sys\n"
+            "with open('calls.jsonl', 'a', encoding='utf-8') as f:\n"
+            "    print(json.dumps(sys.argv[1:]), file=f)\n"
+            "sys.exit(int(sys.argv[-1]))\n",
+            encoding="utf-8",
+        )
+        for env in (None, fallback):
+            for expected in (0, 7, 9009):
+                calls.write_text("", encoding="utf-8")
+                args = ["argument with spaces", str(expected)]
+                result = subprocess.run(
+                    [str(entry), *args],
+                    cwd=fixture,
+                    env=env,
+                    capture_output=True,
+                    timeout=30,
+                )
+                assert result.returncode == expected, (entry.name, expected, result)
+                invocations = calls.read_text(encoding="utf-8").splitlines()
+                assert [json.loads(line) for line in invocations] == [args]
+
+
+def check_disconnected_responses(workplace):
+    """A lost response must not retry an accepted event or prevent shutdown."""
+    cases = [(error, write, "/event")
+             for error in (BrokenPipeError, ConnectionAbortedError, ConnectionResetError)
+             for write in (1, 2)]
+    cases += [(ConnectionAbortedError, write, "/shutdown") for write in (1, 2)]
+    for error, failed_write, path in cases:
+        case_root = workplace / f"{error.__name__}-{failed_write}-{path[1:]}"
+        runtime = service.RuntimeProcess(case_root, core, interval=2)
+        service.acquire_singleton(case_root, core, runtime.instance_id)
+        runtime.state.update(status="ready", health="ready")
+        done, failures, statuses = threading.Event(), [], []
+        base = runtime.make_handler()
+
+        class DisconnectedHandler(base):
+            def setup(self):
+                super().setup()
+                original_write = self.wfile.write
+                writes = 0
+
+                def write(data):
+                    nonlocal writes
+                    writes += 1
+                    if self.path == path and writes >= failed_write:
+                        raise error("client disconnected")
+                    return original_write(data)
+
+                self.wfile.write = write
+
+            def send_response(self, status, message=None):
+                statuses.append(status)
+                super().send_response(status, message)
+
+            def finish(self):
+                try:
+                    super().finish()
+                finally:
+                    done.set()
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), DisconnectedHandler)
+        server.handle_error = lambda *args: failures.append(sys.exception())
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=0.01), daemon=True)
+        thread.start()
+        endpoint = f"http://127.0.0.1:{server.server_port}"
+        try:
+            with patch.object(service.host, "ingest_event", return_value={"accepted": True}) as ingest, patch.object(service, "append_operator_log") as log:
+                try:
+                    service.http_json("POST", endpoint + path, runtime.token, {})
+                except (OSError, HTTPException):
+                    pass  # The client cannot receive a response on its lost connection.
+                assert done.wait(3), (error, failed_write, path)
+                assert failures == [], failures
+                assert statuses == [200], (path, error, failed_write, statuses)
+                assert not any(call.args[2] == "request.error" for call in log.call_args_list)
+                assert runtime.active_requests == 0
+                assert ingest.call_count == (1 if path == "/event" else 0)
+                assert runtime.stop_event.is_set() == (path == "/shutdown")
+                assert service.http_json("GET", endpoint + "/readyz", runtime.token)[0] == 200
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(3)
+            service.release_singleton(case_root, runtime.instance_id, core)
+
+
 def main():
     with tempfile.TemporaryDirectory(prefix="pf-server spaces-") as temp:
         root = Path(temp)
         wp, project = root / "workplace", root / "project"
-        put(project / ".pf/process-forge.yaml", {})
+        put(project / ".pf/process-forge.yaml", {"project": {"id": "operator-fixture"}})
         cache_path = wp / "runtime/pf-runtime-host/state.json"
         put(cache_path, {"projects": [{"project_root": str(project)}], "sessions": {}})
         worker = project / ".pf/runtime/agent-runs/task/attempt/status.json"
         runtime = service.RuntimeProcess(wp, core, interval=2)
+        service.acquire_singleton(wp, core, runtime.instance_id)
         runtime.state.update(status="ready", health="ready")
+        check_disconnected_responses(wp / "disconnected-responses")
         handler_finished = threading.Event()
         base_handler = runtime.make_handler()
         class ObservedHandler(base_handler):
@@ -87,15 +210,19 @@ def main():
             # Receiving the response is earlier than the server's finally block.
             assert handler_finished.wait(3)
             assert responses[0][0] == 200 and runtime.active_requests == 0
+            with patch.object(service.host, "ingest_event", side_effect=ValueError("application failure")):
+                code, body = post("/event", {})
+                assert code == 400 and body == {"error": "application failure"}
+                assert wait_until(lambda: runtime.active_requests == 0)
             runtime.scheduler_active = True
             assert post("/shutdown", guarded)[0] == 409
             runtime.scheduler_active = False
             observed, finish = threading.Event(), threading.Event()
-            def held_guard(*args):
+            def held_guard(*args, **kwargs):
                 observed.set()
                 assert finish.wait(5)
                 return {"counts": {"running": 1}}
-            with patch.object(service.metrics_core(), "shutdown_workers", held_guard):
+            with patch.object(service.metrics_core(), "observe", held_guard):
                 shutdown_response = []
                 shutdown_request = threading.Thread(target=lambda: shutdown_response.append(post("/shutdown", guarded)), daemon=True)
                 shutdown_request.start()
@@ -116,6 +243,7 @@ def main():
             server.shutdown()
             server.server_close()
             thread.join(3)
+            service.release_singleton(wp, runtime.instance_id, core)
         args = argparse.Namespace(command="server", workplace=str(wp), force=False, timeout=1)
         inspection = {"kind": "ready", "state": {"pid": 1, "endpoint": endpoint, "instance_id": "owner"}, "pid": 1}
         with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json") as call:
@@ -126,7 +254,9 @@ def main():
             else:
                 raise AssertionError("old service received unsafe fallback")
             call.assert_not_called()
-        with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json", return_value=(200, {})) as call, patch.object(core, "process_pid_running", return_value=False), patch.object(service, "cleanup_stale_runtime"):
+        from processforge_core.runtime.observation_inputs import WorkerObservationInputService
+
+        with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json", return_value=(200, {})) as call, patch.object(WorkerObservationInputService, "process_pid_running", return_value=False), patch.object(service, "cleanup_stale_runtime"):
             inspection["state"]["capabilities"] = {"guarded_shutdown": 1}
             with redirect_stdout(io.StringIO()):
                 assert service.command_stop(args, core) == 0
@@ -148,6 +278,8 @@ def main():
         (fixture / "tools/processforge.py").write_text("import json,sys; print(json.dumps(sys.argv[1:]))")
         result = subprocess.run([sys.executable, "-B", str(fixture / "bin/pf-server.py"), "status", "--workplace", str(missing), "--json"], capture_output=True, timeout=30)
         assert json.loads(result.stdout) == ["server", "status", "--workplace", str(missing), "--json"]
+        if os.name == "nt":
+            check_windows_launchers(root)
         parsed = core.build_parser().parse_args(["server", "run", "--workplace", str(wp), "--console"])
         assert parsed.func is core.command_runtime_serve and parsed.console
         broken = root / "invalid configuration"
@@ -167,10 +299,12 @@ def main():
                 process.return_value.serve.return_value = 0
                 assert service.command_serve(parsed, core) == 0
             text = stream.getvalue()
-            assert bool(text) == (enabled and stream.isatty())
+            assert bool(text) == stream.isatty()
             if text:
                 assert "ProcessForge" in text and "closing this window stops" in text
+                assert f"App Server Core {core.CORE_PROPERTIES.loaded.version} | PID" in text
                 assert all(ord(char) < 128 for char in text) and "\x1b" not in text
+    assert smoke_server_console.main() == 0
     print("PASS: actual HTTP busy/unknown/inflight/owner/auth guards, force, old capability refusal, launcher and readonly JSON")
     return 0
 

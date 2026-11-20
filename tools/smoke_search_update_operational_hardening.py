@@ -78,9 +78,14 @@ def main() -> int:
         assert deleted_tick["action"] == "refresh"
         assert_not_found(project, workplace, snap, "markertwo")
 
-        processforge.append_workplace_resource_event(
+        from processforge_core.agents.telemetry import TelemetryEventService
+        from processforge_core.common.yaml_io import _parse_simple_yaml
+        from processforge_core.documents.reader import YamlDocumentReader
+        from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
+
+        WorkplaceResourceEventJournal(YamlDocumentReader(_parse_simple_yaml), TelemetryEventService()).append_workplace_resource_event(
             workplace,
-            processforge.resource_management_event(
+            WorkplaceResourceEventJournal(YamlDocumentReader(_parse_simple_yaml), TelemetryEventService()).resource_management_event(
                 scope="workplace",
                 command="smoke",
                 event_type="resource.updated",

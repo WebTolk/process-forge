@@ -3,21 +3,38 @@
 Each replacement is atomic, the set of replacements is not. The OS lock serializes
 this service; it is not a sandbox against a hostile concurrent filesystem owner.
 """
+
 from __future__ import annotations
 
 import base64
-from contextlib import contextmanager
 import os
-from pathlib import Path, PurePosixPath
 import re
 import stat
+import sys
 import uuid
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import asdict
+from pathlib import Path, PurePosixPath
+from typing import Any
 
-from processforge_platforms.file_security import FileReplacementError, native_file_security
+from processforge_platforms.file_security import (
+    FileReplacementError,
+    native_file_security,
+)
 
-from .contract import (Contract, EntryError, block_span, decode_json, digest, encoded,
-                          load_contract, project_content, text_bytes)
-
+from ..maintenance.temporary_disposal import OwnedTemporary
+from .contract import (
+    Contract,
+    EntryError,
+    block_span,
+    decode_json,
+    digest,
+    encoded,
+    load_contract,
+    project_content,
+    text_bytes,
+)
 
 TARGETS = ("AGENTS.md", ".pf/AGENTS.md", ".pf/agent-entry.json")
 START_TARGETS = (".pf/START_AGENT_HERE.md",)
@@ -27,8 +44,88 @@ JOURNALS = ".pf/runtime/agent-entry-transactions"
 MAX_FILE = 1048576
 MAX_JOURNAL = 12 * MAX_FILE
 
+# Each placement/rollback owns only directories it creates in this invocation.
+_STAGING: ContextVar[list[OwnedTemporary] | None] = ContextVar(
+    "agent_entry_staging", default=None
+)
 
-def root_path(value: Path) -> Path:
+
+@contextmanager
+def _transaction_temporaries(root: Path):
+    from ..maintenance.temporary_disposal import (
+        atomic_staging,
+        dispose_owned,
+        release_owned,
+    )
+
+    resources: list[OwnedTemporary] = []
+    token = _STAGING.set(resources)
+    primary: BaseException | None = None
+    outcome: dict[str, Any] = {}
+    try:
+        yield outcome
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        _STAGING.reset(token)
+        # The inner operation has closed entry_lock and durably journaled either
+        # complete data or rollback inputs. Incomplete staging is reproducible
+        # from that journal; source, journal and recovery bytes stay protected.
+        for resource in resources:
+            receipt = None
+            try:
+                receipt = dispose_owned(release_owned(resource))
+                folder = _directory(root, JOURNALS + "/cleanup", private=True)
+                path = folder / (resource.resource_id + ".json")
+                with atomic_staging(path) as temporary:
+                    _durable_file(
+                        temporary,
+                        encoded({"schema_version": 1, **asdict(receipt)}),
+                        exclusive=False,
+                    )
+                    temporary.replace(path)
+                _sync_dir(folder)
+                if receipt.result not in {"deleted", "already_absent"}:
+                    raise OSError("temporary_cleanup:" + receipt.result)
+            except Exception as error:
+                if primary is None and outcome.get("action") != "incomplete":
+                    raise
+                # Diagnostics are secondary even if their own sink or an
+                # exception's custom add_note fails. Never alter the public DTO.
+                code = "temporary_cleanup_receipt:" + type(error).__name__
+                try:
+                    if primary is not None:
+                        primary.add_note(code)
+                except Exception:
+                    pass
+                try:
+                    from .. import diagnostics
+
+                    diagnostics.emit(
+                        "error",
+                        "agent_entry.cleanup_failed",
+                        {
+                            "reason": code,
+                            "resource_id": resource.resource_id,
+                            "result": receipt.result if receipt else "unknown",
+                            "complete": receipt.complete if receipt else False,
+                            "deleted_files": receipt.deleted_files if receipt else 0,
+                            "deleted_bytes": receipt.deleted_bytes if receipt else 0,
+                        },
+                        component="agent_entry",
+                    )
+                except Exception:
+                    pass
+
+
+def root_path(value: Path | None) -> Path:
+    if value is None:
+        raise AttributeError(
+            "'NoneType' object has no attribute 'expanduser'",
+            name="expanduser",
+            obj=value,
+        )
     root = value.expanduser().absolute()
     for path in (*reversed(root.parents), root):
         info = path.lstat()
@@ -40,10 +137,17 @@ def root_path(value: Path) -> Path:
 
 
 def safe_path(root: Path, relative: str, *, writable: bool = False) -> Path:
-    if (not isinstance(relative, str) or not relative or "\\" in relative or ":" in relative
-            or any(ord(char) < 32 for char in relative)
-            or relative.startswith("/") or any(p in {"", ".", ".."} or p.endswith((".", " "))
-                                                for p in relative.split("/"))):
+    if (
+        not isinstance(relative, str)
+        or not relative
+        or "\\" in relative
+        or ":" in relative
+        or any(ord(char) < 32 for char in relative)
+        or relative.startswith("/")
+        or any(
+            p in {"", ".", ".."} or p.endswith((".", " ")) for p in relative.split("/")
+        )
+    ):
         raise EntryError("unsupported_path")
     root_path(root)
     parts = PurePosixPath(relative).parts
@@ -52,7 +156,9 @@ def safe_path(root: Path, relative: str, *, writable: bool = False) -> Path:
         if path.exists():
             if not path.is_dir():
                 raise EntryError("unsupported_path", relative)
-            matches = [p.name for p in path.iterdir() if p.name.casefold() == part.casefold()]
+            matches = [
+                p.name for p in path.iterdir() if p.name.casefold() == part.casefold()
+            ]
             if matches and matches != [part]:
                 raise EntryError("case_collision", relative)
         path = path / part
@@ -67,7 +173,8 @@ def safe_path(root: Path, relative: str, *, writable: bool = False) -> Path:
             if not stat.S_ISDIR(info.st_mode):
                 raise EntryError("unsupported_path", relative)
         elif not (stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode)) or (
-                stat.S_ISREG(info.st_mode) and info.st_nlink != 1):
+            stat.S_ISREG(info.st_mode) and info.st_nlink != 1
+        ):
             raise EntryError("unsupported_path", relative)
         if writable and not info.st_mode & stat.S_IWUSR:
             raise EntryError("read_only", relative)
@@ -99,21 +206,31 @@ def security(path: Path) -> str:
         raise EntryError("unsupported_acl") from None
 
 
-def read_file(root: Path, name: str, *, maximum: int = MAX_FILE, writable: bool = False):
+def read_file(
+    root: Path, name: str, *, maximum: int = MAX_FILE, writable: bool = False
+):
     path = safe_path(root, name, writable=writable)
     if not path.exists():
         return None, {"sha256": None}
     info = path.lstat()
-    if not stat.S_ISREG(info.st_mode) or info.st_size > maximum or stat.S_IMODE(info.st_mode) & 0o7000:
+    if (
+        not stat.S_ISREG(info.st_mode)
+        or info.st_size > maximum
+        or stat.S_IMODE(info.st_mode) & 0o7000
+    ):
         raise EntryError("unsupported_file", name)
-    if writable and os.name != "nt":
-        if info.st_uid != os.getuid() or info.st_gid != os.getgid():
-            raise EntryError("unsupported_acl", name)
-        if hasattr(os, "listxattr") and "system.posix_acl_access" in os.listxattr(path, follow_symlinks=False):
-            raise EntryError("unsupported_acl", name)
-    if os.name == "nt":
-        from ..egress.windows import read_source
+    if sys.platform != "win32":
+        if writable:
+            if info.st_uid != os.getuid() or info.st_gid != os.getgid():
+                raise EntryError("unsupported_acl", name)
+            if hasattr(os, "listxattr") and "system.posix_acl_access" in os.listxattr(
+                path, follow_symlinks=False
+            ):
+                raise EntryError("unsupported_acl", name)
+    if sys.platform == "win32":
         from ..egress.contracts import EgressError
+        from ..egress.windows import read_source
+
         try:
             raw = read_source(path, maximum)
         except EgressError:
@@ -122,15 +239,27 @@ def read_file(root: Path, name: str, *, maximum: int = MAX_FILE, writable: bool 
         fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
         with os.fdopen(fd, "rb") as stream:
             opened = os.fstat(stream.fileno())
-            if (opened.st_dev, opened.st_ino, opened.st_nlink) != (info.st_dev, info.st_ino, 1):
+            if (opened.st_dev, opened.st_ino, opened.st_nlink) != (
+                info.st_dev,
+                info.st_ino,
+                1,
+            ):
                 raise EntryError("source_changed", name)
             raw = stream.read(maximum + 1)
     after = safe_path(root, name).stat()
-    if (len(raw) > maximum or (info.st_ino, info.st_size, info.st_mtime_ns) !=
-            (after.st_ino, after.st_size, after.st_mtime_ns)):
+    if len(raw) > maximum or (info.st_ino, info.st_size, info.st_mtime_ns) != (
+        after.st_ino,
+        after.st_size,
+        after.st_mtime_ns,
+    ):
         raise EntryError("source_changed", name)
-    return raw, {"sha256": digest(raw), "bytes": len(raw), "identity": [info.st_dev, info.st_ino],
-                 "mode": stat.S_IMODE(info.st_mode), "security": security(path)}
+    return raw, {
+        "sha256": digest(raw),
+        "bytes": len(raw),
+        "identity": [info.st_dev, info.st_ino],
+        "mode": stat.S_IMODE(info.st_mode),
+        "security": security(path),
+    }
 
 
 def project_identity(root: Path) -> str:
@@ -139,8 +268,13 @@ def project_identity(root: Path) -> str:
 
 
 def manifest(contract: Contract) -> dict:
-    return {"schema_version": 1, "kind": "pf.agent-entry", "contract_version": contract.version,
-            "contract_sha256": contract.sha256, "projections": list(TARGETS[:2])}
+    return {
+        "schema_version": 1,
+        "kind": "pf.agent-entry",
+        "contract_version": contract.version,
+        "contract_sha256": contract.sha256,
+        "projections": list(TARGETS[:2]),
+    }
 
 
 def policy_input(value) -> list:
@@ -148,20 +282,43 @@ def policy_input(value) -> list:
         return []
     if not isinstance(value, list) or len(value) > 32:
         raise EntryError("budget_policy_invalid")
-    keys = {"id", "unit", "scope", "selection", "limit", "overflow", "source", "accounting_phase"}
+    keys = {
+        "id",
+        "unit",
+        "scope",
+        "selection",
+        "limit",
+        "overflow",
+        "source",
+        "accounting_phase",
+    }
     result = []
     ids = set()
     for row in value:
-        if (not isinstance(row, dict) or set(row) != keys or not isinstance(row["id"], str)
-                or not re.fullmatch(r"[a-z0-9-]{1,64}", row["id"]) or row["id"] in ids
-                or any(not isinstance(row[k], str) for k in ("unit", "scope", "overflow", "source", "accounting_phase"))
-                or row["unit"] not in {"utf8_bytes", "unicode_scalars", "utf16_code_units", "tokens"}
-                or row["scope"] not in {"file", "chain"} or row["overflow"] not in {"truncate", "reject", "warn"}
-                or row["source"] not in {"explicit", "default", "unknown"}
-                or row["accounting_phase"] not in {"raw_concat", "unknown"}
-                or not isinstance(row["selection"], list) or not 1 <= len(row["selection"]) <= 64
-                or any(not isinstance(p, str) or not p for p in row["selection"])
-                or (row["limit"] is not None and (type(row["limit"]) is not int or not 0 <= row["limit"] <= 2**40))):
+        if (
+            not isinstance(row, dict)
+            or set(row) != keys
+            or not isinstance(row["id"], str)
+            or not re.fullmatch(r"[a-z0-9-]{1,64}", row["id"])
+            or row["id"] in ids
+            or any(
+                not isinstance(row[k], str)
+                for k in ("unit", "scope", "overflow", "source", "accounting_phase")
+            )
+            or row["unit"]
+            not in {"utf8_bytes", "unicode_scalars", "utf16_code_units", "tokens"}
+            or row["scope"] not in {"file", "chain"}
+            or row["overflow"] not in {"truncate", "reject", "warn"}
+            or row["source"] not in {"explicit", "default", "unknown"}
+            or row["accounting_phase"] not in {"raw_concat", "unknown"}
+            or not isinstance(row["selection"], list)
+            or not 1 <= len(row["selection"]) <= 64
+            or any(not isinstance(p, str) or not p for p in row["selection"])
+            or (
+                row["limit"] is not None
+                and (type(row["limit"]) is not int or not 0 <= row["limit"] <= 2**40)
+            )
+        ):
             raise EntryError("budget_policy_invalid")
         ids.add(row["id"])
         result.append(dict(row, selection=list(row["selection"])))
@@ -172,14 +329,20 @@ def measure(raw: bytes, unit: str) -> int:
     if unit == "utf8_bytes":
         return len(raw)
     text = raw.decode("utf-8")
-    return len(text.encode("utf-16-le")) // 2 if unit == "utf16_code_units" else len(text)
+    return (
+        len(text.encode("utf-16-le")) // 2 if unit == "utf16_code_units" else len(text)
+    )
 
 
 def budgets(root: Path, proposed: dict[str, bytes], policies: list, contract: Contract):
     cache, inputs, results, blockers = dict(proposed), {}, [], []
     for policy in policies:
         counts, cumulative, found_k = [], 0, False
-        known = policy["limit"] is not None and policy["unit"] != "tokens" and policy["accounting_phase"] == "raw_concat"
+        known = (
+            policy["limit"] is not None
+            and policy["unit"] != "tokens"
+            and policy["accounting_phase"] == "raw_concat"
+        )
         all_complete, k_complete = True, True
         for name in policy["selection"]:
             if name not in cache:
@@ -194,16 +357,36 @@ def budgets(root: Path, proposed: dict[str, bytes], policies: list, contract: Co
             span = block_span(raw, contract)
             size = measure(raw, policy["unit"]) if policy["unit"] != "tokens" else None
             offset = cumulative if policy["scope"] == "chain" else 0
-            full = None if not known else offset + size <= policy["limit"] or policy["overflow"] == "warn"
-            end = measure(raw[:span[1]], policy["unit"]) if span and size is not None else None
-            delivered = None if not known or not span else offset + end <= policy["limit"] or policy["overflow"] == "warn"
+            full = None
+            if known:
+                assert size is not None
+                full = offset + size <= policy["limit"] or policy["overflow"] == "warn"
+            end = (
+                measure(raw[: span[1]], policy["unit"])
+                if span and size is not None
+                else None
+            )
+            delivered = None
+            if known and span:
+                assert end is not None
+                delivered = (
+                    offset + end <= policy["limit"] or policy["overflow"] == "warn"
+                )
             if known and policy["overflow"] == "reject" and not full:
                 delivered = False if span else None
             found_k |= bool(span)
             all_complete &= full is not False
             k_complete &= delivered is not False
-            counts.append({"path": name, "size": size, "chain_offset": offset, "k_end": end,
-                           "k_fully_delivered": delivered, "required_complete": full})
+            counts.append(
+                {
+                    "path": name,
+                    "size": size,
+                    "chain_offset": offset,
+                    "k_end": end,
+                    "k_fully_delivered": delivered,
+                    "required_complete": full,
+                }
+            )
             cumulative += size or 0
         if not found_k:
             blockers.append("entry_contract_not_selected")
@@ -212,14 +395,31 @@ def budgets(root: Path, proposed: dict[str, bytes], policies: list, contract: Co
         if not all_complete:
             blockers.append("required_instructions_would_truncate")
         verified = known and policy["source"] == "explicit" and found_k
-        results.append({"id": policy["id"], "unit": policy["unit"], "scope": policy["scope"],
-                        "status": "accounted" if verified else "budget_unverified", "files": counts,
-                        "total": cumulative if policy["unit"] != "tokens" else None,
-                        "k_fully_delivered": k_complete if verified else None,
-                        "all_required_complete": all_complete if verified else None,
-                        "warning": bool(known and policy["overflow"] == "warn" and any(
-                            (x["chain_offset"] + x["size"]) > policy["limit"] for x in counts))})
-    status = "accounted" if results and all(r["status"] == "accounted" for r in results) else "budget_unverified"
+        results.append(
+            {
+                "id": policy["id"],
+                "unit": policy["unit"],
+                "scope": policy["scope"],
+                "status": "accounted" if verified else "budget_unverified",
+                "files": counts,
+                "total": cumulative if policy["unit"] != "tokens" else None,
+                "k_fully_delivered": k_complete if verified else None,
+                "all_required_complete": all_complete if verified else None,
+                "warning": bool(
+                    known
+                    and policy["overflow"] == "warn"
+                    and any(
+                        (x["chain_offset"] + x["size"]) > policy["limit"]
+                        for x in counts
+                    )
+                ),
+            }
+        )
+    status = (
+        "accounted"
+        if results and all(r["status"] == "accounted" for r in results)
+        else "budget_unverified"
+    )
     return {"status": status, "policies": results}, inputs, sorted(set(blockers))
 
 
@@ -230,21 +430,55 @@ def _read_journal(root: Path, transaction: str) -> dict:
     if raw is None:
         raise EntryError("transaction_missing")
     envelope = decode_json(raw, MAX_JOURNAL)
-    if (not isinstance(envelope, dict) or set(envelope) != {"payload", "sha256"}
-            or digest(encoded(envelope["payload"])) != envelope["sha256"]):
+    if (
+        not isinstance(envelope, dict)
+        or set(envelope) != {"payload", "sha256"}
+        or digest(encoded(envelope["payload"])) != envelope["sha256"]
+    ):
         raise EntryError("journal_invalid")
     value = envelope["payload"]
-    if (not isinstance(value, dict) or set(value) != {"schema_version", "transaction", "project", "state", "files"}
-            or type(value["schema_version"]) is not int or value["schema_version"] != 1 or value["transaction"] != transaction
-            or value["project"] != project_identity(root)
-            or not isinstance(value["state"], str) or value["state"] not in {"prepared", "committed", "rolling_back", "rolled_back"}
-            or not isinstance(value["files"], list) or any(not isinstance(x, dict) for x in value["files"])
-            or tuple(x.get("path") for x in value["files"]) not in PLACEMENT_TARGETS):
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"schema_version", "transaction", "project", "state", "files"}
+        or type(value["schema_version"]) is not int
+        or value["schema_version"] != 1
+        or value["transaction"] != transaction
+        or value["project"] != project_identity(root)
+        or not isinstance(value["state"], str)
+        or value["state"]
+        not in {"prepared", "committed", "rolling_back", "rolled_back"}
+        or not isinstance(value["files"], list)
+        or any(not isinstance(x, dict) for x in value["files"])
+        or tuple(x.get("path") for x in value["files"]) not in PLACEMENT_TARGETS
+    ):
         raise EntryError("journal_invalid")
     for row in value["files"]:
-        if (set(row) != {"path", "before", "after", "before_sha256", "after_sha256", "mode", "before_security", "after_security", "transient_security", "acl"}
-                or type(row["mode"]) is not int or not 0 <= row["mode"] <= 0o777
-                or any(row[k] is not None and not isinstance(row[k], str) for k in ("before_security", "after_security", "transient_security", "acl"))):
+        if (
+            set(row)
+            != {
+                "path",
+                "before",
+                "after",
+                "before_sha256",
+                "after_sha256",
+                "mode",
+                "before_security",
+                "after_security",
+                "transient_security",
+                "acl",
+            }
+            or type(row["mode"]) is not int
+            or not 0 <= row["mode"] <= 0o777
+            or any(
+                row[k] is not None and not isinstance(row[k], str)
+                for k in (
+                    "before_security",
+                    "after_security",
+                    "transient_security",
+                    "acl",
+                )
+            )
+        ):
             raise EntryError("journal_invalid")
         if row["acl"] is not None:
             try:
@@ -255,11 +489,20 @@ def _read_journal(root: Path, transaction: str) -> dict:
                 raise EntryError("journal_invalid")
         for side in ("before", "after"):
             try:
-                data = None if row[side] is None else base64.b64decode(row[side], validate=True)
+                data = (
+                    None
+                    if row[side] is None
+                    else base64.b64decode(row[side], validate=True)
+                )
             except (ValueError, TypeError):
                 raise EntryError("journal_invalid") from None
-            if (side == "after" and data is None or data is not None and len(data) > MAX_FILE
-                    or (digest(data) if data is not None else None) != row[side + "_sha256"]):
+            if (
+                side == "after"
+                and data is None
+                or data is not None
+                and len(data) > MAX_FILE
+                or (digest(data) if data is not None else None) != row[side + "_sha256"]
+            ):
                 raise EntryError("journal_invalid")
     return value
 
@@ -273,7 +516,11 @@ def pending(root: Path) -> list[str]:
     names = sorted(p.stem for p in folder.glob("*.json"))
     if len(names) > 256:
         raise EntryError("journal_inventory_limit")
-    return [name for name in names if _read_journal(root, name)["state"] in {"prepared", "rolling_back"}]
+    return [
+        name
+        for name in names
+        if _read_journal(root, name)["state"] in {"prepared", "rolling_back"}
+    ]
 
 
 def _plan(root: Path, contract: Contract, policies: list):
@@ -284,23 +531,41 @@ def _plan(root: Path, contract: Contract, policies: list):
         previous[name], preconditions[name] = raw, pre
     for name in TARGETS[:2]:
         try:
-            after, action = project_content(previous[name], contract, hidden=name.startswith(".pf/"))
+            after, action = project_content(
+                previous[name], contract, hidden=name.startswith(".pf/")
+            )
         except EntryError as exc:
             raise EntryError(exc.reason, name) from None
         if len(after) > MAX_FILE:
             raise EntryError("output_too_large", name)
         proposed[name] = after
         span = block_span(after, contract)
-        rows.append({"path": name, "action": action, "before_sha256": preconditions[name]["sha256"],
-                     "after_sha256": digest(after), "whole_file_bytes": len(after),
-                     "k_start": span[0], "k_end": span[1], "placed_k_bytes": span[1] - span[0]})
+        assert span is not None  # project_content places a verified contract block.
+        rows.append(
+            {
+                "path": name,
+                "action": action,
+                "before_sha256": preconditions[name]["sha256"],
+                "after_sha256": digest(after),
+                "whole_file_bytes": len(after),
+                "k_start": span[0],
+                "k_end": span[1],
+                "placed_k_bytes": span[1] - span[0],
+            }
+        )
     wanted = manifest(contract)
     raw = previous[TARGETS[2]]
     if raw is not None:
         old = decode_json(raw)
-        if (not isinstance(old, dict) or set(old) != set(wanted) or type(old["schema_version"]) is not int or old["schema_version"] != 1
-                or old["kind"] != wanted["kind"] or old["projections"] != wanted["projections"]
-                or (old["contract_version"], old["contract_sha256"]) not in contract.known):
+        if (
+            not isinstance(old, dict)
+            or set(old) != set(wanted)
+            or type(old["schema_version"]) is not int
+            or old["schema_version"] != 1
+            or old["kind"] != wanted["kind"]
+            or old["projections"] != wanted["projections"]
+            or (old["contract_version"], old["contract_sha256"]) not in contract.known
+        ):
             raise EntryError("entry_manifest_conflict", TARGETS[2])
         # A known manifest cannot legitimize a missing or independently edited K.
         for name in TARGETS[:2]:
@@ -308,32 +573,57 @@ def _plan(root: Path, contract: Contract, policies: list):
             if span is None:
                 raise EntryError("entry_manifest_conflict", name)
     proposed[TARGETS[2]] = encoded(wanted)
-    rows.append({"path": TARGETS[2], "action": "unchanged" if raw == proposed[TARGETS[2]] else "write_manifest",
-                 "before_sha256": preconditions[TARGETS[2]]["sha256"], "after_sha256": digest(proposed[TARGETS[2]])})
+    rows.append(
+        {
+            "path": TARGETS[2],
+            "action": "unchanged" if raw == proposed[TARGETS[2]] else "write_manifest",
+            "before_sha256": preconditions[TARGETS[2]]["sha256"],
+            "after_sha256": digest(proposed[TARGETS[2]]),
+        }
+    )
     accounting, inputs, blockers = budgets(root, proposed, policies, contract)
     interrupted = pending(root)
     if interrupted:
         blockers.append("entry_transaction_incomplete")
-    plan = {"schema_version": 1, "kind": "pf.agent-entry.plan", "project": project_identity(root),
-            "source_digest": contract.source_digest, "contract_version": contract.version,
-            "contract_sha256": contract.sha256, "canonical_k_bytes": len(contract.raw),
-            "generated_contract": contract.raw.decode("utf-8"),
-            "new_hidden_extension": contract.extended.decode("utf-8") if previous[TARGETS[1]] is None else None,
-            "preconditions": preconditions, "files": rows, "budget_policy": policies,
-            "budget_inputs": inputs, "budget": accounting, "blockers": sorted(set(blockers)),
-            "pending_transactions": interrupted,
-            "status": "conflict" if blockers else "current" if previous == proposed else "planned"}
+    plan = {
+        "schema_version": 1,
+        "kind": "pf.agent-entry.plan",
+        "project": project_identity(root),
+        "source_digest": contract.source_digest,
+        "contract_version": contract.version,
+        "contract_sha256": contract.sha256,
+        "canonical_k_bytes": len(contract.raw),
+        "generated_contract": contract.raw.decode("utf-8"),
+        "new_hidden_extension": contract.extended.decode("utf-8")
+        if previous[TARGETS[1]] is None
+        else None,
+        "preconditions": preconditions,
+        "files": rows,
+        "budget_policy": policies,
+        "budget_inputs": inputs,
+        "budget": accounting,
+        "blockers": sorted(set(blockers)),
+        "pending_transactions": interrupted,
+        "status": "conflict"
+        if blockers
+        else "current"
+        if previous == proposed
+        else "planned",
+    }
     plan["digest"] = digest(encoded(plan))
     return plan, previous, proposed
 
 
-def plan_entry(project: Path, *, source: Path | None = None, budget_policy=None) -> dict:
+def plan_entry(
+    project: Path | None, *, source: Path | None = None, budget_policy=None
+) -> dict:
     contract = load_contract(source) if source is not None else load_contract()
     return _plan(root_path(project), contract, policy_input(budget_policy))[0]
 
 
 def _start_plan(root: Path):
     from .start_prompt import load_start_source, project_start_content
+
     root = root_path(root)
     generated, source_digest, legacy = load_start_source()
     name = START_TARGETS[0]
@@ -343,13 +633,27 @@ def _start_plan(root: Path):
         raise EntryError("output_too_large", name)
     interrupted = pending(root)
     blockers = ["entry_transaction_incomplete"] if interrupted else []
-    plan = {"schema_version": 1, "kind": "pf.agent-start-prompt.plan", "project": project_identity(root),
-            "source_digest": source_digest, "generated_prompt": generated,
-            "preconditions": {name: pre},
-            "files": [{"path": name, "action": action, "before_sha256": pre["sha256"], "after_sha256": digest(after)}],
-            "budget_inputs": {}, "budget": {"status": "not_applicable", "reason": "compatibility_prompt_not_k"},
-            "blockers": blockers, "pending_transactions": interrupted,
-            "status": "conflict" if blockers else "current" if raw == after else "planned"}
+    plan = {
+        "schema_version": 1,
+        "kind": "pf.agent-start-prompt.plan",
+        "project": project_identity(root),
+        "source_digest": source_digest,
+        "generated_prompt": generated,
+        "preconditions": {name: pre},
+        "files": [
+            {
+                "path": name,
+                "action": action,
+                "before_sha256": pre["sha256"],
+                "after_sha256": digest(after),
+            }
+        ],
+        "budget_inputs": {},
+        "budget": {"status": "not_applicable", "reason": "compatibility_prompt_not_k"},
+        "blockers": blockers,
+        "pending_transactions": interrupted,
+        "status": "conflict" if blockers else "current" if raw == after else "planned",
+    }
     plan["digest"] = digest(encoded(plan))
     return plan, {name: raw}, {name: after}
 
@@ -358,33 +662,55 @@ def plan_start_prompt(project: Path) -> dict:
     return _start_plan(root_path(project))[0]
 
 
-def apply_start_prompt(project: Path, supplied: dict, *, apply: bool = False, _fault=None) -> dict:
+def apply_start_prompt(
+    project: Path, supplied: dict, *, apply: bool = False, _fault=None
+) -> dict:
     from .start_prompt import load_start_source
-    return _apply_placement(project, supplied, apply=apply, targets=START_TARGETS, planner=_start_plan,
-                            source_guard=lambda: load_start_source()[1], _fault=_fault)
+
+    return _apply_placement(
+        project,
+        supplied,
+        apply=apply,
+        targets=START_TARGETS,
+        planner=_start_plan,
+        source_guard=lambda: load_start_source()[1],
+        _fault=_fault,
+    )
 
 
-def check_entry(project: Path, **kwargs) -> dict:
+def check_entry(project: Path | None, **kwargs) -> dict:
     plan = plan_entry(project, **kwargs)
-    return {"schema_version": 1, "kind": "pf.agent-entry.check", "status": plan["status"],
-            "entry": "current" if plan["status"] == "current" else "legacy_or_unmigrated",
-            "budget": plan["budget"], "blockers": plan["blockers"], "plan_digest": plan["digest"],
-            "files": plan["files"], "pending_transactions": plan["pending_transactions"]}
+    return {
+        "schema_version": 1,
+        "kind": "pf.agent-entry.check",
+        "status": plan["status"],
+        "entry": "current" if plan["status"] == "current" else "legacy_or_unmigrated",
+        "budget": plan["budget"],
+        "blockers": plan["blockers"],
+        "plan_digest": plan["digest"],
+        "files": plan["files"],
+        "pending_transactions": plan["pending_transactions"],
+    }
 
 
 def _directory(root: Path, name: str, *, private: bool = False):
     path = safe_path(root, name, writable=True)
-    if private and os.name == "nt":
-        from ..egress.windows import private_directory
+    if private and sys.platform == "win32":
         from ..egress.contracts import EgressError
+        from ..egress.windows import private_directory
+
         try:
             private_directory(path)
         except EgressError:
             raise EntryError("private_acl_unavailable", name) from None
     else:
         path.mkdir(mode=0o700 if private else 0o755, exist_ok=True)
-        if private and (stat.S_IMODE(path.stat().st_mode) & 0o077 or path.stat().st_uid != os.getuid()):
-            raise EntryError("private_acl_unavailable", name)
+        if sys.platform != "win32":
+            if private and (
+                stat.S_IMODE(path.stat().st_mode) & 0o077
+                or path.stat().st_uid != os.getuid()
+            ):
+                raise EntryError("private_acl_unavailable", name)
     safe_path(root, name, writable=True)
     return path
 
@@ -402,11 +728,13 @@ def entry_lock(root: Path):
             stream.flush()
         stream.seek(0)
         try:
-            if os.name == "nt":
+            if sys.platform == "win32":
                 import msvcrt
+
                 msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
             else:
                 import fcntl
+
                 fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
             raise EntryError("entry_writer_busy") from None
@@ -414,15 +742,19 @@ def entry_lock(root: Path):
             yield
         finally:
             stream.seek(0)
-            if os.name == "nt":
+            if sys.platform == "win32":
                 msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
             else:
                 fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
 
 
-def _durable_file(path: Path, raw: bytes):
-    with path.open("xb") as stream:
-        if os.name != "nt":
+def _durable_file(path: Path, raw: bytes, *, exclusive: bool = True) -> None:
+    with path.open("xb" if exclusive else "wb") as stream:
+        if sys.platform == "win32":
+            # A token's default owner can differ from its user. Preserve the
+            # parent's explicit security before publishing any file content.
+            _set_acl(path, _acl(path.parent))
+        else:
             os.fchmod(stream.fileno(), 0o600)
         stream.write(raw)
         stream.flush()
@@ -430,7 +762,7 @@ def _durable_file(path: Path, raw: bytes):
 
 
 def _sync_dir(path: Path):
-    if os.name != "nt":
+    if sys.platform != "win32":
         fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
         try:
             os.fsync(fd)
@@ -441,20 +773,49 @@ def _sync_dir(path: Path):
 def _journal(root: Path, value: dict):
     name = f"{JOURNALS}/{value['transaction']}.json"
     temporary = safe_path(root, f"{JOURNALS}/{uuid.uuid4().hex}.part", writable=True)
-    _durable_file(temporary, encoded({"payload": value, "sha256": digest(encoded(value))}))
+    _durable_file(
+        temporary, encoded({"payload": value, "sha256": digest(encoded(value))})
+    )
     os.replace(temporary, safe_path(root, name, writable=True))
     _sync_dir(temporary.parent)
 
 
 def _stage(root: Path, transaction: str, raw: bytes) -> Path:
+    from ..maintenance.temporary_disposal import create_owned_directory
+
+    resources = _STAGING.get()
+    if resources is None:
+        raise EntryError("entry_transaction_incomplete")
     _directory(root, ".pf/tmp")
-    directory = _directory(root, f".pf/tmp/agent-entry-{transaction}", private=True)
-    path = safe_path(root, directory.relative_to(root).as_posix() + f"/{uuid.uuid4().hex}.stage", writable=True)
+    if not resources:
+        from ..egress.contracts import EgressError
+
+        try:
+            owned = create_owned_directory(root / ".pf/tmp", private=True)
+        except EgressError:
+            raise EntryError("private_acl_unavailable") from None
+        resources.append(owned)
+        _directory(root, owned.path.relative_to(root).as_posix(), private=True)
+    directory = resources[0].path
+    path = safe_path(
+        root,
+        directory.relative_to(root).as_posix() + f"/{uuid.uuid4().hex}.stage",
+        writable=True,
+    )
     _durable_file(path, raw)
     return path
 
 
-def _replace(root: Path, name: str, staged: Path, mode: int, *, acl=None, fault=None, transaction=""):
+def _replace(
+    root: Path,
+    name: str,
+    staged: Path,
+    mode: int,
+    *,
+    acl=None,
+    fault=None,
+    transaction="",
+):
     target = safe_path(root, name, writable=True)
     safe_path(root, staged.relative_to(root).as_posix(), writable=True)
     try:
@@ -466,7 +827,9 @@ def _replace(root: Path, name: str, staged: Path, mode: int, *, acl=None, fault=
     if acl is not None:
         # Some filesystems re-inherit the staging parent's ACL during replacement.
         # This metadata step is journaled separately from the atomic data replace.
-        _set_acl(safe_path(root, name, writable=True), base64.b64decode(acl, validate=True))
+        _set_acl(
+            safe_path(root, name, writable=True), base64.b64decode(acl, validate=True)
+        )
     _sync_dir(target.parent)
 
 
@@ -479,7 +842,9 @@ def _expect(root: Path, name: str, expected: dict):
 def _replacement_security(root: Path, transaction: str, name: str, acl: str) -> str:
     """Qualify the filesystem's ACL merge on empty private files before writes."""
     second = _stage(root, transaction, b"")
-    directory_name = f".pf/tmp/agent-entry-{transaction}/probe-{uuid.uuid4().hex}"
+    directory_name = (
+        second.parent.relative_to(root).as_posix() + f"/probe-{uuid.uuid4().hex}"
+    )
     directory = _directory(root, directory_name)
     target_parent = safe_path(root, name).parent
     _set_acl(directory, _acl(target_parent))
@@ -502,7 +867,13 @@ def _states(root: Path, journal: dict) -> list:
         try:
             _, state = read_file(root, row["path"], writable=True)
             h = state["sha256"]
-            actual = "before" if h == row["before_sha256"] else "after" if h == row["after_sha256"] else "conflict"
+            actual = (
+                "before"
+                if h == row["before_sha256"]
+                else "after"
+                if h == row["after_sha256"]
+                else "conflict"
+            )
             if actual != "conflict" and h is not None:
                 permitted = {row[actual + "_security"]}
                 if journal["state"] in {"prepared", "rolling_back"}:
@@ -515,16 +886,65 @@ def _states(root: Path, journal: dict) -> list:
     return result
 
 
-def apply_entry(project: Path, supplied: dict, *, apply: bool = False, source: Path | None = None, _fault=None) -> dict:
+def apply_entry(
+    project: Path | None,
+    supplied: dict,
+    *,
+    apply: bool = False,
+    source: Path | None = None,
+    _fault=None,
+) -> dict:
     def contract():
         return load_contract(source) if source is not None else load_contract()
-    return _apply_placement(project, supplied, apply=apply, targets=TARGETS,
-                            planner=lambda root: _plan(root, contract(), policy_input(supplied.get("budget_policy"))),
-                            source_guard=lambda: contract().source_digest, _fault=_fault)
+
+    return _apply_placement(
+        project,
+        supplied,
+        apply=apply,
+        targets=TARGETS,
+        planner=lambda root: _plan(
+            root, contract(), policy_input(supplied.get("budget_policy"))
+        ),
+        source_guard=lambda: contract().source_digest,
+        _fault=_fault,
+    )
 
 
-def _apply_placement(project: Path, supplied: dict, *, apply: bool, targets: tuple,
-                     planner, source_guard, _fault=None) -> dict:
+def _apply_placement(
+    project: Path | None,
+    supplied: dict,
+    *,
+    apply: bool,
+    targets: tuple,
+    planner,
+    source_guard,
+    _fault=None,
+) -> dict:
+    with _transaction_temporaries(root_path(project)) as outcome:
+        assert project is not None
+        result = _apply_placement_owned(
+            project,
+            supplied,
+            apply=apply,
+            targets=targets,
+            planner=planner,
+            source_guard=source_guard,
+            _fault=_fault,
+        )
+        outcome.update(result)
+        return result
+
+
+def _apply_placement_owned(
+    project: Path,
+    supplied: dict,
+    *,
+    apply: bool,
+    targets: tuple,
+    planner,
+    source_guard,
+    _fault=None,
+) -> dict:
     # Only bounded placement services can choose a fixed target set. Journals use the
     # same whitelist; arbitrary file placement is deliberately unsupported.
     if targets not in PLACEMENT_TARGETS:
@@ -550,24 +970,57 @@ def _apply_placement(project: Path, supplied: dict, *, apply: bool, targets: tup
         if plan != supplied:
             raise EntryError("plan_stale")
         tx = uuid.uuid4().hex
-        journal = {"schema_version": 1, "transaction": tx, "project": project_identity(root), "state": "prepared",
-                   "files": [{"path": name, "before": base64.b64encode(before[name]).decode() if before[name] is not None else None,
-                              "after": base64.b64encode(after[name]).decode(), "before_sha256": plan["preconditions"][name]["sha256"],
-                              "after_sha256": digest(after[name]), "mode": plan["preconditions"][name].get("mode", 0o644),
-                              "before_security": plan["preconditions"][name].get("security"),
-                              "after_security": plan["preconditions"][name].get("security"), "transient_security": None,
-                              "acl": base64.b64encode(_acl(root / name)).decode() if os.name == "nt" and before[name] is not None else None} for name in targets]}
+        journal_project = project_identity(root)
+        journal_files = [
+            {
+                "path": name,
+                "before": base64.b64encode(before[name]).decode()
+                if before[name] is not None
+                else None,
+                "after": base64.b64encode(after[name]).decode(),
+                "before_sha256": plan["preconditions"][name]["sha256"],
+                "after_sha256": digest(after[name]),
+                "mode": plan["preconditions"][name].get("mode", 0o644),
+                "before_security": plan["preconditions"][name].get("security"),
+                "after_security": plan["preconditions"][name].get("security"),
+                "transient_security": None,
+                "acl": base64.b64encode(_acl(root / name)).decode()
+                if sys.platform == "win32" and before[name] is not None
+                else None,
+            }
+            for name in targets
+        ]
+        journal = {
+            "schema_version": 1,
+            "transaction": tx,
+            "project": journal_project,
+            "state": "prepared",
+            "files": journal_files,
+        }
         _journal(root, journal)
         try:
-            staged = {name: _stage(root, tx, after[name]) for name in targets if before[name] != after[name]}
-            for row in journal["files"]:
+            staged = {
+                name: _stage(root, tx, after[name])
+                for name in targets
+                if before[name] != after[name]
+            }
+            for row in journal_files:
                 if row["path"] in staged:
                     row["transient_security"] = security(staged[row["path"]])
                     if row["acl"] is not None:
-                        row["transient_security"] = _replacement_security(root, tx, row["path"], row["acl"])
-                        _set_acl(staged[row["path"]], base64.b64decode(row["acl"], validate=True))
+                        row["transient_security"] = _replacement_security(
+                            root, tx, row["path"], row["acl"]
+                        )
+                        _set_acl(
+                            staged[row["path"]],
+                            base64.b64decode(row["acl"], validate=True),
+                        )
                 if row["before"] is None:
-                    row["after_security"] = security(staged[row["path"]]) if os.name == "nt" else str(row["mode"])
+                    row["after_security"] = (
+                        security(staged[row["path"]])
+                        if sys.platform == "win32"
+                        else str(row["mode"])
+                    )
             _journal(root, journal)
             if _fault:
                 _fault("staged", tx)
@@ -581,19 +1034,32 @@ def _apply_placement(project: Path, supplied: dict, *, apply: bool, targets: tup
                 if name not in staged:
                     continue
                 _expect(root, name, plan["preconditions"][name])
-                staged_raw, _ = read_file(root, staged[name].relative_to(root).as_posix())
+                staged_raw, _ = read_file(
+                    root, staged[name].relative_to(root).as_posix()
+                )
                 if staged_raw != after[name]:
                     raise EntryError("staging_changed", name)
-                row = next(row for row in journal["files"] if row["path"] == name)
-                _replace(root, name, staged[name], row["mode"], acl=row["acl"], fault=_fault, transaction=tx)
+                row = next(row for row in journal_files if row["path"] == name)
+                _replace(
+                    root,
+                    name,
+                    staged[name],
+                    row["mode"],
+                    acl=row["acl"],
+                    fault=_fault,
+                    transaction=tx,
+                )
                 if _fault:
                     _fault("replaced:" + name, tx)
                 raw, state = read_file(root, name, writable=True)
-                if raw != after[name] or (before[name] is not None and state["security"] != plan["preconditions"][name]["security"]):
+                if raw != after[name] or (
+                    before[name] is not None
+                    and state["security"] != plan["preconditions"][name]["security"]
+                ):
                     raise EntryError("replacement_verification_failed", name)
             for name in targets:
                 raw, state = read_file(root, name, writable=True)
-                row = next(row for row in journal["files"] if row["path"] == name)
+                row = next(row for row in journal_files if row["path"] == name)
                 if raw != after[name] or state["security"] != row["after_security"]:
                     raise EntryError("replacement_verification_failed", name)
             for name, expected in plan["budget_inputs"].items():
@@ -602,13 +1068,37 @@ def _apply_placement(project: Path, supplied: dict, *, apply: bool, targets: tup
                 raise EntryError("contract_source_changed")
             journal["state"] = "committed"
             _journal(root, journal)
-            return {"action": "applied", "transaction": tx, "budget": plan["budget"], "files": _states(root, journal)}
+            return {
+                "action": "applied",
+                "transaction": tx,
+                "budget": plan["budget"],
+                "files": _states(root, journal),
+            }
         except (EntryError, OSError) as exc:
-            return {"action": "incomplete", "transaction": tx, "reason": exc.reason if isinstance(exc, EntryError) else "storage_error",
-                    "files": _states(root, journal), "remediation": "rollback_transaction"}
+            return {
+                "action": "incomplete",
+                "transaction": tx,
+                "reason": exc.reason
+                if isinstance(exc, EntryError)
+                else "storage_error",
+                "files": _states(root, journal),
+                "remediation": "rollback_transaction",
+            }
 
 
-def rollback_entry(project: Path, transaction: str, *, apply: bool = False, _fault=None) -> dict:
+def rollback_entry(
+    project: Path | None, transaction: str, *, apply: bool = False, _fault=None
+) -> dict:
+    with _transaction_temporaries(root_path(project)) as outcome:
+        assert project is not None
+        result = _rollback_entry_owned(project, transaction, apply=apply, _fault=_fault)
+        outcome.update(result)
+        return result
+
+
+def _rollback_entry_owned(
+    project: Path, transaction: str, *, apply: bool = False, _fault=None
+) -> dict:
     if not apply:
         raise EntryError("explicit_apply_required")
     root = root_path(project)
@@ -637,7 +1127,10 @@ def rollback_entry(project: Path, transaction: str, *, apply: bool = False, _fau
                         if row["acl"] is None:
                             raise EntryError("rollback_conflict", name)
                         _expect(root, name, pre)
-                        _set_acl(safe_path(root, name, writable=True), base64.b64decode(row["acl"], validate=True))
+                        _set_acl(
+                            safe_path(root, name, writable=True),
+                            base64.b64decode(row["acl"], validate=True),
+                        )
                     continue
                 if pre["sha256"] != row["after_sha256"]:
                     raise EntryError("rollback_conflict", name)
@@ -646,14 +1139,28 @@ def rollback_entry(project: Path, transaction: str, *, apply: bool = False, _fau
                     safe_path(root, name, writable=True).unlink()
                     _sync_dir((root / name).parent)
                 else:
-                    staged = _stage(root, transaction, base64.b64decode(row["before"], validate=True))
+                    staged = _stage(
+                        root,
+                        transaction,
+                        base64.b64decode(row["before"], validate=True),
+                    )
                     row["transient_security"] = security(staged)
                     if row["acl"] is not None:
-                        row["transient_security"] = _replacement_security(root, transaction, row["path"], row["acl"])
+                        row["transient_security"] = _replacement_security(
+                            root, transaction, row["path"], row["acl"]
+                        )
                         _set_acl(staged, base64.b64decode(row["acl"], validate=True))
                     _journal(root, journal)
                     _expect(root, name, pre)
-                    _replace(root, name, staged, row["mode"], acl=row["acl"], fault=_fault, transaction=transaction)
+                    _replace(
+                        root,
+                        name,
+                        staged,
+                        row["mode"],
+                        acl=row["acl"],
+                        fault=_fault,
+                        transaction=transaction,
+                    )
                 if _fault:
                     _fault("restored:" + name, transaction)
             if any(row["state"] != "before" for row in _states(root, journal)):
@@ -666,5 +1173,12 @@ def rollback_entry(project: Path, transaction: str, *, apply: bool = False, _fau
             _journal(root, journal)
             return {"action": "rolled_back", "transaction": transaction}
         except (EntryError, OSError) as exc:
-            return {"action": "incomplete", "transaction": transaction, "reason": exc.reason if isinstance(exc, EntryError) else "storage_error",
-                    "files": _states(root, journal), "remediation": "rollback_transaction"}
+            return {
+                "action": "incomplete",
+                "transaction": transaction,
+                "reason": exc.reason
+                if isinstance(exc, EntryError)
+                else "storage_error",
+                "files": _states(root, journal),
+                "remediation": "rollback_transaction",
+            }

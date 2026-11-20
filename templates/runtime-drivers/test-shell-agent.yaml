@@ -2,6 +2,7 @@ schema_version: 1
 id: test-shell-agent
 title: Test Shell Agent
 kind: shell
+prepared_lifecycle_wrapper: true
 command:
   executable: "{python_executable}"
   args:
@@ -13,9 +14,10 @@ command:
     - "--output"
     - "{expected_report_path}"
     - "--heartbeat"
-    - "{heartbeat_path}"
+    - "{agent_run_dir}/target-heartbeat.json"
     - "--mode"
     - "success"
+    - "--skip-exit-marker"
   model_args:
     - "--model"
     - "{agent_model}"

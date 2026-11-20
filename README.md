@@ -15,18 +15,22 @@
 
 </div>
 
-ProcessForge is a file-first framework for creating, versioning, and executing
-AI-assisted processes. It is independent of concrete implementation platforms
-and AI providers: domains, toolchains, knowledge packages, templates, runtime
-drivers, and platform contracts are attached through versionable files instead
-of being hardcoded into the core.
+ProcessForge defines processes in versioned files. A project keeps its Work
+records, context capsules and artifacts in files, and uses local SQLite for
+event and hook journals and worker execution state. Domains, toolchains,
+knowledge packages, templates, runtime drivers and platform contracts can be
+attached through versioned definitions. [Runtime model](docs/concepts/runtime-model.md)
 
-To develop ProcessForge itself, read [CONTRIBUTING.md](CONTRIBUTING.md) and
-[AGENTS.md](AGENTS.md), then prepare a working branch from `origin/dev` before
-initializing local PF. Read [task collaboration](docs/contributors/task-collaboration.md)
-and [new-device setup](docs/contributors/agent-setup.md). These instructions are
-available on `main`; this documentation backport does not promote the 1.3.0 runtime.
-Consumer-project commands remain in [the runbook](docs/getting-started/agent-prompts.md).
+To develop ProcessForge itself, start with [CONTRIBUTING.md](CONTRIBUTING.md).
+Coding agents must also follow [AGENTS.md](AGENTS.md). Contributors use working
+branches and GitHub PRs into `dev`; this repository's local `.pf/` is private
+and is created locally after cloning. Read the [two task workflows](docs/contributors/task-collaboration.md)
+and [new-device setup](docs/contributors/agent-setup.md): local PF is the default
+task source for 1.3.0; GitHub can mirror it or explicitly own the shared task.
+
+For agents using ProcessForge in consumer projects, the command runbook is
+[docs/getting-started/agent-prompts.md](docs/getting-started/agent-prompts.md).
+It describes commands and mechanics implemented in the current codebase.
 
 ![ProcessForge workplace layout](docs/assets/processforge-architecture.svg)
 
@@ -66,8 +70,9 @@ Ledger session.
 Use this when work must be split into independent branches. An orchestrator can
 create bounded assignments and capsules, launch or coordinate worker sessions,
 collect their outputs, and integrate the result through handoffs and reviews.
-Runtime, host telemetry, and worker orchestration are opt-in infrastructure for
-this mode.
+The Forge MCP connection uses the workplace Runtime. Project initialization on
+a workplace with an `organized` default prepares the project’s Codex hook
+configuration. The client controls activation. [Forge hook setup](docs/guides/forge-init-hooks.md)
 
 ## Quick Start
 

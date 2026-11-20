@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from textwrap import dedent
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -81,6 +82,9 @@ class SnapshotTests(unittest.TestCase):
         reader = MemorySnapshots()
         core = SimpleNamespace(locate_flow_root=lambda root: root / '.pf')
         service = ProcessExecutionService(Path('p'), None, core, snapshots=reader)
+        import processforge_core.common.clock as _core_common_clock
+
+        object.__setattr__(service, '_clock', _core_common_clock.now_utc)
         pin = service._process_pin({'id': 'p'}, Path('p/process.yaml'), active_specializations=[], selected_resource_ids=[], allowed_processes=['p'])
         self.assertEqual((pin['snapshot_id'], pin['snapshot_checksum']), ('memory', 'sha256:memory'))
         self.assertEqual(service._selected_resource_ids(), ['a', 'z'])
@@ -109,12 +113,14 @@ class SnapshotTests(unittest.TestCase):
 
     def test_start_preflight_uses_injection_before_capsule(self):
         reader = MemorySnapshots()
-        core = SimpleNamespace(now_utc=lambda: 'now', safe_id=lambda *args: 'a',
+        core = SimpleNamespace(now_utc=lambda: 'now', safe_id=lambda *args: 'a', project_id=lambda _: 'p',
                                resolve_process_definition=lambda *args: SimpleNamespace(process={'id': 'p'}, path=Path('p.yaml')),
                                validate_assignment_scope_overlaps=lambda *args, **kwargs: {'status': 'pass'})
         service = ProcessExecutionService(Path('p'), None, core, snapshots=reader)
+        object.__setattr__(service, '_clock', vars(core)['now_utc'])
         pin = dict(process_id='p', process_version='1', process_fingerprint='sha256:p', snapshot_id='s', snapshot_checksum='sha256:s')
         with patch.object(ProcessExecutionService, '_context_check', return_value={'status': 'fresh'}), \
+             patch('processforge_core.work.start_intent.find_pending', return_value=None), \
              patch.object(ProcessExecutionService, '_find_by_objective', return_value={}), \
              patch.object(ProcessExecutionService, '_project_process_selection', return_value={'allowed': ['p']}), \
              patch.object(ProcessExecutionService, '_select_process', return_value=('p', {})), \
@@ -192,7 +198,7 @@ class SnapshotTests(unittest.TestCase):
     assert pin['snapshot_checksum'] == 'sha256:' + hashlib.sha256(Path('.pf/contexts/project-context.snapshot.yaml').read_bytes()).hexdigest()
     assert not any(name in sys.modules for name in ('processforge', 'processforge_core._legacy_processforge', 'pf_cli', 'pf_runtime'))
     """
-            result = subprocess.run([sys.executable, '-I', '-B', '-c', code], cwd=target, capture_output=True, text=True)
+            result = subprocess.run([sys.executable, '-I', '-B', '-c', dedent(code)], cwd=target, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_original_method_differential(self):

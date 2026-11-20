@@ -16,7 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # SQL startup requires the qualified native namespace backend.
+        os: [ubuntu-22.04, windows-latest]
     env:
       PYTHONUTF8: '1'
       PYTHONDONTWRITEBYTECODE: '1'
@@ -63,6 +64,7 @@ jobs:
           import sys
 
           for script in (
+              'smoke_agent_entry.py',
               'smoke_agent_entry_release.py',
               'smoke_remediation_checksum_surface.py',
               'smoke_public_cleanliness.py',
@@ -71,15 +73,79 @@ jobs:
               'smoke_release_pack_excludes_user_processes.py',
               'smoke_pf_project_process_refs_follow_layout.py',
               'smoke_no_removed_process_refs.py',
+              'smoke_generic_workplace_no_domain_pack_active.py',
+              'smoke_official_software_process_available.py',
+              'smoke_software_profile_activates_official_pack.py',
+              'smoke_runtime_driver_registry.py',
           ):
               subprocess.run([sys.executable, 'tools/' + script], check=True)
+      - name: Check report containment through the public CLI
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          scratch = Path(os.environ["PF_TEST_SCRATCH_ROOT"]) / "report-containment"
+          scratch.mkdir(parents=True, exist_ok=True)
+          environment = dict(os.environ, TMPDIR=str(scratch), TEMP=str(scratch), TMP=str(scratch))
+          subprocess.run([sys.executable, "-B", "tools/smoke_expected_report_containment.py",
+                          "--require-symlink"], env=environment, check=True)
+      - name: Check authenticated report through public ingress
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = Path(os.environ["PF_TEST_SCRATCH_ROOT"]) / "authenticated-report"
+          scratch.mkdir(parents=True, exist_ok=True)
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(str(root / name) for name in ("src", "tools"))
+          for name in ("TMPDIR", "TEMP", "TMP"):
+              environment[name] = str(scratch)
+          subprocess.run([sys.executable, "-B", "tools/smoke_authenticated_report_content.py"],
+                         env=environment, check=True)
       - name: Check contributor installation boundaries
         run: python -m unittest discover -s tests/contributor_setup -v
+      - name: Check public release consumer gates on source and archive
+        run: python -m unittest discover -s tests/release_consumer -v
+      - name: Check package rollback metadata
+        run: python -m unittest discover -s tests/update_metadata -v
+      - name: Check concurrent journal initialization and refusal
+        run: python -m unittest discover -s tests/sqlite_storage -v
+      - name: Check stable MCP connection across Core replacement and failure
+        shell: python
+        run: |
+          import subprocess
+          import sys
+
+          subprocess.run([sys.executable, '-B', '-m', 'unittest', 'discover',
+                          '-s', 'tests/mcp_bridge', '-v'], check=True)
+          for script in ('smoke_mcp_jsonrpc_validation.py',
+                         'smoke_mcp_stdio_unicode.py', 'smoke_mcp_codex_contract.py'):
+              subprocess.run([sys.executable, '-B', 'tools/' + script], check=True)
+      - name: Check six journal producers and dispatch recovery
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          scratch = Path(os.environ['PF_TEST_SCRATCH_ROOT']).resolve() / 'journal-concurrency'
+          scratch.mkdir(parents=True, exist_ok=True)
+          environment = dict(os.environ, TMPDIR=str(scratch), TEMP=str(scratch), TMP=str(scratch))
+          subprocess.run([sys.executable, '-B', 'tools/smoke_process_event_concurrency.py'],
+                         env=environment, check=True)
       - name: Check shared Python QA bundle
         env:
           PF_PYTHON_QA_TEST_ROOT: ${{ runner.temp }}/python-qa-tests
         run: python -m unittest discover -s tests/python_qa -v
-      - name: Verify setup with the documented contributor Core
+      - name: Install and resolve the published contributor knowledge
         shell: python
         run: |
           import json
@@ -89,29 +155,465 @@ jobs:
           import sys
 
           workplace = Path(os.environ['RUNNER_TEMP']) / 'contributor workplace'
-          core = Path(os.environ['RUNNER_TEMP']) / 'contributor Core'
-          revision = 'd0d18f7d24b3f785f082012c377b28ff1cfbe12b'
-          subprocess.run(['git', 'fetch', '--depth=1', 'origin', revision], check=True)
-          subprocess.run(['git', 'worktree', 'add', '--detach', str(core), revision], check=True)
           def run(*args):
               subprocess.run([sys.executable, *map(str, args)], check=True)
-          def pf(*args):
-              run(core / 'bin/pf.py', *args)
-          pf('workplace-init', '--workplace', workplace, '--profile', 'software-development', '--apply')
+          run('bin/pf.py', 'workplace-init', '--workplace', workplace, '--profile', 'software-development', '--apply')
           run('tools/install-contributor-knowledge.py', '--workplace', workplace)
           run('tools/install-contributor-knowledge.py', '--workplace', workplace, '--apply')
           run('tools/install-contributor-knowledge.py', '--workplace', workplace, '--apply')
           profile = json.loads(Path('docs/contributors/knowledge-packages.json').read_text(encoding='utf-8'))
           for package in profile['packages']:
-              pf('knowledge-package-doctor', '--workplace', workplace, '--package', package['id'], '--package-root', 'global')
-          pf('update', 'entity-sources', 'rebuild', '--workplace', workplace)
+              run('bin/pf.py', 'knowledge-package-doctor', '--workplace', workplace, '--package', package['id'], '--package-root', 'global')
+          run('bin/pf.py', 'update', 'entity-sources', 'rebuild', '--workplace', workplace)
           project = Path(os.environ['RUNNER_TEMP']) / 'contributor source project'
           project.mkdir()
           shared_entry = Path('AGENTS.md').read_bytes()
           (project / 'AGENTS.md').write_bytes(shared_entry)
-          pf('project-onboard', '--project-root', project, '--workplace', workplace,
+          run('bin/pf.py', 'project-onboard', '--project-root', project, '--workplace', workplace,
               '--type', 'processforge-development', '--process', 'software-feature-development',
               '--coordination-mode', 'simple', '--apply')
           assert (project / 'AGENTS.md').read_bytes().startswith(shared_entry), 'Onboarding replaced shared instructions'
-          pf('doctor-project', '--project-root', project)
-          pf('project-context-check', '--project-root', project)
+          run('bin/pf.py', 'doctor-project', '--project-root', project)
+          run('bin/pf.py', 'project-context-check', '--project-root', project)
+
+  native-publication:
+    name: Native publication and leases (windows-latest)
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Qualify retained native publication and lease boundaries
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import platform
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / '.pf' / 'tmp' / 'native-publication'
+          scratch.mkdir(parents=True, exist_ok=True)
+          environment = dict(os.environ)
+          environment['PYTHONPATH'] = os.pathsep.join(str(root / name) for name in ('src', 'tools', 'tests'))
+          environment['W3_FIXTURE_ROOT'] = str(scratch)
+          environment['W332_SOURCE'] = str(root)
+          print(platform.platform(), sys.version, flush=True)
+          subprocess.run([
+              sys.executable, '-m', 'pytest', '-q', '-ra', '-p', 'no:cacheprovider',
+              'tests/execution_migration/test_native_control.py',
+              'tests/native_control/test_exclusive_identity.py',
+          ], env=environment, check=True)
+
+  cleanup:
+    name: Cleanup (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Native namespace execution uses the same qualified Linux image as the native job.
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Qualify historical collection cleanup and native stage advance
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / '.pf' / 'tmp' / 'cleanup-acceptance'
+          environment = dict(os.environ)
+          environment['PYTHONPATH'] = os.pathsep.join(str(root / name) for name in ('src', 'tools', 'tests'))
+          for name in ('W3_FIXTURE_ROOT', 'PF_TEST_SCRATCH_ROOT', 'PF_PRIVATE_PROCESS_TEST_ROOT',
+                       'PF_W4_TEST_ROOT', 'PF_RELEASE_REPORT_TEST_ROOT', 'TMPDIR', 'TEMP', 'TMP'):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          subprocess.run([
+              sys.executable, '-m', 'pytest', '-q', '-ra', '--capture=sys', '-p', 'no:cacheprovider',
+              '--basetemp=' + str(scratch / 'pytest'), '--junitxml=cleanup-results.xml',
+              'tests/prepared_collection_state', 'tests/temporary_disposal', 'tests/executions/test_lifecycle.py',
+          ], env=environment, check=True)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: cleanup-results-${{ matrix.os }}
+          path: cleanup-results.xml
+          if-no-files-found: ignore
+
+
+  runtime-recovery:
+    name: Runtime recovery (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Check Runtime singleton from source without PYTHONPATH
+        shell: python
+        run: |
+          import os
+          import subprocess
+          import sys
+
+          environment = dict(os.environ)
+          environment.pop("PYTHONPATH", None)
+          environment["PYTHONNOUSERSITE"] = "1"
+          subprocess.run([sys.executable, "-B", "tools/smoke_runtime_singleton_orphan.py"],
+                         env=environment, check=True, timeout=60)
+      - name: Qualify Runtime state and recovery in file-only fixtures
+        shell: python
+        run: |
+          import os
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd()
+          scratch = root / ".pf" / "tmp" / "runtime-recovery"
+          paths = [str(root / name) for name in (".", "src", "tools", "tests")]
+          os.environ["PYTHONPATH"] = os.pathsep.join(paths)
+          sys.path[:0] = paths
+          for name in ("W3_FIXTURE_ROOT", "PF_TEST_SCRATCH_ROOT", "PF_PRIVATE_PROCESS_TEST_ROOT",
+                       "PF_W4_TEST_ROOT", "PF_RELEASE_REPORT_TEST_ROOT", "TMPDIR", "TEMP", "TMP", "W52_TMP"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              os.environ[name] = str(directory)
+          os.environ["W52_LABEL"] = "runtime-recovery"
+          os.environ["W55_OBSERVATIONS"] = str(scratch / "native-metadata-observations.json")
+
+          """Run maintained assertions and ownership regressions in file-only fixtures."""
+          from pathlib import Path
+          from unittest.mock import patch
+          import json
+          import subprocess
+          import sys
+
+          import pytest
+          import processforge as core
+          import process_execution_smoke_support as support
+
+          calls=[]
+          original_cli=support.cli
+
+          def fixture_cli(*args):
+              if args[0]=="project-onboard":
+                  args=(*args,"--coordination-mode","simple")
+              return original_cli(*args)
+
+          def file_only_start(workplace,name,arguments):
+              assert name=="pf.work.start",name
+              assert set(arguments)=={"project_root","objective"},arguments
+              calls.append(name)
+              return core.process_execution_service(Path(arguments["project_root"]),str(workplace)).start(objective=arguments["objective"])
+
+          def observe(event,arguments):
+              if event!="subprocess.Popen":return
+              command=arguments[1]
+              parts=command if isinstance(command,(tuple,list)) else [command]
+              normalized=[str(p).replace(chr(92),"/").lower() for p in parts]
+              if any("/pf_runtime/mcp_server.py" in p or "/pf_runtime/service.py" in p or Path(p).name in {"codex","codex.exe","claude","claude.exe"} for p in normalized):
+                  raise AssertionError("file_only_profile_forbids_service_or_model_launch")
+
+          sys.addaudithook(observe)
+          selection=[
+              "tests/runtime/test_service_state.py",
+              "tests/runtime/test_scheduler_admission.py",
+              "tests/runtime/test_schedule.py",
+              "tests/executions/test_admission.py",
+              "tests/runtime_monitor/test_uptime.py",
+              "tests/core_properties/test_adapters.py",
+              "tests/work/test_immutable_publication.py",
+              "tests/work/test_start_reliability.py",
+              "tests/work/test_complete_admission.py",
+              "tests/work/test_completion_intent_validation.py",
+              "tests/process_journal/test_sqlite_safety.py",
+              "tests/execution_migration/test_storage_admission.py",
+              "tests/maintenance_service/test_journals.py",
+              "tests/maintenance_scan/test_journal_scan.py",
+              "tests/native_metadata/test_native_metadata_staging.py",
+          ]
+          with patch.object(support,"call_mcp",file_only_start),patch.object(support,"cli",fixture_cli):
+              result=pytest.main(["-q","-ra","--capture=sys","-p","no:cacheprovider","--basetemp="+str(scratch/"pytest"),"--junitxml=runtime-recovery-results.xml",*selection])
+              if result:raise SystemExit(result)
+              import smoke_work_completion_recovery as completion
+              completion.main()
+          subprocess.run([sys.executable,"-B","tools/smoke_process_event_concurrency.py"],check=True)
+          print("FILE_ONLY_PROFILE "+json.dumps({"direct_core_start_calls":len(calls),"bounded_publication_refusal_checked":True,"stdio_mcp_qualified":False,"production_runtime_qualified":False}),flush=True)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: runtime-recovery-results-${{ matrix.os }}
+          path: runtime-recovery-results.xml
+          if-no-files-found: ignore
+
+  runtime-public-event-reads:
+    name: Runtime public event reads (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Check actual CLI and Runtime event reads and scheduler recovery
+        shell: python
+        run: |
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd()
+          scratch = root / ".pf" / "tmp" / "runtime-public-event-reads"
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(
+              str(root / name) for name in (".", "src", "tools", "tests"))
+          for name in ("W3_FIXTURE_ROOT", "PF_TEST_SCRATCH_ROOT", "PF_W4_TEST_ROOT",
+                       "TMPDIR", "TEMP", "TMP"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          subprocess.run([
+              sys.executable, "-B", "-m", "pytest", "-q", "-ra",
+              "-p", "no:cacheprovider", "--basetemp=" + str(scratch / "pytest"),
+              "--junitxml=runtime-public-event-reads.xml",
+              "tests/process_journal/test_event_owner_reads.py",
+              "tests/runtime/test_event_reads.py",
+              "tests/native_control/test_capability_retirement.py",
+              "tests/native_control/test_source_origin.py",
+          ], env=environment, check=True)
+          subprocess.run([
+              sys.executable, "-B", "tools/smoke_runtime_scheduler_failure_isolation.py",
+          ], env=environment, check=True)
+          for smoke in (
+              "smoke_central_event_ingress.py", "smoke_central_event_replay.py",
+              "smoke_provider_adapter_admission.py", "smoke_runtime_host_poc.py",
+              "smoke_session_identity_roundtrip.py", "smoke_codex_lifecycle_identity.py",
+              "smoke_completion_intent_validation_service.py",
+              "smoke_project_snapshot_read_composition.py",
+              "smoke_work_transition_commit_service.py",
+              "smoke_worker_workspace_access.py", "smoke_codex_exec_worker.py",
+              "smoke_diagnostics.py", "smoke_diagnostics_process_invariance.py",
+              "smoke_prepared_execution_recovery.py",
+          ):
+              print("RUN " + smoke, flush=True)
+              subprocess.run([sys.executable, "-B", "tools/" + smoke],
+                             env=environment, check=True)
+      - name: Retain redacted native observations on success and failure
+        if: always()
+        shell: python
+        run: |
+          from itertools import islice
+          from pathlib import Path
+          import sys
+
+          root = Path.cwd()
+          sys.path[:0] = [str(root / name) for name in ("tools", "src", "tests/runtime")]
+          from test_event_reads import _native_capability_notes
+
+          scratch = Path(".pf/tmp/runtime-public-event-reads")
+          observations = []
+          marker = "PF_NATIVE_CAPABILITY "
+          for log in islice(scratch.rglob("runtime.stderr.log"), 16):
+              observations.extend(note.removeprefix(marker)
+                                  for note in _native_capability_notes(log))
+          target = Path("runtime-public-native-observations.jsonl")
+          target.write_text("".join(row + "\n" for row in observations), encoding="utf-8")
+          for row in observations:
+              print(marker + row)
+          print("native_observations=" + str(len(observations)))
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: runtime-public-event-reads-${{ matrix.os }}
+          path: |
+            runtime-public-event-reads.xml
+            runtime-public-native-observations.jsonl
+          if-no-files-found: error
+
+  worker-lifecycle:
+    name: Worker lifecycle (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check actual worker observation, collection and process drain
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import platform
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / ".pf" / "tmp" / "worker-lifecycle"
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(
+              str(root / name) for name in (".", "src", "tools", "tests"))
+          for name in ("W3_FIXTURE_ROOT", "PF_TEST_SCRATCH_ROOT", "PF_W4_TEST_ROOT",
+                       "TMPDIR", "TEMP", "TMP"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          print(platform.platform(), sys.version, flush=True)
+          for smoke in ("smoke_work_capsule_contract_parity.py",
+                        "smoke_worker_run_shell.py", "smoke_director_inspector_boundary.py"):
+              print("RUN " + smoke, flush=True)
+              subprocess.run([sys.executable, "-B", "tools/" + smoke],
+                             env=environment, check=True, timeout=300)
+
+  runtime-lifecycle:
+    name: Runtime lifecycle (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check concurrent sessions and real worker across Runtime restart
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import platform
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / ".pf" / "tmp" / "runtime-lifecycle"
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(
+              str(root / name) for name in (".", "src", "tools", "tests"))
+          for name in ("W3_FIXTURE_ROOT", "PF_TEST_SCRATCH_ROOT", "TMPDIR", "TEMP", "TMP"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          print(platform.platform(), sys.version, flush=True)
+          subprocess.run([sys.executable, "-B", "tools/smoke_long_lived_runtime.py"],
+                         env=environment, check=True, timeout=300)
+
+  mcp-declarations:
+    name: MCP declarations (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime and pinned test dependencies
+        run: python -m pip install -r requirements.txt pytest==9.1.1
+      - name: Qualify declarative MCP and preserved resource admission
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / ".pf" / "tmp" / "mcp-declarations"
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(
+              str(root / name) for name in ("src", "tools", "tests"))
+          for name in ("W3_FIXTURE_ROOT", "PF_TEST_SCRATCH_ROOT", "PF_W4_TEST_ROOT",
+                       "TMPDIR", "TEMP", "TMP", "LOCALAPPDATA", "XDG_CONFIG_HOME"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          subprocess.run([
+              sys.executable, "-B", "-m", "pytest", "-q", "-ra", "-p", "no:cacheprovider",
+              "--basetemp=" + str(scratch / "pytest"),
+              "--junitxml=mcp-declarations-results.xml", "tests/work/test_mcp_declarations.py",
+          ], env=environment, check=True)
+          for script in ("smoke_prepared_execution_context.py", "smoke_codex_worker_governance.py"):
+              subprocess.run([sys.executable, "-B", "tools/" + script],
+                             env=environment, check=True)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: mcp-declarations-results-${{ matrix.os }}
+          path: mcp-declarations-results.xml
+          if-no-files-found: ignore

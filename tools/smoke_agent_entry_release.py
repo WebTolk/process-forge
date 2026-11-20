@@ -13,7 +13,11 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tools")]
+# Capture the trusted entry before Core imports in this adapter smoke.
+import processforge  # noqa: E402, F401
 from processforge_core.agent_entry.contract import encoded, load_contract
+# Core imports require the source path bootstrap above.
+from processforge_core.common.properties import CoreProperties  # noqa: E402
 from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 from smoke_remediation_checksum_surface import load_release_module, load_validator
 
@@ -55,13 +59,15 @@ def main() -> int:
         assert release.release_required_path_exists(source, "AGENTS.md")
 
         root.unlink()
-        assert "AGENTS.md" not in dict(release.release_source_files(source))
+        from processforge_core.maintenance.release_sources import ReleaseSourcePolicy
+
+        assert "AGENTS.md" not in dict(ReleaseSourcePolicy().release_source_files(source))
         assert "AGENTS.md" not in dict(validator.public_file_entries(source))
         assert not release.release_required_path_exists(source, "AGENTS.md")
         # Template validity is separate from the required contributor-policy file.
         assert failures(release, source) == []
         root.write_bytes(contributor_policy.replace(b"\n", b"\r\n"))
-        assert dict(release.release_source_files(source))["AGENTS.md"] == root
+        assert dict(ReleaseSourcePolicy().release_source_files(source))["AGENTS.md"] == root
         assert dict(validator.public_file_entries(source))["AGENTS.md"] == root
 
         metadata = source / "templates/agent-entry-contract.json"
@@ -78,20 +84,20 @@ def main() -> int:
         derived.write_bytes(contract.render(extended=True))
         assert failures(release, source) == []
 
-        before_sources = release.release_source_files(source)
+        before_sources = ReleaseSourcePolicy().release_source_files(source)
         before_inventory = validator.build_inventory(source)
         (source / ".pf").mkdir()
         for name in ("AGENTS.md", "process-forge.yaml", "hooks.yaml"):
             (source / ".pf" / name).write_text("private local state\n", encoding="utf-8")
         assert failures(release, source) == [], "local project state must not govern distribution checks"
-        assert release.release_source_files(source) == before_sources
+        assert ReleaseSourcePolicy().release_source_files(source) == before_sources
         assert validator.build_inventory(source) == before_inventory
 
         inventory = source / "checksums/processforge.sha256"
         inventory.parent.mkdir()
         inventory.write_text(validator.build_inventory(source), encoding="utf-8")
-        files = release.release_source_files(source)
-        version = (source / "VERSION").read_text(encoding="utf-8").strip()
+        files = ReleaseSourcePolicy().release_source_files(source)
+        version = CoreProperties.from_distribution(source).loaded.version
         assert version != "unknown"
         owned = release.release_core_manifest(
             files, version=version, source=None, generated_at="2026-01-01T00:00:00Z"

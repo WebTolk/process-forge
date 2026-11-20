@@ -9,6 +9,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 import processforge as pf
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
+from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from codex_exec_worker import codex_config_args, managed_hook_trust_args, prompt_payload
 
 
@@ -44,10 +48,13 @@ def main() -> int:
         (project / ".pf" / "assignments").mkdir(parents=True)
         (project / ".pf" / "runs" / "governed-run" / "worker-prompts").mkdir(parents=True)
         writable = task(writer=True, code=True, artifacts=True)
-        pf.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
+        import processforge_core.common.yaml_io as _core_common_yaml_io
 
-        driver = pf.default_runtime_driver_documents()["codex-exec"]
-        command, _paths = pf.build_worker_process_command(project, writable, driver)
+        _core_common_yaml_io.write_yaml_file(project / ".pf" / "assignments" / "governed-worker.yaml", writable)
+
+        driver = RuntimeDriverDefinitionPolicy().default_documents()["codex-exec"]
+        from processforge_core.runtime.command import WorkerCommandBuilder
+        command, _paths = WorkerCommandBuilder(pf.ROOT).build(project, writable, driver)
         environment = command["command"]["environment"]
         if environment.get("PF_CODEX_SANDBOX") != "workspace-write":
             raise AssertionError(environment)
@@ -80,14 +87,15 @@ def main() -> int:
             raise AssertionError("foreign hook must disable automatic trust")
 
         readonly = task(writer=False, code=False, artifacts=False)
-        readonly_command, _paths = pf.build_worker_process_command(project, readonly, driver)
+        from processforge_core.runtime.command import WorkerCommandBuilder
+        readonly_command, _paths = WorkerCommandBuilder(pf.ROOT).build(project, readonly, driver)
         if readonly_command["command"]["environment"].get("PF_CODEX_SANDBOX") != "read-only":
             raise AssertionError(readonly_command)
 
         for selected in (writable, readonly):
             for prepared in (None, {"path": ".pf/prepared/fixture.json", "checksum": "sha256:fixture"}):
-                with patch.object(pf, "load_task", return_value=selected):
-                    prompt = pf.render_worker_launch_prompt(project, "governed-worker", prepared_input=prepared)
+                with patch.object(WorkerAssignmentService, "load", return_value=selected):
+                    prompt = _worker_assignment_service.render_prompt(project, "governed-worker", prepared_input=prepared)
                 required = ["PF_PREPARED_INPUT_FILE", "PF_PREPARED_INPUT_SHA256", "Do not bootstrap ProcessForge",
                             "No ProcessForge MCP connection is required", "supplied output delivery contract",
                             "return only its complete content", "For a read-only assignment, do not write the report file yourself",

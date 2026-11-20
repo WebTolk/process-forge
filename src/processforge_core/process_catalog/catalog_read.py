@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
-import re
 
 from ..common.yaml_io import _parse_simple_yaml
 from ..documents.reader import YamlDocumentReader
@@ -12,7 +12,6 @@ from ..project.metadata import ProjectMetadataReader
 from ..work.context_documents import ContextContractInputs
 from . import service
 from .models import ProcessCatalogContext, ProcessDefinitionRef
-
 
 _PATH_CONSTANT = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 _DEFAULT_PATH_CONSTANTS = {
@@ -56,7 +55,8 @@ class _CatalogWorkplaceReader:
 
     def registry_path(self, manifest: Path) -> Path:
         data = self.documents.load(manifest)
-        registries = data.get("registries") if isinstance(data.get("registries"), dict) else {}
+        registries_value = data.get("registries")
+        registries = registries_value if isinstance(registries_value, dict) else {}
         raw = str(registries.get("process_packs") or "registries/process-packs.yaml")
         constants = dict(_DEFAULT_PATH_CONSTANTS)
         declared = data.get("path_constants")
@@ -111,11 +111,13 @@ class _CatalogWorkplaceReader:
 class ProcessCatalogReadService:
     project_root: Path
     distribution_root: Path = field(
-        default_factory=lambda: Path(__file__).resolve().parents[3], kw_only=True,
+        default_factory=lambda: Path(__file__).resolve().parents[3],
+        kw_only=True,
     )
     workplace_manifest: Path | None = field(default=None, kw_only=True)
     documents: YamlDocumentReader = field(
-        default_factory=lambda: YamlDocumentReader(_parse_simple_yaml), kw_only=True,
+        default_factory=lambda: YamlDocumentReader(_parse_simple_yaml),
+        kw_only=True,
     )
 
     def context(self) -> ProcessCatalogContext:
@@ -133,17 +135,25 @@ class ProcessCatalogReadService:
         )
 
     def entries(
-        self, *, strict: bool = False, include_available_official: bool = False,
+        self,
+        *,
+        strict: bool = False,
+        include_available_official: bool = False,
     ) -> list[ProcessDefinitionRef]:
         return service.process_catalog_entries(
-            self.context(), strict=strict,
+            self.context(),
+            strict=strict,
             include_available_official=include_available_official,
         )
 
     def resolve_definition(
-        self, process_or_path: str, *, include_available_official: bool = False,
+        self,
+        process_or_path: str,
+        *,
+        include_available_official: bool = False,
     ) -> ProcessDefinitionRef:
         return service.resolve_process_definition(
-            self.context(), process_or_path,
+            self.context(),
+            process_or_path,
             include_available_official=include_available_official,
         )

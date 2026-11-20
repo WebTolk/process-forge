@@ -1,8 +1,12 @@
 """Existing TransitionRejectionPolicy responsibilities with explicit operation dependencies."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Callable
+
+from processforge_core.evidence.guidance import EvidenceGuidancePolicy
+
 
 @dataclass(frozen=True, kw_only=True)
 class TransitionRejectionPolicy:
@@ -12,8 +16,36 @@ class TransitionRejectionPolicy:
     def is_recoverable(blocker: Any) -> bool:
         if not isinstance(blocker, dict):
             return False
-        return str(blocker.get('code') or '') in {'invalid_evidence', 'not_applicable_evidence_incomplete', 'artifact_path_missing', 'outcome_not_allowed', 'invalid_process_definition'}
+        return str(blocker.get("code") or "") in {
+            "invalid_evidence",
+            "not_applicable_evidence_incomplete",
+            "artifact_path_missing",
+            "outcome_not_allowed",
+            "invalid_process_definition",
+        }
 
-    def rejected(self, *, run: dict[str, Any], assignment: dict[str, Any], session_id: str, reason: str, blockers: list[dict[str, Any]]) -> dict[str, Any]:
-        state = self.state(run_id=str(run.get('id') or ''), assignment_id=str(assignment.get('id') or ''), session_id=session_id)
-        return {**state, 'action': 'transition_rejected', 'reason': reason, 'blockers': blockers}
+    def rejected(
+        self,
+        *,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        session_id: str,
+        reason: str,
+        blockers: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        state = self.state(
+            run_id=str(run.get("id") or ""),
+            assignment_id=str(assignment.get("id") or ""),
+            session_id=session_id,
+        )
+        if isinstance(state.get("evidence_guidance"), dict):
+            state["evidence_guidance"] = {
+                **state["evidence_guidance"],
+                "request_errors": EvidenceGuidancePolicy().request_errors(blockers),
+            }
+        return {
+            **state,
+            "action": "transition_rejected",
+            "reason": reason,
+            "blockers": blockers,
+        }

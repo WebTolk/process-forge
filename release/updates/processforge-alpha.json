@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "product": {
+    "id": "processforge",
+    "name": "ProcessForge"
+  },
+  "generated_at": "2026-10-24T01:19:07Z",
+  "channels": {
+    "alpha": {
+      "latest": "1.3.0-alpha5"
+    }
+  },
+  "subjects": [
+    {
+      "type": "processforge_core",
+      "id": "processforge",
+      "name": "ProcessForge",
+      "versions": [
+        {
+          "version": "1.3.0-alpha5",
+          "channels": [
+            "alpha"
+          ],
+          "stability": "alpha",
+          "prerelease": true,
+          "released_at": "2026-10-24",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.3.0-alpha5",
+            "commit": "af68fecfc539959d2b732e45016f5d09a700ec3d"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha5"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha5/processforge-1.3.0-alpha5.zip",
+              "size": 2938278,
+              "sha256": "5bba94c513b5bbf3261f1c64ca8a8f537b2d8e4aac47d89597a70ba230eb79d3",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha5/processforge-1.3.0-alpha5.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "core",
+              "summary": "Canonical owning-distribution CoreProperties with frozen loaded and live installed metadata"
+            },
+            {
+              "area": "runtime",
+              "summary": "Versioned build-aware state and doctor diagnose same-label replacement without changing guards"
+            },
+            {
+              "area": "mcp",
+              "summary": "Actual serving-process provenance reports build identity and reconnect requirement"
+            },
+            {
+              "area": "monitor",
+              "summary": "Monitor and console receive their Core version from the shared object owner"
+            },
+            {
+              "area": "maintenance",
+              "summary": "Cumulative explicit shared search-index and verified SQLite maintenance from earlier alphas"
+            }
+          ],
+          "migration": {
+            "required": false,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.3.0-alpha5/release/1.3.0-alpha5/notes.md"
+          }
+        },
+        {
+          "version": "1.3.0-alpha4",
+          "channels": [
+            "alpha"
+          ],
+          "stability": "alpha",
+          "prerelease": true,
+          "released_at": "2026-10-23",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.3.0-alpha4",
+            "commit": "7a8f726c320460ecfa99cd8dbf96ea8a631be00f"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha4"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha4/processforge-1.3.0-alpha4.zip",
+              "size": 2923007,
+              "sha256": "52474515eb6cbf59c7a307481a16ab717391c1616a6c924fd6d9156e8ee1aaf2",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha4/processforge-1.3.0-alpha4.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "search",
+              "summary": "Explicit shared index maintenance; context refresh and search only observe readiness"
+            },
+            {
+              "area": "storage",
+              "summary": "Existing workplace SQLite FTS5 storage retained behind a narrow maintenance backend port"
+            },
+            {
+              "area": "cli",
+              "summary": "Manual workplace and existing scoped indexing CLI call one component with durable lock/state/retry"
+            },
+            {
+              "area": "knowledge",
+              "summary": "Batch addition uses native per-item transactions and one final index pass over successfully added qualified resource IDs"
+            },
+            {
+              "area": "scheduler",
+              "summary": "Cold job callable prepared for the future scheduler; periodic execution remains deferred"
+            },
+            {
+              "area": "maintenance",
+              "summary": "Cumulative alpha3 verified SQLite backup/restore and exact-byte journal recovery"
+            }
+          ],
+          "migration": {
+            "required": false,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.3.0-alpha4/docs/releases/1.3.0-alpha4.md"
+          }
+        },
+        {
+          "version": "1.3.0-alpha3",
+          "channels": [
+            "alpha"
+          ],
+          "stability": "alpha",
+          "prerelease": true,
+          "released_at": "2026-10-22",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.3.0-alpha3",
+            "commit": "18fd59e24d7b3ee7c79da26fb2b9001ee94469cd"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha3"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha3/processforge-1.3.0-alpha3.zip",
+              "size": 2884284,
+              "sha256": "b595a818827a286d6e4a9498991d1d4067935bea49e6c2018150bef9078a2022",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha3/processforge-1.3.0-alpha3.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "maintenance",
+              "summary": "Verified SQLite backup/restore, legacy preflight, exact-byte quarantine, explicit skip-invalid and idempotent journal import"
+            },
+            {
+              "area": "usage",
+              "summary": "Shared usage accounting and operator usage CLI"
+            },
+            {
+              "area": "hooks",
+              "summary": "Kimi ingress and hook compatibility"
+            },
+            {
+              "area": "monitor",
+              "summary": "Calendar uptime presentation"
+            },
+            {
+              "area": "work",
+              "summary": "Evidence guidance and advisory artifact review with deferred project-root access"
+            }
+          ],
+          "migration": {
+            "required": false,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.3.0-alpha3/docs/releases/1.3.0-alpha3.md"
+          }
+        },
+        {
+          "version": "1.3.0-alpha1",
+          "channels": [
+            "alpha"
+          ],
+          "stability": "alpha",
+          "prerelease": true,
+          "released_at": "2026-10-20",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.3.0-alpha1",
+            "commit": "d32200700c48bdbf796728f01209798d40a986c6"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.3.0-alpha1"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha1/processforge-1.3.0-alpha1.zip",
+              "size": 2794326,
+              "sha256": "71f8a16f95e1ce63cde3e7f9e3344b67734c14f85f631e8e392d93e46dbde7ea",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.3.0-alpha1/processforge-1.3.0-alpha1.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "core",
+              "summary": "Frozen accepted development checkpoint with preserved public CLI/MCP and file-only contracts"
+            },
+            {
+              "area": "context",
+              "summary": "Consistent official-pack context checks across LF/CRLF text"
+            },
+            {
+              "area": "updates",
+              "summary": "Correct prerelease precedence with build metadata ignored"
+            }
+          ],
+          "migration": {
+            "required": false,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/v1.3.0-alpha1/docs/releases/1.3.0-alpha1.md"
+          }
+        }
+      ]
+    }
+  ]
+}

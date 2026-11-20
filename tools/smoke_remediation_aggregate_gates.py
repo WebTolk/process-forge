@@ -10,6 +10,10 @@ import tempfile
 from pathlib import Path
 
 import processforge
+from processforge_core.maintenance.release_commands import ReleaseCommand
+from processforge_core.maintenance.release_plan import ReleaseCommandPlanBuilder
+
+from processforge_core.project.report_read import ReportProjectionReader
 
 
 def authoring_args(project_root: Path) -> argparse.Namespace:
@@ -43,14 +47,14 @@ def test_authoring_aggregate_exit(root: Path) -> None:
     original_template = processforge.command_template_parity_check
     original_package = processforge.command_knowledge_package_parity_check
     original_platform = processforge.command_platform_parity_check
-    original_status = processforge.resource_report_status
+    original_status = ReportProjectionReader.resource_status
     try:
         processforge.command_process_parity_check_all = lambda _args: 0
         processforge.command_template_parity_check = lambda _args: 1
         processforge.command_knowledge_package_parity_check = lambda _args: 0
         processforge.command_platform_parity_check = lambda _args: 0
-        processforge.resource_report_status = (
-            lambda _project, kind, _resource: ("FAIL", "fixture-review.md")
+        ReportProjectionReader.resource_status = (
+            lambda _self, _project, kind, _resource: ("FAIL", "fixture-review.md")
             if kind == "template"
             else ("PASS", "fixture-review.md")
         )
@@ -66,10 +70,10 @@ def test_authoring_aggregate_exit(root: Path) -> None:
         processforge.command_template_parity_check = original_template
         processforge.command_knowledge_package_parity_check = original_package
         processforge.command_platform_parity_check = original_platform
-        processforge.resource_report_status = original_status
+        ReportProjectionReader.resource_status = original_status
 
 
-def fake_result(command: processforge.ReleaseCommand, *, fail: bool = False) -> processforge.ReleaseCommandResult:
+def fake_result(command: ReleaseCommand, *, fail: bool = False) -> processforge.ReleaseCommandResult:
     return processforge.ReleaseCommandResult(
         label=command.label,
         status="FAIL" if fail else "PASS",
@@ -87,16 +91,16 @@ def fake_result(command: processforge.ReleaseCommand, *, fail: bool = False) -> 
 
 def test_public_gate_expansion(root: Path) -> None:
     commands = [
-        processforge.ReleaseCommand("public-a", ["public-a"], 10, public_gate=True),
-        processforge.ReleaseCommand("internal", ["internal"], 10, layer="development", public_gate=False),
-        processforge.ReleaseCommand("public-b", ["public-b"], 10, public_gate=True),
+        ReleaseCommand("public-a", ["public-a"], 10, public_gate=True),
+        ReleaseCommand("internal", ["internal"], 10, layer="development", public_gate=False),
+        ReleaseCommand("public-b", ["public-b"], 10, public_gate=True),
     ]
     executed: list[str] = []
-    original_commands = processforge.release_test_commands
+    original_commands = ReleaseCommandPlanBuilder.release_test_commands
     original_run = processforge.run_release_command
     original_public_checks = processforge.public_release_checks
     try:
-        processforge.release_test_commands = lambda _root, clean_first=True, public=False: list(commands)
+        ReleaseCommandPlanBuilder.release_test_commands = lambda _self, _root, clean_first=True, public=False: list(commands)
 
         def run(label: str, _command: list[str], _cwd: Path, timeout: int, allow_warn: bool = False, *, layer: str = "public", public_gate: bool = True) -> processforge.ReleaseCommandResult:
             del allow_warn
@@ -113,23 +117,23 @@ def test_public_gate_expansion(root: Path) -> None:
         if executed != ["public-a", "public-b"]:
             raise AssertionError(f"public-gate selected wrong commands: {executed}")
     finally:
-        processforge.release_test_commands = original_commands
+        ReleaseCommandPlanBuilder.release_test_commands = original_commands
         processforge.run_release_command = original_run
         processforge.public_release_checks = original_public_checks
 
 
 def test_public_gate_failure_and_empty_selection(root: Path) -> None:
-    original_commands = processforge.release_test_commands
+    original_commands = ReleaseCommandPlanBuilder.release_test_commands
     original_run = processforge.run_release_command
     original_public_checks = processforge.public_release_checks
     try:
-        public = processforge.ReleaseCommand("public-fail", ["public-fail"], 10, public_gate=True)
-        def public_commands(_root: Path, *, clean_first: bool = True, public: bool = False) -> list[processforge.ReleaseCommand]:
+        public = ReleaseCommand("public-fail", ["public-fail"], 10, public_gate=True)
+        def public_commands(_self, _root: Path, *, clean_first: bool = True, public: bool = False) -> list[ReleaseCommand]:
             del clean_first, public
             return [public_command]
 
         public_command = public
-        processforge.release_test_commands = public_commands
+        ReleaseCommandPlanBuilder.release_test_commands = public_commands
         processforge.run_release_command = (
             lambda label, command, cwd, timeout, allow_warn=False, *, layer="public", public_gate=True: fake_result(public, fail=True)
         )
@@ -139,18 +143,18 @@ def test_public_gate_failure_and_empty_selection(root: Path) -> None:
         if code == 0:
             raise AssertionError("public-gate hid an intentional public command failure")
 
-        internal = processforge.ReleaseCommand("internal", ["internal"], 10, layer="development", public_gate=False)
-        def internal_commands(_root: Path, *, clean_first: bool = True, public: bool = False) -> list[processforge.ReleaseCommand]:
+        internal = ReleaseCommand("internal", ["internal"], 10, layer="development", public_gate=False)
+        def internal_commands(_self, _root: Path, *, clean_first: bool = True, public: bool = False) -> list[ReleaseCommand]:
             del clean_first, public
             return [internal]
 
-        processforge.release_test_commands = internal_commands
+        ReleaseCommandPlanBuilder.release_test_commands = internal_commands
         with contextlib.redirect_stdout(io.StringIO()):
             code = processforge.command_release_test(release_args(root, only=["public-gate"]))
         if code == 0:
             raise AssertionError("public-gate accepted an empty command selection")
     finally:
-        processforge.release_test_commands = original_commands
+        ReleaseCommandPlanBuilder.release_test_commands = original_commands
         processforge.run_release_command = original_run
         processforge.public_release_checks = original_public_checks
 

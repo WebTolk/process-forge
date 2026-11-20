@@ -5,7 +5,8 @@ import tempfile
 from pathlib import Path
 
 from core_boundary_smoke_helpers import write_project, write_workplace
-from processforge import collect_project_source_inventory
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 
 def main() -> int:
@@ -15,7 +16,9 @@ def main() -> int:
         workplace_manifest = write_workplace(root / "processforge")
         (root / "project-materials").mkdir()
         (root / "project-materials" / "notes.md").write_text("project notes\n", encoding="utf-8")
-        inventory = collect_project_source_inventory(root, workplace_manifest=workplace_manifest, manifest_data={"project": {"type": "agent-workspace"}})
+        from processforge_core.project.scan_policy import ProjectScanPolicy
+
+        inventory = ProjectScanPolicy().collect_project_source_inventory(root, workplace_manifest=workplace_manifest, manifest_data={"project": {"type": "agent-workspace"}})
         included = {item["path"] for item in inventory["included"]}
         excluded = {item["path"]: item for item in inventory["excluded"]}
         assert "project-materials/notes.md" in included, inventory

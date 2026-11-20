@@ -32,10 +32,12 @@ python bin/pf.py agent-start-prompt --project-root ../my-project
 `pf.search`/`pf.resolve` и `pf.work.start`. Возвращённые Run/assignment/capsule
 используются в `pf.work.state` и `pf.work.transition` до `run_completed`;
 при `process_choice_required` выбирается предложенный процесс.
-`agent-start-prompt` только печатает подсказку, не меняя файлы. См.
-[политику входа](../concepts/agent-entry.md). Generic onboarding не устанавливает host-specific Codex hooks и не
-требует Runtime, MCP или manual Ledger session. Doctor и context refresh
-остаются operator/advanced diagnostics.
+`agent-start-prompt` печатает подсказку. [Политика входа](../concepts/agent-entry.md)
+
+Если режим workplace по умолчанию — `organized`, при применении плана PF
+готовит в проекте восемь обработчиков Codex. В Garage их можно установить
+отдельно по выбору оператора. Для подключения проекта через CLI достаточно
+локального Core. [Установка и активация хуков](../guides/forge-init-hooks.md)
 
 ## Coordination mode
 

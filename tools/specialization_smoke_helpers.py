@@ -9,7 +9,10 @@ import sys
 from pathlib import Path
 
 import yaml  # type: ignore
-
+from project_storage_smoke_helpers import (
+    create_fixture_flow,
+    initialize_fixture_storage,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PF = ROOT / "bin" / "pf.py"
@@ -165,7 +168,7 @@ def write_specialization(
 
 def write_project(root: Path, workplace: Path, *, specializations: list[str] | None = None, platform: str = "fixture.platform.child") -> Path:
     project = root / "project"
-    flow = project / ".pf"
+    flow = create_fixture_flow(project)
     write_yaml(
         flow / "process-forge.yaml",
         {
@@ -183,6 +186,7 @@ def write_project(root: Path, workplace: Path, *, specializations: list[str] | N
         },
     )
     write_yaml(flow / "process-forge.local.yaml", {"schema_version": 1, "workplace": {"manifest": str((workplace / "workplace.yaml").resolve())}})
+    initialize_fixture_storage(project, workplace)
     (flow / "AGENTS.md").parent.mkdir(parents=True, exist_ok=True)
     (flow / "AGENTS.md").write_text("# AGENTS\n", encoding="utf-8")
     return project

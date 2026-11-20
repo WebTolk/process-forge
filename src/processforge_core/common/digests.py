@@ -14,3 +14,9 @@ class FileDigestReader:
             for chunk in iter(lambda: handle.read(1024 * 1024), b""):
                 digest.update(chunk)
         return digest.hexdigest()
+
+    def sha256_bytes(self, content: bytes) -> str:
+        return hashlib.sha256(content).hexdigest()
+
+    def sha256_optional_file(self, path: Path) -> str | None:
+        return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None

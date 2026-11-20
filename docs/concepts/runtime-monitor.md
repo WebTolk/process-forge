@@ -4,6 +4,16 @@
 Closing it with **Q**, **Esc**, or **Ctrl+C** leaves the server running. It does
 not start, stop, repair, install or configure any service.
 
+The PF App Server window belongs to the foreground Runtime process and is
+separate from this monitor. It automatically shows the PF logo, running Core
+version and PID on a TTY. Closing that server window stops the server; closing
+the monitor does not. `run --minimized` requests minimization only for a verified
+dedicated server window on a supported desktop and does not open the monitor.
+See [server window and autostart](../getting-started/runtime-autostart.md#foreground-server-window)
+for classic Windows console, Linux X11, Windows Terminal/Wayland and headless
+boundaries. A Textual monitor and `autostart_pf_app_server_monitor` are future
+work, not current monitor or configuration features.
+
 From a source checkout (replace the example workplace with your directory):
 
 ```sh
@@ -23,6 +33,13 @@ without interval metadata keeps the old two-second viewer default. Without a
 running Runtime the viewer uses the selected workplace configuration/default.
 The compact view includes a small static PF splash, uptime, sample age and
 activity counts; `--details` selects scheduler and observation diagnostics.
+Uptime uses `yy/mo/dd/hh/mm` (years/months/days/hours/minutes), for example
+`00/00/02/03/15`. The `y/mo/d/h/min` legend distinguishes months from minutes.
+Calendar months and years are calculated in UTC from the existing observation
+timestamp and elapsed seconds. Each whole month retains the starting day/time,
+clamping the day to the target month's last day; twelve months form a year.
+The remainder is elapsed days, hours and complete minutes. Unavailable or invalid
+uptime remains `unknown`; JSON `uptime_seconds` retains its numeric format.
 There is no splash delay. See [workplace configuration](../authoring/workplace-configuration.md)
 for YAML, the independent Core CRUD API and CLI commands.
 There are no overlapping probes or catch-up bursts. Resizing the terminal
@@ -112,8 +129,10 @@ terminal control characters in text are neutralized.
 Normal exit restores the cursor and terminal mode. Killing the viewer
 unconditionally may prevent terminal restoration, but cannot stop the server.
 Server controls are separate commands: `pf server start|run|status|stop|restart`
-or `python bin/pf-server.py ...`. `run --console` shows a banner only on a real
-terminal; `status --json` uses this same read-only projection. Legacy `runtime`
+or `python bin/pf-server.py ...`. Foreground `run`/`serve` shows the header
+automatically on a TTY; `--console` remains accepted. Redirected or missing stdout
+gets no header or GUI actions. The header does not prove server readiness.
+`status --json` uses this same read-only projection. Legacy `runtime`
 commands remain compatible. These launchers run Python, not a native executable.
 
 `server stop/restart` negotiate guarded shutdown with the current owner. The
@@ -125,3 +144,22 @@ Profile changes use `diagnostics-configure`, with preview and explicit `--apply`
 Closing the monitor never changes profiles. Tray/native packaging and remote
 web remain separate work. See [Runtime MCP](runtime-mcp.md) and
 [diagnostics](diagnostics.md) for their existing contracts.
+
+## Bounded service state
+
+`service.json` is the atomic lifecycle record and stays within the 64 KiB budget
+used by admission, native selection and shutdown. It retains identity, lifecycle,
+compact metrics and scheduler summaries. Detailed Inspector lists, per-project
+results, errors and configuration data are stored in two fixed sibling files,
+`service-details.0.json` and `service-details.1.json`. The private control reference
+binds one slot by byte count, SHA-256 and instance identity.
+
+The current owner writes the inactive slot before publishing control. A failed
+publication preserves the previous accepted snapshot; ordinary saves reuse the
+two slots rather than accumulating files. Existing legacy full records remain
+readable. Full Runtime status reconstructs the same diagnostic fields, while the
+monitor and admission read control only. Unavailable or inconsistent details are
+reported as `state_details_error: runtime_state_details_unavailable`; they are
+never combined with another owner's control. These cached details grant no
+permission to start, stop or recover processes. Existing lock timeouts and
+stopping checks are unchanged.

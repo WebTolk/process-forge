@@ -170,6 +170,7 @@ class ReadinessTests(unittest.TestCase):
             class Counted(process_execution.ProcessExecutionService):
                 def _sha256_file(self,path):reads.append(path);return hashlib.sha256(path.read_bytes()).hexdigest()
             instance=Counted(root,root/'.pf',SimpleNamespace(now_utc=lambda:'fixed',rel=lambda path,project:path.relative_to(project).as_posix()))
+            object.__setattr__(instance,'_clock',instance.core.now_utc)
             record=instance._normalize_evidence({'kind':'artifact','id':'report','path':'report.txt'})[0][0]
             gate=dict(record,kind='gate',id='check',status='passed')
             for _ in range(2):

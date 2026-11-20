@@ -62,9 +62,9 @@ AGENTS.md
 .pf/handoffs/project-ready-handoff.md
 ```
 
-The onboarding command also refreshes the project context snapshot under
-`.pf/contexts/` and writes runtime launcher files under `.pf/runtime/bin/`.
-Generic onboarding is agent-host agnostic and does not install Codex hooks.
+Onboarding also refreshes the context snapshot under `.pf/contexts/`, writes
+the launcher under `.pf/runtime/bin/` and initializes the SQL journals and
+execution store for a fresh project. [Execution storage](execution-storage.md)
 
 Root `AGENTS.md` and hidden `.pf/AGENTS.md` receive the same minimum contract K.
 The root is the ordinary entry; hidden extended instructions are read on demand.
@@ -88,14 +88,14 @@ so `.codex/hooks.json`, `.pf/process-forge.local.yaml`, `.pf/runtime/`,
 `.pf/private-notes/`, and `.pf/cache/` are ignored. Cache and private-notes are
 reserved/ignored project areas, not normal onboarding output payloads.
 
-Codex hooks are an optional host telemetry integration. Explicit opt-in safely
-merges managed ProcessForge handlers into `.codex/hooks.json`, backs up an
-existing file, and does not edit global Codex configuration. The file is ignored
-because its hook command contains the local adapter path. `project-init-status`
-reports informational `codex_integration.status` values, but missing, stale, or
-unavailable hooks do not make a generic project incomplete or repairable.
-Operators can still use `project-init-repair --repair-action
-install_codex_hooks --apply` when they intentionally choose this integration.
+The linked workplace’s default project mode determines hook setup. With
+`organized`, a preview reports the planned Codex changes. Apply merges eight
+handlers into the project’s `.codex/hooks.json` and backs up an existing file
+before replacement. Status includes missing or stale required handlers in
+the initialization repair plan. A conflict or unavailable required adapter
+can block readiness. On a Garage workplace the same integration is optional.
+The operator can select `project-init-repair --repair-action install_codex_hooks
+--apply`. The client controls trust and activation. [Forge hook setup](../guides/forge-init-hooks.md)
 
 ## Detection
 

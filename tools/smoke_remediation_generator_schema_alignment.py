@@ -47,6 +47,46 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-remediation-generator-") as tmp:
         workplace = Path(tmp) / "workplace"
         run("workplace-init", "--workplace", str(workplace), "--apply")
+
+        # A source installation can have VERSION without an archive manifest.
+        # Its selected root, rather than the running CLI, owns the identity.
+        distribution = Path(tmp) / "source-distribution"
+        for name in ("tools", "schemas", "processes", "packages", "templates"):
+            (distribution / name).mkdir(parents=True)
+        (distribution / "VERSION").write_text("2.4.6-beta2+source\n", encoding="utf-8")
+        answers_path = Path(tmp) / "answers.yaml"
+        answers_path.write_text(
+            yaml.safe_dump(
+                {"paths": {"distributions": {"processforge": str(distribution)}}}
+            ),
+            encoding="utf-8",
+        )
+        mapped_workplace = Path(tmp) / "mapped-workplace"
+        run(
+            "workplace-init",
+            "--workplace",
+            str(mapped_workplace),
+            "--answers",
+            str(answers_path),
+            "--apply",
+        )
+        distributions = yaml.safe_load(
+            (mapped_workplace / "registries" / "distributions.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        assert distributions["distributions"] == [
+            {
+                "id": "processforge",
+                "label": "Processforge",
+                "path": str(distribution),
+                "scope": "workplace",
+                "status": "available",
+                "name": "ProcessForge",
+                "version": "2.4.6-beta2+source",
+                "channel": "beta",
+            }
+        ], distributions
         empty_selection = run(
             "release-test",
             "--root",

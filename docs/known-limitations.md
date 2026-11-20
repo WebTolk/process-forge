@@ -1,10 +1,9 @@
 # Known Limitations
 
-ProcessForge currently runs as a file-first CLI with bounded orchestration
-artifacts.
+Garage supports local CLI Work without a running service. Forge also supports
+a workplace Runtime, a host-owned MCP connection and coordinated workers.
 
-- File-only mode is the supported operating mode.
-- There is no live AI session interception.
+- Session capture depends on the events and message fields the host supplies.
 - Native hooks can enforce Forge admission and record supported host events.
   External hook delivery remains bounded by the selected outbox/integration path.
 - There is no required daemon or watch-events service.
@@ -20,7 +19,7 @@ artifacts.
   Windows Task Scheduler autostart. A watch-events service, public network API,
   web UI and database-backed scheduler are not implemented. The shipped
   `codex-exec` driver requires a separately available Codex CLI and host setup.
-- WTAICC integration is not implemented.
+- WTAICC support produces local outbox payloads. Delivery to a remote service requires a separate consumer.
 - `--interactive` is a first-run UX marker, not a terminal wizard.
 - External documentation mirroring is a plan or stub unless resources are explicitly imported.
 - Process Run / Task Batch is file-only. It records runs, tasks, iterations, summaries, events, and outbox payloads, but it does not schedule or execute work in the background.
@@ -32,8 +31,8 @@ artifacts.
 
 ## Runtime Model
 
-- The Python CLI is the file-only entry point. Optional long-lived app-server,
-  MCP and Runtime processes have separate lifecycles and memory requirements.
+- The CLI runs one command. The workplace app-server (PF Runtime) and the
+  host-owned MCP transport have separate lifecycles and memory requirements.
 - It does not start background daemons by default.
 - The optional PF Runtime service is an explicit workplace lifecycle host, not
   a requirement for default file-first CLI usage.
@@ -42,8 +41,9 @@ artifacts.
 - Codex MCP registration is host-owned: Codex starts the connected stdio MCP
   process from its configuration for each fresh host session.
 - Managed Linux `systemd --user` Runtime autostart is not provided.
-- Codex hooks are optional host-specific telemetry and are not a generic project
-  readiness requirement.
+- Project initialization checks the project-local Codex configuration when the
+  workplace default mode is `organized`. Garage collection is optional.
+  The client controls whether handlers run. [Hook setup](guides/forge-init-hooks.md)
 - Hosted MCP behavior depends on the selected agent host supporting stdio MCP.
 - TUF metadata and key management are not implemented; update trust is
   based on HTTPS, SHA-256, immutable release assets, and Git provenance.

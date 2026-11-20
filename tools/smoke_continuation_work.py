@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 import hashlib
 import json
 import runpy
@@ -15,10 +16,18 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tools")]
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 from processforge_core.work.continuation import ContinuationService
 from processforge_core.process_execution import ProcessExecutionService
 from process_execution_smoke_support import fixture, stage_evidence
 from smoke_garage_mode_not_promoted_by_session import call_mcp, cli
+from smoke_hook_sqlite_support import events
+
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
 
 
 def records(project):
@@ -26,10 +35,69 @@ def records(project):
             for p in (project / ".pf" / folder).rglob("*.yaml")}
 
 
+@contextmanager
+def nonquiescent_worker(project, workplace, selectors):
+    """Install only an unlaunched fixture in the genuinely selected backend."""
+    from processforge_core.database import SqlStatement
+    from processforge_core.executions.composition import select_execution_storage
+    from processforge_core.work.paths import WorkPaths
+
+    route = select_execution_storage(project, workplace)
+    repository = route.repository
+    run_id, task_id = selectors['run_id'], selectors['assignment_id']
+    if repository is None:
+        worker = WorkPaths().worker_run(project, run_id, task_id)['status']
+        assert not worker.exists()
+        worker.parent.mkdir(parents=True, exist_ok=True)
+        worker.write_text('{"status":"running"}', encoding='utf-8')
+        try:
+            yield
+        finally:
+            worker.unlink()
+        return
+
+    assert repository.load_latest(run_id, task_id) is None
+    payload = {
+        'schema_version': 1, 'run_id': run_id, 'task_id': task_id,
+        'attempt': 1, 'status': 'planned', 'timeout_seconds': 0, 'max_retries': 0,
+        **{key: '' for key in ('driver_id', 'agent_model', 'capsule_path',
+                              'worker_prompt_path', 'expected_report_path',
+                              'stdout_path', 'stderr_path', 'heartbeat_path')},
+        **{key: None for key in ('pid', 'exit_code', 'started_at', 'finished_at',
+                                'last_heartbeat_at', 'failure_reason')},
+    }
+    allocated = repository.allocate_attempt(
+        run_id, task_id, json.dumps(payload), generation=repository.readiness().generation
+    )
+    try:
+        assert allocated.phase == 'prepared' and allocated.process is None
+        yield
+    finally:
+        # Tear down this never-launched fixture, rather than inventing absence.
+        assert repository.load_latest(run_id, task_id) == allocated
+        identity = (repository.project_id, run_id, task_id)
+        with repository.database.transaction() as session:
+            for table in ('execution_current', 'execution_receipt_admissions',
+                          'execution_allocation_floors'):
+                assert session.fetch_one(SqlStatement(
+                    f'SELECT 1 FROM {table} WHERE project_id=? AND run_id=? AND task_id=?',
+                    identity,
+                )) is None
+            session.execute(SqlStatement(
+                'DELETE FROM execution_heads WHERE project_id=? AND run_id=? AND task_id=? AND latest_attempt=?',
+                (*identity, allocated.key.attempt),
+            ))
+            session.execute(SqlStatement(
+                'DELETE FROM execution_attempts WHERE project_id=? AND run_id=? AND task_id=? AND attempt=?',
+                (*identity, allocated.key.attempt),
+            ))
+        assert repository.load_latest(run_id, task_id) is None
+
+
 def main():
     with fixture() as (workplace, project, empty):
-        service = ProcessExecutionService(project, workplace, core)
-        continuation = ContinuationService(project, workplace, core)
+        service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
+        continuation = ContinuationService(project, workplace, core, events=ProcessEventRecorder(), summaries=WorkSummaryRenderer())
         assert service.state(assignment_id=empty['assignment_id'])['execution_readiness']['status'] == 'blocked'
         # Explicit scope is captured before creation; required source checks remain enforced.
         source = project / 'input.txt'; source.write_text('immutable input', encoding='utf-8')
@@ -137,11 +205,9 @@ def main():
         before_cancel = records(project)
         assert continuation.request('cancel_work', **cancel)['action'] == 'preview'
         assert records(project) == before_cancel
-        worker = core.worker_run_paths(project, selectors['run_id'], selectors['assignment_id'])['status']
-        worker.parent.mkdir(parents=True,exist_ok=True); worker.write_text('{"status":"running"}',encoding='utf-8')
-        assert continuation.request('resume', continuation_id='resume-exact')['reason'] == 'worker_not_quiescent'
-        assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'worker_not_quiescent'
-        worker.unlink()
+        with nonquiescent_worker(project, workplace, selectors):
+            assert continuation.request('resume', continuation_id='resume-exact')['reason'] == 'worker_not_quiescent'
+            assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'worker_not_quiescent'
         lease = {'schema_version':1,'id':'fixture-lease','status':'active','scope':{'project_id':core.project_id(project),'task_id':selectors['assignment_id']}}
         core.save_lease(workplace,lease)
         assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'active_lease'
@@ -167,13 +233,26 @@ def main():
         with patch.object(ProcessExecutionService,'_atomic_yaml',fail_run):
             assert continuation.request('cancel_work', **cancel, apply=True)['status'] == 'blocked'
         assert service.transition(run_id=selectors['run_id'],assignment_id=selectors['assignment_id'],outcome='completed')['reason'] == 'cancellation_recovery_pending'
+        native_text = ProcessExecutionService._atomic_text
+        def fail_receipt(self, path, content):
+            if path.name.endswith('.applied.json'):
+                raise OSError('injected interruption after cancellation events')
+            native_text(self, path, content)
+        before_events = events(project)
+        with patch.object(ProcessExecutionService, '_atomic_text', fail_receipt):
+            assert continuation.request('cancel_work', **cancel, apply=True)['status'] == 'blocked'
+        recorded = events(project)
+        assert recorded[:len(before_events)] == before_events
+        appended = recorded[len(before_events):]
+        assert [event['event_type'] for event in appended] == ['task.cancelled', 'run.cancelled']
+        assert len({event['event_id'] for event in appended}) == 2
         result = continuation.request('cancel_work', **cancel, apply=True)
         assert result['status'] == 'cancelled', result
-        events = core.event_runtime_paths(project)[0].read_bytes()
+        assert events(project) == recorded
         assert continuation.request('cancel_work', **cancel, apply=True)['already_applied']
-        assert core.event_runtime_paths(project)[0].read_bytes() == events
+        assert events(project) == recorded
         assert capsule.read_bytes() == capsule_bytes
-        task = core.load_task(project,selectors['assignment_id'])
+        task = _worker_assignment_service.load(project,selectors['assignment_id'])
         assert task['stage'] == 'build' and task['stage_status'] != 'completed'
         assert continuation.request('resume',continuation_id='resume-exact')['reason'] == 'work_is_terminal'
         assert service.state(session_id='session-one')['reason'] == 'work_is_terminal'

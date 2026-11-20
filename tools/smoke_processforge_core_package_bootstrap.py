@@ -44,7 +44,10 @@ def run_python(*args: str, input_text: str | None = None, extra_env: dict[str, s
 
 
 def main() -> int:
-    bootstrap = load_module("processforge_core.bootstrap", REPO_ROOT / "src" / "processforge_core" / "bootstrap.py")
+    sys.path.insert(0, str(REPO_ROOT / "src"))
+    bootstrap = importlib.import_module("processforge_core")
+    assert "processforge" not in sys.modules
+    assert not any(name.startswith(("pf_cli", "pf_runtime")) for name in sys.modules)
     runtime = bootstrap.bootstrap_runtime(__file__)
     assert runtime.repo_root == REPO_ROOT
     assert runtime.core.ROOT == REPO_ROOT

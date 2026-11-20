@@ -17,6 +17,7 @@ PF = ROOT / "tools" / "processforge.py"
 sys.path.insert(0, str(ROOT / "tools"))
 
 import processforge as core
+from processforge_core.chat.writer import ChatTranscriptWriter
 from pf_runtime.session_read import SessionReadError, session_chat_payload, session_context_payload
 
 
@@ -36,7 +37,9 @@ def cli(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
 
 
 def presence_payload(agent_id: str, session_id: str, project: Path) -> dict[str, object]:
-    now = core.now_utc()
+    import processforge_core.common.clock as _core_common_clock
+
+    now = _core_common_clock.now_utc()
     return {
         "schema_version": 1,
         "agent_id": agent_id,
@@ -141,13 +144,15 @@ def check_core_chat(workplace: Path, project: Path, root: Path) -> None:
         assert core.load_chat_messages(project, "Case-Session") == expected
         core.load_chat_messages = legacy_dependency
         chat = session_chat_payload(workplace, core, session_id="Case-Session")
-        assert chat["messages"] == core.chat_export_messages(expected, include_content=True)
+        from processforge_core.chat.export import ChatExportService
+
+        assert chat["messages"] == ChatExportService().chat_export_messages(expected, include_content=True)
     finally:
         for name, value in originals.items():
             setattr(core, name, value)
 
     for role, content, participant in (("user", "reader request", "user"), ("assistant", "reader answer", "codex")):
-        core.append_chat_message(project, session_id="Case-Session", participant_id=participant,
+        ChatTranscriptWriter().append_chat_message(project, session_id="Case-Session", participant_id=participant,
                                  participant_role="worker", message_role=role, content=content, turn_id="reader-turn")
     messages = reader.messages("Case-Session")
     assert len(messages) == 3
@@ -245,7 +250,7 @@ def main() -> int:
                 "--session",
                 session_id,
             )
-            core.append_chat_message(
+            ChatTranscriptWriter().append_chat_message(
                 project,
                 session_id=session_id,
                 participant_id="fixture-agent",
@@ -285,7 +290,9 @@ def main() -> int:
             raise AssertionError("checkout of colliding slug session changed its sibling")
 
         legacy = presence_payload("legacy-agent", "Legacy/Session", project)
-        legacy_path = core.workplace_agent_presence_dir(workplace) / "legacy-agent" / "legacy-session.json"
+        from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+        legacy_path = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace) / "legacy-agent" / "legacy-session.json"
         legacy_path.parent.mkdir(parents=True, exist_ok=True)
         legacy_path.write_text(json.dumps(legacy), encoding="utf-8")
         if core.find_agent_presence(workplace, session_id="Legacy/Session").get("session_id") != "Legacy/Session":
@@ -300,14 +307,14 @@ def main() -> int:
         old_record = {"message_id": "legacy-message", "session_id": "Legacy/Session", "message": {"role": "assistant", "content": "legacy content"}}
         foreign_record = {"message_id": "foreign-message", "session_id": "legacy-session", "message": {"role": "assistant", "content": "foreign content"}}
         old_chat.write_text(json.dumps(old_record)+"\n"+json.dumps(foreign_record)+"\n", encoding="utf-8")
-        core.append_chat_message(project, session_id="Legacy/Session", participant_id="fixture", participant_role="worker", message_role="assistant", content="new content")
+        ChatTranscriptWriter().append_chat_message(project, session_id="Legacy/Session", participant_id="fixture", participant_role="worker", message_role="assistant", content="new content")
         history = core.load_chat_messages(project, "Legacy/Session")
         assert [item["message"]["content"] for item in history] == ["legacy content", "new content"], history
-        core.append_chat_message(project, session_id="Legacy/Session", participant_id="fixture", participant_role="worker", message_role="assistant", content="legacy content", message_id="legacy-message")
+        ChatTranscriptWriter().append_chat_message(project, session_id="Legacy/Session", participant_id="fixture", participant_role="worker", message_role="assistant", content="legacy content", message_id="legacy-message")
         assert len(core.load_chat_messages(project, "Legacy/Session")) == 2
 
         forged = presence_payload("forged-agent", "other-session", project)
-        forged_path = core.workplace_agent_presence_dir(workplace) / "forged-agent" / "forged-session.json"
+        forged_path = AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace) / "forged-agent" / "forged-session.json"
         forged_path.parent.mkdir(parents=True, exist_ok=True)
         forged_path.write_text(json.dumps(forged), encoding="utf-8")
         if core.find_agent_presence(workplace, agent_id="forged-agent", session_id="forged-session"):

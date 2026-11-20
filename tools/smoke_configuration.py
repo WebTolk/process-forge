@@ -22,6 +22,12 @@ AGE = "runtime.temporary_files.max_age_hours"
 
 
 def main():
+    retention = "runtime.temporary_files.retain_unused"
+    assert PFConfig().get(retention) is False
+    global_keep = PFConfig().with_changes({retention: True})
+    assert global_keep.for_project(ProjectPFConfig()).get(retention) is True
+    assert global_keep.for_project(ProjectPFConfig().with_changes({retention: False})).get(retention) is False
+    rejects(lambda: PFConfig().with_changes({retention: "true"}))
     assert PFConfig().get(MODE) == "notify" and PFConfig().get(AGE) == 168
     try:
         TemporaryFilesConfig().mode = "off"

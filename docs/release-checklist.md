@@ -1,16 +1,31 @@
 # Release Checklist
 
+[Русская версия](ru/release-checklist.md)
+
 Run these checks before publishing a ProcessForge release:
 
-Prepare a clean source candidate with explicit root `AGENTS.md` and hidden
-`.pf/AGENTS.md` projections containing the current versioned startup contract.
-The canonical source is `templates/agent-entry-contract.md` and its metadata;
-`templates/project-agents-template.md` is the verified extended projection.
-Review any entry migration before applying it to an existing project. Candidate
-preparation and project migration are separate from packing: `release-pack`
-does not generate instructions or substitute a hidden file for a missing root.
-The release gate rejects missing, stale, changed or inconsistent contracts.
-Regenerate the candidate's checksum inventory after preparing its final layout.
+Prepare a clean source candidate containing the repository's root `AGENTS.md`,
+`CONTRIBUTING.md` and `CONTRIBUTING.ru.md`. These are contributor instructions.
+The source repository's root `.pf/` is private local state: a fresh clone and
+distribution checks must work without it, and it must not enter the public
+inventory or release ZIP. A local `.pf/AGENTS.md` is not a required release input
+or a substitute for the root contributor policy.
+
+The consumer startup contract is shipped separately as
+`templates/agent-entry-contract.md` with `templates/agent-entry-contract.json`
+metadata; `templates/project-agents-template.md` is its verified extended
+projection. Release checks validate these templates and their integrity without
+requiring contributor and consumer instructions to be identical. Review an entry
+migration before applying it to an existing consumer project. `release-pack`
+does not initialize the source project, generate instructions or rewrite the
+root contributor policy.
+
+Record the candidate's exact source commit/tree, included changes and applicable
+verification results. After preparing its final shipped layout, regenerate the
+inventory with `python tools/validate-process-forge-checksums.py --root . --write`,
+inspect the complete inventory diff and run the checker again. A later source
+change requires affected checks on the new identity. A source prerelease version
+does not establish that a release has been published on a provider.
 
 ```bash
 python -m py_compile tools/processforge.py
@@ -33,23 +48,22 @@ python tools/smoke_worker_awareness_of_director.py
 python tools/smoke_error_workflow.py
 python tools/smoke_process_run_task_batch.py
 python bin/pf.py release-test --root . --public --fail-fast
-python bin/pf.py dev-test --root . --suite supervisor-stress
 python bin/pf.py release-pack --root . --output .pf/tmp/release-check/processforge.zip
 python bin/pf.py release-archive-test --archive .pf/tmp/release-check/processforge.zip --root . --extracted-test full
 git diff --check
 ```
 
+The public qualification uses the shipped release checks and the applicable
+repository-owned native tests. `dev-test` runs additional local dogfooding through
+`.pf/dogfooding/run_dogfooding_tests.py`; that private runner and its suite names
+are not supplied by a fresh clone or release archive. When a contributor owns
+such a runner, record its selected suites and results separately. Do not require
+another contributor's private state to run the public checks or report a missing
+local suite as passed.
+
 Release output must not include:
 
-- `.pf/tmp/`
-- `.pf/runtime/`
-- `.pf/artifacts/`
-- `.pf/reviews/`
-- `.pf/handoffs/`
-- `.pf/runs/`
-- `.pf/contexts/`
-- `.pf/assignments/`
-- `.pf/dogfooding/`
+- the source repository's entire root `.pf/` directory
 - `runtime/`
 - `__pycache__/`
 - temporary smoke directories

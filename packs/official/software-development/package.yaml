@@ -2,7 +2,7 @@ schema_version: 1
 kind: processforge.pack
 id: processforge.official.software-development
 name: Official Software Development Process Pack
-version: 1.1.0
+version: 1.1.1
 origin: official
 tier: bundled
 status: stable

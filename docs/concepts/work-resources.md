@@ -33,6 +33,23 @@ it also accepts `limit`, `limitstart` and `offset`. `pf.work.resolve` requires
 `run_id`, `assignment_id`, `context_id` and `resource_id`. Both retain the
 existing project and bound-session authorization checks.
 
+## MCP declarations and agent connections
+
+The MCP routes above are PF interfaces. The `workspace_access.mcp` field is an
+advisory declaration, not a grant for connecting to an MCP server or using host
+tools. Each coding agent configures its actual MCP connections and tool approvals
+in its own configuration. During worker preparation, normalized immutable MCP
+declarations remain in `input.resources.requested.mcp`, while
+`input.resources.grants.mcp` is empty. Preparation does not resolve, pin, check
+revocation of or probe those connections, and changes no agent configuration or
+running server.
+
+The resource verification rules below still apply to actual resource reads;
+`knowledge_resources`, `templates` and `tools` still require their verified
+grants during preparation. Capsule, required-source, file/action scope and
+filesystem checks remain unchanged. MCP fields and catalogs remain for
+compatibility; their removal is separate future work.
+
 ## What a read can return
 
 A ready response is scoped to `work_context` and includes Work/context identity

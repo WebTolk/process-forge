@@ -84,8 +84,9 @@ def main() -> int:
         assert not results[1]["deduplicated"]
         assert results[2]["deduplicated"]
 
-        events_path, _ = runtime.core.event_runtime_paths(project)
-        events = [event for _sequence, event, _error in runtime.core.iter_process_events(events_path)]
+        from smoke_hook_sqlite_support import events as stored_events
+
+        events = stored_events(project)
         lifecycle = [
             event
             for event in events

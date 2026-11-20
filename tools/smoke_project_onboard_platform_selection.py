@@ -85,7 +85,8 @@ platforms:
 
 
 def selected(pf: object, project: Path, workplace: Path, *, project_type: str = "fixture-extension", detected: list[str] | None = None, answers: dict[str, object] | None = None) -> list[str]:
-    return pf.selected_project_platforms(
+    from processforge_core.project.platform_selection import ProjectPlatformSelectionService
+    return ProjectPlatformSelectionService(pf.ROOT).selected(
         {"platforms": detected or []},
         answers or {"project": {}},
         project_type,
@@ -104,7 +105,8 @@ def main() -> int:
         generic_project.mkdir()
         automatic = selected(pf, generic_project, workplace)
         assert automatic == ["example"], automatic
-        generated = pf.build_project_files(generic_project, workplace, {"project": {"type": "fixture-extension"}})
+        from processforge_core.project.file_templates import ProjectFileTemplateBuilder
+        generated = ProjectFileTemplateBuilder(pf.ROOT).build_project_files(generic_project, workplace, {"project": {"type": "fixture-extension"}})
         manifest = yaml.safe_load(generated[generic_project / ".pf" / "process-forge.yaml"])
         assert [item["id"] for item in manifest["platform_contracts"]] == ["platform.example"], manifest["platform_contracts"]
 

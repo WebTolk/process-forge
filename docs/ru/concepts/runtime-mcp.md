@@ -17,10 +17,12 @@
 stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
 detached background service.
 
-Необязательный **pf-app-server** — отдельная служба Runtime для планирования
-и координации workplace. Stdio-фасад использует общий Core; контекст Garage
-и управляемая Work не требуют работающего app-server. При отсутствии MCP
-используйте существующий CLI. См. [Garage Core](garage-core.md) и
+**pf-app-server** — служба Runtime для планирования и координации workplace.
+Контекст Garage и управляемая Work не требуют работающего app-server.
+В Forge stdio-фасад передаёт запросы этой существующей службе, которая исполняет
+их на своём загруженном Core. При недоступном Runtime возвращается ошибка
+backend, без перехода на локальный Core. См.
+[MCP-соединения и обновление Core](mcp-updates.md), [Garage Core](garage-core.md) и
 [требования](../requirements.md).
 
 ## Справка по реализации: транспорт stdio
@@ -41,15 +43,15 @@ detached background service.
 
 ## Инструменты проекта и Work
 
-Garage read tools принимают явный `project_root` и не требуют session identity,
-hooks, daemon, Ledger event, Director process или chat transcript. Session и
-Forge tools по-прежнему требуют session identity (`--session`,
-`PF_MCP_SESSION_ID` или `session_id`), которая уже существует в Agent Ledger.
+Для чтения контекста проекта можно передать `project_root`. Для выбранной
+Work передаются идентификаторы run, assignment и context. Для чтения данных
+сессии нужна её привязка в Ledger через `--session`, `PF_MCP_SESSION_ID`
+или `session_id`. Эти правила действуют и при обработке запроса Runtime в
+Forge. [Выбор Work](work-continuation.md)
 
-Обычная инициализация проекта не зависит от host и не устанавливает Codex
-hooks, а также не запускает Runtime infrastructure. Телеметрия Codex hooks —
-опциональная host-интеграция, которую оператор включает явно, если нужен сбор
-Forge sessions.
+Инициализация использует ту же службу ядра, что и CLI. Если режим связанного
+workplace по умолчанию — `organized`, применение плана готовит проектную
+конфигурацию хуков Codex. [Настройка хуков Forge](../guides/forge-init-hooks.md)
 
 Доступные tools: `pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.project_initialization.initialize`,

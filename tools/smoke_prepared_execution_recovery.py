@@ -7,7 +7,7 @@ import copy
 import io
 import json
 import os
-from contextlib import ExitStack, nullcontext, redirect_stdout
+from contextlib import ExitStack, contextmanager, nullcontext, redirect_stdout
 from pathlib import Path
 import subprocess
 import sys
@@ -17,16 +17,24 @@ from unittest.mock import Mock, patch
 import yaml
 
 import processforge as core
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.runtime.command import WorkerCommandBuilder
+from processforge_core.runtime.selection import RuntimeDriverSelectionService
 import processforge_core.prepared.input as prepared_input
 from process_execution_smoke_support import fixture
 from processforge_core.prepared.input import private_file
 from processforge_core.prepared.collection import CapturedAttemptReader, CollectionRecoveryStore
 from processforge_core.process_execution import ProcessExecutionService
 from smoke_garage_mode_not_promoted_by_session import call_mcp
+from smoke_hook_sqlite_support import events as event_rows
 from smoke_prepared_execution_context import (
-    ROOT, RUN_ID, call, create_task, event_rows, make_shell_driver,
+    ROOT, RUN_ID, call, create_task, make_shell_driver,
     pf, require, setup_basic_project,
 )
+
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
 
 
 def terminal_worker_admission() -> None:
@@ -40,139 +48,394 @@ def terminal_worker_admission() -> None:
         try:
             test()
         except (AssertionError, SystemExit) as exc:
-            failures.append(f'{name}: {exc}')
+            failures.append(f"{name}: {exc}")
 
-    with tempfile.TemporaryDirectory(prefix='pf-terminal-admission-') as temporary:
-        project = Path(temporary)
-        run_dir = project / '.pf/runs/fixture'
-        run_dir.mkdir(parents=True)
+    with tempfile.TemporaryDirectory(prefix="pf-terminal-admission-") as temporary:
+        _workplace, project = setup_basic_project(
+            Path(temporary), "terminal-admission", garage_hooks=False
+        )
+        run_dir = project / ".pf/runs/fixture"
+        run_dir.mkdir(parents=True, exist_ok=True)
 
-        def records(task_status='open', run_status='in_progress', marker='task'):
-            task = {'id': 'fixture', 'run_id': 'fixture', 'status': task_status}
-            run = {'id': 'fixture', 'status': run_status}
-            if marker == 'task':
-                task['process_execution'] = {}
-            elif marker == 'run':
-                run['process_execution'] = {}
-            (run_dir / 'run.yaml').write_text(json.dumps(run), encoding='utf-8')
+        def records(task_status="open", run_status="in_progress", marker="task"):
+            task = {"id": "fixture", "run_id": "fixture", "status": task_status}
+            run = {"id": "fixture", "status": run_status}
+            if marker == "task":
+                task["process_execution"] = {}
+            elif marker == "run":
+                run["process_execution"] = {}
+            (run_dir / "run.yaml").write_text(json.dumps(run), encoding="utf-8")
             return task
 
         def files():
-            return {p.relative_to(project).as_posix(): p.read_bytes() for p in project.rglob('*') if p.is_file()}
+            return {
+                p.relative_to(project).as_posix(): p.read_bytes()
+                for p in project.rglob("*")
+                if p.is_file()
+            }
 
-        forbidden = ('save_task', 'existing_capsule_status', 'existing_running_worker_run',
-                     'load_agent_run_state', 'runtime_driver_for_task', 'emit_process_event',
-                     'emit_worker_run_skip', 'build_worker_process_command')
+        forbidden = (
+            "save_task",
+            "existing_capsule_status",
+            "existing_running_worker_run",
+            "load_agent_run_state",
+            "runtime_driver_for_task",
+            "emit_process_event",
+            "emit_worker_run_skip",
+            "build_worker_process_command",
+            "_storage_first_write",
+        )
 
         def rejected(task_status, run_status, marker, operation):
             task = records(task_status, run_status, marker)
             original = copy.deepcopy(task)
             before = files()
-            spies = {name: Mock(side_effect=AssertionError('unexpected ' + name)) for name in forbidden}
-            prepare = Mock(side_effect=AssertionError('unexpected preparation'))
-            provider = Mock(side_effect=AssertionError('unexpected prepared/provider load'))
-            launch = Mock(side_effect=AssertionError('unexpected process launch'))
+            spies = {
+                name: Mock(side_effect=AssertionError("unexpected " + name))
+                for name in forbidden
+            }
+            prepare = Mock(side_effect=AssertionError("unexpected preparation"))
+            provider = Mock(
+                side_effect=AssertionError("unexpected prepared/provider load")
+            )
+            launch = Mock(side_effect=AssertionError("unexpected process launch"))
             stdout = io.StringIO()
             with ExitStack() as stack:
-                stack.enter_context(patch.object(core, 'require_flow_root'))
-                stack.enter_context(patch.object(core, 'load_task', return_value=task))
-                stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
-                stack.enter_context(patch.multiple(core, **spies))
-                stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
-                stack.enter_context(patch.object(prepared_input, 'load', provider))
-                stack.enter_context(patch.object(core.subprocess, 'Popen', launch))
+                from processforge_core.work.consistency import RunTaskInputReader
+
+                stack.enter_context(
+                    patch.object(RunTaskInputReader, "require_flow_root")
+                )
+                stack.enter_context(
+                    patch.object(WorkerAssignmentService, "load", return_value=task)
+                )
+                stack.enter_context(
+                    patch.object(
+                        core, "worker_run_lifecycle_lock", return_value=nullcontext()
+                    )
+                )
+                stack.enter_context(
+                    patch.multiple(
+                        core,
+                        **{
+                            name: spy
+                            for name, spy in spies.items()
+                            if name
+                            not in {
+                                "build_worker_process_command",
+                                "runtime_driver_for_task",
+                                "emit_process_event",
+                            }
+                        },
+                    )
+                )
+                stack.enter_context(
+                    patch.object(
+                        ProcessEventRecorder,
+                        "emit_process_event",
+                        spies["emit_process_event"],
+                    )
+                )
+                stack.enter_context(
+                    patch.object(
+                        WorkerCommandBuilder,
+                        "build",
+                        spies["build_worker_process_command"],
+                    )
+                )
+                stack.enter_context(
+                    patch.object(
+                        RuntimeDriverSelectionService,
+                        "for_task",
+                        spies["runtime_driver_for_task"],
+                    )
+                )
+                stack.enter_context(patch.object(core, "prepare_worker_run", prepare))
+                stack.enter_context(patch.object(prepared_input, "load", provider))
+                stack.enter_context(patch.object(core.subprocess, "Popen", launch))
                 with redirect_stdout(stdout):
-                    if operation == 'direct':
+                    if operation == "direct":
                         try:
-                            real_prepare(project, 'fixture', model_arg='fixture-model')
+                            real_prepare(project, "fixture", model_arg="fixture-model")
                         except SystemExit as exc:
-                            assert 'work_is_terminal' in str(exc), exc
+                            assert "work_is_terminal" in str(exc), exc
                         else:
-                            raise AssertionError('direct prepare admitted terminal Work')
+                            raise AssertionError(
+                                "direct prepare admitted terminal Work"
+                            )
                     else:
-                        code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))
-                        assert code == 1 and 'work_is_terminal' in stdout.getvalue(), stdout.getvalue()
-            assert all(not spy.called for spy in [*spies.values(), prepare, provider, launch])
-            assert task == original and files() == before, 'terminal admission changed records/attempt/output files'
+                        code = getattr(core, "command_worker_run_" + operation)(
+                            argparse.Namespace(
+                                project_root=str(project), task="fixture"
+                            )
+                        )
+                        assert code == 1 and "work_is_terminal" in stdout.getvalue(), (
+                            stdout.getvalue()
+                        )
+            assert all(
+                not spy.called for spy in [*spies.values(), prepare, provider, launch]
+            )
+            assert task == original and files() == before, (
+                "terminal admission changed records/attempt/output files"
+            )
 
-        cases = [(status, 'in_progress', marker) for status in ('done', 'completed', 'failed', 'cancelled') for marker in ('task', 'run')]
-        cases += [('open', status, marker) for status in ('completed', 'failed', 'cancelled') for marker in ('task', 'run')]
-        cases += [('cancelled', 'in_progress', 'legacy')]
+        cases = [
+            (status, "in_progress", marker)
+            for status in ("done", "completed", "failed", "cancelled")
+            for marker in ("task", "run")
+        ]
+        cases += [
+            ("open", status, marker)
+            for status in ("completed", "failed", "cancelled")
+            for marker in ("task", "run")
+        ]
+        cases += [("cancelled", "in_progress", "legacy")]
         for task_status, run_status, marker in cases:
-            for operation in ('prepare', 'start', 'direct'):
-                check(f'{operation}/{marker}/{task_status}/{run_status}',
-                      lambda t=task_status, r=run_status, m=marker, o=operation: rejected(t, r, m, o))
+            for operation in ("prepare", "start", "direct"):
+                check(
+                    f"{operation}/{marker}/{task_status}/{run_status}",
+                    lambda t=task_status, r=run_status, m=marker, o=operation: rejected(
+                        t, r, m, o
+                    ),
+                )
 
-        def admitted(task_status, marker, operation):
+        def retry_dispatch(task_status, marker, operation):
             task = records(task_status, marker=marker)
-            paths = {'status': project / 'status.json', 'command': project / 'command.json'}
-            prepare = Mock(return_value=(task, {'id': 'manual', 'kind': 'manual'}, paths))
+            paths = {
+                "status": project / "status.json",
+                "command": project / "command.json",
+            }
+            prepare = Mock(
+                return_value=(task, {"id": "manual", "kind": "manual"}, paths)
+            )
             provider = Mock(return_value={})
-            launch = Mock(side_effect=AssertionError('manual fixture launched process'))
+            launch = Mock(side_effect=AssertionError("manual fixture launched process"))
             before = files()
-            with ExitStack() as stack:
-                stack.enter_context(patch.object(core, 'require_flow_root'))
-                stack.enter_context(patch.object(core, 'load_task', return_value=task))
-                stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
-                stack.enter_context(patch.object(core, 'existing_running_worker_run', return_value=None))
-                stack.enter_context(patch.object(core, 'load_agent_run_state', return_value={'status': 'failed', 'attempt': 1}))
-                stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
-                stack.enter_context(patch.object(core, 'json_read', return_value={'status': 'ready'}))
-                stack.enter_context(patch.object(prepared_input, 'load', provider))
-                stack.enter_context(patch.object(core.subprocess, 'Popen', launch))
-                with redirect_stdout(io.StringIO()):
-                    code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))
-            assert code == 0 and prepare.call_count == 1
-            assert provider.call_count == (1 if operation == 'start' else 0)
-            assert not launch.called and files() == before
+            stdout = io.StringIO()
+            argv = argparse.Namespace(project_root=str(project), task="fixture")
+            admission_failure = {}
+            original_admission = core._worker_start_admission
 
-        for status, marker in [('open', 'task'), ('open', 'run'), ('open', 'legacy'), ('failed', 'legacy'), ('done', 'legacy'), ('completed', 'legacy')]:
-            for operation in ('prepare', 'start'):
-                check(f'retry/{marker}/{status}/{operation}', lambda s=status, m=marker, o=operation: admitted(s, m, o))
+            @contextmanager
+            def observed_admission(root):
+                try:
+                    with original_admission(root):
+                        yield
+                except Exception as exc:
+                    # Preserve the actual exception and all guards. These are
+                    # failure-time locals, not a later cache/fence observation.
+                    from processforge_core.executions.model import ExecutionError
+
+                    if isinstance(exc, ExecutionError):
+                        admission_failure["code"] = exc.code
+                        frames = []
+                        trace = exc.__traceback__
+                        while trace is not None:
+                            frame = trace.tb_frame
+                            frames.append(
+                                {
+                                    "file": Path(frame.f_code.co_filename).name,
+                                    "function": frame.f_code.co_name,
+                                    "line": trace.tb_lineno,
+                                }
+                            )
+                            if frame.f_code is original_admission.__wrapped__.__code__:
+                                local = frame.f_locals
+                                if "complete" in local:
+                                    admission_failure["registration_complete"] = local[
+                                        "complete"
+                                    ]
+                                    admission_failure["project_in_cache"] = (
+                                        root in local["roots"]
+                                    )
+                            trace = trace.tb_next
+                        admission_failure["frames"] = frames
+                        caller = sys._getframe().f_back
+                        while caller is not None:
+                            if caller.f_code.co_name in {
+                                "_legacy_worker_run_start",
+                                "_sql_worker_run_start",
+                            }:
+                                admission_failure["storage_route"] = (
+                                    caller.f_code.co_name
+                                )
+                                break
+                            caller = caller.f_back
+                    raise
+
+            with ExitStack() as stack:
+                from processforge_core.work.consistency import RunTaskInputReader
+
+                stack.enter_context(
+                    patch.object(RunTaskInputReader, "require_flow_root")
+                )
+                stack.enter_context(
+                    patch.object(WorkerAssignmentService, "load", return_value=task)
+                )
+                stack.enter_context(
+                    patch.object(
+                        core, "worker_run_lifecycle_lock", return_value=nullcontext()
+                    )
+                )
+                stack.enter_context(
+                    patch.object(core, "existing_running_worker_run", return_value=None)
+                )
+                stack.enter_context(
+                    patch.object(
+                        core,
+                        "load_agent_run_state",
+                        return_value={"status": "failed", "attempt": 1},
+                    )
+                )
+                stack.enter_context(patch.object(core, "prepare_worker_run", prepare))
+                stack.enter_context(
+                    patch.object(core, "json_read", return_value={"status": "ready"})
+                )
+                stack.enter_context(patch.object(prepared_input, "load", provider))
+                stack.enter_context(patch.object(core.subprocess, "Popen", launch))
+                # A forced non-SQL route must refuse start before the mocked
+                # preparation/launch ports. Real SQL retries have CLI coverage.
+                from processforge_core.executions.composition import ExecutionStorage
+
+                stack.enter_context(
+                    patch.object(
+                        core,
+                        "_execution_storage",
+                        return_value=ExecutionStorage("legacy"),
+                    )
+                )
+                stack.enter_context(
+                    patch.object(
+                        core, "_storage_first_write", return_value=(None, None)
+                    )
+                )
+                stack.enter_context(
+                    patch.object(core, "_worker_start_admission", observed_admission)
+                )
+                with redirect_stdout(stdout):
+                    code = getattr(core, "command_worker_run_" + operation)(argv)
+            after = files()
+
+            def diagnostics():
+                # Evaluated only by a failed assertion; retain the actual call.
+                return {
+                    "argv": list(sys.argv),
+                    "command": "command_worker_run_" + operation,
+                    "arguments": vars(argv),
+                    "code": code,
+                    "prepare_calls": prepare.call_count,
+                    "provider_calls": provider.call_count,
+                    "launch_calls": launch.call_count,
+                    "changed_files": sorted(k for k in before.keys() | after.keys()
+                                            if before.get(k) != after.get(k)),
+                    "stdout": stdout.getvalue(),
+                    "admission": admission_failure,
+                }
+
+            if operation == "start":
+                assert code == 1 and "execution_storage_not_ready" in stdout.getvalue(), diagnostics()
+                assert prepare.call_count == 0, diagnostics()
+            else:
+                # This only checks dispatch to the injected preparation port.
+                assert code == 0 and prepare.call_count == 1, diagnostics()
+            assert provider.call_count == 0, diagnostics()
+            assert not launch.called and after == before, diagnostics()
+
+        for status, marker in [
+            ("open", "task"),
+            ("open", "run"),
+            ("open", "legacy"),
+            ("failed", "legacy"),
+            ("done", "legacy"),
+            ("completed", "legacy"),
+        ]:
+            for operation in ("prepare", "start"):
+                check(
+                    f"retry/{marker}/{status}/{operation}",
+                    lambda s=status, m=marker, o=operation: retry_dispatch(s, m, o),
+                )
 
         def cancellation_priority(operation):
-            task = records('cancelled')
-            intent = run_dir / 'cancellation-fixture.yaml'
-            intent.write_text('pending\n', encoding='utf-8')
+            task = records("cancelled")
+            intent = run_dir / "cancellation-fixture.yaml"
+            intent.write_text("pending\n", encoding="utf-8")
             try:
                 stdout = io.StringIO()
-                with patch.object(core, 'require_flow_root'), patch.object(core, 'load_task', return_value=task), \
-                     patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()), \
-                     patch.object(core, 'prepare_worker_run', side_effect=AssertionError('unexpected prepare')), redirect_stdout(stdout):
-                    code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))
-                assert code == 1 and 'cancellation_recovery_pending' in stdout.getvalue(), stdout.getvalue()
+                from processforge_core.work.consistency import RunTaskInputReader
+
+                with (
+                    patch.object(RunTaskInputReader, "require_flow_root"),
+                    patch.object(WorkerAssignmentService, "load", return_value=task),
+                    patch.object(
+                        core, "worker_run_lifecycle_lock", return_value=nullcontext()
+                    ),
+                    patch.object(
+                        core,
+                        "prepare_worker_run",
+                        side_effect=AssertionError("unexpected prepare"),
+                    ),
+                    redirect_stdout(stdout),
+                ):
+                    code = getattr(core, "command_worker_run_" + operation)(
+                        argparse.Namespace(project_root=str(project), task="fixture")
+                    )
+                assert (
+                    code == 1 and "cancellation_recovery_pending" in stdout.getvalue()
+                ), stdout.getvalue()
             finally:
                 intent.unlink()
 
-        for operation in ('prepare', 'start'):
-            check('pending cancellation/' + operation, lambda o=operation: cancellation_priority(o))
+        for operation in ("prepare", "start"):
+            check(
+                "pending cancellation/" + operation,
+                lambda o=operation: cancellation_priority(o),
+            )
 
         def failure_sync(marker, attempt_status):
             task = records(marker=marker)
             before = copy.deepcopy(task)
             saved, updated, emitted = Mock(), Mock(), Mock()
-            with patch.object(core, 'save_task', saved), patch.object(core, 'update_run_task_status', updated), patch.object(core, 'emit_process_event', emitted):
-                core.sync_failed_worker_lifecycle(project, task, {'status': attempt_status, 'failure_reason': 'fixture failure'})
-            if marker == 'legacy':
-                assert task['status'] == 'failed' and task['result']['status'] == 'failed'
+            with (
+                patch.object(core, "save_task", saved),
+                patch.object(core, "update_run_task_status", updated),
+                patch.object(ProcessEventRecorder, "emit_process_event", emitted),
+            ):
+                core.sync_failed_worker_lifecycle(
+                    project,
+                    task,
+                    {"status": attempt_status, "failure_reason": "fixture failure"},
+                )
+            if marker == "legacy":
+                assert (
+                    task["status"] == "failed" and task["result"]["status"] == "failed"
+                )
                 assert saved.call_count == updated.call_count == emitted.call_count == 1
             else:
-                assert task == before and not any(x.called for x in (saved, updated, emitted)), 'worker failure terminalized governed Work'
+                assert task == before and not any(
+                    x.called for x in (saved, updated, emitted)
+                ), "worker failure terminalized governed Work"
 
-        for marker in ('task', 'run', 'legacy'):
+        for marker in ("task", "run", "legacy"):
             for status in sorted(core.AGENT_RUN_FAILURE_TERMINAL_STATUSES):
-                check('failure sync/' + marker + '/' + status, lambda m=marker, s=status: failure_sync(m, s))
+                check(
+                    "failure sync/" + marker + "/" + status,
+                    lambda m=marker, s=status: failure_sync(m, s),
+                )
 
     for failure in failures:
-        print('FAIL: ' + failure, flush=True)
-    print(f'Terminal admission: {count - len(failures)}/{count} cases passed', flush=True)
-    assert not failures, '\n'.join(failures)
+        print("FAIL: " + failure, flush=True)
+    print(
+        f"Terminal admission: {count - len(failures)}/{count} cases passed", flush=True
+    )
+    assert not failures, "\n".join(failures)
 
 
 def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
-    task = core.load_task(project, task_id)
-    paths = core.worker_run_paths(project, run_id, task_id)
-    state = core.json_read(paths['status'])
+    task = _worker_assignment_service.load(project, task_id)
+    from processforge_core.work.paths import WorkPaths
+    paths = WorkPaths().worker_run(project, run_id, task_id)
+    from processforge_core.common.json_io import json_read
+    state = json_read(paths['status'])
     reader = CapturedAttemptReader(project)
     captured = reader.read(task, state, run_id=run_id)
     require(captured is not None and captured.attempt == state['attempt'], 'real capture not recognized')
@@ -181,7 +444,8 @@ def historical_capture_checks(project: Path, task_id: str, run_id: str) -> None:
     complete = attempt / 'collection-complete.json'
     prepared_path = project / state['prepared_input']['path']
     capsule = core.assignment_capsule_path(project, task_id)
-    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id), capsule, receipt, complete, prepared_path]
+    from processforge_core.work.paths import WorkPaths
+    protected = [WorkPaths().assignment_document(project, task_id), WorkPaths().run_document(project, run_id), capsule, receipt, complete, prepared_path]
     before = [p.read_bytes() for p in protected]
     events_before = event_rows(project)
 
@@ -354,16 +618,19 @@ def prepared_attempt_type_checks(project: Path, task: dict, state: dict, run_id:
 
 
 def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: Path) -> None:
-    task = core.load_task(project, task_id)
-    paths = core.worker_run_paths(project, run_id, task_id)
+    task = _worker_assignment_service.load(project, task_id)
+    from processforge_core.work.paths import WorkPaths
+    paths = WorkPaths().worker_run(project, run_id, task_id)
     state_raw = paths['status'].read_bytes()
-    state = core.json_read(paths['status'])
+    from processforge_core.common.json_io import json_read
+    state = json_read(paths['status'])
     source = project / '.pf/artifacts/capture-input.txt'
     original_source = source.read_bytes()
     attempt = (project / state['prepared_input']['path']).parent
     marker = None
     store = CollectionRecoveryStore(project)
-    protected = [core.assignment_yaml_path(project, task_id), core.run_yaml_path(project, run_id),
+    from processforge_core.work.paths import WorkPaths
+    protected = [WorkPaths().assignment_document(project, task_id), WorkPaths().run_document(project, run_id),
                  core.assignment_capsule_path(project, task_id), project / state['prepared_input']['path']]
     before = [p.read_bytes() for p in protected]
 
@@ -466,7 +733,7 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: 
                 argparse.Namespace(project_root=str(project), run=run_id, profile=None, driver=None,
                     interval=0, max_ticks=1, final_drain_timeout=0.1))
         require(code == 1 and 'RECOVERY-REQUIRED:' in output and 'FINAL-DRAIN: pending=' in output, output)
-        require(core.load_task(project, task_id)['status'] == task['status'], 'refusal completed parent Work')
+        require(_worker_assignment_service.load(project, task_id)['status'] == task['status'], 'refusal completed parent Work')
 
         source.write_bytes(original_source)
         with patch('pf_runtime.host.ingest_event', return_value={'accepted': False, 'chat_message_ids': []}):
@@ -489,7 +756,8 @@ def collection_refusal_checks(project: Path, task_id: str, run_id: str, driver: 
         require(code == 0 and 'observed=1' in output, output)
         code, output = call(project, task_id, 'prepare', driver=str(driver))
         require(code == 0, output)
-        new_state = core.json_read(paths['status'])
+        from processforge_core.common.json_io import json_read
+        new_state = json_read(paths['status'])
         require(new_state['attempt'] > state['attempt'] and store.read(task, new_state, run_id=run_id) is None, 'new attempt inherited refusal')
         code, output = call(project, task_id, 'start', driver=str(driver))
         require(code == 0, output)
@@ -504,33 +772,30 @@ def governed_continuation() -> None:
         code, output = call(project, started["assignment_id"], "prepare", driver="manual")
         require(code != 0 and "worker_report_undeclared" in output, output)
 
-        class ScopedFixtureService(ProcessExecutionService):
-            def _write_capsule(self, run, assignment, pin):
-                # Declare scope before immutable context creation. Do not rewrite
-                # a persisted capsule or its pins to obtain a positive fixture.
-                report = ".pf/artifacts/governed-worker.md"
-                assignment.update(
-                    allowed_files=[report], expected_report={"artifact": report},
-                    required_outputs=[{"id": "worker-report", "path": report, "required": True}],
-                    allowed_read_files=['.pf/artifacts/capture-input.txt'],
-                    required_sources=['.pf/artifacts/capture-input.txt'],
-                )
-                return super()._write_capsule(run, assignment, pin)
-
         objective = "Governed prepared executor recovery fixture"
         source = project / '.pf/artifacts/capture-input.txt'
         source.parent.mkdir(parents=True, exist_ok=True)
         source.write_bytes(b'capture input\n')
-        service = ScopedFixtureService(project, workplace, core)
-        work = service.start(objective=objective, process_id="declarative-smoke")
+        service = ProcessExecutionService(project, workplace, core)
+        report = ".pf/artifacts/governed-worker.md"
+        work = service.start(
+            objective=objective, process_id="declarative-smoke",
+            scope_intent={"schema_version": 1, "assignment": {
+                "allowed_files": [report], "expected_report": {"artifact": report},
+                "required_outputs": [{"id": "worker-report", "path": report, "required": True}],
+                "allowed_read_files": [".pf/artifacts/capture-input.txt"],
+                "required_sources": [".pf/artifacts/capture-input.txt"],
+            }},
+        )
         require(work["action"] == "created_new", work)
         task = work["assignment_id"]
         driver = make_shell_driver(project)
         code, output = call(project, task, "start", driver=str(driver))
         require(code == 0, output)
         collection_refusal_checks(project, task, work['run_id'], driver)
-        paths = [core.assignment_yaml_path(project, task),
-                 core.run_yaml_path(project, work["run_id"]),
+        from processforge_core.work.paths import WorkPaths
+        paths = [WorkPaths().assignment_document(project, task),
+                 WorkPaths().run_document(project, work["run_id"]),
                  core.assignment_capsule_path(project, task)]
         before = [path.read_bytes() for path in paths]
         for _ in range(2):
@@ -601,9 +866,11 @@ core.command_worker_run_collect(argparse.Namespace(project_root=sys.argv[2],task
             capture_output=True, text=True, encoding="utf-8", timeout=90,
         )
         require(crashed.returncode == 77, (crashed.returncode, crashed.stdout, crashed.stderr))
-        paths = core.worker_run_paths(project, RUN_ID, "crash-task")
+        from processforge_core.work.paths import WorkPaths
+        paths = WorkPaths().worker_run(project, RUN_ID, "crash-task")
         lock = paths["root"] / ".lifecycle.lock"
-        state = core.json_read(paths["status"])
+        from processforge_core.common.json_io import json_read
+        state = json_read(paths["status"])
         attempt = (project / state["prepared_input"]["path"]).parent
         receipt = attempt / "collection-receipt.json"
         complete = attempt / "collection-complete.json"

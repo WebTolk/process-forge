@@ -24,10 +24,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 sys.path.insert(0, str(ROOT / 'tools'))
 
+# Capture the trusted entry before Core imports in this adapter smoke.
+import processforge  # noqa: E402, F401
 from processforge_core import diagnostics as d
 from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service
+from processforge_core.common.yaml_dump import dump_yaml as _canonical_dump_yaml
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.work.state import WorkStatePolicy
 
@@ -347,19 +350,39 @@ class AdapterTests(NormalizedTests):
     def test_cli_factory_and_output_parity(self):
         import processforge as core
         from pf_cli.commands.work import WorkStateCommand
+        from processforge_core.work.consistency import RunTaskInputReader
+
         service = fixture()
-        manifest = Path('workplace/workplace.yaml')
-        with patch.object(core, 'resolve_project_workplace_manifest', return_value=manifest), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
-            self.assertIs(core.process_execution_service(Path('fixture')), service)
-            factory.assert_called_once_with(Path('fixture'), manifest.parent, core)
+        project = Path("fixture")
+        with (
+            tempfile.TemporaryDirectory(dir=SCRATCH) as raw,
+            patch(
+                "processforge_core.composition.build_process_execution_service",
+                return_value=service,
+            ) as factory,
+        ):
+            workplace = Path(raw).resolve()
+            (workplace / "workplace.yaml").write_text(
+                "coordination:\n  director_enabled: false\n", encoding="utf-8"
+            )
+            self.assertIs(
+                core.process_execution_service(project, str(workplace)), service
+            )
+            factory.assert_called_once_with(
+                project,
+                workplace,
+                core,
+                events=core._process_event_recorder,
+                summaries=core._work_summary_renderer,
+            )
         output = io.StringIO()
         records = []
         arguments = SimpleNamespace(project_root='fixture', json=True)
-        with d.operation(logger(sinks=[records.append]), 'cli', 'request', request_id='cli-request'), patch.object(core, 'require_flow_root'), patch.object(core, 'process_execution_service', return_value=service), patch('sys.stdout', output):
+        with d.operation(logger(sinks=[records.append]), 'cli', 'request', request_id='cli-request'), patch.object(RunTaskInputReader, 'require_flow_root'), patch.object(core, 'process_execution_service', return_value=service), patch('sys.stdout', output):
             command = WorkStateCommand(
                 execution_factory=core.process_execution_service,
-                require_flow_root=core.require_flow_root,
-                dump_yaml=core.dump_yaml,
+                require_flow_root=RunTaskInputReader().require_flow_root,
+                dump_yaml=_canonical_dump_yaml,
             )
             self.assertEqual(command.execute(arguments), 0)
         self.assertEqual(json.loads(output.getvalue()), service.state())
@@ -368,42 +391,91 @@ class AdapterTests(NormalizedTests):
 
     def test_mcp_factory_selectors_and_guard(self):
         from pf_runtime import mcp_server, session_read
-        service = fixture()
-        core = SimpleNamespace(project_id=lambda path: path.name)
-        host = SimpleNamespace(resolve_project=lambda ref, core: Path(ref), project_for_session=lambda args, workplace, core: Path('fixture'))
-        runtime = SimpleNamespace(core=core, host=host)
-        records = []
-        arguments = {'project_root': 'fixture', 'run_id': 'r', 'assignment_id': 'a', 'context_id': 'a-capsule'}
-        with d.operation(logger(sinks=[records.append]), 'mcp', 'request', request_id='mcp-request'), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
-            state = mcp_server.tool_result('pf.work.state', arguments, Path('workplace'), 'session', runtime)
-            self.assertEqual(state, service.state())
-            factory.assert_called_once_with(Path('fixture'), Path('workplace'), core)
-        completed = next(r for r in records if r['code'] == 'work.state.completed')
-        self.assertEqual(completed['identity']['request_id'], 'mcp-request')
-        self.assertEqual(completed['identity']['session_id'], 'session')
-        with patch('processforge_core.composition.build_process_execution_service', side_effect=AssertionError('guard before factory')):
-            with self.assertRaises(session_read.SessionReadError):
-                mcp_server.tool_result('pf.work.state', {**arguments, 'session_id': 'other'}, Path('workplace'), 'session', runtime)
+
+        from processforge_core.configuration import DeviceConfigurationSource
+
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as raw:
+            root = Path(raw).resolve()
+            project = root / "fixture"
+            workplace = root / "workplace"
+            project.mkdir()
+            workplace.mkdir()
+            service = fixture(project=str(project))
+            core = SimpleNamespace(project_id=lambda path: path.name)
+            host = SimpleNamespace(
+                resolve_project=lambda ref, core: Path(ref),
+                project_for_session=lambda args, workplace, core: project,
+            )
+            runtime = SimpleNamespace(core=core, host=host)
+            records = []
+            arguments = {
+                "project_root": str(project),
+                "run_id": "r",
+                "assignment_id": "a",
+                "context_id": "a-capsule",
+            }
+            with patch.object(
+                DeviceConfigurationSource,
+                "default_path",
+                return_value=root / "device.yaml",
+            ):
+                with (
+                    d.operation(
+                        logger(sinks=[records.append]),
+                        "mcp",
+                        "request",
+                        request_id="mcp-request",
+                    ),
+                    patch(
+                        "processforge_core.composition.build_process_execution_service",
+                        return_value=service,
+                    ) as factory,
+                ):
+                    state = mcp_server.tool_result(
+                        "pf.work.state", arguments, workplace, "session", runtime
+                    )
+                    self.assertEqual(state, service.state())
+                    factory.assert_called_once_with(project, workplace, core)
+                completed = next(
+                    r for r in records if r["code"] == "work.state.completed"
+                )
+                self.assertEqual(completed["identity"]["request_id"], "mcp-request")
+                self.assertEqual(completed["identity"]["session_id"], "session")
+                with patch(
+                    "processforge_core.composition.build_process_execution_service",
+                    side_effect=AssertionError("guard before factory"),
+                ):
+                    with self.assertRaises(session_read.SessionReadError):
+                        mcp_server.tool_result(
+                            "pf.work.state",
+                            {**arguments, "session_id": "other"},
+                            workplace,
+                            "session",
+                            runtime,
+                        )
 
     def test_host_factory_shared_payload_and_denied_guard(self):
         from pf_runtime import host
         service = fixture()
-        root = Path('fixture')
+        scratch = tempfile.TemporaryDirectory(dir=SCRATCH)
+        self.addCleanup(scratch.cleanup)
+        root = Path(scratch.name) / 'fixture'
+        workplace = Path(scratch.name) / 'workplace'
         records = []
         core = SimpleNamespace(event_runtime_paths=lambda path: (path / 'none.ndjson', path / 'outbox'),
                                json_read=lambda path: {}, supervisor_state_path=lambda path: path / 'supervisor',
                                iter_agent_presence=lambda workplace: [], read_current_project_session=lambda path: {},
                                rel=lambda path, project: path.name)
         with d.operation(logger(sinks=[records.append]), 'runtime', 'request', request_id='host-request'), patch.object(host, 'project_for_session', return_value=root), patch.object(host, 'route_project', return_value={'project_id': 'fixture'}), patch.object(host, 'stage_obligations_payload', return_value={}), patch.object(host, 'active_execution_records', return_value=[]), patch.object(host, 'journal_events', return_value=[]), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
-            payload = host.work_state_payload(Path('workplace'), core, session='session')
+            payload = host.work_state_payload(workplace, core, session='session')
             self.assertEqual(payload['current_work_state']['process_execution'], service.state())
-            factory.assert_called_once_with(root, Path('workplace'), core)
+            factory.assert_called_once_with(root, workplace, core)
         completed = next(r for r in records if r['code'] == 'work.state.completed')
         self.assertEqual(completed['identity']['request_id'], 'host-request')
         self.assertEqual(completed['identity']['session_id'], 'session')
         with patch.object(host, 'project_for_session', side_effect=ValueError('denied')), patch('processforge_core.composition.build_process_execution_service', side_effect=AssertionError('guard before factory')):
             with self.assertRaisesRegex(ValueError, 'denied'):
-                host.work_state_payload(Path('workplace'), core)
+                host.work_state_payload(workplace, core)
 
 
 def main():

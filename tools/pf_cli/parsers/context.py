@@ -74,7 +74,7 @@ class ProjectContextCommandParser:
     def register_resolution(
         self, add_parser: Callable[..., argparse.ArgumentParser]
     ) -> None:
-        context_resolve = add_parser("context-resolve", help="Resolve project context or explicit platform/process/specialization resources.")
+        context_resolve = add_parser("context-resolve", help="Read the project snapshot or resolve explicit platform/process/specialization resources without writing context files.")
         context_resolve.add_argument("--project-root", required=True, help="Project root path.")
         context_resolve.add_argument("--workplace", help="Workplace root path for explicit specialization resolution.")
         context_resolve.add_argument("--platform", action="append", default=[], help="Selected platform id. Repeatable.")

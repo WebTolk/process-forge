@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Reject report escapes before real worker collection or host file reads."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,22 +12,43 @@ from unittest.mock import patch
 
 import processforge as core
 from pf_runtime import host
-from smoke_conversation_completeness import setup_worker_project, transcript, worker_envelope
+from smoke_conversation_completeness import (
+    pf,
+    setup_worker_project,
+    transcript,
+    worker_envelope,
+)
+
+from processforge_core.work.worker_assignment import WorkerAssignmentService
+
+_worker_assignment_service = WorkerAssignmentService()
 
 
-def main() -> int:
+def main(*, require_symlink: bool = False) -> int:
     with tempfile.TemporaryDirectory(prefix="pf-report-containment-") as raw:
         root = Path(raw)
-        _, project, _, run_id, task_id, attempt, valid_report = setup_worker_project(root)
+        _, project, _, run_id, task_id, attempt, valid_report = setup_worker_project(
+            root
+        )
         outside = root / "outside.md"
         marker = "ExternalReportMustNeverBeRead"
         outside.write_text(marker, encoding="utf-8")
-        paths = ["../outside.md", "..\\outside.md", str(outside), "Q:" + "outside.md", "/outside.md"]
+        paths = [
+            "../outside.md",
+            "..\\outside.md",
+            str(outside),
+            "Q:" + "outside.md",
+            "/outside.md",
+        ]
         link = project / "linked-report.md"
         try:
             link.symlink_to(outside)
             paths.append(link.name)
-        except (OSError, NotImplementedError):
+        except (OSError, NotImplementedError) as exc:
+            if require_symlink:
+                raise AssertionError(
+                    "symlink capability required for containment qualification"
+                ) from exc
             print("SKIP: symlink creation unavailable")
         read_text = Path.read_text
         read_bytes = Path.read_bytes
@@ -36,37 +58,108 @@ def main() -> int:
             return read_text(path, *args, **kwargs)
 
         def guarded_bytes(path):
-            assert path.resolve() != outside.resolve(), "external report byte read attempted"
+            assert path.resolve() != outside.resolve(), (
+                "external report byte read attempted"
+            )
             return read_bytes(path)
 
         for report_rel in paths:
-            task = core.load_task(project, task_id)
+            task = _worker_assignment_service.load(project, task_id)
             task["expected_report"]["artifact"] = report_rel
             task["required_outputs"][0]["path"] = report_rel
             core.save_task(project, task)
-            with patch.object(Path, "read_text", guarded_read), patch.object(Path, "read_bytes", guarded_bytes):
-                assert core.task_output_path(project, {"path": report_rel}) is None
-                assert any(item.level == "FAIL" for item in core.required_output_checks(project, task))
-                assert core.task_verification_fingerprint(project, task).startswith("sha256:")
+            with (
+                patch.object(Path, "read_text", guarded_read),
+                patch.object(Path, "read_bytes", guarded_bytes),
+            ):
+                from processforge_core.work.outputs import WorkOutputPolicy
+
+                assert (
+                    WorkOutputPolicy().task_path(project, {"path": report_rel}) is None
+                )
+                from processforge_core.work.outputs import WorkOutputPolicy
+
+                assert any(
+                    item.level == "FAIL"
+                    for item in WorkOutputPolicy().checks(project, task)
+                )
+                from processforge_core.work.outputs import WorkOutputPolicy
+
+                assert (
+                    WorkOutputPolicy().fingerprint(project, task).startswith("sha256:")
+                )
                 with contextlib.redirect_stdout(io.StringIO()):
-                    assert core.command_task_doctor(argparse.Namespace(project_root=str(project), task=task_id)) == 1
-                    assert core.command_worker_run_collect(argparse.Namespace(project_root=str(project), task=task_id)) == 1
-                envelope = worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerExpectedReportCaptured", marker)
+                    assert (
+                        core.command_task_doctor(
+                            argparse.Namespace(project_root=str(project), task=task_id)
+                        )
+                        == 1
+                    )
+                    assert (
+                        core.command_worker_run_collect(
+                            argparse.Namespace(project_root=str(project), task=task_id)
+                        )
+                        == 1
+                    )
+                envelope = worker_envelope(
+                    project,
+                    run_id,
+                    task_id,
+                    attempt,
+                    report_rel,
+                    "WorkerExpectedReportCaptured",
+                    marker,
+                )
                 assert host._worker_session_authorized(envelope, project, core) is False
-            assert not transcript(project, f"pf-worker:{run_id}:{task_id}:attempt:{attempt}")
+            refused = pf(
+                "worker-run",
+                "collect",
+                "--project-root",
+                str(project),
+                "--task",
+                task_id,
+                expect=1,
+            )
+            assert "invalid expected report path" in refused
+            assert not transcript(
+                project, f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
+            )
             for path in (project / ".pf/runtime").rglob("*"):
                 if path.is_file() and path.suffix in {".json", ".ndjson", ".md"}:
-                    assert marker not in path.read_text(encoding="utf-8", errors="replace"), path
+                    assert marker not in path.read_text(
+                        encoding="utf-8", errors="replace"
+                    ), path
         task["expected_report"]["artifact"] = valid_report
         task["required_outputs"][0]["path"] = valid_report
         core.save_task(project, task)
-        (project / valid_report).write_text("# Authorized report\n", encoding="utf-8")
-        with contextlib.redirect_stdout(io.StringIO()):
-            assert core.command_worker_run_collect(argparse.Namespace(project_root=str(project), task=task_id)) == 0
-        assert len(transcript(project, f"pf-worker:{run_id}:{task_id}:attempt:{attempt}")) == 1
-    print("PASS: report traversal, absolute and symlink escapes rejected before reads; valid collection works")
+        content = "# Authorized report\n"
+        (project / valid_report).write_text(content, encoding="utf-8")
+        pf("worker-run", "collect", "--project-root", str(project), "--task", task_id)
+        session = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
+        rows = transcript(project, session)
+        assert len(rows) == 1
+        message = rows[0]["message"]
+        assert isinstance(message, dict)
+        assert message["role"] == "assistant"
+        assert message["content"] == content
+        pf("worker-run", "collect", "--project-root", str(project), "--task", task_id)
+        assert transcript(project, session) == rows
+        for path in (project / ".pf/runtime").rglob("*"):
+            if path.is_file() and path.suffix in {".json", ".ndjson", ".md"}:
+                assert marker not in path.read_text(
+                    encoding="utf-8", errors="replace"
+                ), path
+    print(
+        "PASS: available report escape cases rejected before reads; public collection captures once"
+    )
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--require-symlink",
+        action="store_true",
+        help="fail if symlink escape coverage is unavailable",
+    )
+    raise SystemExit(main(require_symlink=parser.parse_args().require_symlink))

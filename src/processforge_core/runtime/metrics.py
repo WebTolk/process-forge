@@ -4,6 +4,7 @@ Budgets bound work/bytes between filesystem calls, not kernel IO latency. A
 partial group has observed lower bounds but no exact counts. No source text,
 identities, paths or exception messages leave this module's projection.
 """
+
 from __future__ import annotations
 
 import json
@@ -20,12 +21,20 @@ from ..common.request_scope import safe_load
 # Preserve the existing required parser dependency at this module's boundary.
 yaml = import_module("yaml")
 
-FIELDS = {"registrations": ("projects", "sessions"),
-          "sessions": ("online", "stale", "offline"),
-          "workers": ("running",), "work": ("in_progress", "blocked"),
-          "leases": ("held", "expired", "inactive")}
-SOURCES = dict(registrations="host_registration_cache", sessions="agent_presence_ttl",
-               workers="worker_status_records", work="run_records", leases="lease_records")
+FIELDS = {
+    "registrations": ("projects", "sessions"),
+    "sessions": ("online", "stale", "offline"),
+    "workers": ("running",),
+    "work": ("in_progress", "blocked"),
+    "leases": ("held", "expired", "inactive"),
+}
+SOURCES = dict(
+    registrations="host_registration_cache",
+    sessions="agent_presence_ttl",
+    workers="worker_status_records",
+    work="run_records",
+    leases="lease_records",
+)
 ISSUES = {"coverage", "budget", "invalid", "unreadable", "unsafe_path"}
 MAX_AGE = 45
 
@@ -41,7 +50,9 @@ def epoch(value: Any) -> float:
 
 def linked(path: Path) -> bool:
     st = path.lstat()
-    return stat.S_ISLNK(st.st_mode) or bool(getattr(st, "st_file_attributes", 0) & 0x400)
+    return stat.S_ISLNK(st.st_mode) or bool(
+        getattr(st, "st_file_attributes", 0) & 0x400
+    )
 
 
 def contained(path: Path, root: Path) -> None:
@@ -62,7 +73,10 @@ class Budget:
         self.issues: set[str] = set()
 
     def check(self):
-        if min(self.entries, self.files, self.bytes) < 0 or time.monotonic() > self.deadline:
+        if (
+            min(self.entries, self.files, self.bytes) < 0
+            or time.monotonic() > self.deadline
+        ):
             self.issues.add("budget")
             raise TimeoutError
 
@@ -78,7 +92,14 @@ class Budget:
                     self.entries -= 1
                     self.check()
                     path = Path(entry.path)
-                    if parts[0] != "*" and entry.name != parts[0] and not (parts[0].startswith("*.") and entry.name.endswith(parts[0][1:])):
+                    if (
+                        parts[0] != "*"
+                        and entry.name != parts[0]
+                        and not (
+                            parts[0].startswith("*.")
+                            and entry.name.endswith(parts[0][1:])
+                        )
+                    ):
                         continue
                     if linked(path):
                         self.issues.add("unsafe_path")
@@ -114,7 +135,11 @@ class Budget:
         if len(raw) > maximum:
             self.issues.add("budget")
             raise ValueError("oversize record")
-        data = json.loads(raw) if path.suffix == ".json" else safe_load(raw.decode("utf-8"))
+        data = (
+            json.loads(raw)
+            if path.suffix == ".json"
+            else safe_load(raw.decode("utf-8"))
+        )
         if not isinstance(data, dict):
             raise ValueError("invalid record")
         return data
@@ -122,16 +147,29 @@ class Budget:
 
 def group(name, observed, issues=()):
     issues = sorted(set(issues))
-    return {"source": SOURCES[name], "coverage": "partial" if issues else "complete",
-            "counts": {k: None if issues else observed[k] for k in FIELDS[name]},
-            "observed": observed, "issues": issues}
+    return {
+        "source": SOURCES[name],
+        "coverage": "partial" if issues else "complete",
+        "counts": {k: None if issues else observed[k] for k in FIELDS[name]},
+        "observed": observed,
+        "issues": issues,
+    }
 
 
 def registrations(cache):
-    valid = (isinstance(cache, dict) and isinstance(cache.get("projects"), list)
-             and isinstance(cache.get("sessions"), dict))
-    return group("registrations", {"projects": len(cache["projects"]) if valid else 0,
-                                    "sessions": len(cache["sessions"]) if valid else 0}, () if valid else ("coverage",))
+    valid = (
+        isinstance(cache, dict)
+        and isinstance(cache.get("projects"), list)
+        and isinstance(cache.get("sessions"), dict)
+    )
+    return group(
+        "registrations",
+        {
+            "projects": len(cache["projects"]) if valid else 0,
+            "sessions": len(cache["sessions"]) if valid else 0,
+        },
+        () if valid else ("coverage",),
+    )
 
 
 def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
@@ -142,21 +180,62 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
     rows = {}
     try:
         if name == "sessions":
-            presence_dir = core.workplace_agent_presence_dir(workplace)
-            paths = ((path, workplace) for parts in (("*.json",), ("*", "*.json")) for path in budget.walk(presence_dir, parts, workplace))
+            from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+            presence_dir = AgentWorkplaceRegistry().workplace_agent_presence_dir(
+                workplace
+            )
+            paths = (
+                (path, workplace)
+                for parts in (("*.json",), ("*", "*.json"))
+                for path in budget.walk(presence_dir, parts, workplace)
+            )
         elif name == "leases":
-            paths = ((path, workplace) for path in budget.walk(core.workplace_agent_leases_dir(workplace), ("*.yaml",), workplace))
+            from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+            paths = (
+                (path, workplace)
+                for path in budget.walk(
+                    AgentWorkplaceRegistry().workplace_agent_leases_dir(workplace),
+                    ("*.yaml",),
+                    workplace,
+                )
+            )
         else:
+
             def project_paths():
                 for project in roots[:128]:
                     budget.check()
+                    pattern: tuple[str, ...]
                     if name == "workers":
-                        folder, pattern = project / ".pf/runtime/agent-runs", ("*", "*", "status.json")
+                        from ..executions.composition import select_execution_storage
+
+                        route = select_execution_storage(
+                            project, workplace, deadline=budget.deadline
+                        )
+                        budget.check()
+                        if route.repository is not None:
+                            current = route.repository.current(
+                                limit=128, deadline=budget.deadline
+                            )
+                            budget.check()
+                            counts["running"] += len(current.records)
+                            if not current.complete:
+                                budget.issues.add("coverage")
+                            continue
+                        folder, pattern = (
+                            project / ".pf/runtime/agent-runs",
+                            ("*", "*", "status.json"),
+                        )
                     else:
                         folder, pattern = project / ".pf/runs", ("*", "run.yaml")
-                    yield from ((path, project) for path in budget.walk(folder, pattern, project))
+                    yield from (
+                        (path, project)
+                        for path in budget.walk(folder, pattern, project)
+                    )
                 if len(roots) > 128:
                     budget.issues.add("budget")
+
             paths = project_paths()
         for path, base in paths:
             try:
@@ -164,32 +243,108 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
                 status = item.get("status")
                 if name == "sessions":
                     agent, session = item.get("agent_id"), item.get("session_id")
-                    if not isinstance(agent, str) or not agent or not isinstance(session, str) or not session:
+                    if (
+                        not isinstance(agent, str)
+                        or not agent
+                        or not isinstance(session, str)
+                        or not session
+                    ):
                         raise ValueError
                     canonical = core.agent_presence_path(workplace, agent, session)
-                    legacy = core.workplace_agent_presence_dir(workplace) / core.safe_id(agent, "agent") / (core.safe_id(session, "session") + ".json")
-                    if path not in {canonical, legacy, core.legacy_agent_presence_path(workplace, agent)}:
+                    from processforge_core.agents.registry import AgentWorkplaceRegistry
+
+                    legacy = (
+                        AgentWorkplaceRegistry().workplace_agent_presence_dir(workplace)
+                        / core.safe_id(agent, "agent")
+                        / (core.safe_id(session, "session") + ".json")
+                    )
+                    if path not in {
+                        canonical,
+                        legacy,
+                        core.legacy_agent_presence_path(workplace, agent),
+                    }:
                         raise ValueError
                     key = (agent, session)
                     if key not in rows or path == canonical:
                         rows[key] = (path == canonical, item)
                 elif name == "workers":
-                    if status not in {"planned", "ready", "starting", "running", "completed", "failed", "timed_out", "unknown_exit", "lost", "blocked", "cancelled", "manual_required"}:
+                    if status not in {
+                        "planned",
+                        "ready",
+                        "starting",
+                        "running",
+                        "completed",
+                        "failed",
+                        "timed_out",
+                        "unknown_exit",
+                        "lost",
+                        "blocked",
+                        "cancelled",
+                        "manual_required",
+                    }:
                         raise ValueError
                     if status in {"starting", "unknown_exit", "lost"}:
                         budget.issues.add("coverage")
+                    if (
+                        status in {"completed", "failed", "timed_out", "cancelled"}
+                        and item.get("pid") is not None
+                    ):
+                        probe = getattr(core, "_legacy_tree_probe", None)
+                        budget.check()
+                        if (
+                            probe is None
+                            or probe(
+                                base,
+                                item.get("run_id"),
+                                item.get("task_id"),
+                                item,
+                                deadline=budget.deadline,
+                            )
+                            is not True
+                        ):
+                            budget.issues.add("coverage")
+                        budget.check()
                     counts["running"] += status == "running"
                 elif name == "work":
-                    if status not in {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}:
+                    if status not in {
+                        "draft",
+                        "open",
+                        "in_progress",
+                        "blocked",
+                        "review",
+                        "completed",
+                        "cancelled",
+                        "failed",
+                    }:
                         raise ValueError
                     if status in counts:
                         counts[status] += 1
                 else:
-                    issued, expires = epoch(item.get("issued_at")), epoch(item.get("expires_at"))
-                    if issued > now or expires < issued or status not in {"active", "released", "revoked", "expired", "stale"}:
+                    issued, expires = (
+                        epoch(item.get("issued_at")),
+                        epoch(item.get("expires_at")),
+                    )
+                    if (
+                        issued > now
+                        or expires < issued
+                        or status
+                        not in {"active", "released", "revoked", "expired", "stale"}
+                    ):
                         raise ValueError
-                    counts["held" if status == "active" and expires > now else "expired" if status in {"active", "expired"} else "inactive"] += 1
-            except (ValueError, TypeError, OverflowError, RecursionError, yaml.YAMLError):
+                    counts[
+                        "held"
+                        if status == "active" and expires > now
+                        else "expired"
+                        if status in {"active", "expired"}
+                        else "inactive"
+                    ] += 1
+            except (
+                ValueError,
+                TypeError,
+                OverflowError,
+                RecursionError,
+                yaml.YAMLError,
+            ):
                 budget.issues.add("invalid")
             except OSError:
                 budget.issues.add("unreadable")
@@ -197,27 +352,63 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
             try:
                 status, ttl = item.get("status"), item.get("heartbeat_ttl_seconds")
                 age = now - epoch(item.get("last_seen_at"))
-                if type(ttl) is not int or ttl < 1 or age < 0 or status not in {"online", "offline", "stale", "checked_out", "failed"}:
+                if (
+                    type(ttl) is not int
+                    or ttl < 1
+                    or age < 0
+                    or status
+                    not in {"online", "offline", "stale", "checked_out", "failed"}
+                ):
                     raise ValueError
-                counts["online" if status == "online" and age <= ttl else "stale" if status in {"online", "stale"} else "offline"] += 1
+                counts[
+                    "online"
+                    if status == "online" and age <= ttl
+                    else "stale"
+                    if status in {"online", "stale"}
+                    else "offline"
+                ] += 1
             except (ValueError, TypeError, OverflowError):
                 budget.issues.add("invalid")
     except TimeoutError:
         budget.issues.add("budget")
     except (OSError, ValueError, TypeError):
         budget.issues.add("unreadable")
+    except Exception as exc:
+        from ..database import DatabaseError
+        from ..executions.model import ExecutionError
+
+        if not isinstance(exc, (DatabaseError, ExecutionError)):
+            raise
+        budget.issues.add("coverage")
     return group(name, counts, budget.issues)
 
 
-def collect(workplace, roots, core, instance_id, registration, *, coverage=True, now=None, interval_seconds=None):
+def collect(
+    workplace,
+    roots,
+    core,
+    instance_id,
+    registration,
+    *,
+    coverage=True,
+    now=None,
+    interval_seconds=None,
+):
     now = time.time() if now is None else now
-    groups = {name: observe(name, workplace, roots, core, now=now, coverage=coverage)
-              for name in ("sessions", "workers", "work", "leases")}
+    groups = {
+        name: observe(name, workplace, roots, core, now=now, coverage=coverage)
+        for name in ("sessions", "workers", "work", "leases")
+    }
     groups["registrations"] = registration
-    result = {"schema_version": 1, "instance_id": instance_id,
-              "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(), "groups": groups}
+    result = {
+        "schema_version": 1,
+        "instance_id": instance_id,
+        "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(),
+        "groups": groups,
+    }
     if interval_seconds is not None:
         from ..configuration import MetricsConfig
+
         result["interval_seconds"] = MetricsConfig(interval_seconds).interval_seconds
     return result
 
@@ -225,24 +416,38 @@ def collect(workplace, roots, core, instance_id, registration, *, coverage=True,
 def project(snapshot, instance_id, *, now):
     """Allowlist and strictly validate a fresh instance-bound compact snapshot."""
     try:
-        if not isinstance(snapshot, dict) or type(snapshot.get("schema_version")) is not int or snapshot["schema_version"] != 1 or not instance_id or snapshot.get("instance_id") != instance_id:
+        if (
+            not isinstance(snapshot, dict)
+            or type(snapshot.get("schema_version")) is not int
+            or snapshot["schema_version"] != 1
+            or not instance_id
+            or snapshot.get("instance_id") != instance_id
+        ):
             raise ValueError
         age = now - epoch(snapshot.get("observed_at"))
         interval = snapshot.get("interval_seconds")
-        maximum_age = MAX_AGE
+        maximum_age: float = MAX_AGE
         if "interval_seconds" in snapshot:
             from ..configuration import MetricsConfig
-            interval = MetricsConfig(interval).interval_seconds
+
+            interval = MetricsConfig(snapshot["interval_seconds"]).interval_seconds
             maximum_age = max(5, 4.5 * interval)
         if not 0 <= age <= maximum_age:
             raise ValueError
         result = {}
         for name, fields in FIELDS.items():
             item = snapshot["groups"][name]
-            if item["source"] != SOURCES[name] or item["coverage"] not in {"complete", "partial"}:
+            if item["source"] != SOURCES[name] or item["coverage"] not in {
+                "complete",
+                "partial",
+            }:
                 raise ValueError
             issues = item["issues"]
-            if not isinstance(issues, list) or len(issues) > len(ISSUES) or any(type(i) is not str or i not in ISSUES for i in issues):
+            if (
+                not isinstance(issues, list)
+                or len(issues) > len(ISSUES)
+                or any(type(i) is not str or i not in ISSUES for i in issues)
+            ):
                 raise ValueError
             counts, observed = {}, {}
             for key in fields:
@@ -256,7 +461,11 @@ def project(snapshot, instance_id, *, now):
                     raise ValueError
                 counts[key], observed[key] = v, o
             result[name] = group(name, observed, issues)
-        return {"age_seconds": round(age, 1), "groups": result, "interval_seconds": interval}
+        return {
+            "age_seconds": round(age, 1),
+            "groups": result,
+            "interval_seconds": interval,
+        }
     except (KeyError, ValueError, TypeError, OverflowError):
         return None
 
@@ -265,7 +474,17 @@ def registered_projects(workplace, *, budget=None):
     """Bounded cache routing for observation; no project execution/context build."""
     budget = budget or Budget()
     try:
-        cache = budget.read(workplace / "runtime/pf-runtime-host/state.json", workplace, maximum=4194304)
+        cache = budget.read(
+            workplace / "runtime/pf-runtime-host/state.json", workplace, maximum=4194304
+        )
+    except (OSError, ValueError, TypeError, TimeoutError):
+        return [], registrations({}), False
+    return registration_routes(cache, budget=budget)
+
+
+def registration_routes(cache, *, budget):
+    """Validate the same bounded routing coverage before and after publication."""
+    try:
         projects = cache.get("projects")
         if not isinstance(projects, list) or len(projects) > 128:
             raise ValueError
@@ -274,10 +493,15 @@ def registered_projects(workplace, *, budget=None):
         for item in projects:
             budget.check()
             try:
-                if not isinstance(item, dict) or not isinstance(item.get("project_root"), str):
+                if not isinstance(item, dict) or not isinstance(
+                    item.get("project_root"), str
+                ):
                     raise ValueError
                 root = Path(item["project_root"])
-                if not root.is_absolute() or not (root / ".pf/process-forge.yaml").is_file():
+                if (
+                    not root.is_absolute()
+                    or not (root / ".pf/process-forge.yaml").is_file()
+                ):
                     raise ValueError
                 contained(root / ".pf/process-forge.yaml", root)
                 if root not in roots:
@@ -293,4 +517,12 @@ def shutdown_workers(workplace, core):
     """Fresh worker-only guard, including invalid/unroutable registrations."""
     budget = Budget(seconds=0.5)
     roots, _registration, coverage = registered_projects(workplace, budget=budget)
-    return observe("workers", workplace, roots, core, now=time.time(), coverage=coverage, budget=budget)
+    return observe(
+        "workers",
+        workplace,
+        roots,
+        core,
+        now=time.time(),
+        coverage=coverage,
+        budget=budget,
+    )

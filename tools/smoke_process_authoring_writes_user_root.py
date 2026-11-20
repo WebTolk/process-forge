@@ -14,10 +14,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
+    from project_storage_smoke_helpers import (
+        create_fixture_flow,
+        initialize_fixture_storage,
+    )
+
     with tempfile.TemporaryDirectory(prefix="pf-authoring-user-root-") as raw:
         project = Path(raw)
-        (project / ".pf").mkdir()
-        (project / ".pf" / "process-forge.yaml").write_text("schema_version: 1\nid: smoke\n", encoding="utf-8")
+        flow = create_fixture_flow(project)
+        (flow / "process-forge.yaml").write_text("schema_version: 1\nproject:\n  id: smoke\n", encoding="utf-8")
+        initialize_fixture_storage(project)
         command = [
             sys.executable,
             str(ROOT / "bin" / "pf.py"),

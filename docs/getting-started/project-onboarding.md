@@ -59,9 +59,13 @@ into the project.
 
 The project-local launcher reads private `.pf/process-forge.local.yaml` or `PROCESSFORGE_HOME` to find the ProcessForge distribution. Public files such as `AGENTS.md` do not reveal the resolved distribution path.
 
-Generic onboarding does not install host-specific Codex hooks and does not
-require Runtime, MCP, or a Ledger session. Inside the linked project, the agent
-reads root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project),
+On a workplace with an `organized` default, onboarding prepares eight
+project-local Codex handlers on apply. Garage offers the same installer as
+an opt-in. The CLI can onboard a project without a running Runtime or MCP.
+[Hook setup and client activation](../guides/forge-init-hooks.md)
+
+Inside the linked project the agent reads root `AGENTS.md` (or the explicit
+`.pf/AGENTS.md` fallback in an unmigrated project),
 then uses `pf.context`, conditional `pf.search`/`pf.resolve` and `pf.work.start`.
 Use returned Run/assignment/capsule IDs with `pf.work.state` and
 `pf.work.transition` until `run_completed`. Handle `process_choice_required`

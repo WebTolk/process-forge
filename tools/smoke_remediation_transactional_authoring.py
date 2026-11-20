@@ -200,16 +200,18 @@ def test_platform_staged_semantics(root: Path) -> None:
     workplace = root / "platform-semantics-workplace"
     init_workplace(workplace)
     before = fingerprint(workplace)
-    original = processforge.platform_contract_from_values
+    from processforge_core.project.platform_documents import PlatformDocumentBuilder
 
-    def with_missing_parent(values: dict) -> dict:
-        contract = original(values)
+    original = PlatformDocumentBuilder.platform_contract_from_values
+
+    def with_missing_parent(self, values: dict) -> dict:
+        contract = original(self, values)
         contract.setdefault("requires", {})["platforms"] = [
             {"id": "platform.missing-parent", "required": True}
         ]
         return contract
 
-    processforge.platform_contract_from_values = with_missing_parent
+    PlatformDocumentBuilder.platform_contract_from_values = with_missing_parent
     try:
         args = processforge.build_parser().parse_args(
             [
@@ -230,22 +232,26 @@ def test_platform_staged_semantics(root: Path) -> None:
         else:
             raise AssertionError("schema-valid platform with missing parent was committed")
     finally:
-        processforge.platform_contract_from_values = original
+        PlatformDocumentBuilder.platform_contract_from_values = original
     assert fingerprint(workplace) == before, "staged semantic failure mutated workplace"
 
 
 def test_post_commit_replay(root: Path) -> None:
     processforge = importlib.import_module("processforge")
+    from processforge_core.authoring.plans import AuthoringEffect, AuthoringPlan
+
     workplace = root / "post-commit-workplace"
     init_workplace(workplace)
-    original_append = processforge.append_workplace_resource_event
+    from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
+
+    original_append = WorkplaceResourceEventJournal.append_workplace_resource_event
     calls = {"count": 0}
 
-    def flaky_append(workplace_root: Path, event: dict) -> Path:
+    def flaky_append(self, workplace_root: Path, event: dict) -> Path:
         calls["count"] += 1
         if calls["count"] == 2:
             raise RuntimeError("injected audit failure")
-        return original_append(workplace_root, event)
+        return original_append(self, workplace_root, event)
 
     transaction_id = "platform-audit-replay"
     effect_payload = {
@@ -268,14 +274,14 @@ def test_post_commit_replay(root: Path) -> None:
             },
         ],
     }
-    plan = processforge.AuthoringPlan(
+    plan = AuthoringPlan(
         transaction_id=transaction_id,
         command="platform-create",
         runtime_root=workplace / "runtime",
         authoritative_writes=[],
         registry_writes=[],
         post_commit_effects=[
-            processforge.AuthoringEffect(
+            AuthoringEffect(
                 "platform-audit-events",
                 "runtime/resource-management/proposals/<transaction>.yaml and runtime/events/events.ndjson",
                 kind="platform_audit",
@@ -284,7 +290,7 @@ def test_post_commit_replay(root: Path) -> None:
         ],
         validation_callbacks=[],
     )
-    processforge.append_workplace_resource_event = flaky_append
+    WorkplaceResourceEventJournal.append_workplace_resource_event = flaky_append
     try:
         try:
             processforge.execute_authoring_plan(plan)
@@ -293,7 +299,9 @@ def test_post_commit_replay(root: Path) -> None:
         else:
             raise AssertionError("post-commit failure returned success")
     finally:
-        processforge.append_workplace_resource_event = original_append
+        from processforge_core.resources.workplace_events import WorkplaceResourceEventJournal
+
+        WorkplaceResourceEventJournal.append_workplace_resource_event = original_append
     journal_path = workplace / "runtime" / "authoring-transactions" / transaction_id / "journal.yaml"
     journal = yaml.safe_load(journal_path.read_text(encoding="utf-8"))
     assert journal["state"] == "committed_audit_pending"

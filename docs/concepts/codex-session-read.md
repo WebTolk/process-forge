@@ -27,12 +27,12 @@ need the missing capability remain blocked.
 
 ## Conversation capture
 
-`tools/pf_runtime/codex_hooks.py` stores every registered Codex hook payload
-raw-first through the existing ingress path. `UserPromptSubmit` captures the
-user message; `Stop` captures `last_assistant_message`; and `SubagentStop`
-captures the subagent final message. All three use the pre-existing transcript
-writer, deterministic message identity and replay rules. Project events retain
-only message metadata, never transcript content.
+The Codex adapter submits supported inputs to the project’s raw hook journal
+when collection is enabled. The journal keeps the receipt and any pending
+processing state. `logging.raw_hooks` controls retention of raw payload history.
+With a verified binding, `UserPromptSubmit` can record the user message, and
+`Stop`, `SessionEnd` or `SubagentStop` can record a supplied final message.
+The transcript writer owns the content. [Hook and chat storage](hooks-events.md)
 
 The `Stop` and `SubagentStop` handlers output `{}`: this is valid neutral
 Codex hook protocol and does not block, rewrite or continue a turn. On a
@@ -41,10 +41,11 @@ additional context so that the current turn can invoke session MCP methods
 without manually locating PF files. A session id is project-scoped context,
 not a cross-project capability.
 
-## Opt-in hook registration
+## Project-local hook registration
 
-The distribution does not alter a user's Codex files automatically. To inspect
-or install project-local observation hooks, run:
+On a workplace with an `organized` default, applying project initialization
+merges the supported handlers. Operators can also inspect or manage the
+registration directly. [Forge hook setup](../guides/forge-init-hooks.md)
 
 ```powershell
 python tools/pf_runtime/codex_integration.py status --project-root .

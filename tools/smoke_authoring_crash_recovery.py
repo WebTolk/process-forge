@@ -20,18 +20,23 @@ def load_journal(path: Path) -> dict:
 
 
 def crash_after_publish_rolls_back(processforge: object, root: Path) -> None:
+    from processforge_core.authoring.inputs import AuthoringInputService
+    from processforge_core.authoring.plans import AuthoringPlan, AuthoringWrite
+
+    _authoring_input_service = AuthoringInputService()
+
     runtime = root / "runtime"
     existing = root / "authoritative" / "existing.txt"
     created = root / "authoritative" / "nested" / "created.txt"
     existing.parent.mkdir(parents=True)
     existing.write_text("before\n", encoding="utf-8")
-    plan = processforge.AuthoringPlan(
+    plan = AuthoringPlan(
         transaction_id="crash-after-publish",
         command="smoke-crash-recovery",
         runtime_root=runtime,
         authoritative_writes=[
-            processforge.AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
-            processforge.AuthoringWrite(created, b"created\n", role="entity"),
+            AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
+            AuthoringWrite(created, b"created\n", role="entity"),
         ],
         registry_writes=[],
         post_commit_effects=[],
@@ -42,7 +47,7 @@ def crash_after_publish_rolls_back(processforge: object, root: Path) -> None:
     records = journal["writes"]
     processforge.publish_authoring_write(plan, plan.authoritative_writes[0], records[0], staged, journal)
     processforge.publish_authoring_write(plan, plan.authoritative_writes[1], records[1], staged, journal)
-    journal_path = processforge.authoring_journal_path(plan)
+    journal_path = _authoring_input_service.journal_path(plan)
     assert load_journal(journal_path)["state"] == "prepared"
     assert processforge.recover_authoring_transaction(journal_path, apply=False) == "prepared"
     assert processforge.recover_authoring_transaction(journal_path, apply=True) == "rolled_back"
@@ -55,16 +60,21 @@ def crash_after_publish_rolls_back(processforge: object, root: Path) -> None:
 
 
 def corrupted_backup_requires_manual_recovery(processforge: object, root: Path) -> None:
+    from processforge_core.authoring.inputs import AuthoringInputService
+    from processforge_core.authoring.plans import AuthoringPlan, AuthoringWrite
+
+    _authoring_input_service = AuthoringInputService()
+
     runtime = root / "runtime"
     existing = root / "authoritative" / "corrupted.txt"
     existing.parent.mkdir(parents=True)
     existing.write_text("before\n", encoding="utf-8")
-    plan = processforge.AuthoringPlan(
+    plan = AuthoringPlan(
         transaction_id="corrupted-backup",
         command="smoke-crash-recovery",
         runtime_root=runtime,
         authoritative_writes=[
-            processforge.AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
+            AuthoringWrite(existing, b"after\n", role="entity", allow_replace=True),
         ],
         registry_writes=[],
         post_commit_effects=[],
@@ -75,7 +85,7 @@ def corrupted_backup_requires_manual_recovery(processforge: object, root: Path) 
     record = journal["writes"][0]
     processforge.publish_authoring_write(plan, plan.authoritative_writes[0], record, staged, journal)
     Path(record["backup_path"]).write_text("corrupt\n", encoding="utf-8")
-    journal_path = processforge.authoring_journal_path(plan)
+    journal_path = _authoring_input_service.journal_path(plan)
     assert processforge.recover_authoring_transaction(journal_path, apply=True) == "recovery_required"
     recovered = load_journal(journal_path)
     assert recovered["rollback_verified"] is False

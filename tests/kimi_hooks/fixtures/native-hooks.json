@@ -1,0 +1,79 @@
+{
+  "SessionStart": {
+    "hook_event_name": "SessionStart",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "client_type": "cli",
+    "source": "startup",
+    "session_title": "Fixture",
+    "model": "kimi-k3",
+    "profile": "default"
+  },
+  "PreToolUse": {
+    "hook_event_name": "PreToolUse",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "tool_name": "Read",
+    "tool_call_id": "call-1",
+    "tool_input": {"path": "README.md"}
+  },
+  "PostToolUse": {
+    "hook_event_name": "PostToolUse",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "tool_name": "Read",
+    "tool_call_id": "call-1",
+    "tool_input": {"path": "README.md"},
+    "tool_output": "Fixture result"
+  },
+  "PostToolUseFailure": {
+    "hook_event_name": "PostToolUseFailure",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "tool_name": "Bash",
+    "tool_call_id": "call-failed",
+    "tool_input": {"command": "fixture-command"},
+    "error": {"name": "ToolExecutionError", "message": "Fixture failure"}
+  },
+  "UserPromptSubmit": {
+    "hook_event_name": "UserPromptSubmit",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "prompt": [{"type": "text", "text": "Проверь проект"}],
+    "is_steer": false
+  },
+  "SubagentStop": {
+    "hook_event_name": "SubagentStop",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "agent_name": "reviewer",
+    "response": "Проверка завершена"
+  },
+  "Stop": {
+    "hook_event_name": "Stop",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "stop_hook_active": false
+  },
+  "SessionEnd": {
+    "hook_event_name": "SessionEnd",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "reason": "exit",
+    "session_title": "Fixture"
+  },
+  "PreCompact": {
+    "hook_event_name": "PreCompact",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "trigger": "auto",
+    "token_count": 12000
+  },
+  "PostCompact": {
+    "hook_event_name": "PostCompact",
+    "session_id": "kimi-fixture-session",
+    "cwd": "fixture-project",
+    "trigger": "auto",
+    "estimated_token_count": 3000
+  }
+}

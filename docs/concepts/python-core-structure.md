@@ -85,6 +85,57 @@ See [supported actions](action-discovery.md).
 
 | Module | Responsibility |
 | --- | --- |
+| `src/processforge_core/project/file_templates.py`, `project/runtime_launchers.py` | Existing project files and launcher template bytes through explicit distribution and concrete initialization/discovery inputs. |
+| `src/processforge_core/project/workplace_templates.py`, `project/workplace_terms.py`, `process_catalog/profile_packs.py` | Existing workplace files, terms and official profile pack selection. |
+| `src/processforge_core/project/initialization_discovery.py` | Existing classifier/detection composition, global resource matching and registry text reads; initialization receives an explicit file-generation operation. |
+| `src/processforge_core/project/configuration_inputs.py` | Existing project/device configuration resolution with the same shared resolver and last-valid configuration behavior. |
+| `src/processforge_core/agents/process_events.py`, `agents/hook_dispatch.py` | Existing event admission, journal append, diagnostics and hook dispatch with concrete Core dependencies; Work composition supplies an optional recorder explicitly. |
+| `src/processforge_core/chat/writer.py` | Existing chat append, locking, duplicate handling, event recording and export synchronization. |
+| `src/processforge_core/maintenance/release_manifest.py`, `maintenance/release_plan.py`, `maintenance/release_commands.py` | Existing release-manifest rules, ordered command plans and command records; execution remains with its current adapter. |
+| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Shared existing Markdown list formatting, canonical release name and hash pattern. |
+| `src/processforge_core/common/properties.py` | CoreIdentity frozen value, CoreIdentityReadPort, bounded DistributionMetadataReader and CoreProperties; canonical loaded and live installed distribution metadata. |
+| `src/processforge_core/resources/project_packages.py` | Project package manifests, root records, current candidate/index reads, duplicate tracking and dependency IDs through concrete Core paths/documents. |
+| `src/processforge_core/project/platform_resolution.py` | Existing recursive platform hierarchy and resource/dependency aggregation with concrete catalog, projection and package owners. |
+| `src/processforge_core/process_catalog/semantics.py` | Existing authoring coverage, semantic projections and ordered compatibility comparison. |
+| `src/processforge_core/presentation/process_parity.py` | Existing process import/parity Markdown reports, separate from semantic rules. |
+| `src/processforge_core/runtime/worker_plans.py` | Existing worker plan defaults, subagent/dependency projections, recursion and current assignment-completion reads. |
+| `src/processforge_core/project/platform_selection.py` | Existing platform/type/registry selection and findings with concrete answer, document, detection, platform and package owners. |
+| `src/processforge_core/maintenance/registries.py` | Existing entity/override/installed registry reads and install-target resolution; no installation or version-write authority. |
+| `src/processforge_core/runtime/worker_validation.py` | Current worker plan, extension-key and subagent report checks. |
+| `src/processforge_core/project/hooks.py` | Hook configuration location and ordered validation. |
+| `src/processforge_core/common/record_validation.py` | Existing event/chat field and secret validation. |
+| `src/processforge_core/process_catalog/routes.py` | Current route lookup, validation and required role. |
+| `src/processforge_core/process_catalog/handoffs.py` | Handoff directory/path and soft document read. |
+| `src/processforge_core/maintenance/validation.py` | Existing update override and normalized-manifest checks. |
+| `src/processforge_core/project/platform_documents.py` | Existing platform document model/byte construction. |
+| `src/processforge_core/project/registry_checks.py` | Current registry paths and package-root validation. |
+| `src/processforge_core/common/text.py` | Canonical trailing newline and diagnostic hint formatting. |
+| `src/processforge_core/common/yaml_dump.py` | Exact existing YAML scalar and recursive serialization. |
+| `src/processforge_core/process_catalog/audit.py` | Existing ordered builtin process catalog report and flat package index. |
+| `src/processforge_core/project/setup.py` | Existing workplace setup proposal mapping and Markdown. |
+| `src/processforge_core/project/registry_write.py` | Existing schema-checked registry upsert and atomic staging. |
+| `src/processforge_core/project/templates.py` | Existing template root selection and manifest lookup. |
+| `src/processforge_core/project/platform_validation.py` | Existing ordered platform semantic validation. |
+| `src/processforge_core/common/policies.py` | Shared policy entry and identifier matching primitives. |
+| `src/processforge_core/project/requirements.py` | Existing platform dependency preflight and registry ID reads. |
+| `src/processforge_core/resources/records.py` | Existing resource defaults, public references and normalization. |
+| `src/processforge_core/resources/package_checks.py` | Existing ordered knowledge package doctor. |
+| `src/processforge_core/resources/index_checks.py` | Existing resource index/path_ref/project checks. |
+| `src/processforge_core/work/worker_assignment.py` | Strict assignment reads and exact worker launch prompt rendering. |
+| `src/processforge_core/authoring/plans.py` | Existing authoring dataclasses and plan stdout. |
+| `src/processforge_core/authoring/inputs.py` | Existing authoring modes, paths, journals and parent guards. |
+| `src/processforge_core/process_catalog/examples.py` | Existing process authoring example document bytes. |
+| `src/processforge_core/common/status.py` | Shared existing aggregate status projection. |
+| `src/processforge_core/maintenance/candidate_read.py` | Existing fresh candidate JSON read/find. |
+| `src/processforge_core/project/session_read.py` | Existing session report status, recent files and legacy freshness. |
+| `src/processforge_core/configuration/specializations.py` | Existing specialization registry/path candidates and manifest index. |
+| `src/processforge_core/evolution/validation.py` | Existing ordered knowledge candidate checks and category constants. |
+| `src/processforge_core/maintenance/transfer.py` | Existing update manifest fetch and artifact transfer. |
+| `src/processforge_core/authoring/journals.py` | Existing authoring journal storage and exact cleanup failures. |
+| `src/processforge_core/configuration/parameter_sources.py` | Existing parameter source provenance, paths, reads and merge composition. |
+| `src/processforge_core/project/report_read.py` | Existing Markdown sections, capability help and resource report projection. |
+| `src/processforge_core/project/initialization_inputs.py` | Existing initial project types, mode and defaults. |
+| `src/processforge_core/process_catalog/contracts.py` | Existing ordered process contract validation, route document reads and shared handoff modes. |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
@@ -118,12 +169,41 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/work/publication.py` | Existing atomic Work text/YAML publication through explicit deferred formatter/writer dependencies. |
 | `src/processforge_core/work/events.py` | Existing Work event envelope and subsequent diagnostics through a typed, dynamically resolved emitter. |
 | `src/processforge_core/work/context_read.py` | Live capsule validation and assignment normalization through concrete Core contract inputs. |
-| `src/processforge_core/work/context_documents.py` | Concrete field normalization and document/path/identity inputs for Work context reads. |
+| `src/processforge_core/work/context_documents.py` | Concrete Work field/document inputs, path/scope/dependency projection, required-source observations and capsule coordination projection. |
+| `src/processforge_core/work/context.py` | Existing assignment context compilation; parameter merging uses ParameterMergePolicy directly, while the compiler retains other legacy dependencies. |
 | `src/processforge_core/process_catalog/` | Concrete catalog and effective ProcessDefinition readers; offered process selection and pin construction retain their explicit operation dependencies. |
 | `src/processforge_core/process_catalog/summary.py` | Allowed-process context summary using a concrete catalog by default and an optional narrow catalog port for injection, without a monolith callback. |
 | `src/processforge_core/project/metadata.py` | Live project identity, manifest and flow-root reads through concrete Core YAML; shared by context, catalog and resources. |
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading through concrete Core YAML and file digest readers, bound to the project root. |
 | `src/processforge_core/common/digests.py` | Existing raw-byte SHA256 file reading, shared by snapshot reads, monolithic facades and maintenance update. |
+| `src/processforge_core/configuration/parameters.py` | Stateless ParameterMergePolicy owning existing parameter-map merging and ordered provenance, without a monolith dependency. |
+| `src/processforge_core/project/classification.py` | Stateless ProjectClassifierRulePolicy for existing classifier matching; concrete source/discovery services compose registry reads, traversal and detection. |
+| `src/processforge_core/common/paths.py` | Shared path_matches_pattern primitive for classification and detection, alongside the unchanged rel helper. |
+| `src/processforge_core/process_catalog/artifacts.py` | Stateless ProcessArtifactDeclarationPolicy for defined, declared and produced artifact IDs; contract checks and companion inspection use Core services; authoring publication retains its existing owner. |
+| `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder for existing defaults, answer normalization and process materialization, using concrete evolution rules. |
+| `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy for existing evolve defaults, normalization and ordered validation checks. |
+| `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy for existing builtin documents, registry defaults, placeholders, limits and document readiness checks. |
+| `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy for existing source identity, derived site records, overrides and policy merging, without I/O. |
+| `src/processforge_core/process_catalog/presentation.py`, `process_catalog/coordination.py` | Existing authoring text rendering and shared process coordination projection. |
+| `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader for existing live registry/document lookup with an explicit distribution root and concrete Core readers. |
+| `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy for existing candidate identity, target/routing, promotion readiness and targeting validation. |
+| `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Existing update-version normalization/selection and assessment rendering. |
+| `src/processforge_core/project/coordination.py` | ProjectCoordinationReader for existing project/workplace coordination defaults, mode normalization and live config reads. |
+| `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Canonical shared text patterns/predicates and existing evolve findings/redaction/recursive value transformation. |
+| `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy for existing trust, URL/env/source shape checks, registry validation and stable sorting. |
+| `src/processforge_core/work/outputs.py` | WorkOutputPolicy for existing output/report paths, waivers, required-output checks and verification fingerprints. |
+| `src/processforge_core/project/detection.py` | ProjectDetectionService for current generic file inventory and existing platform detection rules. |
+| `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy for placeholder expansion, durable explicit environment and launch-only inheritance. |
+| `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks for the existing JSON Schema subset and current schema-file checks with an explicit distribution root. |
+| `src/processforge_core/work/paths.py` | WorkPaths for existing Run, Assignment, artifact, handoff and worker-attempt locations, preserving their distinct ID normalization. |
+| `src/processforge_core/runtime/command.py` | WorkerCommandBuilder for existing sandbox projection and command composition with concrete Core policies. |
+| `src/processforge_core/project/platforms.py` | PlatformContractReader for live seed/project/workplace catalog overlays and exact registry fallback. |
+| `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader for existing registry paths, YAML/JSON reads, doctor checks and local file-URL resolution. |
+| `src/processforge_core/runtime/selection.py` | RuntimeDriverSelectionService for existing task/saved-command driver selection through concrete Core readers and policies. |
+| `src/processforge_core/project/platform_policy.py` | PlatformContractPolicy for existing reference, dependency and required/recommended/optional resource projections. |
+| `src/processforge_core/process_catalog/validation.py` | ProcessAuthoringValidationService for existing authoring logic, companion paths/file checks and canonical workflow/iteration constants. |
+| `src/processforge_core/common/json_io.py` | Canonical existing json_read primitive with current file reads and unchanged native failures. |
+| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title, list/string-list and borrowed parameter-mapping primitives. |
 | `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
 | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
@@ -144,6 +224,21 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/composition.py` | Explicit service factories and the remaining LegacyResourceSearchReadAdapter; migrated current-work, context, definition and resource-resolve readers use concrete Core owners. |
 | `src/processforge_core/bootstrap.py` | Existing runtime module assembly and lazy access to the service factories. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade and transport/host/provider adapters. |
+
+`build_core_properties()` captures one process-bound `CoreProperties` object on
+its first call, deriving the owning distribution root from the Core module rather
+than cwd. The CLI facade captures it at boot; `RuntimeBootstrap.properties` returns
+the same owner. Constructor injection supports library use without CLI/Host.
+`loaded` remains frozen while `installed()` rereads the bound distribution.
+This cache holds no project, Work, grants or request documents. Release/build
+identity, honest partial/unknown reasons, relocation and independent spec/schema,
+Runtime component and protocol versions are described in
+[Core properties](core-properties.md). Metadata identity does not verify payload
+integrity or qualify an archive, installation or connected-host restart.
+The shared owner also validates portable process records and compares frozen
+loaded versus live installed metadata. Runtime/Host state schema2 and actual MCP
+discovery provenance contract2 expose this identity without changing authority
+or tool input schemas; equal release labels alone do not prove equal builds.
 
 `build_current_work_service(project_root, *, documents=None)` constructs the concrete CurrentWorkService with Core YAML and inventory readers. RuntimeBootstrap, context and start consumers call this owner directly; LegacyWorkReadAdapter and WorkReadCorePort are removed. Construction performs no I/O and introduces no global service cache or DI container. Remaining bootstrap/lifecycle callback edges still require separate migration.
 
@@ -500,3 +595,631 @@ input nonmutation. It performs no document reads and retains no inputs or result
 Snapshot assembly, freshness decisions and durable publication keep their
 existing responsibilities. This presentation move does not make those paths
 independent of the legacy composition or complete any OOP epic.
+
+## Parameter Merge
+
+`configuration.parameters.ParameterMergePolicy` owns the existing recursive map
+merge, ID-list merge, deletion and replacement rules with ordered provenance.
+Its instance method is `merge_maps(base, override, source_id, path="", provenance=None)`.
+The owner retains no per-merge state, performs no I/O and has no dependency on
+the CLI or Host. Deep copies, mutation of supplied provenance, native errors,
+iteration order and existing duplicate-ID behavior remain unchanged. Five old
+parameter helper definitions have been removed from `tools/processforge.py`.
+
+The two direct consumers import from the owning module: `add_parameter_source`
+in `tools/processforge.py` uses the policy for each source merge and passes the
+existing provenance object; `work.context.build_context_fields` uses it for
+the immutable assignment parameter merge.
+
+`build_context_fields` still calls `core.add_parameter_source` and
+`core.parameter_payload` for the process/stage/task source cascade. Assignment
+normalization, snapshot paths/checksums, project/workplace resolution, source
+capture and coordination also retain existing legacy dependencies. Extracting
+the merge policy does not make the complete context compiler independent of
+the monolith. This ownership reference describes source code; archive,
+installed-Core, Runtime and connected-host acceptance remain separate.
+
+## Classifier matching and process artifact declarations
+
+`project.classification.ProjectClassifierRulePolicy` owns the existing rule
+algorithm through its ordinary instance method `matches(rule, available_paths)`;
+condition matching is private. Both `inactive_official_classifier_hints` and
+`classify_project` in `tools/processforge.py` call this owner directly. A list-valued
+`when.all` takes precedence even when empty (which returns false); nonempty `all`
+and `any` retain short-circuit evaluation. Existing shape checks and nonblank
+`exists` string handling are unchanged.
+
+`common.paths.path_matches_pattern` is the shared primitive used by this policy,
+`ProjectDetectionService.group_matches` and `matches`. It preserves backslash
+normalization and standard-library `fnmatch.fnmatch` checks on the full path then
+its `Path(...).name`, including platform-dependent matching. `rel` is unchanged.
+The two old classifier definitions and the old matcher definition are removed
+from the monolith; consumers import the owning Core modules explicitly.
+
+`process_catalog.artifacts.ProcessArtifactDeclarationPolicy` owns the ordinary
+instance methods `defined_ids(process)`, `declared_ids(process)` and
+`produced_ids(process)`. Core authoring/contract validators and builtin catalog
+reporting call the owner directly;
+the three old artifact-ID definitions are removed. Shared `common.values` helpers
+preserve list-only handling, string-list conversion/filter order, comma-separated
+strings, dict/list distinctions, ID truthiness, duplicate handling and native
+exception order. Remaining monolith consumers import canonical shared primitives;
+the two temporally distinct monolith `as_list` definitions remain in place.
+
+Both policies are stateless, perform no I/O and have no monolith callback or
+import. Classifier registry loading, tree walking and activation remain in the
+legacy CLI paths. Process contract checks and companion inspection belong to
+ProcessContractValidationService. Authoring transactions, catalog registration
+and activation retain their existing legacy owners. These
+pure policy extractions do not fully migrate classification or validation,
+complete any OOP epic, or establish archive, installed-Core, Runtime or
+connected-host acceptance.
+
+## Process authoring, evolution, driver documents and update sites
+
+`process_catalog.authoring.ProcessAuthoringDefinitionBuilder` owns `defaults`,
+`normalize`, `build`, `normalize_transitions` and
+`materialize_responsibility_boundaries`. Its normal constructor uses the concrete
+`process_catalog.evolution.ProcessEvolutionPolicy`, whose methods are
+`default_block`, `normalize_block` and `validate_block`. Both preserve fresh
+defaults, the existing shallow sharing and deep-copy locations, unknown fields,
+disabled handling and ordered checks. Transition routes retain their shared
+return mapping. Full authoring/schema validation and durable publication retain
+their legacy responsibilities.
+
+`runtime.drivers.RuntimeDriverDefinitionPolicy` owns `default_documents`,
+`default_registry`, `placeholder_errors`, `parse_limits`, `start_readiness` and
+`validate`, together with the existing reserved environment keys and placeholders.
+Document readiness performs no executable probing. Defaults remain fresh on each
+call; validation messages, ordering, native errors and existing argument
+normalization are preserved. Runtime process execution, registry I/O and worker
+lifecycle retain their existing owners.
+
+`maintenance.sites.UpdateSitePolicy` owns `location`, `source_kind`, `source_id`,
+`stable_key`, `record` and `policy`. It retains ordered source-key lists, raw
+nonblank IDs, override precedence, shallow policy mutation and borrowed channel,
+parent and local-data values. It uses `common.paths.rel` and performs no I/O.
+Update discovery, schema validation, network access, installation and recovery
+remain with their existing owners.
+
+Shared primitives have one canonical owner: `common.checks.Check` remains a
+mutable dataclass and `check` uppercases its level; `common.ids` owns `safe_id`
+and `title_from_id`; `common.values` owns strict-list `as_list` and the existing
+`string_list` conversion. All known consumers use the concrete owners or these
+imports. The obsolete internal definitions are removed without wrappers.
+These moves preserve external 1.2.0 contracts and establish bounded source-only
+evidence; they do not complete the OOP epics or qualify other delivery layers.
+
+## Presentation, live driver catalog and candidate selection
+
+`ProcessAuthoringDefinitionBuilder.from_definition` owns the existing reverse
+projection from a process definition to authoring answers. Earlier builder
+methods are unchanged. `process_catalog.presentation.ProcessAuthoringRenderer`
+owns `questions`, `logic_review`, `agent_prompt` and `document`, preserving
+rendered bytes and evaluation order. The small canonical function
+`process_catalog.coordination.process_coordination_requirements` and its mode
+set are shared with the remaining monolith consumers.
+
+`runtime.catalog.RuntimeDriverCatalogReader(distribution_root)` uses concrete
+`YamlDocumentReader`, `ProjectMetadataReader` and `RuntimeDriverDefinitionPolicy`.
+It owns registry paths/entries, entry paths, strict document loading, exact
+registered lookup, reference resolution/classification/normalization and the
+driver ID list. It preserves first-match lookup, ordered overwrites, direct-path
+behavior, builtin fallback, unknown fields and native refusals. Construction
+performs no I/O; operations read current files without retaining parsed documents.
+The monolith and existing MCP registered-driver lookup call this owner. The MCP
+adapter keeps its driver-ID guard before a lazy owning-module import, preserving
+standalone bootstrap timing and bound project/workplace values.
+
+`evolution.candidates.KnowledgeCandidateTargetingPolicy` owns existing candidate
+ID, target and destination projections, promotion/generalization readiness and
+ordered targeting validation. It borrows the original nested mappings and uses
+canonical checks, identifiers, string-list conversion and existing evolve target
+types. The new responsibility package has a minimal initializer. Full candidate
+sanitization, publication/export and lifecycle retain their existing owners.
+
+`maintenance.versions.UpdateVersionSelectionPolicy` uses concrete
+`ResourceVersionPolicy` and `UpdateSitePolicy` for existing latest lookup, both
+manifest-version shapes, version selection and candidate IDs. Nested references,
+subject sharing, stable sorting and warnings retain their earlier behavior.
+`maintenance.presentation.UpdateAssessmentRenderer.render` owns the existing
+assessment text. Fetching, update orchestration, installation and recovery remain
+with their existing owners. These internal interfaces establish source ownership;
+external commands, MCP schemas and delivery-layer acceptance retain their existing
+contracts.
+
+## Work fields, coordination, shared privacy and source contracts
+
+The existing `work.context_documents.ContextContractInputs` owns eight additional
+existing operations: assignment path keys, write-scope projection, glob and
+overlap flags, dependency sets, required-source file observations, capsule
+coordination and path/scope matching. Its original fields, frozen constructor and
+20 earlier methods are unchanged. Existing normalization methods are reused;
+two obsolete monolith wrappers are removed. The context compiler calls capsule
+coordination directly at the former projection site. Scope decisions retain
+platform behavior and empty-scope handling; access, admission, lifecycle and the
+remaining compiler dependencies retain their existing owners.
+
+`project.coordination.ProjectCoordinationReader` owns the existing project and
+workplace defaults, mode normalization and configuration reads. Its concrete
+YAML reader and project metadata reader preserve live observations, shallow
+director merges, unknown fields, fresh defaults and refusal order. The reader
+retains no project, Work or parsed configuration. Effective coordination assembly
+and Director operations remain legacy responsibilities.
+
+`common.privacy` owns `BACKSLASH`, `LOCAL_PATH_PATTERNS`, `SECRET_VALUE_PATTERNS`,
+`is_public_path_safe` and `contains_secret_value`. `AnswersDocumentReader` uses
+the canonical data with its original class algorithm. `evolution.privacy.EvolvePrivacyPolicy`
+owns `findings`, `text` and `value`, preserving regex patterns/flags, redactions,
+recursive behavior, dictionary keys, tuple identity and native errors. Host uses
+the canonical secret predicate after the existing automatic-content filters;
+short-circuit order, bootstrap timing and all authentication/provenance/hash
+guards are preserved.
+
+`maintenance.source_contracts.UpdateSourceContractPolicy` owns existing HTTPS
+defaults, remote/artifact URL shapes, env-reference and source checks, registry
+validation and source sorting. It preserves mutation of the supplied check list,
+type/truthiness distinctions, native errors and check order. Schema-based override
+and full normalized-manifest validation continue to call these shared helpers
+from their legacy owners. No scanner, trust, authorization or update rule is added.
+These internal moves preserve module annotation semantics and external 1.2.0
+contracts; evidence remains limited to the qualified source slice.
+
+## Output declarations, platform detection, worker environment and schema checks
+
+`work.outputs.WorkOutputPolicy` owns `waivers`, `path`, `task_path`,
+`expected_report` and `default_report`. It uses existing `ContextContractInputs`
+for normalization and preserves traversal/drive/absolute-path checks before
+resolution, containment, native failures and existing defaults. Required-output
+normalization calls the existing Core owner directly. The same policy owns
+required-output `checks` and verification `fingerprint`; lifecycle remains with
+the application service. Host and existing consumers call the policy at their
+former guard positions. Optional application dependencies are described below.
+
+`project.detection.ProjectDetectionService` owns `files`, `group_matches` and
+`matches`, using canonical `common.paths` and `common.values.list_value`.
+Generic inventory retains its existing ignored-component policy and remains
+distinct from classifier inventory pruning. Detection preserves file ordering,
+read limits, invalid-regex fallback and current filesystem observations; no
+parsed or metadata-only cache is introduced. Classifier loading/activation remain
+legacy responsibilities.
+
+`runtime.environment.WorkerEnvironmentPolicy` owns `minimal`, `build`,
+`materialize` and `expand`, reusing reserved keys from `runtime.drivers`.
+Persisted command data contains only existing PF-owned and explicit values;
+inherited host environment is materialized at launch. Placeholder recursion,
+coercion, reserved-key refusal and native errors retain their original behavior.
+Process creation, attempt state, collection and recovery retain their owners.
+
+`maintenance.schema_checks.UpdateSchemaChecks(distribution_root)` owns
+`type_matches`, `resolve_ref`, `validate`, `append` and `require`. This is the
+existing JSON Schema subset, including its ordered diagnostics and exceptions.
+Construction performs no I/O; schema files are read afresh for each check.
+Update orchestration, network, installation and recovery remain with their
+existing owners. These moves qualify source behavior only; archive, installed,
+Runtime and connected-host acceptance remain separate.
+
+## Work locations, worker commands and live catalogs
+
+`work.paths.WorkPaths` owns Run and Assignment document paths, task artifacts,
+summaries, handoffs, worker prompts and ordered attempt paths. Run directory and
+handoff normalization preserve valid generated IDs with repeated hyphens;
+assignment and agent/task locations retain their separate `safe_id` behavior.
+The strict assignment-path validation in `ContextContractInputs` remains distinct.
+Concrete `ProjectMetadataReader` supplies the flow root without constructor I/O.
+
+`runtime.command.WorkerCommandBuilder(distribution_root)` owns `sandbox` and
+`build`, composing existing Work paths, output rules, environment, driver limits
+and context normalizers. Output preflight precedes variables and environment;
+placeholder expansion, model arguments, prepared wrapper, path resolution and
+command fields preserve their earlier ordering and behavior. Existing consumers
+use canonical owners. The terminal-admission test spies on the relocated builder
+and retains its original assertions. Process launch, locks, durable attempt
+state, collection and recovery retain their existing owners.
+
+`project.platforms.PlatformContractReader(distribution_root)` owns ID projection,
+registry lookup, seed/project paths, record loading, overlay index and lookup
+fallback. It reuses concrete Core YAML and `WorkspacePathReferenceReader` rather
+than copying registry/path algorithms. Seed, project and workplace overlays,
+aliases, duplicates, unknown fields, disabled/missing records and borrowed values
+preserve their existing behavior. Operations read current files without caching.
+
+`maintenance.documents.UpdateDocumentReader(distribution_root)` owns update
+registry locations, soft YAML reads, doctor YAML/schema checks, manifest candidate
+paths, registry path lists, update index, local file URLs and YAML/JSON document
+and text reading. It reuses existing YAML, workspace-path and schema owners.
+Soft update YAML filters parse errors; index reading retains its earlier error
+sentinel behavior; doctor checks may append schema errors and still return the
+parsed mapping. Construction performs no I/O. Network fetch, effects and update
+lifecycle remain legacy responsibilities. Egress and prepared-input consumers
+use canonical Work paths but retain their other unmoved dependencies. This is
+bounded source ownership, with later delivery layers and OOP epics still separate.
+
+## Output readiness, driver selection and validation
+
+`WorkOutputPolicy.checks` and `fingerprint` preserve optional-output skipping,
+waivers, missing/pending/invalid distinctions, live file observations and exact
+JSON/hash encoding. Earlier fields, constructor and path methods are unchanged.
+`ProcessExecutionService` receives independent optional keyword-only callables
+`output_checks` and `verification_fingerprint`, with canonical Core methods by
+default and explicit `None` for unavailability. Frozen/repr/compare behavior and
+the three positional constructor arguments remain intact. Existing automation
+projectors retain their guards, reasons and exception identity; unused
+capabilities remain lazy. Event/journal dependencies retain their earlier wiring.
+
+`runtime.selection.RuntimeDriverSelectionService(distribution_root)` owns
+`for_task` and `for_worker_state`, preserving saved command reads, direct-path
+copies, fallback and validation/error order. The existing
+`ProjectMetadataReader.workplace_manifest()` owns the local-only workplace
+manifest lookup with project identity bound in the reader. It remains distinct
+from broader automatic workplace resolution. `common.json_io.json_read` owns
+the existing primitive, including raw JSON types and native parse/read failures.
+
+`project.platform_policy.PlatformContractPolicy(catalog)` receives a concrete
+`PlatformContractReader` for canonical IDs. It owns reference normalization,
+extends/requires and required/recommended/optional resource projections, retaining
+type/truthiness distinctions, sorting, deduplication and existing includes rules.
+Hierarchy resolution and project package catalogs use the concrete owners below.
+
+`process_catalog.validation.ProcessAuthoringValidationService` owns `logic`,
+`files` and `paths`, using existing evolution/artifact policies and canonical
+workflow/iteration constants. Guard/check order, nested ID validation, warnings,
+companion-root handling and file observations are unchanged. The shared
+`common.privacy.public_yaml_has_private_path` retains its original serialization
+and predicate. Full process-contract checks use the concrete owner below. Route-map validation,
+publication and recovery remain with their existing owners. These are internal source interfaces; external
+1.2.0 contracts and later delivery-layer acceptance remain separate.
+
+## Project packages, platform hierarchy, process semantics and worker plans
+
+`resources.project_packages.ProjectPackageCatalogReader(distribution_root)` owns
+`workplace_roots`, `workplace_root_paths`, `candidates`, `index`, `dependencies`
+and `root_from_entry`. Project and workplace arguments remain explicit per call.
+Current candidates retain discovery order, resolved-path deduplication and active
+official-pack additions. Project indexes preserve last-wins and the duplicate
+sentinel; the existing workplace search catalog keeps its separate first-wins
+contract. There is no parsed-document cache or constructor I/O.
+
+The moved `PackageRootResolution` keeps its existing class name, fields,
+annotations, defaults and representation. Its root-entry operation uses the
+existing `WorkspacePathReferenceReader` algorithm, then explicitly maps the
+plain record fields while retaining warnings/entry aliases. The existing private
+snapshot record and its consumers are unchanged; path rules are not duplicated.
+
+`project.platform_resolution.PlatformContractResolver(distribution_root)` owns
+the existing recursive `resolve` and `merge_ids` operations. It uses concrete
+platform catalog/projection/package owners, preserving cycle and traversal order,
+extends versus required-platform resource inclusion, override aliases, conflict
+order, sorted outputs and package dependency FIFO. `common.values.parameter_payload`
+is the shared primitive that returns the original parameter mapping. Existing
+Work context assembly uses it directly; its other dependencies remain unmoved.
+
+`process_catalog.semantics.ProcessSemanticPolicy` owns authoring coverage,
+semantic-map and process projections, sorted strings/events/objects, and ordered
+comparison. `presentation.process_parity.ProcessParityRenderer` owns the existing
+`import_report` and `parity_report` Markdown. Their strings, warning/failure
+precedence and source-field distinctions retain the prior contract.
+
+`runtime.worker_plans.WorkerPlanPolicy` owns default plans, worker/subagent and
+dependency projections, recursive reachability, literal overlap policy and
+`task_dependencies_done`. The last operation uses current Work paths and strict
+YAML reads. Execution, scope/lease checks, locks, lifecycle and recovery retain
+their existing owners. These are internal source responsibilities; external
+1.2.0 behavior and later delivery-layer acceptance remain separate.
+
+## Package roots, platform selection, update registries and process contracts
+
+`ProjectPackageCatalogReader` also owns root registry reads, root/path resolution,
+manifest discovery and manifest loading through the existing concrete
+`WorkspacePathReferenceReader`. The canonical algorithms are reused, with the
+public root record retained through one explicit field converter. Existing
+private snapshot records and their callers remain unchanged. Prior package
+catalog behavior and constructor/field contracts are retained.
+
+`project.platform_selection.ProjectPlatformSelectionService(distribution_root)`
+owns existing selected/derived platform decisions, project/parent type hints,
+current detection, registry findings, binding matching and forbidden-base rules.
+It uses concrete readers and operation-local project/workplace arguments.
+`AnswersDocumentReader.strings` owns the recursive answer flattener;
+`PlatformContractReader.normalize_id_pair` owns the existing two-ID projection.
+Hint normalization/matching live in `project.classification`; `common.values.registry_ids`
+is the shared literal registry projection. All previous owner methods and data
+remain unchanged. No MCP resource use is introduced by reading existing registry metadata.
+
+`YamlDocumentReader.policy(name, root=None, *, distribution_root)` owns the earlier
+policy document lookup. The explicit required keyword replaces the old module
+ROOT without capturing a dummy project or changing the constructor. File guards,
+soft YAML errors and returned values are unchanged; all callers supply the actual
+distribution root. Other document reads retain their earlier behavior.
+
+`maintenance.registries.UpdateRegistryReader(distribution_root)` owns entity
+manifest records, overrides, installed subject lookup and install-target selection.
+`UpdateDocumentReader` also owns runtime/candidates/notifications locations.
+Discovery and override priority, installed-record aliases, package-only dedup and
+install override/current-record/fallback precedence remain intact. These operations
+read/resolve only; installation, timestamped version writes and update lifecycle
+retain their previous owners.
+
+`process_catalog.contracts.ProcessContractValidationService(distribution_root)`
+owns the existing full process contract checks, with concrete metadata,
+evolution, artifact, authoring and route-document owners. `ProcessRouteDocumentReader`
+owns route location and soft document reading. The actual metadata function and
+stable predicate live in `process_catalog.service`; shared handoff modes belong
+to `contracts`. Guard/check/refusal and filesystem-observation order, strict/stable
+severity, unknowns, companion/template precedence and route defaults remain unchanged.
+Route-map validation, handoff execution, authoring callbacks/transactions, lifecycle,
+locks, recovery and later delivery-layer qualification remain separate work.
+
+## Worker plan checks, record validation and route/handoff readers
+
+`runtime.worker_validation.WorkerPlanValidationService(distribution_root)` owns
+the existing plan checks, extension-key filtering and subagent report checks.
+It composes current ContextContractInputs, RuntimeDriverCatalogReader,
+WorkerPlanPolicy and ScopeConflictService with actual operation-local project
+roots. Literal type tests, repeated driver reads, dependency exemptions, scope
+conflicts and recursive current report observations retain their earlier order.
+The four plan field sets belong to that module. WORKSPACE_ACCESS_KEYS and both
+normalizers use existing work.context_documents definitions directly; the old
+Main wrappers/duplicate tuple are removed, including three other Core callers.
+
+`project.hooks.HookConfigurationReader` owns hooks.yaml location and its existing
+ordered shape checks. `common.record_validation.RecordValidationPolicy` owns
+event/chat required fields, the existing event-type expression and the shared
+secret check. JSON serialization and its native failures remain unchanged.
+Hook dispatch, journals and effects retain their existing owners.
+
+`process_catalog.routes.ProcessRouteService(distribution_root)` owns current
+route lookup, validation and required-role projection. It reuses the existing
+route reader, shared modes and schema checker. `process_catalog.handoffs.HandoffDocumentReader`
+owns handoff directory/path/soft read with real project metadata and document
+owners. First matches, borrowed mappings, schema/check order and not-found
+refusals remain intact. Handoff writes and execution, leases, continuation,
+workflow transactions and recovery retain their existing owners.
+
+`maintenance.validation.UpdateDocumentValidationService(distribution_root)` owns
+the existing overrides and normalized manifest checks with concrete schema and
+source-contract policies. The SHA-256 expression is unchanged. UpdateRegistryReader
+also owns the distinct installed-version projection; UpdateDocumentReader also
+owns staged-record location/soft reading. Existing reader constructors and
+previous methods are unchanged. Discovery, writes, installation, artifact I/O,
+network and timestamp generation retain their earlier owners.
+
+## Platform document building, registry checks and catalog audit
+
+`project.platform_documents.PlatformDocumentBuilder` owns the existing platform
+document path/byte/note list construction. It preserves every YAML and Markdown
+literal, output order and native lookup failure; it returns data without writing
+files. Platform authoring publication retains its owner; semantic validation now uses
+PlatformContractValidationService as described below.
+
+`project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
+owns current registry path checks and package-root checks through the existing
+WorkspacePathReferenceReader, ContextContractInputs and ProjectPackageCatalogReader.
+Actual workplace roots are operation-local. Alias/default/status/writable rules,
+duplicates, current filesystem observations and warning/check order are unchanged.
+`common.yaml_dump` owns the exact existing format_scalar and recursive dump_yaml;
+all actual Main/Runtime/process-execution formatter consumers use that owner.
+The zero-argument yaml_formatter provider and one-argument formatting callbacks
+retain their earlier shapes. No serializer replacement or Runtime start is added.
+`common.text` owns the original ensure_trailing_newline and check_with_hint
+functions. Capsule publication composition calls the canonical newline and YAML
+formatters from the same one-argument callbacks; the other legacy dependencies stay with
+their existing owners. No publication or failure timing is changed.
+
+`process_catalog.audit.BuiltinProcessCatalogAuditService(distribution_root)` owns
+the ordered builtin catalog report using a per-operation concrete catalog reader,
+contract/authoring/artifact policies and canonical metadata functions. The flat
+sorted root/packages/*.yaml index remains distinct from the broader project
+package index. Public internal skips, official companion roots, counts, repeated
+observations and warning concatenation retain their earlier semantics.
+The pure process_catalog_contexts projection lives in existing service.py;
+all its prior definitions/data remain unchanged.
+
+`project.setup.WorkplaceSetupProposalBuilder` owns the existing setup proposal
+mapping and Markdown using ProjectCoordinationReader. Defaults, literal path
+placeholders, list coercions, borrowed fields, ordering and invalid-mode refusals
+are preserved. Constructors perform no I/O; actual setup writes, authoring transactions, locks, recovery and later delivery
+layers retain their owners. Registry upsert now belongs to WorkplaceRegistryWriter.
+
+## Registry writes, template lookup and platform validation
+
+`project.registry_write.WorkplaceRegistryWriter(distribution_root)` owns the
+existing registry upsert. It retains schema mapping/validation and original
+refusals, UUID staging beside the destination, os.replace and finally cleanup.
+No locking, retry or new atomic-write behavior is added. The shared upsert_resource
+primitive lives in existing common.values, whose prior implementation is intact.
+
+`project.templates.TemplateCatalogService(distribution_root)` owns existing
+template-root selection and manifest lookup. It reuses WorkspacePathReferenceReader
+and WorkplaceRegistryWriter. Read mode stays read-only; write mode preserves the
+fallback registry upsert before selected-ID validation and the original mkdir
+ordering. Candidate-first lookup, first registry match and original path behavior
+remain unchanged; no new containment or template policy is introduced.
+
+`project.platform_validation.PlatformContractValidationService(distribution_root)`
+owns the complete existing semantic platform checks through concrete contract,
+resolution, selection, package and template owners. Check/message order, repeated
+live reads, required/recommended resources, cycles and falsey resolution fallback
+are preserved. Pure policy_entries/policy_id_matches live in common.policies;
+other Main consumers use those same shared functions.
+
+`project.requirements.PlatformDependencyPreflightService(distribution_root)` owns
+the original dependency preflight and direct workplace registry-ID reads. Missing
+resource order, duplicates, tool/MCP reads and native refusals remain unchanged.
+Constructors perform no I/O or retain project documents. All actual callers use
+these owners in the same source slice; authoring publication/transactions and
+unselected recovery paths remain with their earlier owners. This source refactor
+does not complete the OOP epics or archive/install/Runtime/connected-host gates.
+
+## Resource records, package/index checks and worker assignment prompts
+
+`resources.records.ResourceRecordService` owns the existing load/index defaults,
+registered-root references, public path_ref projection and record normalization.
+The exact HEAVY_RESOURCE_KINDS set lives with it. Canonical path readers and
+ResourceSnapshotRules remain the algorithm owners; nested aliases, private-path
+hiding, first-root precedence, unknown fields and the currently ignored
+register_private_path argument retain their behavior without new writes.
+
+`resources.package_checks.KnowledgePackageValidationService(distribution_root)`
+owns the existing package doctor, including its separate manifest/schema read,
+resource/index/privacy/navigation/dependency/policy checks in the original order.
+`resources.index_checks.KnowledgeResourceIndexService(distribution_root)` owns
+index-path selection, path_ref registry findings and project resource index checks.
+It reuses existing containment/ID validation, package catalog and registry owners;
+package.yaml early return and optional project-local index semantics are unchanged.
+The exact shared path_is_relative_to lives in existing common.paths.
+
+`work.worker_assignment.WorkerAssignmentService` owns strict full assignment
+loading and the existing worker launch prompt text. Missing/YAML refusals,
+safe-ID/path ordering, prepared-input branches, counts/sections and final newline
+are unchanged. All six existing Host/smoke consumers use the Core reader;
+their other logic and assertions are preserved. Constructors perform no I/O or
+retain project documents. Preparation/launch policy, index writes/timestamps,
+unselected authoring and lifecycle/recovery stay with their existing owners.
+This source slice does not complete OOP epics or later delivery qualifications.
+
+## Authoring data/read inputs, process output and candidate reading
+
+`authoring.plans` owns the existing mutable AuthoringWrite/AuthoringEffect/
+AuthoringPlan dataclasses and AuthoringPlanRenderer. Fields, defaults, borrowed
+callback data and sorted stdout are unchanged. `authoring.inputs.AuthoringInputService`
+owns mode selection, transaction/journal paths, incomplete journals and parent
+guards/chains. Callbacks remain inert in this moved scope. Authoring preflight,
+failure injection, staging, publication, commit and rollback retain their owners.
+Existing FileDigestReader gained the two original raw-byte/guarded-file helpers;
+its prior streaming method and dataclass contract are unchanged.
+
+`process_catalog.examples` owns exact process_yaml_content and the seven original
+process authoring example documents through ProcessAuthoringExampleBuilder.
+Existing ProcessParityRenderer gained the original parity index; common.status
+owns shared aggregate_status. Prior renderer methods and every output literal,
+ordering, annotation and native error remain unchanged.
+
+`maintenance.candidate_read.UpdateCandidateReader(distribution_root)` owns the
+existing fresh JSON candidate read/find. It reuses UpdateDocumentReader paths
+and the identical common.clock.now_utc; constructor performs no
+I/O or clock read. Missing/JSONDecodeError/non-dict fallbacks, other failures,
+raw ID/first match and unknown fields remain unchanged. Two authoring smoke
+consumers use canonical models/input owners after their existing local bootstrap;
+assertions, fixtures and failure-injection matrices are preserved. This source
+slice adds no feature and leaves OOP epics and later delivery layers open.
+
+## Session reads, specialization catalog, candidate validation and update transfer
+
+ProjectSessionReadService owns the original report regex, recent-file ordering
+and legacy context-index substring freshness. It composes current project
+metadata/source readers; modern context freshness and report lifecycles retain
+their owners. common.text owns the shared exact COLON_WS primitive.
+
+SpecializationCatalogReader(distribution_root) owns existing resource IDs,
+registry paths, ordered/deduplicated candidates, manifest index and first-file
+selection. It reuses WorkspacePathReferenceReader containment/validation/path
+constants and current metadata/YAML owners. Candidate status filtering and the
+unfiltered last-wins index remain distinct; unknown fields and live reads remain.
+
+KnowledgeCandidateValidationService composes the existing targeting/privacy
+policies and ordered checks. evolution.validation owns the unchanged category
+set; constructors perform no document reads. UpdateTransferService composes
+existing site/document owners and preserves local copy2/HTTP stream behavior,
+timeouts, warning/error boundaries and destination effects. It adds no retry,
+directory creation or archive inspection. These source-only moves preserve
+external 1.2.0 contracts and leave OOP epics/later delivery acceptance open.
+
+## Journal storage, parameter sources, report projections and project inputs
+
+AuthoringJournalStore owns the original journal data/plan writes, with the same
+mkdir, UUID sibling staging, serialization, replace and finally cleanup. Errors
+and cleanup precedence remain unchanged. Authoring preflight, callback/effect
+execution, publication and rollback retain their existing owners.
+
+ParameterSourceService owns source records, workplace paths, source accumulation,
+process parameter reading and requirements fingerprints. It reuses canonical
+path/YAML/digest/merge owners and preserves private markers, aliases, source order
+and fresh reads. The Work context consumer calls it directly for its three
+selected accumulation steps; unselected Work context responsibilities remain.
+
+ReportProjectionReader owns original Markdown section/boolean parsing, exact
+capability waiver help and resource report status. The aggregate smoke binds its
+mock to this canonical owner with unchanged fixtures/assertions/restoration.
+ProjectInitializationInputs owns existing manifest project types, allowed type
+sets, greenfield/brownfield mode and initial defaults. The initialization consumer
+calls it directly. Coordination project modes/defaults are separate contracts.
+All constructors are cold and roots explicit. This source-only move preserves
+1.2.0 contracts and leaves OOP epics/later qualification open.
+
+## Setup, policies, events and execution inputs
+
+The next twenty bounded groups use the following concrete owners. Selected
+implementations and old helper aliases are removed from Main; actual CLI,
+Runtime, Core and smoke callers import the owning modules directly.
+
+| Responsibility | Module and owner |
+| --- | --- |
+| Workplace setup answers | `project.setup_answers.WorkplaceSetupAnswers` |
+| Classifier sources and inventories | `project.classifier_sources.ProjectClassifierSourceReader` |
+| Project scan roles and exclusions | `project.scan_policy.ProjectScanPolicy` |
+| Release source filtering | `maintenance.release_sources.ReleaseSourcePolicy` |
+| Project overrides | `project.overrides.ProjectOverrideReader` |
+| Capability providers and routes | `project.capability_resolution.ProjectCapabilityResolution` |
+| Workplace resource event journals | `resources.workplace_events.WorkplaceResourceEventJournal` |
+| Release Git provenance | `maintenance.release_provenance.ReleaseGitProvenance` |
+| Workspace resource matching | `work.workspace_refs.WorkspaceAccessReferenceService` |
+| Event hook selection and payloads | `agents.hook_policy.HookDispatchPolicy` |
+| Chat export projection | `chat.export.ChatExportService` |
+| Session metadata writes | `agents.session_metadata.SessionMetadataWriter` |
+| Telemetry event construction and recording | `agents.telemetry.TelemetryEventService` |
+| Run/task inputs and consistency | `work.consistency.RunTaskInputReader`, `RunTaskConsistencyService` |
+| Orchestration configuration | `work.orchestration_config.OrchestrationConfigService` |
+| Supervisor profiles, plans and state | `runtime.supervisor_inputs.SupervisorInputService`, `SupervisorStateInputs` |
+| Worker observation inputs | `runtime.observation_inputs.WorkerObservationInputService` |
+| Agent workplace registry | `agents.registry.AgentWorkplaceRegistry` |
+| Project coordination state | `project.coordination_state.ProjectCoordinationStateService` |
+| Public source and encoding policies | `maintenance.public_source_checks.PublicSourcePolicy` |
+
+`resources.registries.WorkplaceRegistryReader` owns the existing live registry
+reads and their root-independent path dependency graph. The frozen
+`WorkspacePathReferenceReader` inherits these algorithms with its existing
+fields and constructor. Run/task and supervisor inputs likewise separate
+root-independent reads from operations requiring an explicit distribution root.
+No reader substitutes a project or current directory for that root.
+
+Shared primitives remain plain functions in `common.clock`, `common.json_io`,
+`common.yaml_io` and `resources.buckets`. Exact policy constants live beside
+their owners. The mutable detached-process registry is one object in
+`runtime.observation_inputs`, used by both extraction and remaining operations.
+ProcessExecutionService keeps its constructor and match arguments; private
+clock/event-path fields compose concrete Core operations without Main callbacks.
+Controlled fixtures bind these dependencies while preserving assertions and
+failure order. Runtime imports retain the existing guards and Core bootstrap.
+
+Algorithms, signatures, payloads, errors, document formats, unknown fields,
+read/write ordering and live YAML reads are retained. The resource event dirty
+mark still has its original behavior. Operational worker observation, overlap
+materialization, the remaining workspace-access workflow and lifecycle/recovery
+retain their earlier owners. These groups add no product feature and do not
+complete OOP epics or archive/install/Runtime/connected-host qualification.
+
+### Resource rules, parameters and Work presentation
+
+| Responsibility | Canonical owner |
+| --- | --- |
+| Resource identity and declared-root containment | `resources.identity.ResourceIdentityPolicy` |
+| Workplace registry catalog | `resources.workplace_catalog.WorkplaceCatalogReader` |
+| Live path constants | `resources.registries.WorkplaceRegistryReader` |
+| Project and assignment parameter composition | `configuration.project_parameters.ProjectParameterResolver`, `configuration.assignment_parameters.AssignmentParameterResolver` |
+| Package manifest and index documents | `resources.package_write.PackageManifestWriter` |
+| Private resource path publication | `resources.private_paths.PrivateResourcePathWriter` |
+| Work task indexes and run summaries | `presentation.work_summaries.WorkSummaryRenderer` |
+| Platform definition values | `project.platform_documents.PlatformDocumentBuilder` |
+
+The root-independent catalog shares the actual resource rules and registry
+reader. Snapshot readers retain their existing constructor and dataclass fields.
+Parameter and package writers receive the actual distribution root; source
+composition reuses the existing concrete dependencies. Mutable policy constants
+have one owner beside their rules.
+
+Work summary rendering is an explicit optional dependency in execution,
+continuation and Runtime composition. A missing renderer retains the existing
+fallback; controlled fixtures supply their existing callbacks through that input.
+Dataclass fields and positional constructors remain unchanged. These moves do
+not introduce device indexing, scheduling or another product operation.

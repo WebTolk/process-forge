@@ -28,4 +28,4 @@ Remaining legacy handlers move with their bounded Core refactors.
 Preserve the released CLI contract and original project/distribution identity.
 Update actual consumers and payload checksums when moving a module. Use focused
 existing checks and equivalence evidence appropriate to the change. Follow the
-project's governed Work scope and preserve unrelated working-tree changes.
+task scope and CONTRIBUTING.md workflow; preserve unrelated working-tree changes.

@@ -54,13 +54,20 @@ during the execution phase.
 Inspector is not a separate participant. It is the primary agent using CLI
 checks, process gates, and self-checks.
 
-Agent Ledger exists in all modes, but it is a CLI-managed file ledger, not a
-separate watchman agent. Agents check in at session start, heartbeat during long
-work, and check out before leaving.
+Agent Ledger is the attendance/session layer, not a separate watchman agent.
+In Forge/factory operation, supported Codex/Kimi hooks deliver lifecycle and
+activity automatically through Host to Ledger. New admitted prompt, compaction
+and tool activity refresh exact session presence without periodic LLM calls.
+Rejected, unknown/raw-only, duplicate or replayed input cannot refresh presence
+or reopen a checked-out session. Presence does not extend leases or prove OS
+process/tree ownership or completion; execution receipts remain separate.
+Raw history retention is optional and no heartbeat is synthesized during silence.
 
 Garage `pf.context`, `pf.search`, `pf.resolve`, and `pf.work.start` do not
-require a manual Ledger session. Session commands below are Forge/operator
-tools, not the ordinary Garage start path.
+require Runtime, hooks or a Ledger session. Session commands below are manual
+Forge/operator compatibility tools. Effective provider registration and Host
+configuration must be verified separately on a device; source behavior does not
+establish that qualification.
 
 Agent Director is not required in single-agent mode. Process Supervisor /
 Execution Inspector is not required unless the process launches external
@@ -92,7 +99,9 @@ These runtime files are private and are not part of the public release archive.
 
 ## Forge And Operator Session Commands
 
-Use either the ledger command names or the simple session aliases:
+For manual operation or diagnostics, use the ledger names or session aliases.
+Explicit heartbeat CLI/MCP calls remain compatible; routine automatic delivery
+does not require an agent to spend tokens on periodic calls:
 
 ```bash
 python bin/pf.py session-start --workplace <workplace> --project-root <project> --agent primary-agent --process task-batch-execution

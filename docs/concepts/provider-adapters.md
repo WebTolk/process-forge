@@ -6,7 +6,7 @@ ProcessForge separates raw event receipt from permission to create project effec
 
 `tools/pf_runtime/provider_adapters.py` defines `AdapterPolicy`, `WorkerBinding`, and immutable `AdapterRegistry`. Application code constructs the registry from already-instantiated policy objects. Registry keys are the exact `(provider, adapter)` pair, duplicate or malformed keys are rejected, and `.policies` exposes the registered policies. Incoming event fields never import code, name a command, mutate the registry, or grant trust.
 
-The source Host uses `DEFAULT_ADAPTER_REGISTRY` from `builtin_provider_adapters.py`. It contains the Codex hook adapter (`codex` / `codex-hooks`), the ProcessForge-owned Codex worker capture (`processforge` / `pf-codex-exec-worker`), and the normalized Runtime compatibility adapter (`processforge` / `runtime-legacy`). These names describe current source behavior; they do not establish installed-Core or connected-host qualification.
+The source Host uses `DEFAULT_ADAPTER_REGISTRY` from `builtin_provider_adapters.py`. It contains the Codex hook adapter (`codex` / `codex-hooks`), the ProcessForge-owned Codex worker capture (`processforge` / `pf-codex-exec-worker`), the Kimi hook adapter (`kimi` / `kimi-hooks`), and the normalized Runtime compatibility adapter (`processforge` / `runtime-legacy`). These names describe current source behavior; they do not establish installed-Core or connected-host qualification.
 
 A trusted integration can construct a finite alternate registry in application code and pass it to `host.ingest_event`:
 
@@ -37,7 +37,11 @@ For worker capture, the adapter supplies neutral facts such as run, task, attemp
 
 The normalized Runtime compatibility adapter accepts only its already-normalized event on the authenticated Runtime path and rejects conversation messages. This preserves that transport's existing authentication boundary; it is not a general alternate-provider ingress route.
 
-Generic project initialization and status treat Codex telemetry as optional. Missing or bounded failures in the optional status callback produce an unavailable informational read-model instead of blocking generic readiness. Hook installation remains an explicit `install_codex_hooks` repair action and requires the normal apply acknowledgement; initialization does not install hooks automatically.
+Project initialization uses the linked workplace’s default mode to decide
+whether Codex registration is required. An `organized` default includes it in
+the plan and apply step. In Garage the status is informational and operators
+can request `install_codex_hooks` explicitly. The adapter registry also accepts
+Kimi events from a configured producer. [Initialization and repair](../guides/forge-init-hooks.md)
 
 These statements describe the source checkout. Installed Core, Workplace, and connected-host acceptance are separate T06 evidence and are not implied by source tests or documentation.
 

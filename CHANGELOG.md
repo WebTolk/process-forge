@@ -2,6 +2,245 @@
 
 ## Unreleased
 
+## 1.3.0 - 2026-11-20
+
+See the [release notes](release/1.3.0/notes.md) and
+[примечания к выпуску](release/1.3.0/notes.ru.md).
+
+- Run the built-in Codex worker in projects with or without Git on Windows and
+  supported Linux systems. PF checks process ownership and retains collected results.
+- Find current worker executions through an index in new projects. Existing
+  projects can migrate their history and resume an interrupted transfer from a checkpoint.
+- Reconnect Forge agents after a compatible Core update or Runtime restart.
+  Concurrent session registration spends less time waiting on a busy service.
+- Continue interrupted Core file updates and keep known 1.2.0 worker records
+  through migration. The public 1.2.0 upgrade and recovery paths were exercised
+  on Windows and Linux.
+
+## 1.3.0-beta4 - 2026-11-18
+
+See the [release notes](release/1.3.0-beta4/notes.md) and
+[примечания к выпуску](release/1.3.0-beta4/notes.ru.md).
+
+- Route Forge MCP clients through the existing Runtime and shared Core, retaining
+  session/project checks and reconnecting the same pipes after Runtime restart.
+- Add explicit updater-owned Runtime stop/apply/start with `--manage-runtime`;
+  preserve file-update recovery and verify the loaded target Core. Project
+  journal migration remains an explicit agent action after
+  `storage_migration_required`; new projects use SQL journals.
+- Preserve historically collected legacy results when their completion and
+  collection evidence match. Remove the historical-manager adoption machinery
+  from ordinary updates and journal migration.
+- Hold the existing Runtime singleton mutex during Core replacement and retain
+  a confirmed old-process exit until its lifecycle records change, so PID reuse
+  cannot interrupt an admitted update.
+- Honor Core Runtime job periods and retain failed job health until retry.
+  Reuse YAML loader policies within the existing cache limit, and read active
+  assignments through Core without retaining completed assignment histories.
+- Return success after a completed file-only archive update with an explicit
+  Workplace. Preserve the managed update's separate doctor result and errors.
+- Honor the configured stop timeout when authenticating the exact App Server
+  owner during explicit force recovery.
+- Keep slow Runtime inspection and projection outside shared execution admission,
+  retaining stop fences, native leases and checks around starts and mutations.
+- Check required event admission before publishing Work-start documents. Recover
+  interrupted publication with the same objective, scope, Work identity and
+  capsule; refuse execution while publication remains pending.
+- Keep full journal integrity and row-parity checks outside shared admission.
+  Revalidate store changes before migration publication and Work-start's final
+  journal open.
+- Handle an owned file becoming a directory during Core update and preserve
+  its preimage for recovery. Set Windows journal and cleanup receipt ownership
+  before writing agent-entry data.
+- Include the [architecture decision register](docs/architecture/README.md)
+  and the English and Russian migration and MCP guidance.
+
+## 1.3.0-beta3 - 2026-11-02
+
+### Fixed
+
+- Restore manifest-based updates of existing file-only installations through
+  the verified release CLI extracted outside the replacement target. Preserve
+  actual preimages, the recovery journal and private project/workplace data.
+- Keep enrolled and partially enrolled installations on native replacement;
+  the file route does not create enrollment or migration authority.
+- Allow explicit Windows App Server force recovery after a verified owner's
+  shutdown refusal. Authenticate and pin that exact process object; preserve
+  default shutdown behavior and unrelated processes.
+
+This development build does not establish general Core or POSIX acceptance.
+See the [beta3 notes](release/1.3.0-beta3/notes.md).
+
+## 1.3.0-beta2 - 2026-11-01
+
+### Fixed
+
+- Read private project and workplace YAML processes under `processes/user/`
+  and `processes/custom/` without treating them as immutable Core payload.
+  Keep catalog resolution, private data and release ownership unchanged.
+- Preserve captured bytes for every published file and refuse private process
+  writes, code files, path aliases, links and changes during a read.
+- Compare owned Windows temporary files and directories using Python's identity
+  for the pinned handle, avoiding false identity changes on Python 3.11.
+- Route worker input capture and the existing conversation smoke through their
+  current provider-adapter owner.
+
+### Qualification
+
+- This isolated repair is based on beta1. It does not include other unaccepted
+  development changes or claim general Core, POSIX or stable-release acceptance.
+
+See the [beta2 notes](release/1.3.0-beta2/notes.md).
+
+## 1.3.0-beta1 - 2026-10-26
+
+### Changed
+
+- Prepare the beta1 source candidate from the existing alpha6 development
+  checkpoint. This release-identity change adds no functionality.
+- Document the existing owned worker scratch lifecycle and retention boundaries;
+  required input, recovery data and durable evidence remain protected.
+- Define the Core update policy: confirmed updates must converge all
+  release-owned Core files to qualified target release bytes, replacing local
+  edits even when official bytes are unchanged between releases. Preserve actual
+  replaced or removed preimages, including missing-file absence, in the existing
+  recovery backup. Existing flags remain accepted; force is not required solely
+  for local Core edits and cannot bypass authority, ownership, selection, path,
+  collision or safety checks. Unknown non-owned files, configuration, project and
+  Workplace data, and runtime state retain their existing handling. The first
+  update from 1.2.0 retains its handoff, confirmation and recovery requirements.
+  Final implementation matching and normal documentation/release checks remain
+  mandatory.
+
+### Fixed
+
+- Preserve committed scratch bindings on prepare retry and recover unpublished
+  worker scratch before retry; retain explicit cancellation and cleanup results.
+- Preserve sealed release reports, child failure output and extracted release
+  evidence before disposal.
+- Restore `release-archive-test` without `--root`, retaining explicit-root source
+  verification and the existing default evidence root.
+
+### Qualification
+
+- This is a source candidate, not a publication or beta acceptance record.
+  Archive, installed Core and connected-host qualification remain separate;
+  real OS cold-stop, restart and reboot operations require their own delivery.
+- Stable remains 1.2.0. Update channels, tags and published assets are unchanged.
+
+See the [beta1 candidate notes](release/1.3.0-beta1/notes.md).
+
+## 1.3.0-alpha6 - source checkpoint
+
+- Internal development identity preceding beta1; this entry does not assert
+  publication or completed release qualification.
+
+## 1.3.0-alpha5 - 2026-10-24
+
+### Fixed
+
+- Read Core identity from the owning distribution through shared CoreProperties
+  across CLI, Runtime, monitor, MCP and Host.
+- Keep the loaded identity immutable and observe installed metadata separately;
+  diagnose changed builds and report unknown for missing or inconsistent data.
+
+### Changed
+
+- Record build-aware Core provenance in Runtime/Host state and MCP action
+  discovery while retaining separate release, component, protocol and schema
+  versions and existing public CLI/MCP parameters and response fields.
+
+See the [alpha5 release notes](release/1.3.0-alpha5/notes.md).
+
+## 1.3.0-alpha4 - 2026-10-23
+
+### Changed
+
+- Separate project initialization, context refresh/repair, context observation and
+  search from workplace documentation indexing. Resource mutations mark derived
+  state stale; indexing runs through an explicit manual command.
+- Route workplace manual indexing, existing scoped CLI refresh/rebuild/tick and
+  the cold future-scheduler job through one Core indexing component. Keep SQLite
+  FTS5 as the default backend behind a narrow adapter contract.
+- Record durable maintenance state and serialize writers with an OS-owned lock,
+  preserving explicit interruption recovery and current query/access filters.
+
+### Added
+
+- Add `knowledge-add-batch` with per-item transaction results and one final
+  indexing pass limited to successfully added resource IDs; retain unrelated
+  documents, read-only dry-run and explicit global reconciliation.
+- Add `search-index-maintain --workplace <workplace> --apply [--json]` for explicit
+  authorized workplace maintenance. Periodic execution belongs to the future PF
+  scheduler; additional database/vector adapters and RAG remain separate work.
+
+### Fixed
+
+- Open index readers without database creation or the default SQLite lock wait,
+  preserving live WAL reads and safe unavailable-state reporting.
+- Keep context/required-resource readiness independent from search availability;
+  redact unknown diagnostics and preserve selected-resource query boundaries.
+
+See the [alpha4 release notes](docs/releases/1.3.0-alpha4.md).
+
+## 1.3.0-alpha3 - 2026-10-22
+
+### Added
+
+- Add explicit SQLite journal maintenance: consistent backup bundles through the
+  SQLite backup API, manifest/hash/integrity verification and restoration to a
+  new destination. See [journal maintenance](docs/concepts/sqlite-journal-maintenance.md).
+- Preserve corrupt legacy journal lines byte for byte in a verifiable quarantine,
+  including NUL bytes, with source offsets and hashes. Import refuses invalid
+  rows unless `--skip-invalid` is explicit; counts, replay and migration barriers
+  remain visible. The existing migration script delegates to the shared service.
+- Explain required evidence and accepted evidence shapes in shared Work responses.
+  Artifact authoring findings are advisory and retain the reviewed content hash.
+- Store available native-worker token usage and execution time in a shared
+  accounting store, with CLI inspection/export and explicit partial coverage.
+
+### Changed
+
+- Display monitor calendar uptime in years, months, days, hours and minutes.
+- Keep the new maintenance services independent of Main and Host composition;
+  CLI adapters compose narrow backup/scanning ports and existing journal owners.
+
+### Fixed
+
+- Accept the supported Kimi native hook and raw-conversation payloads while
+  preserving ingress policy and historical evidence bytes.
+
+This cumulative prerelease includes accepted changes after alpha1 and the
+qualified alpha2 development archives. See the [alpha3 release notes](docs/releases/1.3.0-alpha3.md).
+
+## 1.3.0-alpha1 - 2026-10-20
+
+### Changed
+
+- Freeze the accepted development checkpoint as the first 1.3.0 alpha while
+  preserving public CLI/MCP contracts and file-only operation.
+- Continue the accepted internal Core separation across resource readers,
+  project context, lifecycle and update owners. Further refactoring remains
+  outside this frozen release.
+- Provide portable shared Python QA tools and explicit assurance requirements,
+  keeping quality dependencies outside the installed Core.
+- Configure the supported native Codex hooks during Forge initialization while
+  preserving existing user settings.
+
+### Fixed
+
+- Keep official-pack context freshness consistent between CLI and MCP when
+  identical text uses LF or CRLF line endings, without refreshing the snapshot.
+- Handle disconnected HTTP clients without retrying accepted responses and
+  retain the qualified console-free Windows App Server launch.
+- Order update prereleases correctly so a later alpha and the final release
+  can follow an installed alpha; ignore build metadata for precedence while
+  preserving existing resource constraints and channel selection.
+- Restore the missing Path import in the focused runtime hardcode-policy smoke.
+
+See the [alpha release notes](docs/releases/1.3.0-alpha1.md). This prerelease
+does not replace the stable 1.2.0 channel.
+
 ## 1.2.0 - 2026-10-18
 
 ### Changed

@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 import processforge
+from processforge_core.resources.identity import ResourceIdentityPolicy
 from specialization_smoke_helpers import read_yaml, run_pf, write_workspace, write_yaml
 
 
@@ -72,7 +73,7 @@ def require_rejected_without_write(workplace: Path, command: str, resource_id: s
 def main() -> int:
     for invalid_control_id in ["docs.\x01escaped", "docs.\x7fescaped"]:
         try:
-            processforge.validate_resource_id(invalid_control_id, "fixture")
+            ResourceIdentityPolicy().validate_resource_id(invalid_control_id, "fixture")
         except SystemExit:
             pass
         else:

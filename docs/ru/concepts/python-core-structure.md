@@ -90,6 +90,57 @@ Work-импорты на текущем dev-этапе не сохраняютс
 
 | Модуль | Обязанность |
 | --- | --- |
+| `src/processforge_core/project/file_templates.py`, `project/runtime_launchers.py` | Прежние файлы проекта и байты шаблонов запуска с явным корнем дистрибутива и конкретными входными службами инициализации и обнаружения. |
+| `src/processforge_core/project/workplace_templates.py`, `project/workplace_terms.py`, `process_catalog/profile_packs.py` | Прежние файлы рабочего места, термины и выбор официальных пакетов по профилю. |
+| `src/processforge_core/project/initialization_discovery.py` | Прежняя сборка классификации и обнаружения, подбор общих ресурсов и чтение текста реестров; инициализация получает явную операцию генерации файлов. |
+| `src/processforge_core/project/configuration_inputs.py` | Прежнее разрешение конфигурации проекта и устройства с тем же общим resolver и сохранением последней корректной конфигурации. |
+| `src/processforge_core/agents/process_events.py`, `agents/hook_dispatch.py` | Прежние допуск событий, запись журнала, диагностика и выполнение hooks через конкретные зависимости Core; сборка Work явно передаёт необязательный recorder. |
+| `src/processforge_core/chat/writer.py` | Прежние добавление сообщений, блокировки, обработка повторов, запись событий и синхронизация экспорта. |
+| `src/processforge_core/maintenance/release_manifest.py`, `maintenance/release_plan.py`, `maintenance/release_commands.py` | Прежние правила манифеста выпуска, упорядоченные планы команд и их записи; выполнение остаётся у текущего адаптера. |
+| `src/processforge_core/common/markdown.py`, `common/release_identity.py` | Общие прежние форматирование Markdown-списков, имя выпуска и шаблон хеша. |
+| `src/processforge_core/common/properties.py` | Frozen value CoreIdentity, CoreIdentityReadPort, ограниченный DistributionMetadataReader и CoreProperties; канонические loaded и live installed метаданные поставки. |
+| `src/processforge_core/resources/project_packages.py` | Манифесты пакетов проекта, записи корней, актуальные candidates/index, дубликаты и зависимости через конкретные пути и документы Core. |
+| `src/processforge_core/project/platform_resolution.py` | Прежнее рекурсивное разрешение иерархии платформ и сбор ресурсов/зависимостей через конкретные каталоги и правила Core. |
+| `src/processforge_core/process_catalog/semantics.py` | Прежняя полнота авторинга, проекции семантики и упорядоченное сравнение совместимости. |
+| `src/processforge_core/presentation/process_parity.py` | Прежние Markdown-отчёты импорта и паритета процесса отдельно от семантических правил. |
+| `src/processforge_core/runtime/worker_plans.py` | Прежние начальные планы работников, правила подагентов и зависимостей, рекурсия и актуальное чтение завершённости назначений. |
+| `src/processforge_core/project/platform_selection.py` | Прежний выбор платформ/типов/реестров и находки через конкретных владельцев ответов, документов, обнаружения, платформ и пакетов. |
+| `src/processforge_core/maintenance/registries.py` | Прежнее чтение entity/override/installed реестров и разрешение пути установки; без установки и записи версий. |
+| `src/processforge_core/runtime/worker_validation.py` | Прежние проверки планов, дополнительных ключей и отчётов подагентов. |
+| `src/processforge_core/project/hooks.py` | Путь конфигурации hooks и прежний порядок проверок. |
+| `src/processforge_core/common/record_validation.py` | Прежняя проверка полей event/chat и секретов. |
+| `src/processforge_core/process_catalog/routes.py` | Текущий поиск маршрута, проверка и требуемая роль. |
+| `src/processforge_core/process_catalog/handoffs.py` | Каталог, путь и мягкое чтение handoff. |
+| `src/processforge_core/maintenance/validation.py` | Прежние проверки overrides и нормализованного манифеста обновлений. |
+| `src/processforge_core/project/platform_documents.py` | Прежнее построение модели и байтов документов платформы. |
+| `src/processforge_core/project/registry_checks.py` | Текущая проверка путей реестров и корней пакетов. |
+| `src/processforge_core/common/text.py` | Прежние завершающая строка и оформление подсказок. |
+| `src/processforge_core/common/yaml_dump.py` | Точная прежняя сериализация скаляров и рекурсивного YAML. |
+| `src/processforge_core/process_catalog/audit.py` | Прежний отчёт каталога процессов и плоский индекс пакетов. |
+| `src/processforge_core/project/setup.py` | Прежние модель предложения настройки workplace и Markdown. |
+| `src/processforge_core/project/registry_write.py` | Прежнее обновление реестра с проверкой схем и атомарным staging. |
+| `src/processforge_core/project/templates.py` | Прежний выбор корня шаблонов и поиск манифестов. |
+| `src/processforge_core/project/platform_validation.py` | Прежняя упорядоченная семантическая проверка платформ. |
+| `src/processforge_core/common/policies.py` | Общие функции policy entries и сопоставления ID. |
+| `src/processforge_core/project/requirements.py` | Прежняя проверка зависимостей платформ и чтение ID реестров. |
+| `src/processforge_core/resources/records.py` | Прежние defaults, публичные ссылки и нормализация ресурсов. |
+| `src/processforge_core/resources/package_checks.py` | Прежняя упорядоченная диагностика пакетов знаний. |
+| `src/processforge_core/resources/index_checks.py` | Прежние проверки индексов, path_ref и ресурсов проекта. |
+| `src/processforge_core/work/worker_assignment.py` | Строгое чтение Assignment и прежний текст worker launch prompt. |
+| `src/processforge_core/authoring/plans.py` | Прежние модели авторинга и stdout плана. |
+| `src/processforge_core/authoring/inputs.py` | Прежние режимы, пути, журналы и guards авторинга. |
+| `src/processforge_core/process_catalog/examples.py` | Прежние байты документов примера авторинга процессов. |
+| `src/processforge_core/common/status.py` | Общая прежняя проекция итогового статуса. |
+| `src/processforge_core/maintenance/candidate_read.py` | Прежнее свежее чтение и поиск JSON кандидатов. |
+| `src/processforge_core/project/session_read.py` | Прежние статусы отчётов, недавние файлы и legacy freshness. |
+| `src/processforge_core/configuration/specializations.py` | Прежние registry/path candidates и индекс специализаций. |
+| `src/processforge_core/evolution/validation.py` | Прежние упорядоченные проверки кандидата знаний и категории. |
+| `src/processforge_core/maintenance/transfer.py` | Прежнее получение update manifest и перенос артефакта. |
+| `src/processforge_core/authoring/journals.py` | Прежняя запись журнала авторинга и точные ошибки очистки. |
+| `src/processforge_core/configuration/parameter_sources.py` | Прежние provenance, пути, чтение и merge источников параметров. |
+| `src/processforge_core/project/report_read.py` | Прежние Markdown sections, справка и проекция resource report. |
+| `src/processforge_core/project/initialization_inputs.py` | Прежние исходные типы, режим и defaults проекта. |
+| `src/processforge_core/process_catalog/contracts.py` | Прежняя упорядоченная проверка контракта процесса, чтение route-документов и общие режимы handoff. |
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
 | `src/processforge_core/evidence/` | Прежние правила сбора и identity доказательств, нормализация и актуальная диагностика файлов, удовлетворение требований и gates, порядок blockers готовности через явные зависимости. |
@@ -127,11 +178,40 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/documents/reader.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Актуальная проверка капсулы и нормализация Assignment через конкретные зависимости Core. |
-| `src/processforge_core/work/context_documents.py` | Нормализация полей и конкретное чтение документов, путей и идентификаторов для Work context. |
+| `src/processforge_core/work/context_documents.py` | Конкретные поля и документы Work, проекции путей/scopes/dependencies, наблюдение required sources и проекция coordination капсулы. |
+| `src/processforge_core/work/context.py` | Прежняя компиляция контекста Assignment; слияние параметров вызывает ParameterMergePolicy напрямую, остальные legacy-зависимости компилятора сохраняются. |
 | `src/processforge_core/process_catalog/` | Конкретные читатели каталога и effective ProcessDefinition; выбор из предложенных процессов и подготовка pin сохраняют явные зависимости операций. |
 | `src/processforge_core/project/metadata.py` | Живое чтение ID проекта, manifest и корня .pf через Core YAML; общий владелец для контекста, каталога и ресурсов. |
 | `src/processforge_core/project/snapshot.py` | Чтение актуального ProjectContextSnapshot через конкретные читатели YAML и файловых хешей Core, привязанные к корню проекта. |
 | `src/processforge_core/common/digests.py` | Прежнее чтение SHA256 исходных байтов файла, общее для snapshot, фасадов монолита и maintenance update. |
+| `src/processforge_core/configuration/parameters.py` | ParameterMergePolicy без состояния: прежнее слияние карт параметров и упорядоченный provenance без зависимости от монолита. |
+| `src/processforge_core/project/classification.py` | ProjectClassifierRulePolicy без состояния для прежних правил классификации; конкретные службы источников и обнаружения объединяют чтение реестров, обход и определение проекта. |
+| `src/processforge_core/common/paths.py` | Общий примитив path_matches_pattern для классификации и обнаружения вместе с неизменённым helper rel. |
+| `src/processforge_core/process_catalog/artifacts.py` | ProcessArtifactDeclarationPolicy без состояния для defined, declared и produced ID артефактов; полные валидаторы и I/O companion-файлов сохраняют legacy-владельцев. |
+| `src/processforge_core/process_catalog/authoring.py` | ProcessAuthoringDefinitionBuilder: прежние значения по умолчанию, нормализация ответов и построение процесса с конкретными правилами evolve. |
+| `src/processforge_core/process_catalog/evolution.py` | ProcessEvolutionPolicy: прежние значения evolve по умолчанию, нормализация и упорядоченные проверки. |
+| `src/processforge_core/runtime/drivers.py` | RuntimeDriverDefinitionPolicy: прежние встроенные документы, реестр, placeholders, limits и проверки готовности документа. |
+| `src/processforge_core/maintenance/sites.py` | UpdateSitePolicy: прежние идентификаторы источников, записи сайтов, переопределения и слияние политик без I/O. |
+| `src/processforge_core/process_catalog/presentation.py`, `process_catalog/coordination.py` | Прежнее оформление authoring-текстов и общая проекция требований координации процесса. |
+| `src/processforge_core/runtime/catalog.py` | RuntimeDriverCatalogReader: актуальное чтение реестров и документов с явным корнем дистрибутива и конкретными читателями Core. |
+| `src/processforge_core/evolution/candidates.py` | KnowledgeCandidateTargetingPolicy: прежние идентификаторы, target/routing, готовность promotion и проверка targeting. |
+| `src/processforge_core/maintenance/versions.py`, `maintenance/presentation.py` | Прежняя нормализация и выбор версий обновления, оформление assessment. |
+| `src/processforge_core/project/coordination.py` | ProjectCoordinationReader: прежние defaults, нормализация режимов и актуальное чтение project/workplace coordination. |
+| `src/processforge_core/common/privacy.py`, `evolution/privacy.py` | Общие канонические текстовые шаблоны/предикаты и прежние evolve findings, redaction и рекурсивное преобразование значений. |
+| `src/processforge_core/maintenance/source_contracts.py` | UpdateSourceContractPolicy: прежние trust/URL/env/source проверки, валидация реестра и стабильная сортировка. |
+| `src/processforge_core/work/outputs.py` | WorkOutputPolicy: прежние пути выходов/отчётов, waiver, проверки required outputs и verification fingerprint. |
+| `src/processforge_core/project/detection.py` | ProjectDetectionService: актуальный общий список файлов и прежние правила обнаружения платформы. |
+| `src/processforge_core/runtime/environment.py` | WorkerEnvironmentPolicy: placeholders, сохраняемое явное окружение и наследование только при запуске. |
+| `src/processforge_core/maintenance/schema_checks.py` | UpdateSchemaChecks: существующее подмножество JSON Schema и актуальное чтение схем с явным корнем дистрибутива. |
+| `src/processforge_core/work/paths.py` | WorkPaths: прежние пути Run, Assignment, артефактов, handoff и worker attempt с различной нормализацией ID. |
+| `src/processforge_core/runtime/command.py` | WorkerCommandBuilder: прежняя проекция sandbox и сборка команды через конкретные политики Core. |
+| `src/processforge_core/project/platforms.py` | PlatformContractReader: актуальный каталог seed/project/workplace с прежним перекрытием и fallback. |
+| `src/processforge_core/maintenance/documents.py` | UpdateDocumentReader: прежние пути реестров, YAML/JSON, doctor checks и локальные file URL. |
+| `src/processforge_core/runtime/selection.py` | RuntimeDriverSelectionService: прежний выбор драйвера задания и сохранённой команды через конкретные Core readers/policies. |
+| `src/processforge_core/project/platform_policy.py` | PlatformContractPolicy: прежние проекции ссылок, зависимостей и required/recommended/optional ресурсов. |
+| `src/processforge_core/process_catalog/validation.py` | ProcessAuthoringValidationService: прежние authoring logic, companion paths/checks и канонические workflow/iteration constants. |
+| `src/processforge_core/common/json_io.py` | Каноническая прежняя json_read с актуальным чтением и исходными ошибками. |
+| `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Общие изменяемый Check и фабрика, примитивы идентификаторов, заголовков, списков и исходных словарей параметров. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
 | `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Существующий сбор Runtime metrics с бюджетами, registered project roots, freshness и collection workers; импорт из `processforge_core.runtime.metrics`. |
@@ -149,6 +229,22 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/composition.py` | Общие фабрики сервисов и оставшийся LegacyResourceSearchReadAdapter; перенесённые читатели текущей работы, контекста, определений процессов и разрешения ресурсов используют конкретных владельцев Core. |
 | `src/processforge_core/bootstrap.py` | Существующая сборка runtime-модулей и ленивый доступ к фабрикам сервисов. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade, транспортные адаптеры, host и provider policies. |
+
+`build_core_properties()` при первом вызове захватывает один process-bound объект
+`CoreProperties`, определяя корень поставки по модулю Core, независимо от cwd.
+CLI facade захватывает его при boot; `RuntimeBootstrap.properties` возвращает
+того же владельца. Constructor injection поддерживает библиотечную работу без
+CLI/Host. `loaded` остаётся frozen, а `installed()` перечитывает выбранную поставку.
+Кеш не удерживает проект, Work, grants или документы запроса. Release/build
+identity, честные partial/unknown причины, перенос и независимые версии
+spec/schema, Runtime component и protocol описаны в
+[свойствах Core](core-properties.md). Идентичность метаданных не доказывает
+целостность payload или приёмку архива, установки и connected-host restart.
+Общий owner также проверяет переносимые записи процесса и сравнивает frozen
+loaded с актуальными installed метаданными. Runtime/Host state schema2 и
+provenance реального MCP discovery contract2 показывают эту идентичность без
+смены полномочий и входных схем инструментов; одинаковый release label
+сам по себе не доказывает совпадение сборок.
 
 `build_current_work_service(project_root, *, documents=None)` создаёт конкретный CurrentWorkService с читателями YAML и inventory из Core. RuntimeBootstrap, контекст и start вызывают этого владельца напрямую; LegacyWorkReadAdapter и WorkReadCorePort удалены. При сборке ввод-вывод не выполняется, общий кеш сервисов и DI-контейнер не вводятся. Оставшиеся обратные вызовы bootstrap/lifecycle требуют отдельных переносов.
 
@@ -513,3 +609,630 @@ CLI и существующий narrowing/search smoke вызывают влад
 Сборка снимка, определение актуальности и надёжная запись сохраняют свои
 существующие обязанности. Перенос представления не делает эти пути независимыми
 от прежней сборки зависимостей и не завершает ни один эпик OOP.
+
+## Слияние параметров
+
+`configuration.parameters.ParameterMergePolicy` владеет прежними правилами
+рекурсивного слияния карт, слияния списков по ID, удаления и замены с упорядоченным
+provenance. Метод экземпляра — `merge_maps(base, override, source_id, path="", provenance=None)`.
+Владелец не хранит состояние слияния, не выполняет I/O и не зависит от CLI или
+Host. Глубокое копирование, изменение переданного provenance, исходные ошибки,
+порядок обхода и прежнее поведение дубликатов ID сохранены. Пять старых определений
+parameter helpers удалены из `tools/processforge.py`.
+
+Два прямых потребителя импортируют класс из модуля-владельца: `add_parameter_source`
+в `tools/processforge.py` применяет policy при слиянии каждого источника и передаёт
+существующий объект provenance; `work.context.build_context_fields` использует её
+для слияния параметров неизменяемого контекста Assignment.
+
+`build_context_fields` по-прежнему вызывает `core.add_parameter_source` и
+`core.parameter_payload` для каскада источников process/stage/task. Нормализация
+Assignment, пути и хеши snapshot, определение проекта/рабочего места, захват
+источников и coordination также сохраняют прежние legacy-зависимости. Выделение
+merge policy не делает полный компилятор контекста независимым от монолита.
+Справочник описывает исходный код; приёмка архива, установленного Core, Runtime и
+подключённых хостов остаётся отдельной.
+
+## Проверка правил классификации и объявления артефактов процесса
+
+`project.classification.ProjectClassifierRulePolicy` владеет прежним алгоритмом
+правил через обычный метод экземпляра `matches(rule, available_paths)`; проверка
+условий остаётся приватной. `inactive_official_classifier_hints` и
+`classify_project` в `tools/processforge.py` вызывают владельца напрямую. Список
+`when.all` имеет приоритет даже при пустом значении (результат false); непустой
+`all` и `any` сохраняют короткое замыкание. Прежние проверки формы данных и
+обработка непустой строки `exists` сохранены.
+
+`common.paths.path_matches_pattern` — общий примитив для этой policy,
+`ProjectDetectionService.group_matches` и `matches`. Он сохраняет нормализацию
+обратных слешей и проверки стандартным `fnmatch.fnmatch` сначала полного пути,
+затем его `Path(...).name`, включая платформенную семантику сравнения. `rel` не
+изменён. Два старых определения классификатора и старое определение matcher
+удалены из монолита; потребители явно импортируют модули-владельцы Core.
+
+`process_catalog.artifacts.ProcessArtifactDeclarationPolicy` владеет обычными
+методами экземпляра `defined_ids(process)`, `declared_ids(process)` и
+`produced_ids(process)`. Core-проверки authoring и контракта процесса, а также
+отчёт builtin catalog вызывают владельца напрямую; три старых
+определения сбора ID артефактов удалены. Общие функции `common.values` сохраняют обработку
+только списков, порядок преобразования и фильтрации string-list, строки через
+запятую, различия dict/list, истинность ID, обработку дубликатов и прежний порядок
+исключений. Остальные потребители монолита импортируют общие примитивы из
+модулей-владельцев; два определения `as_list` с разным временем действия остаются
+в монолите.
+
+Обе policy не хранят состояние, не выполняют I/O и не импортируют монолит и не
+вызывают его через callbacks. Загрузка реестров классификаторов, обход дерева и
+активация остаются в legacy-путях CLI. Проверки контракта процесса и companion
+принадлежат ProcessContractValidationService. Транзакции authoring, регистрация
+каталога и активация сохраняют прежних legacy-владельцев. Выделение чистых policy не означает полного переноса
+классификации или валидации, завершения OOP-эпиков или приёмки архива,
+установленного Core, Runtime либо подключённых хостов.
+
+## Построение процессов, evolve, документы драйверов и update-site
+
+`process_catalog.authoring.ProcessAuthoringDefinitionBuilder` владеет методами
+`defaults`, `normalize`, `build`, `normalize_transitions` и
+`materialize_responsibility_boundaries`. Обычный конструктор использует конкретный
+`process_catalog.evolution.ProcessEvolutionPolicy` с методами `default_block`,
+`normalize_block` и `validate_block`. Сохранены новые значения по умолчанию при
+каждом вызове, прежние ссылки на вложенные данные и места глубокого копирования,
+неизвестные поля, обработка отключённого evolve и порядок проверок. Маршруты
+переходов сохраняют общий словарь возврата. Полная проверка authoring и схем,
+а также надёжная публикация остаются у прежних владельцев.
+
+`runtime.drivers.RuntimeDriverDefinitionPolicy` владеет методами
+`default_documents`, `default_registry`, `placeholder_errors`, `parse_limits`,
+`start_readiness` и `validate`, а также прежними наборами зарезервированных
+переменных среды и placeholders. Готовность документа проверяется без поиска
+исполняемого файла. Сохранены свежие словари, сообщения и порядок проверки,
+исходные ошибки и прежняя нормализация аргументов. Запуск процессов Runtime,
+чтение реестра и жизненный цикл воркеров сохраняют существующих владельцев.
+
+`maintenance.sites.UpdateSitePolicy` владеет методами `location`, `source_kind`,
+`source_id`, `stable_key`, `record` и `policy`. Сохранены порядок ключей источника,
+пробелы в непустом ID, приоритет переопределений, изменение общего вложенного
+словаря политики и заимствованные значения каналов, родителя и локальных данных.
+Класс использует `common.paths.rel` и не выполняет I/O. Поиск обновлений,
+проверка схем, сеть, установка и восстановление остаются у прежних владельцев.
+
+Общие примитивы имеют единственного владельца: `common.checks.Check` остаётся
+изменяемым dataclass, а `check` переводит уровень в верхний регистр;
+`common.ids` содержит `safe_id` и `title_from_id`, `common.values` — строгий
+списочный `as_list` и прежний `string_list`. Все найденные потребители используют
+конкретные классы или эти импорты. Прежние внутренние определения удалены без
+обёрток. Перенос сохраняет внешние контракты 1.2.0 и подтверждён для исходников;
+он не завершает OOP-эпики и не квалифицирует другие слои поставки.
+
+## Представление, актуальный каталог драйверов и выбор candidates
+
+`ProcessAuthoringDefinitionBuilder.from_definition` владеет прежним обратным
+преобразованием определения процесса в authoring answers. Предыдущие методы
+builder не изменены. `process_catalog.presentation.ProcessAuthoringRenderer`
+содержит `questions`, `logic_review`, `agent_prompt` и `document`, сохраняя байты
+текста и порядок вычислений. Небольшая каноническая функция
+`process_catalog.coordination.process_coordination_requirements` и её набор
+режимов используются также оставшимися потребителями монолита.
+
+`runtime.catalog.RuntimeDriverCatalogReader(distribution_root)` использует
+конкретные `YamlDocumentReader`, `ProjectMetadataReader` и
+`RuntimeDriverDefinitionPolicy`. Ему принадлежат пути и записи реестров, пути
+документов, строгое чтение, точный поиск зарегистрированного драйвера, разрешение
+и нормализация ссылок, список ID. Сохранены первое подходящее совпадение,
+упорядоченные замены, прямые пути, встроенные значения, неизвестные поля и
+исходные отказы. Конструктор не выполняет I/O; операции читают текущие файлы
+без хранения разобранных документов. Монолит и существующий поиск драйвера
+в MCP вызывают этого владельца. Адаптер MCP сохраняет проверку ID перед
+отложенным импортом, порядок bootstrap и привязанные project/workplace.
+
+`evolution.candidates.KnowledgeCandidateTargetingPolicy` владеет прежними
+проекциями ID, target и destination, готовностью promotion/generalization
+и упорядоченной проверкой targeting. Он сохраняет ссылки на вложенные словари
+и использует канонические checks, идентификаторы, string-list и существующие
+типы evolve targets. Новый пакет ответственности имеет минимальный initializer.
+Полная очистка кандидатов, публикация/экспорт и lifecycle остаются у прежних
+владельцев.
+
+`maintenance.versions.UpdateVersionSelectionPolicy` использует конкретные
+`ResourceVersionPolicy` и `UpdateSitePolicy` для прежнего поиска latest, двух
+форматов версий manifest, выбора версии и ID кандидатов. Вложенные ссылки,
+общий словарь subject, стабильная сортировка и warnings сохраняют прежнее
+поведение. `maintenance.presentation.UpdateAssessmentRenderer.render` владеет
+исходным текстом assessment. Получение данных, координация обновления, установка
+и восстановление остаются у прежних владельцев. Эти внутренние интерфейсы
+фиксируют владение исходниками; внешние команды, схемы MCP и приёмка слоёв
+поставки сохраняют существующие контракты.
+
+## Поля Work, coordination, общие privacy и контракты источников
+
+Существующий `work.context_documents.ContextContractInputs` дополнен восемью
+прежними операциями: ключи путей Assignment, проекция write scope, признаки glob
+и overlap, зависимости, наблюдение файлов required sources, coordination капсулы
+и сопоставление пути со scope. Поля, frozen-конструктор и 20 предыдущих методов
+не изменены. Нормализация переиспользована; две старые обёртки монолита удалены.
+Компилятор контекста вызывает проекцию coordination напрямую на прежнем месте.
+Платформенная семантика и пустые scopes сохранены; доступ, admission, lifecycle
+и остальные зависимости компилятора остаются у существующих владельцев.
+
+`project.coordination.ProjectCoordinationReader` владеет прежними defaults,
+нормализацией режимов и чтением project/workplace configuration. Конкретные
+читатели YAML и метаданных проекта сохраняют актуальное чтение, поверхностное
+слияние director, неизвестные поля, свежие defaults и порядок отказов. Reader
+не хранит проект, Work или разобранную конфигурацию. Общая сборка effective
+coordination и операции Director остаются у прежних владельцев.
+
+`common.privacy` содержит `BACKSLASH`, `LOCAL_PATH_PATTERNS`,
+`SECRET_VALUE_PATTERNS`, `is_public_path_safe` и `contains_secret_value`.
+`AnswersDocumentReader` использует канонические данные с прежним алгоритмом
+класса. `evolution.privacy.EvolvePrivacyPolicy` владеет `findings`, `text` и
+`value`, сохраняя regex/flags, замены, рекурсию, ключи словарей, идентичность
+tuple и исходные ошибки. Host вызывает канонический secret-предикат после
+прежних фильтров автоматического содержимого. Короткое замыкание, bootstrap
+и все проверки authentication/provenance/hash сохранены.
+
+`maintenance.source_contracts.UpdateSourceContractPolicy` владеет прежними HTTPS
+defaults, формой remote/artifact URL, env-reference и source checks, проверкой
+реестра и сортировкой. Сохранены изменение переданного списка checks, различия
+типов/truthiness, исходные ошибки и порядок проверок. Schema-based overrides и
+полная проверка normalized manifest вызывают эти общие методы из прежних
+владельцев. Новые scanner/trust/authorization/update правила не добавлены.
+Перенос сохраняет модульные аннотации и внешние контракты 1.2.0; доказательства
+относятся к квалифицированному срезу исходников.
+
+## Выходы Work, обнаружение платформы, окружение воркера и схемы
+
+`work.outputs.WorkOutputPolicy` владеет `waivers`, `path`, `task_path`,
+`expected_report` и `default_report`. Нормализация использует существующий
+`ContextContractInputs`. Сохранены проверки traversal, drive и абсолютных путей
+до разрешения, containment, исходные ошибки и значения по умолчанию.
+Нормализация required outputs вызывает прежнего владельца Core напрямую.
+Та же политика владеет `checks` обязательных выходов и verification `fingerprint`;
+lifecycle остаётся у прикладного сервиса. Host и остальные потребители вызывают
+политику на прежних местах защитных проверок. Необязательные зависимости
+прикладного сервиса описаны ниже.
+
+`project.detection.ProjectDetectionService` владеет `files`, `group_matches`
+и `matches`, используя канонические `common.paths` и `common.values.list_value`.
+Общий список файлов сохраняет прежние исключения компонентов пути и отличается
+от обхода классификатора. Сохранены порядок файлов, пределы чтения, буквальный
+поиск при ошибке regex и наблюдение актуальной файловой системы. Кеш разобранных
+данных или проверка свежести только по метаданным не добавлены. Чтение и активация
+классификаторов остаются у прежних владельцев.
+
+`runtime.environment.WorkerEnvironmentPolicy` владеет `minimal`, `build`,
+`materialize` и `expand`, переиспользуя reserved keys из `runtime.drivers`.
+Сохраняемые данные команды содержат прежние значения PF и явную конфигурацию;
+окружение хоста наследуется только при запуске. Рекурсия placeholders,
+преобразования, отказы по reserved keys и исходные ошибки сохранены. Создание
+процесса, состояние попытки, сбор результата и восстановление остаются
+у существующих владельцев.
+
+`maintenance.schema_checks.UpdateSchemaChecks(distribution_root)` владеет
+`type_matches`, `resolve_ref`, `validate`, `append` и `require`. Это прежнее
+подмножество JSON Schema с исходным порядком сообщений и исключениями.
+Конструктор не выполняет I/O; каждая проверка заново читает файлы схем.
+Координация обновлений, сеть, установка и восстановление остаются у прежних
+владельцев. Приёмка относится к исходникам; архив, установленный Core, Runtime
+и реально подключённый хост проверяются отдельно.
+
+## Пути Work, команды воркеров и актуальные каталоги
+
+`work.paths.WorkPaths` владеет путями документов Run и Assignment, артефактов,
+сводок, handoff, worker prompts и упорядоченными путями попытки. Каталог Run
+и handoff сохраняют допустимые generated ID с повторными дефисами; пути
+Assignment и agent/task используют прежнюю отдельную нормализацию `safe_id`.
+Строгая проверка пути Assignment в `ContextContractInputs` остаётся отдельной.
+Конкретный `ProjectMetadataReader` предоставляет flow root без I/O конструктора.
+
+`runtime.command.WorkerCommandBuilder(distribution_root)` владеет `sandbox` и
+`build`, используя существующих владельцев путей, выходов, окружения, driver
+limits и нормализации контекста. Проверка выходов предшествует variables и
+окружению. Placeholders, model arguments, prepared wrapper, разрешение путей
+и поля команды сохраняют исходный порядок. Проверка terminal admission
+наблюдает перенесённый builder и сохраняет прежние assertions. Запуск процесса,
+блокировки, состояние попытки, сбор и восстановление остаются у прежних владельцев.
+
+`project.platforms.PlatformContractReader(distribution_root)` владеет ID,
+поиском реестра, seed/project путями, чтением записей, overlay index и fallback.
+Он переиспользует YAML Core и `WorkspacePathReferenceReader`, сохраняя порядок
+seed/project/workplace, aliases, дубликаты, неизвестные поля, disabled/missing
+и ссылки на исходные вложенные значения. Операции читают актуальные файлы без кеша.
+
+`maintenance.documents.UpdateDocumentReader(distribution_root)` владеет путями
+реестров обновлений, мягким чтением YAML, doctor YAML/schema checks, поиском путей
+manifest, списками registry paths, update index, локальными file URL и чтением
+YAML/JSON документов и текста. Переиспользованы прежние YAML/path/schema owners.
+Мягкое чтение отбрасывает ошибки YAML; index сохраняет прежний error sentinel;
+doctor может добавить ошибки схемы и всё равно вернуть разобранный словарь.
+Конструктор не выполняет I/O. Сеть, запись и lifecycle обновлений остаются
+у прежних владельцев. Egress и prepared inputs используют канонические пути
+Work, сохраняя остальные неперенесённые зависимости. Приёмка ограничена
+исходниками; более поздние слои поставки и OOP-эпики проверяются отдельно.
+
+## Готовность выходов, выбор драйвера и проверки
+
+`WorkOutputPolicy.checks` и `fingerprint` сохраняют пропуск optional outputs,
+waivers, различия missing/pending/invalid, актуальное чтение и точное JSON/hash
+кодирование. Прежние поля, конструктор и методы путей не меняются.
+`ProcessExecutionService` получает независимые необязательные keyword-only
+callables `output_checks` и `verification_fingerprint`. По умолчанию используются
+методы Core, явный `None` означает недоступность. Frozen/repr/compare и три
+позиционных аргумента сохранены. Projectors сохраняют guards, reasons и
+идентичность исключений; неиспользуемые capabilities остаются ленивыми.
+Зависимости событий и журнала сохраняют прежнюю сборку.
+
+`runtime.selection.RuntimeDriverSelectionService(distribution_root)` владеет
+`for_task` и `for_worker_state`, сохраняя чтение сохранённой команды, копирование
+direct path, fallback и порядок проверок/ошибок. Существующий
+`ProjectMetadataReader.workplace_manifest()` владеет локальным поиском manifest
+с проектом, привязанным к reader. Он отличается от широкого автоматического
+разрешения workplace. `common.json_io.json_read` сохраняет прежние raw JSON types
+и исходные ошибки чтения/разбора.
+
+`project.platform_policy.PlatformContractPolicy(catalog)` получает конкретный
+`PlatformContractReader` для канонических ID. Ему принадлежат нормализация ссылок,
+extends/requires и проекции required/recommended/optional ресурсов с прежними
+различиями типов/truthiness, сортировкой, dedup и includes. Разрешение иерархии
+и каталог пакетов проекта используют конкретных владельцев, описанных ниже.
+
+`process_catalog.validation.ProcessAuthoringValidationService` владеет `logic`,
+`files` и `paths`, используя готовые evolution/artifact policies и канонические
+workflow/iteration constants. Порядок checks, вложенная проверка ID, warnings,
+companion root и наблюдение файлов сохранены. Общая
+`common.privacy.public_yaml_has_private_path` сохраняет прежнюю сериализацию
+и предикат. Полная проверка process contract использует конкретного владельца ниже; проверка
+route-map, публикация и recovery остаются у существующих владельцев. Внешние контракты 1.2.0 и приёмка более
+поздних слоёв поставки проверяются отдельно.
+
+## Пакеты проекта, иерархия платформ, семантика процессов и планы работников
+
+`resources.project_packages.ProjectPackageCatalogReader(distribution_root)` владеет
+`workplace_roots`, `workplace_root_paths`, `candidates`, `index`, `dependencies`
+и `root_from_entry`. Проект и workplace передаются на каждой операции. Поиск
+сохраняет порядок обхода, устранение повторных разрешённых путей и добавления из
+активных официальных пакетов. Индекс проекта сохраняет последнее совпадение и
+отдельную запись дубликатов; поисковый каталог workplace по-прежнему сохраняет
+первое совпадение. Кеша документов и чтения в конструкторе нет.
+
+Перенесённый `PackageRootResolution` сохраняет имя класса, поля, аннотации,
+значения по умолчанию и представление. Для записи корня используется готовый
+алгоритм `WorkspacePathReferenceReader`, затем явно сопоставляются поля обычной
+записи с сохранением ссылок warnings/entry. Прежняя частная модель snapshot и её
+потребители не меняются; правила разрешения путей не копируются.
+
+`project.platform_resolution.PlatformContractResolver(distribution_root)` владеет
+прежними рекурсивными операциями `resolve` и `merge_ids`. Он использует конкретных
+владельцев каталога, проекций платформ и пакетов. Сохраняются порядок обхода и
+циклов, различия ресурсов extends и required-platform, ссылки overrides, порядок
+конфликтов, сортировка результата и очередь зависимостей пакетов.
+`common.values.parameter_payload` возвращает прежний исходный словарь параметров.
+Сборка контекста Work использует этот примитив напрямую; остальные её зависимости
+остаются неперенесёнными.
+
+`process_catalog.semantics.ProcessSemanticPolicy` владеет полнотой авторинга,
+семантической картой и проекциями процесса, строк, событий, объектов и сравнением.
+`presentation.process_parity.ProcessParityRenderer` владеет прежними Markdown-
+отчётами `import_report` и `parity_report`. Их текст, приоритет ошибок и
+предупреждений, различия отсутствующих исходных полей сохранены.
+
+`runtime.worker_plans.WorkerPlanPolicy` владеет начальными планами, проекциями
+работников/подагентов и зависимостей, рекурсивной достижимостью, буквальным правилом
+пересечения записей и `task_dependencies_done`. Последняя операция использует
+актуальные пути Work и строгое чтение YAML. Исполнение, scopes/leases, блокировки,
+жизненный цикл и восстановление остаются у прежних владельцев. Внешнее поведение
+1.2.0 и приёмка более поздних слоёв поставки проверяются отдельно.
+
+## Корни пакетов, выбор платформ, реестры обновлений и контракты процессов
+
+`ProjectPackageCatalogReader` также владеет чтением реестра корней, разрешением
+корней и путей, поиском и загрузкой манифестов через готовый конкретный
+`WorkspacePathReferenceReader`. Алгоритмы переиспользованы; публичная модель корня
+сохраняется через одно явное сопоставление полей. Частная модель snapshot и её
+потребители не меняются. Прежние методы каталога, поля и конструктор сохранены.
+
+`project.platform_selection.ProjectPlatformSelectionService(distribution_root)`
+владеет прежним выбором обычных и производных платформ, подсказками типов проекта
+и родителей, актуальным обнаружением, находками реестров, сопоставлением bindings
+и правилами запрета базовой технологии. Используются конкретные читатели и явные
+проект/workplace на операции. `AnswersDocumentReader.strings` владеет рекурсивным
+сбором строк ответа; `PlatformContractReader.normalize_id_pair` — прежней парой ID.
+Нормализация и сопоставление подсказок находятся в `project.classification`,
+`common.values.registry_ids` сохраняет буквальную проекцию реестра. Прежние методы
+и данные владельцев не меняются. Чтение прежних метаданных MCP не добавляет
+использование MCP-ресурсов.
+
+`YamlDocumentReader.policy(name, root=None, *, distribution_root)` владеет прежним
+поиском policy-документа. Обязательный аргумент по имени заменяет глобальный ROOT,
+не захватывая фиктивный проект и не меняя конструктор. Guards файлов, мягкие ошибки
+YAML и возвращаемые значения сохранены; потребители передают действительный корень
+дистрибутива. Остальные методы документов остаются прежними.
+
+`maintenance.registries.UpdateRegistryReader(distribution_root)` владеет записями
+манифестов, overrides, поиском установленных subject и выбором пути установки.
+`UpdateDocumentReader` также владеет путями runtime/candidates/notifications.
+Порядок поиска и приоритет overrides, ссылки на записи, устранение повторов только
+пакетов и порядок override/installed/fallback сохранены. Эти операции читают и
+разрешают пути; установка, запись версии с timestamp и lifecycle обновлений
+остаются у прежних владельцев.
+
+`process_catalog.contracts.ProcessContractValidationService(distribution_root)`
+владеет полной проверкой контракта процесса через готовых владельцев metadata,
+evolution, артефактов, авторинга и route-документов. `ProcessRouteDocumentReader`
+владеет путём и мягким чтением карты. Канонические metadata и stable predicate
+находятся в `process_catalog.service`; общие handoff modes — в `contracts`.
+Порядок guards/checks/отказов и наблюдений файлов, severity strict/stable, неизвестные
+поля, приоритет companion/templates и defaults карты сохранены. Проверка самой
+route-map, исполнение handoff, callbacks/транзакции авторинга, lifecycle,
+блокировки, recovery и приёмка последующих слоёв остаются отдельной работой.
+
+## Проверка планов, записей и чтение маршрутов и handoff
+
+`runtime.worker_validation.WorkerPlanValidationService(distribution_root)` владеет
+прежними проверками плана, фильтрацией дополнительных ключей и проверкой отчётов
+подагентов. Он использует готовые ContextContractInputs, RuntimeDriverCatalogReader,
+WorkerPlanPolicy и ScopeConflictService с фактическим проектом на операции.
+Буквальные проверки типов, повторные чтения драйверов, исключения зависимостей,
+конфликты областей и рекурсивные наблюдения отчётов сохраняют прежний порядок.
+Четыре набора полей плана принадлежат этому модулю. WORKSPACE_ACCESS_KEYS и обе
+нормализации используют готовый work.context_documents напрямую; старые обёртки
+и дублирующий tuple удалены, включая три обращения других компонентов Core.
+
+`project.hooks.HookConfigurationReader` владеет путём hooks.yaml и прежними
+упорядоченными проверками формы. `common.record_validation.RecordValidationPolicy`
+владеет обязательными полями event/chat, прежним выражением типа события и общей
+проверкой секретов. Сериализация JSON и её исходные ошибки сохранены.
+Отправка hooks, журналы и эффекты остаются у действующих владельцев.
+
+`process_catalog.routes.ProcessRouteService(distribution_root)` владеет текущим
+поиском и проверкой маршрута и проекцией требуемой роли. Используются готовый
+читатель маршрутов, общие режимы и проверка схемы. `process_catalog.handoffs.HandoffDocumentReader`
+владеет каталогом, путём и мягким чтением handoff через фактические metadata
+проекта и документы. Первое совпадение, ссылки на словари, порядок проверок
+и отказы отсутствия сохранены. Запись и исполнение handoff, leases, continuation,
+транзакции процесса и recovery остаются у действующих владельцев.
+
+`maintenance.validation.UpdateDocumentValidationService(distribution_root)`
+владеет прежними проверками overrides и нормализованного манифеста через
+конкретные schema/source-contract policies. Выражение SHA-256 сохранено.
+UpdateRegistryReader также владеет отдельной проекцией установленных версий;
+UpdateDocumentReader — путём и мягким чтением staged record. Конструкторы
+и все прежние методы читателей сохранены. Поиск, запись, установка, ввод-вывод
+артефактов, сеть и получение времени остаются у прежних владельцев.
+
+## Документы платформ, проверки реестров и аудит каталога
+
+`project.platform_documents.PlatformDocumentBuilder` владеет прежним построением
+списка путей, байтов и заметок документов платформы. Литералы YAML и Markdown,
+порядок результатов и исходные ошибки обращений сохранены; метод возвращает
+данные и не записывает файлы. Publication авторинга платформ сохраняет владельца; семантическая проверка
+перенесена в PlatformContractValidationService, описанный ниже.
+
+`project.registry_checks.WorkplaceRegistryValidationService(distribution_root)`
+владеет текущими проверками путей реестров и корней пакетов через готовые
+WorkspacePathReferenceReader, ContextContractInputs и ProjectPackageCatalogReader.
+Фактический workplace передаётся на операцию. Правила aliases/default/status/
+writable, дубликаты, наблюдения файлов и порядок предупреждений сохранены.
+`common.yaml_dump` владеет точными прежними format_scalar и рекурсивным dump_yaml;
+все фактические потребители Main/Runtime/process execution используют этого владельца.
+Фабрика yaml_formatter без аргументов и callback форматирования с одним аргументом
+сохраняют прежнюю форму. Сериализатор не подменяется, Runtime не запускается.
+`common.text` владеет прежними ensure_trailing_newline и check_with_hint.
+Сборка публикации капсулы вызывает канонические newline/YAML formatters из тех же
+callback с одним аргументом; остальные legacy-зависимости сохраняют владельцев. Порядок публикации
+и ошибок не меняется.
+
+`process_catalog.audit.BuiltinProcessCatalogAuditService(distribution_root)`
+владеет упорядоченным отчётом builtin catalog через конкретный читатель каталога
+на операцию, contract/authoring/artifact policies и канонические metadata.
+Плоский отсортированный индекс root/packages/*.yaml сохраняет отличие от полного
+индекса пакетов проекта. Пропуск internal в public-режиме, official companion roots,
+счётчики, повторные наблюдения и объединение предупреждений прежние.
+Чистая проекция process_catalog_contexts находится в существующем service.py;
+все его прежние определения и данные сохранены.
+
+`project.setup.WorkplaceSetupProposalBuilder` владеет прежним словарём предложения
+настройки и Markdown через ProjectCoordinationReader. Defaults, path placeholders,
+преобразование списков, ссылки на поля, порядок и отказы неверного режима сохранены.
+Конструкторы не выполняют ввод-вывод. Настройка, транзакции авторинга, блокировки, recovery и последующие слои
+приёмки сохраняют владельцев. Обновление реестра — в WorkplaceRegistryWriter.
+
+## Запись реестров, поиск шаблонов и проверки платформ
+
+`project.registry_write.WorkplaceRegistryWriter(distribution_root)` владеет
+прежним обновлением реестра. Сохранены карта схем, проверки и исходные отказы,
+UUID staging рядом с назначением, os.replace и очистка finally. Новых блокировок,
+повторов или правил атомарности нет. Общий upsert_resource находится в прежнем
+common.values, все существовавшие определения которого сохранены.
+
+`project.templates.TemplateCatalogService(distribution_root)` владеет выбором
+корня шаблонов и поиском манифеста через WorkspacePathReferenceReader и
+WorkplaceRegistryWriter. Read не записывает; write сохраняет fallback upsert
+перед проверкой выбранного ID и прежний порядок mkdir. Приоритет кандидата,
+первое совпадение реестра и прежние правила путей сохранены без новых ограничений.
+
+`project.platform_validation.PlatformContractValidationService(distribution_root)`
+владеет прежней полной семантической проверкой через конкретные владельцы
+контрактов, разрешения платформ, выбора, пакетов и шаблонов. Порядок сообщений,
+повторные чтения, обязательность ресурсов, циклы и falsey fallback сохранены.
+Чистые policy_entries/policy_id_matches находятся в common.policies; остальные
+потребители Main используют эти же общие функции.
+
+`project.requirements.PlatformDependencyPreflightService(distribution_root)`
+владеет прежним preflight зависимостей и прямым чтением ID реестров workplace.
+Порядок отсутствующих ресурсов, дубликаты, чтения tools/MCP и исходные отказы
+сохранены. Конструкторы не читают файлы и не удерживают документы проекта.
+Все фактические потребители переведены в этом срезе. Publication/транзакции
+авторинга и невыбранные recovery-пути сохраняют прежних владельцев. Source-only
+рефакторинг не завершает OOP-эпики и приёмку архива/установки/Runtime/connected host.
+
+## Ресурсы, проверки пакетов и worker assignment prompt
+
+`resources.records.ResourceRecordService` владеет прежними load/index defaults,
+ссылками на зарегистрированные корни, публичным path_ref и нормализацией записей.
+Точный набор HEAVY_RESOURCE_KINDS расположен рядом. Алгоритмы путей и snapshot
+переиспользуют готовых владельцев. Ссылки на вложенные поля, скрытие приватных
+путей, приоритет первого корня, unknown fields и неиспользуемый register_private_path
+сохраняют прежнее поведение без новых записей.
+
+`resources.package_checks.KnowledgePackageValidationService(distribution_root)`
+владеет прежним doctor пакета, отдельным повторным чтением манифеста/схемы,
+проверками ресурсов, индекса, приватности, navigation/dependencies/policy в прежнем
+порядке. `resources.index_checks.KnowledgeResourceIndexService(distribution_root)`
+владеет выбором пути индекса, проверкой path_ref в реестрах и индексами ресурсов
+проекта через готовые containment/ID/package/registry owners. Ранний возврат для
+package.yaml и необязательность локального индекса сохранены. Общая точная
+path_is_relative_to находится в существующем common.paths.
+
+`work.worker_assignment.WorkerAssignmentService` владеет строгим полным чтением
+Assignment и прежним текстом worker launch prompt. Отказы missing/YAML, порядок
+safe ID/путей, ветви prepared input, счётчики, разделы и newline сохранены.
+Все шесть прежних Host/smoke потребителей используют Core reader; их остальная
+логика и assertions не меняются. Конструкторы не читают и не удерживают документы.
+Preparation/launch policy, запись индекса/timestamps, невыбранный authoring и
+lifecycle/recovery сохраняют владельцев. OOP-эпики и последующая приёмка открыты.
+
+## Данные и чтение авторинга, представление процессов и кандидаты
+
+`authoring.plans` владеет прежними изменяемыми dataclass AuthoringWrite,
+AuthoringEffect, AuthoringPlan и AuthoringPlanRenderer. Поля, defaults, ссылки
+на callback-данные и отсортированный stdout сохранены. AuthoringInputService
+в `authoring.inputs` владеет режимом, путями transaction/journal, незавершёнными
+журналами и проверками/цепочками родителей. Перенесённый scope не исполняет
+callbacks. Preflight, failure injection, staging/publication/commit/rollback
+сохраняют владельцев. FileDigestReader получил два прежних raw-byte/guarded-file
+метода; его streaming-метод и dataclass-контракт не изменились.
+
+`process_catalog.examples` владеет точной process_yaml_content и построением
+семи прежних документов примера через ProcessAuthoringExampleBuilder. Готовый
+ProcessParityRenderer получил прежний индекс parity, общая aggregate_status
+находится в common.status. Существовавшие методы, литералы, порядок, аннотации
+и исходные ошибки сохранены.
+
+`maintenance.candidate_read.UpdateCandidateReader(distribution_root)` владеет
+прежним свежим JSON read/find через готовые пути UpdateDocumentReader и точные
+существующие часы common.clock.now_utc. Конструктор не читает файлы/время.
+Fallback missing/JSONDecodeError/non-dict, остальные ошибки, raw ID/first match
+и unknown fields сохранены. Два authoring smoke используют канонические модели
+и inputs после прежнего локального bootstrap; assertions, fixtures и матрицы
+failure injection точны. Новых функций нет; OOP-эпики и поздняя приёмка открыты.
+
+## Чтение сессий, каталог специализаций, кандидаты и перенос обновлений
+
+ProjectSessionReadService владеет прежним regex статуса отчёта, порядком недавних
+файлов и legacy freshness по подстрокам context-index. Он использует готовые
+project metadata/source readers. Современный context freshness и report lifecycle
+сохраняют владельцев; common.text владеет точной общей константой COLON_WS.
+
+SpecializationCatalogReader(distribution_root) владеет прежними resource IDs,
+registry paths, упорядоченными candidates с дедупликацией, manifest index и
+выбором первого файла. Готовый WorkspacePathReferenceReader отвечает за guards,
+containment и path constants; YAML/metadata owners переиспользованы. Фильтр
+статусов candidates и нефильтрованный индекс с последним победителем сохранены
+как разные алгоритмы. Неизвестные поля и повторные свежие чтения не изменены.
+
+KnowledgeCandidateValidationService собирает готовые targeting/privacy policies
+и прежние проверки в исходном порядке; evolution.validation владеет точным набором
+категорий. Конструкторы не читают документы. UpdateTransferService переиспользует
+site/document owners и сохраняет local copy2/HTTP stream, timeouts, границы
+warnings/errors и эффекты destination. Новых retries, mkdir или проверки архивов
+нет. Внешние контракты 1.2.0 сохранены; OOP-эпики и поздняя приёмка открыты.
+
+## Журналы, источники параметров, проекции отчётов и входы проекта
+
+AuthoringJournalStore владеет прежними data/plan writes журнала: mkdir, UUID
+соседнего временного файла, serialization, replace и finally cleanup сохранены
+в прежнем порядке с тем же приоритетом ошибок. Preflight, callback/effect
+execution, publication и rollback сохраняют существующих владельцев.
+
+ParameterSourceService владеет source records, workplace paths, накоплением
+источников, чтением process parameters и requirements fingerprints. Готовые
+path/YAML/digest/merge owners переиспользованы. Приватные markers, aliases,
+порядок источников и свежие чтения сохранены. Work context вызывает службу
+напрямую в трёх выбранных шагах; остальные обязанности явно не перенесены.
+
+ReportProjectionReader владеет прежним разбором Markdown sections/boolean,
+точной справкой capability waiver и resource report status. Aggregate smoke
+подменяет канонический метод, сохраняя fixtures/assertions/restoration.
+ProjectInitializationInputs владеет manifest project types, наборами разрешённых
+типов, greenfield/brownfield и начальными defaults. Initialization consumer
+вызывает её напрямую. Coordination modes/defaults имеют отдельный контракт.
+Конструкторы холодные, корни явные. Source-only перенос сохраняет 1.2.0;
+OOP-эпики и поздняя квалификация остаются открытыми.
+
+## Настройка, правила, события и данные выполнения
+
+Следующие двадцать ограниченных групп переданы конкретным владельцам Core.
+Выбранные реализации и прежние алиасы вспомогательных функций удалены из Main;
+потребители в CLI, Runtime, Core и проверках обращаются к модулям владельцев.
+
+| Ответственность | Модуль и владелец |
+| --- | --- |
+| Ответы настройки рабочего места | `project.setup_answers.WorkplaceSetupAnswers` |
+| Источники классификаторов и перечни файлов | `project.classifier_sources.ProjectClassifierSourceReader` |
+| Роли путей и исключения сканирования | `project.scan_policy.ProjectScanPolicy` |
+| Отбор исходников выпуска | `maintenance.release_sources.ReleaseSourcePolicy` |
+| Переопределения проекта | `project.overrides.ProjectOverrideReader` |
+| Поставщики возможностей и маршруты | `project.capability_resolution.ProjectCapabilityResolution` |
+| Журналы событий ресурсов рабочего места | `resources.workplace_events.WorkplaceResourceEventJournal` |
+| Происхождение выпуска в Git | `maintenance.release_provenance.ReleaseGitProvenance` |
+| Сопоставление ресурсов рабочего пространства | `work.workspace_refs.WorkspaceAccessReferenceService` |
+| Выбор хуков и подготовка их данных | `agents.hook_policy.HookDispatchPolicy` |
+| Представление экспорта чата | `chat.export.ChatExportService` |
+| Запись метаданных сессии | `agents.session_metadata.SessionMetadataWriter` |
+| Построение и запись событий телеметрии | `agents.telemetry.TelemetryEventService` |
+| Чтение и согласованность Run/task | `work.consistency.RunTaskInputReader`, `RunTaskConsistencyService` |
+| Настройки оркестрации | `work.orchestration_config.OrchestrationConfigService` |
+| Профили, планы и состояние supervisor | `runtime.supervisor_inputs.SupervisorInputService`, `SupervisorStateInputs` |
+| Данные наблюдения за воркерами | `runtime.observation_inputs.WorkerObservationInputService` |
+| Реестр агентов рабочего места | `agents.registry.AgentWorkplaceRegistry` |
+| Состояние координации проекта | `project.coordination_state.ProjectCoordinationStateService` |
+| Правила публичных исходников и кодировки | `maintenance.public_source_checks.PublicSourcePolicy` |
+
+`resources.registries.WorkplaceRegistryReader` владеет прежним чтением реестров
+и связанными правилами путей, которым не нужен корень проекта или дистрибутива.
+Замороженный `WorkspacePathReferenceReader` наследует эти алгоритмы, сохраняя
+поля и конструктор. Данные Run/task и supervisor также отделены от операций,
+которым требуется явно заданный корень дистрибутива. Подстановка корня проекта
+или текущего каталога вместо него не используется.
+
+Общие простые функции находятся в `common.clock`, `common.json_io`,
+`common.yaml_io` и `resources.buckets`. Точные константы правил расположены
+рядом с владельцами. Изменяемый реестр отсоединённых процессов остаётся единым
+объектом в `runtime.observation_inputs` для перенесённых и оставшихся операций.
+Конструктор и match arguments ProcessExecutionService сохранены; закрытые поля
+часов и путей событий получают конкретные операции Core без обращений к Main.
+Управляемые тестовые зависимости перенесены с сохранением assertions и порядка
+ошибок. Импорты Runtime следуют прежним проверкам и загрузке Core.
+
+Алгоритмы, сигнатуры, данные ответов, ошибки, форматы документов, неизвестные
+поля, порядок чтения/записи и свежие чтения YAML сохранены. Пометка индекса после
+события ресурса действует по прежним правилам. Операционное наблюдение за
+воркерами, материализация пересечений, оставшийся сценарий доступа к рабочему
+пространству и lifecycle/recovery сохраняют прежних владельцев. Новых функций
+продукта нет; OOP-эпики и приёмка архива, установки, Runtime и подключённого хоста
+этими группами не завершаются.
+
+### Правила ресурсов, параметры и представление Work
+
+| Ответственность | Владелец |
+| --- | --- |
+| Идентификаторы ресурсов и границы объявленного корня | `resources.identity.ResourceIdentityPolicy` |
+| Каталог реестров рабочего места | `resources.workplace_catalog.WorkplaceCatalogReader` |
+| Актуальные константы путей | `resources.registries.WorkplaceRegistryReader` |
+| Параметры проекта и задания | `configuration.project_parameters.ProjectParameterResolver`, `configuration.assignment_parameters.AssignmentParameterResolver` |
+| Манифесты пакетов и документы индекса | `resources.package_write.PackageManifestWriter` |
+| Публикация приватного пути ресурса | `resources.private_paths.PrivateResourcePathWriter` |
+| Индекс задач и сводка запуска Work | `presentation.work_summaries.WorkSummaryRenderer` |
+| Значения определения платформы | `project.platform_documents.PlatformDocumentBuilder` |
+
+Каталог без привязки к корню использует общие правила ресурсов и чтение реестров.
+Читатели снимков сохраняют конструктор и поля dataclass. Обработчики параметров
+и записи пакетов получают настоящий корень дистрибутива; при сборке исходного
+CLI используются прежние конкретные зависимости. Изменяемые константы правил
+имеют единственного владельца рядом с соответствующей логикой.
+
+Формирование документов Work явно передаётся как необязательная зависимость
+исполнения, продолжения и Runtime. При её отсутствии сохраняется прежний
+резервный сценарий; тестовые адаптеры передают свои управляемые функции через
+этот вход. Поля dataclass и позиционные конструкторы сохранены. Индексация
+устройства, планировщик и новые операции продукта здесь не добавляются.

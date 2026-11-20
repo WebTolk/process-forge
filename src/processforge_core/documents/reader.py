@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from ..common.request_scope import safe_load, safe_load_fields
+from ..common.yaml_io import yaml_error
 
 
 @dataclass(frozen=True)
@@ -38,3 +39,10 @@ class YamlDocumentReader:
         if isinstance(error, str) and error:
             raise SystemExit(f"FAIL: {path} is invalid YAML: {error}")
         return data
+
+    def policy(self, name: str, root: Path | None = None, *, distribution_root: Path) -> dict[str, Any]:
+        path = (root or distribution_root) / "policies" / name
+        if not path.is_file():
+            return {}
+        data = self.load(path)
+        return data if isinstance(data, dict) and not yaml_error(data) else {}

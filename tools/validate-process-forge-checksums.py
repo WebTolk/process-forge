@@ -41,6 +41,19 @@ PUBLIC_ROOT_FILES = [
     "requirements.txt",
     ".gitignore",
     ".processforge-releaseignore",
+    # Match the explicit public notes in the release source selection.
+    "release/1.3.0-alpha5/notes.md",
+    "release/1.3.0-alpha5/notes.ru.md",
+    "release/1.3.0-beta1/notes.md",
+    "release/1.3.0-beta1/notes.ru.md",
+    "release/1.3.0-beta2/notes.md",
+    "release/1.3.0-beta2/notes.ru.md",
+    "release/1.3.0-beta3/notes.md",
+    "release/1.3.0-beta3/notes.ru.md",
+    "release/1.3.0-beta4/notes.md",
+    "release/1.3.0-beta4/notes.ru.md",
+    "release/1.3.0/notes.md",
+    "release/1.3.0/notes.ru.md",
 ]
 PUBLIC_INVENTORY = Path("checksums/processforge.sha256")
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}

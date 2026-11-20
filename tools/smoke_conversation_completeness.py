@@ -7,19 +7,18 @@ import contextlib
 import hashlib
 import json
 import os
-import shutil
 import subprocess
 import sys
-import uuid
+import tempfile
 from pathlib import Path
 from typing import Iterator
 
 from codex_exec_worker import capture_worker_input, prompt_payload
-from processforge_subprocess import diagnostic_text, run_command
 from pf_runtime.codex_hooks import native_envelope
-from pf_runtime.host import worker_input_summary
-from smoke_hook_sqlite_support import events as sqlite_events, remove_event as sqlite_remove_event
-
+from pf_runtime.provider_adapters import worker_input_summary
+from processforge_subprocess import diagnostic_text, run_command
+from smoke_hook_sqlite_support import events as sqlite_events
+from smoke_hook_sqlite_support import remove_event as sqlite_remove_event
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
@@ -127,7 +126,9 @@ def setup_worker_project(root: Path) -> tuple[Path, Path, Path, str, str, str, s
     definition.update(id="prompt-only", name="Prompt-only fixture")
     process_path = project / "processes/custom/prompt-only.yaml"
     process_path.parent.mkdir(parents=True, exist_ok=True)
-    core.write_yaml_file(process_path, definition)
+    import processforge_core.common.yaml_io as _core_common_yaml_io
+
+    _core_common_yaml_io.write_yaml_file(process_path, definition)
     pf("project-context-refresh", "--project-root", str(project))
     second = root / "foreign-project"
     second.mkdir()
@@ -516,15 +517,13 @@ def smoke_worker_capture(root: Path) -> None:
 
 
 def main() -> int:
-    tmp_root = ROOT / ".pf" / "tmp"
-    tmp_root.mkdir(parents=True, exist_ok=True)
-    root = tmp_root / f"pf-conversation-{uuid.uuid4().hex}"
-    root.mkdir()
+    temporary = tempfile.TemporaryDirectory(prefix="pf-conversation-")
+    root = Path(temporary.name)
     try:
         smoke_codex_user_prompt(root)
         smoke_worker_capture(root)
     finally:
-        shutil.rmtree(root, ignore_errors=True)
+        temporary.cleanup()
     print("PASS: conversation completeness smoke")
     return 0
 

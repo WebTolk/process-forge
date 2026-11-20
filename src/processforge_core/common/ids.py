@@ -9,6 +9,10 @@ def safe_id(value: str, default: str = "project") -> str:
     return cleaned or default
 
 
+def title_from_id(value: str) -> str:
+    return " ".join(part.capitalize() for part in safe_id(value, "item").split("-"))
+
+
 def opaque_identity_digest(identity: str) -> str:
     """Return a filesystem-safe key without normalizing the opaque identity."""
 

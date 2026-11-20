@@ -15,10 +15,11 @@ Enable the optional **pf-app-server** when workplace scheduling, worker
 supervision and live operational views are needed. It is the long-lived PF
 Runtime process reached through existing runtime/server commands.
 
-The application's MCP host independently starts and owns the stdio MCP process.
-Starting or restarting the app-server does not start or reload that MCP process;
-updating Core files does not update code already loaded by a connected host.
-Infrastructure lifecycle actions belong to an authorized operator.
+The application host owns the stdio MCP connection. In Garage a backend
+request starts a fresh Core child. With `coordination.director_enabled` in
+the workplace, the bridge uses the running Runtime. After a compatible update,
+the next request can use the replacement child or the restarted Runtime over
+the same connection. [MCP routing and updates](mcp-updates.md)
 
 ## Durable project files
 
@@ -32,7 +33,8 @@ The file layout is the runtime contract:
   delivery material.
 - `.pf/runtime/events/events.sqlite3` stores optional event envelopes and required admission/verification state.
 - `.pf/runtime/agent-events/hooks.sqlite3` stores project hook receipts, pending input and optional raw history.
-- `.pf/runtime/agent-runs/` stores optional worker process state.
+- `.pf/data/pf.sqlite3` is the default bound store for worker attempts and current execution state.
+- `.pf/runtime/agent-runs/` holds worker receipts, output and compatibility projections. [Execution storage](execution-storage.md)
 - `.pf/runtime/supervisor/` stores optional supervisor loop state.
 
 ## Project raw ingress
@@ -103,6 +105,18 @@ session maps are rebuildable caches only.
 The following details explain diagnostics and recovery for maintainers; they
 are not extra steps in the ordinary Work lifecycle.
 
+Core `RuntimeSchedule` supplies the actual job periods: Ledger and Inspector
+5 seconds, Director 10 seconds, projections 30 seconds. Host polling only checks
+what is due. Each project has its own cadence, measured from attempt completion,
+including failures; slow passes do not cause catch-up loops. Job faults remain
+visible until that job is retried. Manual ticks keep their existing behavior.
+
+Core `RunTaskInputReader.active_tasks` owns active-assignment discovery. It
+validates current YAML bytes, retains small terminal headers, and loads full
+active documents with a second status check. The bounded YAML cache shares
+equivalent loader policies; its limits and caller mutation isolation are unchanged.
+Ordinary agents use the public Work operations without managing these caches.
+
 Runtime status reports scheduler liveness as `scheduler_alive`. A failed scheduler
 operation or malformed routing cache degrades health while other valid projects continue;
 a successful later pass restores health. A stopped scheduler is never reported
@@ -134,10 +148,10 @@ independent of the daemon.
 
 Codex hooks are thin fact adapters. They normalize documented lifecycle or tool
 facts, append existing PF events, and delegate check-in, heartbeat, and
-checkout to Core. The stdio MCP facade is mostly bounded/read-oriented, but it
-also exposes governed mutation tools for project initialization, repair, and
-work bootstrap. Those mutating tools are explicit, limited, and require their
-documented guard inputs such as `apply: true`.
+checkout to Core. The MCP catalogue also includes governed Work start, state,
+transition and cancellation, continuation, worker prepare/start/collect,
+project initialization and repair. Each action declares its own selectors,
+permissions and apply requirements. [Action discovery](action-discovery.md)
 
 The stdio MCP process is owned by the MCP host, not by PF Runtime autostart.
 Codex starts it from host MCP configuration for each connected session. See

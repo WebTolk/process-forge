@@ -8,6 +8,10 @@ import tempfile
 from unittest.mock import patch
 
 import processforge as core
+from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher
+from processforge_core.agents.process_events import ProcessEventRecorder
+from processforge_core.composition import bind_process_events, bind_work_summaries
+from processforge_core.presentation.work_summaries import WorkSummaryRenderer
 from processforge_core.configuration import ProjectPFConfig
 from processforge_core.process_event_journal import ProcessEventJournal
 from processforge_core.raw_hook_journal import RawHookJournal
@@ -23,7 +27,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix="pf-sqlite-runtime-") as directory:
         workplace, project = setup_basic_project(Path(directory), "project")
         core.configuration_service(workplace / "configuration.yaml").update({"logging.events": False, "logging.raw_hooks": False})
-        path = core.event_runtime_paths(project)[0]
+        from processforge_core.agents.hook_policy import HookDispatchPolicy
+        from processforge_core.work.consistency import RunTaskInputReader
+
+        path = RunTaskInputReader().event_runtime_paths(project)[0]
         journal = ProcessEventJournal()
         baseline = journal.count(path)
         start = native_envelope({"hook_event_name": "SessionStart", "source": "startup", "cwd": str(project), "session_id": "live"})
@@ -39,8 +46,8 @@ def main():
         assert journal.count(path) == baseline
         pending = native_envelope({"hook_event_name": "PostToolUse", "cwd": str(project), "session_id": "live",
                                    "tool_name": "Read", "tool_use_id": "pending-dispatch"})
-        with patch.object(core, "selected_hooks", return_value=[{"id": "test"}]), \
-                patch.object(core, "dispatch_hooks", side_effect=OSError("after admission, before dispatch")):
+        with patch.object(HookDispatchPolicy, "selected_hooks", return_value=[{"id": "test"}]), \
+                patch.object(RuntimeHookDispatcher, "dispatch_hooks", side_effect=OSError("after admission, before dispatch")):
             try:
                 host.ingest_event(pending, workplace, core)
             except OSError:
@@ -48,7 +55,7 @@ def main():
             else:
                 raise AssertionError("dispatch interruption was swallowed")
         assert journal.pending_dispatch(path)
-        with patch.object(core, "dispatch_hooks", return_value=[]) as dispatch:
+        with patch.object(RuntimeHookDispatcher, "dispatch_hooks", return_value=[]) as dispatch:
             host.ingest_event(pending, workplace, core)
             assert dispatch.call_count == 1
         assert not journal.pending_dispatch(path)
@@ -73,7 +80,7 @@ def main():
         projection = host.stage_obligations_path(project, core)
         before = projection.read_bytes()
         with patch.object(host, "stage_obligation_rows", side_effect=AssertionError("idle full stage rebuild")):
-            core.append_process_event(project, {"event_id": "evt_ordinary"}, dispatch=False)
+            ProcessEventRecorder().append_process_event(project, {"event_id": "evt_ordinary"}, dispatch=False)
             host.refresh_stage_obligations(project, core)
         assert projection.read_bytes() == before
         # New verification facts invalidate the projection even with history off.
@@ -84,16 +91,19 @@ def main():
             assert build.call_count == 1
     with fixture() as (workplace, project, started):
         config = project / ".pf/configuration.yaml"
-        core.write_yaml_file(config, ProjectPFConfig().with_changes({"logging.events": False}).to_dict())
-        before = ProcessEventJournal().count(core.event_runtime_paths(project)[0])
-        service = ProcessExecutionService(project, workplace, core)
+        from processforge_core.work.consistency import RunTaskInputReader
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(config, ProjectPFConfig().with_changes({"logging.events": False}).to_dict())
+        before = ProcessEventJournal().count(RunTaskInputReader().event_runtime_paths(project)[0])
+        service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
         _proof, evidence = prepare(service, started, project)
         intent = interrupt(service, started, project, evidence, "event", "after")
-        result = ProcessExecutionService(project, workplace, core).transition(run_id=started["run_id"], outcome="completed")
+        result = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer()).transition(run_id=started["run_id"], outcome="completed")
         assert result["action"] == "run_completed", result
         assert not paths(project, started)["intent"].exists()
-        assert ProcessEventJournal().count(core.event_runtime_paths(project)[0]) == before
-        assert all(core.process_event_exists(core.event_runtime_paths(project)[0], event["event_id"]) for event in intent["final"]["events"])
+        assert ProcessEventJournal().count(RunTaskInputReader().event_runtime_paths(project)[0]) == before
+        assert all(core.process_event_exists(RunTaskInputReader().event_runtime_paths(project)[0], event["event_id"]) for event in intent["final"]["events"])
     print("PASS: raw/history off, live overrides, conversation delivery, no ingress rebuild/scan, unchanged tick and Work recovery without history")
 
 

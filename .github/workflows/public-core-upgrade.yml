@@ -1,0 +1,252 @@
+name: Public Core upgrade
+
+on:
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+    inputs:
+      full_archive:
+        description: Run the full public suite from the extracted candidate on both platforms
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  candidate:
+    name: Build shared public-upgrade candidate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      artifact_name: ${{ steps.build.outputs.artifact_name }}
+      archive_sha256: ${{ steps.build.outputs.archive_sha256 }}
+      source_commit: ${{ steps.build.outputs.source_commit }}
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Build one exact candidate archive
+        id: build
+        shell: python
+        run: |
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          assets = root / ".pf/tmp/t06-public-core/assets"
+          assets.mkdir(parents=True)
+          archive = assets / "processforge-candidate.zip"
+          sidecar = assets / "processforge-candidate.manifest.json"
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          tree = subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], text=True).strip()
+          print("SOURCE_HEAD", head, "SOURCE_TREE", tree, flush=True)
+          subprocess.run([
+              sys.executable, "-B", "bin/pf.py", "release-pack",
+              "--root", str(root), "--output", str(archive),
+          ], check=True, timeout=90)
+          metadata = json.loads(sidecar.read_bytes())
+          assert metadata["source"]["commit"] == head
+          assert metadata["source"]["dirty"] is False
+          archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
+          assert archive_hash == metadata["archive"]["sha256"]
+          artifact = "public-core-candidate-" + os.environ["GITHUB_RUN_ID"] + "-" + os.environ["GITHUB_RUN_ATTEMPT"]
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write("artifact_name=" + artifact + "\n")
+              output.write("archive_sha256=" + archive_hash + "\n")
+              output.write("source_commit=" + head + "\n")
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.build.outputs.artifact_name }}
+          path: |
+            .pf/tmp/t06-public-core/assets/processforge-candidate.zip
+            .pf/tmp/t06-public-core/assets/processforge-candidate.manifest.json
+          if-no-files-found: error
+          include-hidden-files: true
+
+  core-files:
+    name: Core files from public 1.2.0 (${{ matrix.os }})
+    needs: candidate
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ inputs.full_archive && 130 || 20 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check file-update recovery and refusal regressions
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          subprocess.run([sys.executable, "-m", "pip", "install", "pytest==9.1.1"], check=True)
+          root = Path.cwd()
+          scratch = root / ".pf/tmp/t06-file-recovery-tests"
+          scratch.mkdir(parents=True)
+          environment = dict(os.environ)
+          environment["PYTHONPATH"] = os.pathsep.join(str(root / p) for p in ("src", "tools", "tests"))
+          for name in ("TMPDIR", "TEMP", "TMP"):
+              environment[name] = str(scratch)
+          subprocess.run([
+              sys.executable, "-B", "-m", "pytest", "-q", "-ra", "-p", "no:cacheprovider",
+              "--basetemp=" + str(scratch / "pytest"), "tests/maintenance",
+          ], env=environment, check=True, timeout=180)
+      - name: Qualify the same Core archive and real recovery on each OS
+        shell: python
+        env:
+          GH_TOKEN: ${{ github.token }}
+          T06_ARTIFACT_NAME: ${{ needs.candidate.outputs.artifact_name }}
+          T06_ARCHIVE_SHA256: ${{ needs.candidate.outputs.archive_sha256 }}
+          T06_SOURCE_COMMIT: ${{ needs.candidate.outputs.source_commit }}
+        run: |
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          scratch = root / ".pf/tmp/t06-public-core"
+          assets = scratch / "assets"
+          assets.mkdir(parents=True)
+          archive = assets / "processforge-candidate.zip"
+          sidecar = assets / "processforge-candidate.manifest.json"
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          assert head == os.environ["T06_SOURCE_COMMIT"]
+          print("SOURCE_HEAD", head, "ARCHIVE_SHA256", os.environ["T06_ARCHIVE_SHA256"], flush=True)
+          subprocess.run([
+              "gh", "run", "download", os.environ["GITHUB_RUN_ID"],
+              "--repo", "WebTolk/process-forge",
+              "--name", os.environ["T06_ARTIFACT_NAME"], "--dir", str(assets),
+          ], check=True, timeout=90)
+          subprocess.run([
+              "gh", "release", "download", "v1.2.0",
+              "--repo", "WebTolk/process-forge",
+              "--pattern", "processforge-1.2.0.zip",
+              "--pattern", "processforge-1.2.0.manifest.json",
+              "--dir", str(assets),
+          ], check=True, timeout=90)
+          subprocess.run([
+              sys.executable, "-B", "tools/smoke_public_core_upgrade.py",
+              "--public-dir", str(assets), "--candidate", str(archive),
+              "--sidecar", str(sidecar), "--commit", head,
+              "--sha256", os.environ["T06_ARCHIVE_SHA256"],
+              "--root", str(scratch / "fixture"),
+              "--out", str(root / ".pf/artifacts/t06-public-core"),
+          ], check=True, timeout=660)
+          # The same archive must complete migration and a real retained worker.
+          report = json.loads((root / ".pf/artifacts/t06-public-core/results.json").read_bytes())
+          assert report["core_file_checks"] == "passed"
+          assert report["full_t06_qualified"] is True
+          assert report["project_migration"]["status"] == "ready"
+          assert report["retained_worker"]["collection"] == "collected"
+          assert report["managed_runtime"]["status"] == "passed"
+          recovery_out = root / ".pf/artifacts/t06-file-recovery"
+          subprocess.run([
+              sys.executable, "-B", "tools/smoke_public_core_upgrade.py", "--file-recovery",
+              "--public-dir", str(assets), "--candidate", str(archive),
+              "--sidecar", str(sidecar), "--commit", head,
+              "--sha256", os.environ["T06_ARCHIVE_SHA256"],
+              "--root", str(scratch / "recovery-fixture"), "--out", str(recovery_out),
+          ], check=True, timeout=300)
+          recovery = json.loads((recovery_out / "receipt.json").read_bytes())
+          assert recovery["archive_sha256"] == os.environ["T06_ARCHIVE_SHA256"]
+          assert recovery["source"]["commit"] == head
+          required = {
+              "actual_os_failure_before_manifest", "default_readonly", "no_confirm",
+              "wrong_archive", "recovery_fails_again", "confirmed_recovery",
+              "target_bytes_preimages_unknown",
+          }
+          assert set(recovery["matrix"]) == required
+          assert all(value == "pass" for value in recovery["matrix"].values())
+          assert recovery["full_t06_accepted"] is False
+      - name: Validate the full extracted public archive
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_archive }}
+        shell: python
+        env:
+          EXPECTED_SHA256: ${{ needs.candidate.outputs.archive_sha256 }}
+          SOURCE_COMMIT: ${{ needs.candidate.outputs.source_commit }}
+        run: |
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+          import sys
+
+          root = Path.cwd()
+          assets = root / ".pf/tmp/t06-public-core/assets"
+          archive = assets / "processforge-candidate.zip"
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+          assert digest == os.environ["EXPECTED_SHA256"]
+          environment = dict(os.environ)
+          environment.pop("PYTHONPATH", None)
+          scratch = Path(os.environ["RUNNER_TEMP"]) / "pf-full-archive"
+          for name in ("TMPDIR", "TEMP", "TMP", "PF_TEST_SCRATCH_ROOT", "W3_FIXTURE_ROOT",
+                       "PF_W4_TEST_ROOT", "PF_PRIVATE_PROCESS_TEST_ROOT", "PF_RELEASE_REPORT_TEST_ROOT"):
+              directory = scratch / name.lower()
+              directory.mkdir(parents=True, exist_ok=True)
+              environment[name] = str(directory)
+          commands = root / ".pf/runtime/release-test/commands"
+          previous = set(commands.glob("*/result.json"))
+          result = subprocess.run([
+              sys.executable, "-B", "bin/pf.py", "release-archive-test",
+              "--archive", str(archive), "--manifest", str(assets / "processforge-candidate.manifest.json"),
+              "--root", str(root), "--extracted-test", "full", "--timeout-scale", "5",
+          ], env=environment)
+          failures = []
+          records = set(commands.glob("*/result.json")) - previous
+          report = root / ".pf/artifacts/full-archive"
+          report.mkdir(parents=True, exist_ok=True)
+          for path in sorted(records):
+              child = json.loads(path.read_bytes())
+              shutil.copytree(path.parent, report / "commands" / path.parent.name)
+              if child["returncode"] != 0 or child["timed_out"]:
+                  script = next((Path(arg).name for arg in child["args"] if arg.endswith(".py")),
+                                Path(child["args"][0]).name)
+                  failures.append({"command": script, "returncode": child["returncode"],
+                                   "timed_out": child["timed_out"]})
+          (report / "result.json").write_text(json.dumps({
+              "source_commit": os.environ["SOURCE_COMMIT"], "archive_sha256": digest,
+              "returncode": result.returncode, "recorded_commands": len(records),
+              "failed_commands": failures,
+          }, indent=2) + "\n", encoding="utf-8")
+          raise SystemExit(result.returncode)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: public-core-upgrade-${{ matrix.os }}
+          path: |
+            .pf/artifacts/t06-public-core/
+            .pf/artifacts/t06-file-recovery/
+            .pf/artifacts/full-archive/
+          if-no-files-found: warn
+          include-hidden-files: true

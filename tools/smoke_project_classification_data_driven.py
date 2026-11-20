@@ -14,21 +14,28 @@ def check_flow_state_markers(pf, root: Path) -> None:
     receipt.parent.mkdir(parents=True)
     receipt.write_text('{"artifact": "package-receipt"}\n', encoding="utf-8")
     classifier = pf.ROOT / "packs/official/software-development/project-classifiers/software-web.yaml"
-    classified = pf.classify_project(project, explicit_classifier_paths=[classifier])
+    from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+    from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+    classified = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project, explicit_classifier_paths=[classifier])
     assert classified["project_types"] == [], classified
     assert classified["inactive_classifier_hints"] == [], classified
-    assert pf.inactive_official_classifier_hints(None, project) == []
-    assert receipt in pf.list_project_files(project), "generic inventory must retain PF evidence"
-    assert not any(path == ".pf" or path.startswith(".pf/") for path in pf.project_available_paths(project))
+    from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+
+    assert ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).inactive_official_classifier_hints(None, project) == []
+    from processforge_core.project.detection import ProjectDetectionService
+    assert receipt in ProjectDetectionService().files(project), "generic inventory must retain PF evidence"
+    assert not any(path == ".pf" or path.startswith(".pf/") for path in ProjectClassifierSourceReader(Path(__file__).resolve().parents[1]).project_available_paths(project))
 
     (project / "main.py").write_text("pass\n", encoding="utf-8")
-    python_only = pf.classify_project(project, explicit_classifier_paths=[classifier])
+    python_only = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project, explicit_classifier_paths=[classifier])
     assert python_only["project_types"] == ["software.python"], python_only
     for relative in ("package.json", "application/frontend/package.json"):
         actual = project / relative
         actual.parent.mkdir(parents=True, exist_ok=True)
         actual.write_text("{}\n", encoding="utf-8")
-        with_application = pf.classify_project(project, explicit_classifier_paths=[classifier])
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+        from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+        with_application = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project, explicit_classifier_paths=[classifier])
         assert with_application["project_types"] == ["software.javascript-node", "software.python"], with_application
         actual.unlink()
 
@@ -43,23 +50,31 @@ def check_marker_parity(pf, root: Path) -> None:
         marker.parent.mkdir(parents=True)
         marker.write_text("fixture\n", encoding="utf-8")
         flow = project / ".pf"
-        pf.write_yaml_file(flow / "project-classifiers" / "fixture.yaml", {
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+        import processforge_core.common.yaml_io as _core_common_yaml_io
+
+        _core_common_yaml_io.write_yaml_file(flow / "project-classifiers" / "fixture.yaml", {
             "schema_version": 1, "kind": "processforge.project_classifier",
             "id": "fixture.parity", "status": "active",
             "rules": [{"id": name, "when": {"all": [{"exists": path}]},
                        "classify_as": {"project_types": [f"fixture.{name}"]}}
                       for name, path in rules],
         })
-        pf.write_yaml_file(flow / "registries" / "project-classifiers.yaml", {
+        _core_common_yaml_io.write_yaml_file(flow / "registries" / "project-classifiers.yaml", {
             "schema_version": 1, "project_classifiers": [
                 {"id": "fixture.parity", "path": "project-classifiers/fixture.yaml", "status": "active"}],
         })
         receipt = flow / "artifacts" / "frontend" / "package.json"
         receipt.parent.mkdir(parents=True)
         receipt.write_text("{}\n", encoding="utf-8")
-        actual = pf.classify_project(project)
-        with patch.object(pf, "list_classifier_files", pf.list_project_files):
-            previous = pf.classify_project(project)
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+        from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+        actual = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project)
+        from processforge_core.project.detection import ProjectDetectionService
+        with patch.object(ProjectClassifierSourceReader, "list_classifier_files", ProjectDetectionService().files):
+            from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+            from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+            previous = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).classify_project(project)
         assert actual == previous, (actual, previous)
         assert actual["loaded_classifiers"] == ["fixture.parity"], actual
         assert actual["project_types"] == ([] if kind == "unclassified" else [f"fixture.{kind}"]), actual
@@ -72,12 +87,14 @@ def main() -> None:
         project = root / "project"
         project.mkdir()
         (project / "fixture.marker").write_text("fixture\n", encoding="utf-8")
-        without = pf.detect_project(project)
+        from processforge_core.project.classifier_sources import ProjectClassifierSourceReader
+        from processforge_core.project.initialization_discovery import ProjectDiscoveryReader
+        without = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).detect_project(project)
         if without["status"] != "unclassified" or without["project_kind"] != ["unknown"]:
             raise AssertionError(without)
         classifier = root / "fixture.classifier.yaml"
         classifier.write_text((pf.ROOT / "templates" / "project-classifier.yaml").read_text(encoding="utf-8"), encoding="utf-8")
-        with_classifier = pf.detect_project(project, explicit_classifier_paths=[classifier])
+        with_classifier = ProjectDiscoveryReader(ProjectClassifierSourceReader(pf.ROOT)).detect_project(project, explicit_classifier_paths=[classifier])
         if with_classifier["status"] != "classified":
             raise AssertionError(with_classifier)
         if with_classifier["project_kind"] != ["fixture.project-type.a"]:

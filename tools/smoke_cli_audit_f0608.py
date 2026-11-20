@@ -144,11 +144,13 @@ def smoke_exception_and_foreign_release(root: Path) -> None:
     target = root / "foreign.yaml"
     lock = lock_path(target)
     with pf.registry_file_lock(target, timeout_seconds=1, stale_after_seconds=0):
+        import processforge_core.common.clock as _core_common_clock
+
         foreign = {
             "path": str(target),
             "pid": os.getpid(),
             "host": "foreign-owner",
-            "created_at": pf.now_utc(),
+            "created_at": _core_common_clock.now_utc(),
             "token": uuid.uuid4().hex,
         }
         lock.write_text(json.dumps(foreign) + "\n", encoding="utf-8")
@@ -192,16 +194,18 @@ def write_coordination_fixture(root: Path) -> tuple[Path, Path]:
 
 def smoke_presence_and_public_mode(root: Path) -> None:
     empty = root / "empty-workplace"
-    assert pf.active_organized_project_sessions(empty) == []
+    from processforge_core.project.coordination_state import ProjectCoordinationStateService
+
+    assert ProjectCoordinationStateService().active_organized_project_sessions(empty) == []
     workplace, project = write_coordination_fixture(root)
-    active = pf.active_organized_project_sessions(workplace)
+    active = ProjectCoordinationStateService().active_organized_project_sessions(workplace)
     assert len(active) == 1 and active[0]["agent_id"] == "agent-1", active
 
     offline = workplace / "runtime" / "agent-presence" / "agent-1" / "offline.json"
     offline.write_text(json.dumps({"status": "offline", "project_root": str(project)}), encoding="utf-8")
     corrupt = workplace / "runtime" / "agent-presence" / "agent-1" / "corrupt.json"
     corrupt.write_text("{not-json", encoding="utf-8")
-    assert len(pf.active_organized_project_sessions(workplace)) == 1
+    assert len(ProjectCoordinationStateService().active_organized_project_sessions(workplace)) == 1
 
     args = type("Args", (), {"workplace": str(workplace), "director_enabled": "false", "director_office_enabled": None, "force": False, "json": True})()
     try:
@@ -214,8 +218,11 @@ def smoke_presence_and_public_mode(root: Path) -> None:
 
 def smoke_plan_default_parity(root: Path) -> None:
     plan = {"run": {"id": "run"}, "workers": [{"id": "worker-a"}]}
-    normalized = pf.normalized_orchestrator_plan(ROOT, plan)
-    expected = pf.expected_report_artifact({"id": "worker-a"})
+    from processforge_core.work.orchestration_config import OrchestrationConfigService
+
+    normalized = OrchestrationConfigService().normalized_orchestrator_plan(ROOT, plan)
+    from processforge_core.work.outputs import WorkOutputPolicy
+    expected = WorkOutputPolicy().expected_report({"id": "worker-a"})
     assert normalized["workers"][0]["expected_report_artifact"] == expected == ".pf/artifacts/worker-a-report.md"
     # A missing required plan field is still a validation error, but writing
     # its diagnostic normalization must not crash with NameError.

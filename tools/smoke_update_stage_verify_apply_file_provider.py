@@ -27,6 +27,10 @@ def main() -> int:
         require_ok(run_pf("update", "rollback", "--workplace", str(workplace), "--candidate", candidate_id))
         restored = (workplace / "packages" / "acme.software-processes" / "package.yaml").read_text(encoding="utf-8")
         assert "version: 1.0.0" in restored
+        installed = (workplace / "registries" / "installed-subjects.yaml").read_text(
+            encoding="utf-8"
+        )
+        assert "version: 1.0.0" in installed
     print("PASS: update stage/verify/apply/rollback local-file smoke")
     return 0
 

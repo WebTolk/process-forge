@@ -1,4 +1,5 @@
 """Port for revision-checked configuration persistence."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from .models import PFConfig, ProjectPFConfig
 class ConfigSnapshot:
     config: PFConfig | ProjectPFConfig
     revision: str | None
+    explicit_keys: frozenset[str] = frozenset()
 
     @property
     def exists(self) -> bool:
@@ -20,6 +22,8 @@ class ConfigSnapshot:
 class ConfigStore(Protocol):
     def read(self) -> ConfigSnapshot: ...
 
-    def write(self, config: PFConfig | ProjectPFConfig, *, expected_revision: str | None) -> ConfigSnapshot: ...
+    def write(
+        self, config: PFConfig | ProjectPFConfig, *, expected_revision: str | None
+    ) -> ConfigSnapshot: ...
 
     def delete(self, *, expected_revision: str) -> ConfigSnapshot: ...

@@ -8,9 +8,9 @@ from typing import Any, Callable, Iterator
 
 from ..common.yaml_io import _parse_simple_yaml
 from ..documents.reader import YamlDocumentReader
-from .projection import WorkProjectionPolicy
 from .inventory import WorkInventory
 from .metadata import WorkMetadataReadPass
+from .projection import WorkProjectionPolicy
 
 __all__ = ()
 
@@ -18,7 +18,9 @@ __all__ = ()
 @dataclass(frozen=True)
 class YamlWorkRecordReader:
     project_root: Path
-    documents: YamlDocumentReader = field(default_factory=lambda: YamlDocumentReader(_parse_simple_yaml))
+    documents: YamlDocumentReader = field(
+        default_factory=lambda: YamlDocumentReader(_parse_simple_yaml)
+    )
 
     @property
     def flow_root(self) -> Path:
@@ -43,8 +45,12 @@ class YamlWorkRecordReader:
 @dataclass(frozen=True)
 class CurrentWorkService:
     project_root: Path
-    documents: YamlDocumentReader = field(default_factory=lambda: YamlDocumentReader(_parse_simple_yaml))
-    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(default=None, kw_only=True, repr=False, compare=False)
+    documents: YamlDocumentReader = field(
+        default_factory=lambda: YamlDocumentReader(_parse_simple_yaml)
+    )
+    work_metadata: Callable[[], WorkMetadataReadPass] | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
 
     def summary(self) -> dict[str, Any]:
         active = self.active_items()
@@ -57,7 +63,11 @@ class CurrentWorkService:
         }
 
     def active_items(self) -> list[dict[str, Any]]:
-        return [item for item in self.items() if item["state"] == "active" and not item["bootstrap_placeholder"]]
+        return [
+            item
+            for item in self.items()
+            if item["state"] == "active" and not item["bootstrap_placeholder"]
+        ]
 
     def find_by_objective(self, objective: str) -> dict[str, Any]:
         projection = WorkProjectionPolicy()
@@ -65,7 +75,11 @@ class CurrentWorkService:
         active: list[dict[str, Any]] = []
         historical: list[dict[str, Any]] = []
         for item in self.items():
-            if item["bootstrap_placeholder"] or projection.normalize_objective(str(item.get("objective") or "")) != normalized:
+            if (
+                item["bootstrap_placeholder"]
+                or projection.normalize_objective(str(item.get("objective") or ""))
+                != normalized
+            ):
                 continue
             if item["state"] == "active":
                 active.append(item)
@@ -74,22 +88,45 @@ class CurrentWorkService:
         return {"active": active[0] if active else None, "historical": historical}
 
     def items(self) -> list[dict[str, Any]]:
-        records = self.work_metadata() if self.work_metadata is not None else WorkMetadataReadPass(self.project_root, self.documents)
+        records = (
+            self.work_metadata()
+            if self.work_metadata is not None
+            else WorkMetadataReadPass(self.project_root, self.documents)
+        )
         projection = WorkProjectionPolicy()
         rows: list[dict[str, Any]] = []
         for run_path, run in records.runs():
             run_status = str(run.get("status") or "")
             run_id = str(run.get("id") or run_path.parent.name)
-            tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
+            tasks_value = run.get("tasks")
+            tasks = tasks_value if isinstance(tasks_value, list) else []
             if not tasks:
-                rows.append(projection.work_item(run_id=run_id, run_status=run_status, task={}, run=run))
+                rows.append(
+                    projection.work_item(
+                        run_id=run_id, run_status=run_status, task={}, run=run
+                    )
+                )
             for entry in tasks:
                 if not isinstance(entry, dict):
                     continue
                 task_id = str(entry.get("id") or "")
-                task = records.assignment(task_id) if records.assignment_exists(task_id) else {"id": task_id, "status": entry.get("status"), "objective": run.get("objective")}
-                rows.append(projection.work_item(run_id=run_id, run_status=run_status, task=task, run=run))
+                task = (
+                    records.assignment(task_id)
+                    if records.assignment_exists(task_id)
+                    else {
+                        "id": task_id,
+                        "status": entry.get("status"),
+                        "objective": run.get("objective"),
+                    }
+                )
+                rows.append(
+                    projection.work_item(
+                        run_id=run_id, run_status=run_status, task=task, run=run
+                    )
+                )
         if records.assignment_exists("first-assignment"):
             task = records.assignment("first-assignment")
-            rows.append(projection.work_item(run_id="", run_status="", task=task, run={}))
+            rows.append(
+                projection.work_item(run_id="", run_status="", task=task, run={})
+            )
         return rows
