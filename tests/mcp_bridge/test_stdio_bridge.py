@@ -7,12 +7,15 @@ import importlib.util
 import json
 import platform
 import queue
+import sqlite3
 import subprocess
 import sys
 import tempfile
 import threading
 import time
 import unittest
+from collections.abc import Callable
+from contextlib import closing
 from io import TextIOWrapper
 from pathlib import Path
 from typing import Any, cast
@@ -207,6 +210,202 @@ class StdioBridgeTest(unittest.TestCase):
         )
         self.assertNotIn("error", response)
         return json.loads(response["result"]["contents"][0]["text"]), notices
+
+    def work_events(self, journal: Path, run_id: str) -> list[tuple[str, str]]:
+        self.assertTrue(journal.is_file(), "Forge Work must use the project journal")
+        with closing(
+            sqlite3.connect(journal.as_uri() + "?mode=ro", uri=True)
+        ) as connection:
+            return connection.execute(
+                "SELECT event_type, event_id FROM events WHERE run_id = ? ORDER BY seq",
+                (run_id,),
+            ).fetchall()
+
+    def assert_work_started(self, journal: Path, run_id: str) -> list[tuple[str, str]]:
+        events = self.work_events(journal, run_id)
+        self.assertEqual(
+            [kind for kind, _ in events],
+            [
+                "run.created",
+                "task.created",
+                "assignment.created",
+                "process.stage.started",
+            ],
+        )
+        self.assertEqual(len({event_id for _, event_id in events}), len(events))
+        return events
+
+    def check_forge_work_publication(
+        self,
+        project: Path,
+        client: WireClient,
+        journal: Path,
+        start_work: Callable[..., dict[str, Any]],
+    ) -> None:
+        flow = project / ".pf"
+        outbox = flow / "runtime/hooks/work-journal-test"
+        hooks = {
+            "schema_version": 1,
+            "hooks": {
+                "targets": [
+                    {
+                        "id": "work-journal-test",
+                        "type": "outbox",
+                        "enabled": True,
+                        "path": "runtime/hooks/work-journal-test",
+                        "event_types": ["run.created", "process.stage.completed"],
+                    }
+                ]
+            },
+        }
+        (flow / "hooks.yaml").write_text(yaml.safe_dump(hooks), encoding="utf-8")
+        request = {
+            "objective": "Verify Forge Work journal admission and recovery",
+            "process_id": "software-feature-development",
+            "scope_intent": {
+                "schema_version": 1,
+                "assignment": {
+                    "execution_mode": "planning_only",
+                    "ownership": {"writer": False},
+                    "allowed_actions": ["read", "write_artifact"],
+                    "allowed_read_files": ["AGENTS.md"],
+                    "allowed_files": [".pf/artifacts/work-journal-test/**"],
+                },
+            },
+        }
+
+        def call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+            response, _ = client.exchange(
+                "tools/call", {"name": name, "arguments": arguments}
+            )
+            return response
+
+        def result(response: dict[str, Any]) -> dict[str, Any]:
+            self.assertNotIn("error", response)
+            self.assertFalse(response["result"].get("isError"), response)
+            return json.loads(response["result"]["content"][0]["text"])
+
+        assignments = flow / "assignments"
+        capsules = flow / "contexts/assignment-capsules"
+
+        def published_documents() -> tuple[set[Path], set[Path], set[Path]]:
+            return (
+                set(assignments.glob("*.yaml")),
+                set(capsules.glob("*.yaml")),
+                set((flow / "runs").glob("*/run.yaml")),
+            )
+
+        before = published_documents()
+        preserved_journal = journal.with_name("events-test-backup.sqlite3")
+        journal.rename(preserved_journal)
+        journal.mkdir()
+        try:
+            cli_refused = start_work(
+                "Work when journal is unavailable", expected_exit=1
+            )
+            self.assertEqual(cli_refused["reason"], "storage_path_unsafe", cli_refused)
+            refused = result(call("pf.work.start", request))
+            self.assertEqual(refused["action"], "blocked", refused)
+            self.assertEqual(refused["reason"], "storage_path_unsafe", refused)
+            self.assertEqual(published_documents(), before)
+        finally:
+            journal.rmdir()
+            preserved_journal.rename(journal)
+
+        # Simulate an unavailable delivery destination after the journal commit.
+        outbox.parent.mkdir(parents=True, exist_ok=True)
+        outbox.write_text("fixture obstructs the outbox directory", encoding="utf-8")
+        try:
+            interrupted = call("pf.work.start", request)
+            self.assertTrue(
+                "error" in interrupted or interrupted["result"].get("isError"),
+                interrupted,
+            )
+        finally:
+            outbox.unlink()
+
+        (assignment_path,) = set(assignments.glob("*.yaml")) - before[0]
+        interrupted_work = yaml.safe_load(assignment_path.read_text(encoding="utf-8"))
+        run_id = interrupted_work["run_id"]
+        assignment_id = interrupted_work["id"]
+        capsule = capsules / f"{assignment_id}.capsule.yaml"
+        capsule_bytes = capsule.read_bytes()
+        started_events = self.assert_work_started(journal, run_id)
+        created_event_id = started_events[0][1]
+        with closing(
+            sqlite3.connect(journal.as_uri() + "?mode=ro", uri=True)
+        ) as connection:
+            self.assertIsNotNone(
+                connection.execute(
+                    "SELECT event_id FROM pending_dispatch WHERE event_id = ?",
+                    (created_event_id,),
+                ).fetchone()
+            )
+
+        recovered = result(call("pf.work.start", request))
+        self.assertEqual(recovered["action"], "created_new", recovered)
+        self.assertEqual(recovered["run_id"], run_id)
+        self.assertEqual(recovered["assignment_id"], assignment_id)
+        self.assertEqual(capsule.read_bytes(), capsule_bytes)
+        self.assertEqual(self.work_events(journal, run_id), started_events)
+        (delivery,) = list(outbox.glob("*.json"))
+        self.assertEqual(
+            json.loads(delivery.read_bytes())["event"]["event_id"], created_event_id
+        )
+        with closing(
+            sqlite3.connect(journal.as_uri() + "?mode=ro", uri=True)
+        ) as connection:
+            self.assertIsNone(
+                connection.execute(
+                    "SELECT event_id FROM pending_dispatch WHERE event_id = ?",
+                    (created_event_id,),
+                ).fetchone()
+            )
+
+        selectors = {
+            "run_id": run_id,
+            "assignment_id": assignment_id,
+            "context_id": recovered["context"]["id"],
+        }
+        state = result(call("pf.work.state", selectors))
+        evidence = state["evidence_guidance"]["transition_template"]["evidence"]
+        path = ".pf/artifacts/work-journal-test/observation.md"
+        artifact = project / path
+        artifact.parent.mkdir(parents=True)
+        artifact.write_text(
+            "Confirmed retained journal events and outbox receipt.\n",
+            encoding="utf-8",
+        )
+        transitioned = result(
+            call(
+                "pf.work.transition",
+                {
+                    **selectors,
+                    "outcome": "completed",
+                    "notes": "Confirmed retained journal events and exact Work selectors.",
+                    "evidence": [{**item, "path": path} for item in evidence],
+                },
+            )
+        )
+        self.assertEqual(transitioned["action"], "stage_transitioned", transitioned)
+        events = self.work_events(journal, run_id)
+        self.assertEqual(events[:4], started_events)
+        self.assertEqual(
+            [kind for kind, _ in events[4:]],
+            [
+                "process.stage.completed",
+                "process.stage.transitioned",
+                "process.stage.started",
+            ],
+        )
+        self.assertEqual(len({event_id for _, event_id in events}), len(events))
+        transition_event = events[4][1]
+        transition_delivery = outbox / f"{transition_event}.work-journal-test.json"
+        self.assertEqual(
+            json.loads(transition_delivery.read_bytes())["event"]["event_id"],
+            transition_event,
+        )
+        self.assertEqual(capsule.read_bytes(), capsule_bytes)
 
     def test_compatible_replacement_keeps_connection_and_refreshes_discovery(
         self,
@@ -412,6 +611,12 @@ class StdioBridgeTest(unittest.TestCase):
         state = json.loads(state_path.read_bytes())
         work = start_work("Read the scoped Forge CLI fixture")
         self.assertEqual(work["action"], "created_new", work)
+        journal = project / ".pf/runtime/events/events.sqlite3"
+        started_events = self.assert_work_started(journal, work["run_id"])
+        repeated = start_work("Read the scoped Forge CLI fixture")
+        self.assertEqual(repeated["run_id"], work["run_id"])
+        self.assertEqual(repeated["assignment_id"], work["assignment_id"])
+        self.assertEqual(self.work_events(journal, work["run_id"]), started_events)
         selectors = (
             "--run",
             work["run_id"],
@@ -513,6 +718,8 @@ class StdioBridgeTest(unittest.TestCase):
             )
             self.assertTrue(mismatch["result"]["isError"])
             self.assertIn("session_mismatch", mismatch["result"]["content"][0]["text"])
+
+        self.check_forge_work_publication(project, clients[0], journal, start_work)
 
         # The instance selector is checked by the server, not trusted from disk.
         stale = dict(state, instance_id="different-runtime-instance")
