@@ -33,12 +33,9 @@ git remote add gitverse https://gitverse.ru/webtolk/process-forge.git
 If the clone came from GitVerse and its only remote is `origin`, rename that
 remote to `gitverse`, then add GitHub as `origin`. Inspect existing remote
 configuration before changing it; do not overwrite a different setup blindly.
-Reuse the available GitHub credentials. Public GitVerse refs can be read
-anonymously. To push to the HTTPS mirror, use a non-interactive Git credential
-helper scoped to `https://gitverse.ru`. Have it read the existing `GITVERSE_TOKEN`
-from the environment and supply the GitVerse account name and the token as its
-password. Keep the token value out of remote URLs, command arguments, logs and
-files. If the token is unavailable, report the missing mirror access.
+Use the credentials configured for each remote. Keep credentials out of remote
+URLs, command arguments, logs and committed files. If a push is refused, report
+which remote needs write access.
 
 ## Branches and delivery
 
