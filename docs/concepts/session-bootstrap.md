@@ -25,29 +25,21 @@ that K reached the client. Optional `agent-start-prompt` prints current guidance
 without writing files or treating stored START as authority. See
 [agent entry](agent-entry.md) and [global sections](global-agent-section.md).
 
-## Explicit Session Request
+## Explicit session commands
 
-Operator session bootstrap turns a structured request into a formal session.
-The request has a session id, mode, actor, role, project root, optional
-assignment path, and options for writes, cache use and context refresh. Its
-schema and template remain `schemas/session-start.schema.json` and
-`templates/session-start-template.yaml`.
+`session-start --agent` uses the Ledger check-in path. With `--mode`, the CLI
+requires an existing project flow root. It checks the snapshot, records the
+selected mode, writes private session metadata and telemetry, and emits
+project events. A supplied `--assignment` contributes an assignment reference
+and a start event. `--allow-write` permits the session status report unless
+`--report-only` is also set. An explicit `--rebuild-context-if-stale` can
+refresh a missing or stale snapshot.
 
-## Modes
-
-`resume` inspects existing project flow. By default it reports without changing
-public artifacts while recording private session telemetry.
-
-`project_init` starts Project Init. Applied initialization creates `.pf/` state
-and full K in root and hidden AGENTS, subject to entry ownership/budget checks.
-
-`assignment_execute` starts a bounded worker with its assignment and Execution
-Context Package or snapshot-based capsule. It must respect those boundaries
-rather than rediscovering the whole project.
-
-`context_resolve` and `context_compile` are deprecated compatibility modes that
-write into `.pf/contexts/`. Run/Task/session APIs remain available for explicit
-compatibility and operator uses; they are not an ordinary-work fallback.
+The mode labels include `resume`, `project_init`, `assignment_execute`,
+`context_resolve`, `context_compile` and `doctor_context`. To create a project
+use [project onboarding](../getting-started/project-onboarding.md). To launch
+a worker use the [worker lifecycle](action-discovery.md). The session command
+records the mode supplied by the caller.
 
 ## Rules
 
@@ -60,4 +52,4 @@ compatibility and operator uses; they are not an ordinary-work fallback.
 - Ordinary work must not install, start or repair Runtime, MCP, hooks or Ledger.
   Report infrastructure blockers to the operator.
 
-The file-only bootstrap needs no backend, database, dashboard or mandatory runner.
+The CLI can run this bootstrap locally. Project events use the [SQLite journal](hook-journal-sqlite.md).

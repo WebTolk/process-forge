@@ -67,6 +67,6 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 python .pf/runtime/bin/pf.py project-context-check --project-root .
 ```
 
-Из обычного проекта не вызывайте `python bin/pf.py`. Используйте проектный
-launcher и тот же интерпретатор Python, в котором установлен PyYAML.
+В подключённом проекте используйте проектный launcher и интерпретатор Python
+с зависимостями из `requirements.txt` дистрибутива.
 Полный порядок описан в [инициализации](initialization-order.md).

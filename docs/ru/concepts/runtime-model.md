@@ -16,10 +16,11 @@ boundary.
 наблюдения за исполнителями и оперативного состояния. Это долгоживущий процесс
 PF Runtime, доступный через существующие команды runtime/server.
 
-Приложение-хост отдельно запускает stdio-процесс MCP и управляет им.
-Запуск или перезапуск app-server не запускает и не перезагружает MCP.
-Обновление файлов Core не меняет код, уже загруженный подключённым хостом.
-Действия с инфраструктурой выполняет уполномоченный оператор.
+Приложение управляет stdio-соединением MCP. В Garage новый запрос к ядру
+запускает дочерний процесс. При включённом `coordination.director_enabled`
+рабочего места мост обращается к запущенному Runtime. После совместимого
+обновления следующий запрос через то же соединение может попасть в новый
+дочерний процесс или перезапущенный Runtime. [Маршрутизация и обновления MCP](mcp-updates.md)
 
 ## Долговечные файлы проекта
 
@@ -32,7 +33,8 @@ File layout является runtime contract:
 - `.pf/artifacts/`, `.pf/reviews/` и `.pf/handoffs/` хранят evidence и delivery material.
 - `.pf/runtime/events/events.sqlite3` хранит необязательную историю и необходимые ID и факты проверки.
 - `.pf/runtime/agent-events/hooks.sqlite3` хранит квитанции хуков, незавершённую обработку и необязательные сырые данные.
-- `.pf/runtime/agent-runs/` хранит optional worker process state.
+- `.pf/data/pf.sqlite3` — стандартная привязанная база попыток запуска и текущего состояния исполнителей.
+- `.pf/runtime/agent-runs/` хранит квитанции, выход исполнителей и проекции для совместимости. [Хранилище исполнений](execution-storage.md)
 - `.pf/runtime/supervisor/` хранит optional supervisor loop state.
 
 ## Приём хуков проекта
@@ -146,10 +148,10 @@ Request или event с другим project отклоняется. Это со
 
 Codex hooks — тонкие fact adapters. Они нормализуют documented lifecycle или
 tool facts, добавляют existing PF events и делегируют check-in, heartbeat и
-checkout в Core. Stdio MCP facade в основном bounded/read-oriented, но также
-предоставляет governed mutation tools для project initialization, repair и work
-bootstrap. Эти mutating tools ограничены и требуют guard inputs, например
-`apply: true`.
+checkout в Core. Через MCP также доступны создание Work, чтение состояния,
+переход, отмена и продолжение, подготовка, запуск и сбор результата исполнителя,
+инициализация и восстановление проекта. У каждого действия свои идентификаторы,
+права и требования к `apply`. [Каталог действий](action-discovery.md)
 
 Stdio MCP process принадлежит MCP host, а не PF Runtime autostart. Codex
 запускает его из host MCP configuration для каждой connected session. См.

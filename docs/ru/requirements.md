@@ -6,19 +6,20 @@ PF Runtime, MCP, хуки Codex или вручную открытая сесс�
 
 ## Python и библиотеки
 
-Рекомендуется **Python 3.11+**. Текущие приёмочные проверки выполнены на
-**CPython 3.14.3 под Windows**. Это не подтверждает совместимость со всеми
-сочетаниями версий Python и операционных систем. Успешный разбор исходников
-старой грамматикой Python не заменяет запуск проверок на нужном интерпретаторе.
+Используйте **Python 3.11+**. Проверки публичных исходников выполняются на
+Python 3.11 под Windows и Ubuntu. На другом Windows-устройстве зафиксированы
+CPython 3.14.3 и версия SQLite. Результаты относятся к проверенным сочетаниям.
+[Матрица CI](../../.github/workflows/repository-checks.yml) · [Отчёт устройства](https://github.com/WebTolk/process-forge/issues/110)
 
 | Компонент | Требование и назначение |
 | --- | --- |
-| PyYAML | `PyYAML>=6.0` — единственная внешняя Python-зависимость в `requirements.txt`. Используется для чтения и записи конфигурации и артефактов YAML. |
+| PyYAML | `PyYAML>=6.0` используется для чтения и записи YAML-конфигурации и артефактов. |
+| jsonschema | Ядро использует пакет для валидации JSON Schema. Установите зависимости из `requirements.txt`. |
 | `sqlite3` | Нужны модуль стандартной библиотеки Python и сборка SQLite с поддержкой UPSERT. Локальные журналы событий и входящих хуков используют транзакции, WAL и `synchronous=FULL`. Отдельный сервер БД не нужен. |
 | SQLite FTS5 | Нужен для индексированного полнотекстового поиска по ресурсам. PF проверяет наличие расширения; без него сообщает `degraded` / `fts5_unavailable`. Работающий журнал ещё не подтверждает наличие FTS5. |
 | `ssl` и доверенные CA | Нужны для загрузок по HTTPS и исходящих HTTPS-запросов. Python должен поддерживать SSL и доверять цепочке сертификатов сервера. В Windows исходящие запросы используют системные хранилища сертификатов. |
 | `zlib` и `zipfile` | Нужны для чтения сжатых архивов релизов и обновлений, а также для создания ZIP с DEFLATE. Для этих операций урезанной сборки Python без `zlib` недостаточно. |
-| `venv` и `pip` | Нужны при настройке изолированного окружения и установке PyYAML. В некоторых ОС устанавливаются отдельными пакетами. Это инструменты настройки, а не фоновые службы. |
+| `venv` и `pip` | Создают изолированное окружение и устанавливают пакеты из `requirements.txt`. В некоторых дистрибутивах ОС эти инструменты поставляются отдельно. |
 | Windows `ctypes` | Нужен для сохранения прав доступа к файлам, диагностики процессов и нативных исходящих запросов в Windows. Сборка Python должна включать рабочие привязки к Windows API. |
 
 CLI, MCP и HTTP-службы используют стандартную библиотеку Python. Внешний MCP
@@ -67,7 +68,7 @@ app-server резерв нужен каждому процессу. Обычна
 
 ```bash
 python --version
-python -m pip show PyYAML
+python -m pip show PyYAML jsonschema
 python -c "import sqlite3, ssl, zlib, venv, yaml; print('PyYAML', yaml.__version__); print('SQLite', sqlite3.sqlite_version); print('SSL', ssl.OPENSSL_VERSION); print('zlib', zlib.ZLIB_VERSION)"
 python -c "import sqlite3; db = sqlite3.connect(':memory:'); db.execute('CREATE TABLE probe (id INTEGER PRIMARY KEY, value TEXT)'); db.execute('INSERT INTO probe VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET value=excluded.value', ('ok',)); db.execute('CREATE VIRTUAL TABLE search_probe USING fts5(content)'); db.close(); print('UPSERT and FTS5 available')"
 python bin/pf.py version

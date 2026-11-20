@@ -20,7 +20,10 @@ The project file is `.pf/diagnostics.json`; its version 1 shape is defined by [`
 }
 ```
 
-`work` is keyed by exact run id and `sessions` by exact session id. Each value may override the same settings as the project layer, including `locked`. The resolution order is defaults, project, matching Work, matching session, `PF_DIAGNOSTICS` JSON, then command invocation options. A `locked` field prevents later layers from changing that setting. Limits can only be lowered from the current layer's value. Invalid configuration uses the safe quiet/stderr fallback and reports a health/configuration error; it must not change the business operation.
+`work` is keyed by exact run ID and `sessions` by exact session ID. The
+resolution order is defaults, project, matching Work, matching session,
+`PF_DIAGNOSTICS` JSON, then invocation options. A layer can lock a setting
+against later changes. Size and collection limits can only be tightened.
 
 The profiles set detail defaults: `quiet` uses `warning`; `normal` uses `info`; `diagnostic` and `trace` use `debug`; `off` disables optional diagnostics. A threshold includes that severity and all more severe levels. The canonical levels and Python numeric mapping are:
 
@@ -57,7 +60,9 @@ These commands are implemented in the source tree. Their availability still depe
 
 `diagnostics-status` is an inspection operation: it shows effective values and their sources, locks, configuration errors, expiry state, and bounded health counters for the current process. Each retained canonical record also carries a snapshot of the counters at the time it was written. `diagnostics-export` reads only ProcessForge diagnostic JSONL, filters by request/run/time, sanitizes a local bundle, and creates the requested new file without overwrite. It does not repair context, restart a service, or upload data. Check the intended recipient and inspect the sanitized result before sharing it.
 
-If configuration is invalid, collection fails closed to `off`; a fixed, non-sensitive health notification may still be written to stderr so operators can discover the fallback. It does not include rejected configuration values and does not bypass a locked sink or privacy policy.
+Invalid project configuration selects profile `off` and sink `none`. The
+logger can still issue a fixed configuration-health notice on stderr. Rejected
+configuration values are omitted from the notice.
 
 ## Privacy and failure behavior
 

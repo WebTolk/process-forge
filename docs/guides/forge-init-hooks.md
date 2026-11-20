@@ -18,6 +18,7 @@ Garage keeps its existing optional installation behavior, including its current
 | Agent | Native PF integration | Configuration |
 | --- | --- | --- |
 | Codex | Existing `codex-hooks` adapter, `codex-hooks.v1` envelope | Project-local `.codex/hooks.json` |
+| Kimi | Registered `kimi-hooks` ingress adapter | The initializer prepares Codex configuration only. |
 | Claude Code, Cursor, Gemini CLI | No registered native PF hook adapter in this distribution | No hook files generated |
 
 Codex setup reuses the bundled installer and its existing command format
@@ -26,7 +27,7 @@ SessionStart, SessionEnd, PostToolUse, UserPromptSubmit, PreCompact, PostCompact
 Stop and SubagentStop. This identifies the supported bundled protocol, not a
 claim that every Codex binary version supports or has trusted the hook layer.
 No agent binary is installed, detected by guessing a version, or restarted.
-Other agents need a bounded native adapter/ingress contract before auto-setup.
+The [provider registry](../concepts/provider-adapters.md) lists the supported input adapters.
 
 ## Results and recovery
 

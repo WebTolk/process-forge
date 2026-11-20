@@ -3,19 +3,28 @@
 
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
     checks = {
-        "README.md": ["Garage mode does not require PF Runtime", "Runtime, host telemetry, and worker orchestration are opt-in"],
-        "README.ru.md": ["Режим гаража не требует PF Runtime", "Runtime, host telemetry и worker orchestration подключаются"],
-        "docs/getting-started/runtime-autostart.md": ["Garage does not require PF Runtime"],
-        "docs/ru/getting-started/runtime-autostart.md": ["Garage не требует PF Runtime"],
+        "README.md": (
+            "Garage mode does not require PF Runtime",
+            "Forge MCP connection uses the workplace Runtime",
+        ),
+        "README.ru.md": (
+            "Режим гаража не требует PF Runtime",
+            "Подключение MCP в Forge использует Runtime рабочего места",
+        ),
+        "docs/getting-started/runtime-autostart.md": [
+            "Garage does not require PF Runtime"
+        ],
+        "docs/ru/getting-started/runtime-autostart.md": [
+            "Garage не требует PF Runtime"
+        ],
     }
     for rel, markers in checks.items():
-        text = (ROOT / rel).read_text(encoding="utf-8")
+        text = " ".join((ROOT / rel).read_text(encoding="utf-8").split())
         for marker in markers:
             if marker not in text:
                 raise AssertionError(f"{rel} missing: {marker}")

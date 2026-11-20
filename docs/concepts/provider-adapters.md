@@ -37,7 +37,11 @@ For worker capture, the adapter supplies neutral facts such as run, task, attemp
 
 The normalized Runtime compatibility adapter accepts only its already-normalized event on the authenticated Runtime path and rejects conversation messages. This preserves that transport's existing authentication boundary; it is not a general alternate-provider ingress route.
 
-Generic project initialization and status treat Codex telemetry as optional. Missing or bounded failures in the optional status callback produce an unavailable informational read-model instead of blocking generic readiness. Hook installation remains an explicit `install_codex_hooks` repair action and requires the normal apply acknowledgement; initialization does not install hooks automatically.
+Project initialization uses the linked workplace’s default mode to decide
+whether Codex registration is required. An `organized` default includes it in
+the plan and apply step. In Garage the status is informational and operators
+can request `install_codex_hooks` explicitly. The adapter registry also accepts
+Kimi events from a configured producer. [Initialization and repair](../guides/forge-init-hooks.md)
 
 These statements describe the source checkout. Installed Core, Workplace, and connected-host acceptance are separate T06 evidence and are not implied by source tests or documentation.
 

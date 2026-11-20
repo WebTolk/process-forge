@@ -30,10 +30,10 @@ See the [agent runbook](docs/getting-started/agent-prompts.md) for the full cycl
 
 | | Garage | Forge |
 |---|---|---|
-| Runtime daemon | Not required | Required when coordination uses it |
-| MCP | Optional; started by the host | Optional; started by the host |
-| Ledger session | Not needed for context/search/resolve/work.start | Used for orchestration |
-| Hooks | Optional host telemetry | Optional host-specific telemetry |
+| Runtime service | Optional for local CLI and Garage MCP | Required for the Forge MCP backend |
+| MCP | Host starts stdio when selected | Host starts stdio and connects to Runtime |
+| Ledger session | Project context and Work operations accept project/Work selectors | Session views require a bound Ledger session |
+| Codex hooks | Optional collection via `runtime.garage_hooks` | Project initialization prepares the handlers on a workplace with an `organized` default |
 | Director | No | Yes when coordination requires it |
 | Runtime autostart | Not needed | Optional when using the service |
 
