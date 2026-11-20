@@ -65,4 +65,4 @@ and grammar. The behavioral corrections below were traced to their owners.
   Onboarding a project and launching a worker have separate entry points. [Session bootstrap](../concepts/session-bootstrap.md)
 - Invalid project diagnostic settings select `off/none`. The CLI uses both
   PyYAML and jsonschema, and the source CI matrix uses Python 3.11 on Windows
-  and Ubuntu. [Diagnostics](../../src/processforge_core/diagnostics.py) · [Dependencies](../../requirements.txt) · [CI matrix](../../.github/workflows/repository-checks.yml)
+  and Ubuntu. [Diagnostics](../../src/processforge_core/diagnostics.py) · [Dependencies](../../requirements.txt) · [CI matrix](https://github.com/WebTolk/process-forge/blob/a4ecea35a83e9c5b8d1f2f683714ee3b3268eba6/.github/workflows/repository-checks.yml)

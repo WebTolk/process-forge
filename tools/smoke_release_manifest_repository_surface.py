@@ -6,7 +6,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from release_metadata_contract import ARCHIVE_NAME, RELEASE_VERSION, SIDECAR_NAME, load_json
+from release_metadata_contract import (
+    ARCHIVE_NAME,
+    RELEASE_VERSION,
+    SIDECAR_NAME,
+    load_json,
+)
 
 
 def main() -> int:
@@ -23,10 +28,11 @@ def main() -> int:
     missing = [str(path) for path in paths if not path.is_file()]
     if missing:
         raise AssertionError("missing release surface: " + ", ".join(missing))
-    sidecar = load_json(paths[1])
-    historical = load_json(paths[2])
-    if sidecar != historical:
-        raise AssertionError("historical release sidecar differs from the shipped sidecar")
+    load_json(paths[1])
+    if paths[1].read_bytes() != paths[2].read_bytes():
+        raise AssertionError(
+            "historical release sidecar differs from the shipped sidecar"
+        )
     print("PASS: repository release metadata surface is complete")
     return 0
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify immutable 1.2.0 asset URLs and archive integrity metadata."""
+"""Verify versioned stable asset URLs and archive integrity metadata."""
 
 from __future__ import annotations
 
@@ -25,25 +25,51 @@ def main() -> int:
     parser.add_argument("--archive")
     args = parser.parse_args()
     root = Path(args.root).resolve()
-    manifest_path = Path(args.manifest).resolve() if args.manifest else root / "release" / "updates" / "processforge-stable.json"
-    archive = Path(args.archive).resolve() if args.archive else root / "dist" / ARCHIVE_NAME
+    manifest_path = (
+        Path(args.manifest).resolve()
+        if args.manifest
+        else root / "release" / "updates" / "processforge-stable.json"
+    )
+    archive = (
+        Path(args.archive).resolve() if args.archive else root / "dist" / ARCHIVE_NAME
+    )
     manifest = load_json(manifest_path)
     version = release_version(manifest)
-    if version.get("channels") != ["stable"] or version.get("prerelease") is not False or version.get("yanked") is not False:
-        raise AssertionError("1.2.0 is not the sole active stable release")
+    if (
+        version.get("channels") != ["stable"]
+        or version.get("prerelease") is not False
+        or version.get("yanked") is not False
+    ):
+        raise AssertionError(f"{RELEASE_VERSION} is not the sole active stable release")
     artifacts = version.get("artifacts")
-    if not isinstance(artifacts, list) or len(artifacts) != 1 or not isinstance(artifacts[0], dict):
+    if (
+        not isinstance(artifacts, list)
+        or len(artifacts) != 1
+        or not isinstance(artifacts[0], dict)
+    ):
         raise AssertionError("stable release must contain exactly one ZIP artifact")
     artifact = artifacts[0]
     expected_url = f"{ASSET_BASE_URL}/{ARCHIVE_NAME}"
     expected_provenance = f"{ASSET_BASE_URL}/{SIDECAR_NAME}"
-    if artifact.get("url") != expected_url or artifact.get("provenance_url") != expected_provenance:
-        raise AssertionError("stable manifest URLs are not immutable v1.2.0 GitHub Release assets")
-    if artifact.get("sha256") != sha256_file(archive) or artifact.get("size") != archive.stat().st_size:
-        raise AssertionError("stable manifest archive hash or size does not match dist artifact")
+    if (
+        artifact.get("url") != expected_url
+        or artifact.get("provenance_url") != expected_provenance
+    ):
+        raise AssertionError(
+            "stable manifest URLs do not match the versioned GitHub Release assets"
+        )
+    if (
+        artifact.get("sha256") != sha256_file(archive)
+        or artifact.get("size") != archive.stat().st_size
+    ):
+        raise AssertionError(
+            "stable manifest archive hash or size does not match dist artifact"
+        )
     if "1.2.1" in manifest_path.read_text(encoding="utf-8"):
         raise AssertionError("updater-test versions leaked into the stable manifest")
-    print(f"PASS: stable manifest points to immutable ProcessForge {RELEASE_VERSION} assets")
+    print(
+        f"PASS: stable manifest points to immutable ProcessForge {RELEASE_VERSION} assets"
+    )
     return 0
 
 
