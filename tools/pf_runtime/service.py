@@ -1346,7 +1346,7 @@ class RuntimeProcess:
                     payload = self.read_body()
                     if self.path in {"/mcp", "/work/start"}:
                         from pf_runtime.mcp_server import operator_work_start, respond
-                        from processforge_core.bootstrap import RuntimeBootstrap
+                        from processforge_core.bootstrap import build_runtime_bootstrap
 
                         if (
                             payload.pop("expected_instance_id", None)
@@ -1354,7 +1354,7 @@ class RuntimeProcess:
                         ):
                             self.send_json(409, {"error": "runtime_instance_mismatch"})
                             return
-                        bootstrap = RuntimeBootstrap(
+                        bootstrap = build_runtime_bootstrap(
                             repo_root=Path(__file__).resolve().parents[2],
                             core=runtime.core,
                             host=host,

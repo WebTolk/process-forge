@@ -145,6 +145,22 @@ def _load_legacy_core(repo_root: Path) -> ModuleType:
     return module
 
 
+def build_runtime_bootstrap(
+    repo_root: Path, core: ModuleType, host: ModuleType, service: ModuleType
+) -> RuntimeBootstrap:
+    """Wire Work publication to the Core already loaded by this entry point."""
+    from .agents.process_events import ProcessEventRecorder
+
+    runtime = RuntimeBootstrap(
+        repo_root=repo_root,
+        core=core,
+        host=host,
+        service=service,
+    )
+    object.__setattr__(runtime, "_process_events", ProcessEventRecorder())
+    return runtime
+
+
 def bootstrap_runtime(caller_file: str | Path) -> RuntimeBootstrap:
     repo_root = _repo_root_from(caller_file)
     _ensure_sys_path(repo_root / "src")
@@ -152,15 +168,8 @@ def bootstrap_runtime(caller_file: str | Path) -> RuntimeBootstrap:
     core = _load_legacy_core(repo_root)
     host = importlib.import_module("pf_runtime.host")
     service = importlib.import_module("pf_runtime.service")
-    runtime = RuntimeBootstrap(
-        repo_root=repo_root,
-        core=core,
-        host=host,
-        service=service,
-    )
-    from .agents.process_events import ProcessEventRecorder
+    runtime = build_runtime_bootstrap(repo_root, core, host, service)
     from .presentation.work_summaries import WorkSummaryRenderer
 
-    object.__setattr__(runtime, "_process_events", ProcessEventRecorder())
     object.__setattr__(runtime, "_work_summaries", WorkSummaryRenderer())
     return runtime
