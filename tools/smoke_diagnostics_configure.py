@@ -13,7 +13,31 @@ sys.path.insert(0, str(ROOT / "src"))
 from processforge_core import diagnostics as d
 
 
+def check_max_duration() -> None:
+    # Cover both rounding directions, a whole-second carry and an exact instant.
+    for now, expected in (
+        (1_700_000_000.0000007, "2023-11-14T22:28:20+00:00"),
+        (1_700_000_000.0000002, "2023-11-14T22:28:20+00:00"),
+        (1_700_000_000.9999998, "2023-11-14T22:28:20.999999+00:00"),
+        (1_700_000_000.125, "2023-11-14T22:28:20.125000+00:00"),
+        (1_700_000_000 + 7 / 4096, "2023-11-14T22:28:20.001708+00:00"),
+    ):
+        for profile in ("diagnostic", "trace"):
+            _, report = d.configure_proposal({}, profile, duration=900, now=now)
+            assert report["change"]["expires_at"] == expected
+            assert report["effective"]["values"]["profile"] == profile
+
+    beyond_limit = {"profile": "trace", "expires_at": "2023-11-14T22:28:20.000001Z"}
+    try:
+        d.resolve_config(("project", beyond_limit), now=1_700_000_000.0000007)
+    except ValueError as exc:
+        assert "within 15 minutes" in str(exc)
+    else:
+        raise AssertionError("accepted an explicit deadline beyond the limit")
+
+
 def main():
+    check_max_duration()
     now = time.time()
     original = {"schema_version": 1, "sink": "none", "work": {"other": {"profile": "quiet"}}, "sessions": {"keep": {"profile": "off"}}}
     proposed, report = d.configure_proposal(original, "diagnostic", run_id="exact-work", duration=120, now=now)
@@ -43,13 +67,33 @@ def main():
         path.write_text(json.dumps(original))
         env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
         env.pop("PF_DIAGNOSTICS", None)
-        command = [sys.executable, "-B", str(ROOT / "bin/pf.py"), "diagnostics-configure", "--project-root", str(project), "--profile", "diagnostic", "--session-id", "new", "--duration", "60"]
+        command = [
+            sys.executable,
+            "-B",
+            str(ROOT / "bin/pf.py"),
+            "diagnostics-configure",
+            "--project-root",
+            str(project),
+            "--profile",
+            "diagnostic",
+            "--session-id",
+            "new",
+        ]
+        maximum = [*command, "--duration", "900"]
         before = {p.relative_to(project).as_posix(): p.read_bytes() for p in project.rglob("*") if p.is_file()}
-        result = subprocess.run(command, capture_output=True, env=env, timeout=30)
+        result = subprocess.run(maximum, capture_output=True, env=env, timeout=30)
         assert result.returncode == 0, result.stderr
         assert json.loads(result.stdout)["action"] == "plan"
         assert before == {p.relative_to(project).as_posix(): p.read_bytes() for p in project.rglob("*") if p.is_file()}
-        result = subprocess.run([*command, "--apply"], capture_output=True, env=env, timeout=30)
+        result = subprocess.run(
+            [*command, "--duration", "901", "--apply"],
+            capture_output=True,
+            env=env,
+            timeout=30,
+        )
+        assert result.returncode == 1, (result.stdout, result.stderr)
+        assert path.read_bytes() == before[".pf/diagnostics.json"]
+        result = subprocess.run([*maximum, "--apply"], capture_output=True, env=env, timeout=30)
         assert result.returncode == 0, result.stderr
         after = json.loads(path.read_text())
         assert after["work"] == original["work"] and after["sessions"]["keep"] == original["sessions"]["keep"]
