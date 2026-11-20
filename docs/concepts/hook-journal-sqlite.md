@@ -4,7 +4,7 @@ Project journals preserve hook acceptance and the facts used by Work checks.
 They are private operational data, separate from public artifacts and reports.
 Use the [requirements](../requirements.md) for supported SQLite and storage.
 
-Each validated project owns two private local databases:
+The project’s event and hook journals occupy two private SQLite files.
 
 | File | Owner and purpose |
 | --- | --- |
@@ -20,9 +20,13 @@ For a live backup use SQLite's backup API rather than copying only the DB file.
 
 Admission IDs are unique in SQL. Appends never load previous history to find a
 duplicate. Indexed methods provide ID/latest/assignment lookups, constant-size
-stored counts and keyset pages (`after` sequence, `limit` 1–1000). Sequence gaps
-are valid; a cursor is not a line number. Full iteration is reserved for
-explicit export, doctor, migration or history rebuild.
+stored counts and keyset pages (`after` sequence, `limit` 1–1000). The cursor
+is the last returned sequence and gaps are valid. On a store bound to a
+project identity, a library reader needs the configured storage host. Runtime
+obtains it through `ProcessEventRecorder.event_journal_for_project`. Opening
+such a journal by path alone can return `storage_host_required`. A page read
+includes storage checks, the indexed query and decoding the selected records.
+Explicit validation, export, migration and rebuild can visit the full history.
 
 Raw acceptance commits before project effects. Cross-owner effects are
 recoverable, not one cross-database transaction: deterministic IDs make retry
@@ -30,17 +34,23 @@ safe; pending raw input remains until completion; pending project hook dispatch
 is retried by duplicate admission or the Runtime tick. External command/API
 execution is not introduced by this migration.
 
-`logging.raw_hooks` and `logging.events` inherit device defaults with independent
-project overrides. Disabling history preserves minimal admissions, pending work
+`logging.raw_hooks` and `logging.events` follow the effective PFConfig for
+the operation, including device, workplace and project settings. Disabling
+history preserves minimal admissions, pending work
 and latest verification facts. It does not suspend Work or chat delivery. The
 existing transcript owner stores conversation bodies; event history refers to
 them. These settings do not erase earlier data or promise physical secure erasure.
 See [configuration](../authoring/workplace-configuration.md#project-history-and-raw-hooks).
 
-## Journals that remain NDJSON
+## Other project and workplace storage
 
-This migration changes the two project journals above. Other owners retain
-their own formats:
+Worker execution state has a separate SQL store, by default
+`.pf/data/pf.sqlite3`. Work stages, assignments and capsules remain in project
+files. The default diagnostic sink writes rotating JSONL in
+`.pf/runtime/diagnostics/`. [Execution storage](execution-storage.md) ·
+[Diagnostics](diagnostics.md)
+
+The following streams use NDJSON.
 
 | Scope | File | Purpose |
 | --- | --- | --- |

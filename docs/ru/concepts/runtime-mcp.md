@@ -43,15 +43,15 @@ backend, без перехода на локальный Core. См.
 
 ## Инструменты проекта и Work
 
-Garage read tools принимают явный `project_root` и не требуют session identity,
-hooks, daemon, Ledger event, Director process или chat transcript. Session и
-Forge tools по-прежнему требуют session identity (`--session`,
-`PF_MCP_SESSION_ID` или `session_id`), которая уже существует в Agent Ledger.
+Для чтения контекста проекта можно передать `project_root`. Для выбранной
+Work передаются идентификаторы run, assignment и context. Для чтения данных
+сессии нужна её привязка в Ledger через `--session`, `PF_MCP_SESSION_ID`
+или `session_id`. Эти правила действуют и при обработке запроса Runtime в
+Forge. [Выбор Work](work-continuation.md)
 
-Обычная инициализация проекта не зависит от host и не устанавливает Codex
-hooks, а также не запускает Runtime infrastructure. Телеметрия Codex hooks —
-опциональная host-интеграция, которую оператор включает явно, если нужен сбор
-Forge sessions.
+Инициализация использует ту же службу ядра, что и CLI. Если режим связанного
+workplace по умолчанию — `organized`, применение плана готовит проектную
+конфигурацию хуков Codex. [Настройка хуков Forge](../guides/forge-init-hooks.md)
 
 Доступные tools: `pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.project_initialization.initialize`,

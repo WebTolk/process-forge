@@ -11,12 +11,12 @@ the direct commands below are for operators with explicit paths and choices.
 
 | | Garage | Forge |
 |---|---|---|
-| Runtime daemon | Not required | Required when coordination uses it |
-| MCP | Optional host-owned stdio process; CLI works without it | Host-owned stdio when selected |
-| Ledger session | Not needed for `pf.context/search/resolve/work.start` | Used for orchestration |
-| Hooks | Optional host telemetry | Forge admission checks; host telemetry when selected |
-| Director | No | Yes when required by coordination |
-| Runtime autostart | Not needed | Recommended/required |
+| Runtime service | Optional for local CLI and Garage MCP | Required for the Forge MCP backend |
+| MCP | Host-owned stdio when selected | Host-owned stdio forwards requests to the workplace Runtime |
+| Ledger session | Project context and Work operations accept project/Work selectors | Session views require a bound Ledger session |
+| Codex hooks | Optional collection via `runtime.garage_hooks` | Onboarding on a workplace with an `organized` default prepares the handlers |
+| Director | No | Used for organized coordination |
+| Runtime autostart | Optional | Optional Windows facility for starting the service at logon |
 
 The normal project-agent path is `pf.context -> pf.search -> pf.resolve ->
 pf.work.start`. Current context outranks historical generated reports. Runtime,
@@ -138,10 +138,10 @@ python bin/pf.py chat-record --project-root <project-root> --session-id session-
 python bin/pf.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
 ```
 
-`chat-record` writes `.pf/runtime/chat/transcripts/<session-id>.ndjson` and
-emits `chat.message.recorded`. By default, exported payloads include metadata,
-hashes, and local content references; full redacted content requires
-`--include-content`.
+`chat-record` writes a private `session-<identity-digest>.ndjson` transcript
+and emits `chat.message.recorded`. Default exports contain metadata, hashes
+and local references. Use `--include-content` for redacted text.
+[Transcript location and legacy reads](concepts/chat-relay.md)
 
 ## Validation
 

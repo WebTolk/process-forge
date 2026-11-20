@@ -43,14 +43,15 @@ including when dispatch fails; an explicit null `id` remains a request.
 
 ## Use the project and Work tools
 
-Garage read tools accept an explicit `project_root` and do not require a session identity,
-hooks, daemon, Ledger event, Director process, or chat transcript. Session and
-Forge tools still require a session identity (`--session`, `PF_MCP_SESSION_ID`,
-or `session_id`) that already exists in Agent Ledger.
+Project-scoped context reads accept `project_root`. A selected Work can be
+addressed by its run, assignment and context IDs. Session views require an
+existing Ledger binding supplied by `--session`, `PF_MCP_SESSION_ID` or
+`session_id`. These identity rules also apply when the Forge Runtime handles
+the request. [Work selection](work-continuation.md)
 
-Generic project initialization is host-agnostic. It does not install Codex
-hooks or start Runtime infrastructure. Codex hook telemetry is an optional,
-explicit host integration for operators who need Forge session capture.
+Project initialization uses the same onboarding service as the CLI. When
+the linked workplace’s default project mode is `organized`, apply prepares
+the project-local Codex hook configuration. [Forge hook setup](../guides/forge-init-hooks.md)
 
 Available tools are `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
 `pf.project_initialization.initialize`, `pf.project_initialization.repair`,

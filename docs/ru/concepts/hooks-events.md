@@ -31,32 +31,24 @@ SQLite хранит уникальные квитанции, данные нез
 
 ## Codex adapter and registration
 
-`tools/pf_runtime/codex_hooks.py` — тонкий adapter. Normalized mappings включают
-session lifecycle, compaction и tool facts. Каждый зарегистрированный event
-принимается raw-first. `UserPromptSubmit` записывает user prompt, `Stop` и `SessionEnd`
-записывают переданное поле `last_assistant_message`, а `SubagentStop` — переданное
-итоговое сообщение subagent, когда их Ledger session и project binding валидны.
+Адаптер Codex распознаёт события сессии, сжатия контекста и вызовов инструментов.
+При включённом сборе и действующей привязке `UserPromptSubmit` может записать
+сообщение пользователя. `Stop`, `SessionEnd` и `SubagentStop` могут записать
+переданное итоговое сообщение. Хранение исходных данных регулирует
+`logging.raw_hooks`. Полнота стенограммы зависит от полей, которые доставил хост.
 
-Эта возможность не доказывает, что все Codex hooks зарегистрированы в
-environment. Distribution не устанавливает host `.codex/hooks.json`. Adapter
-acceptance, normalized mapping, conversation mapping и фактическая host
-registration являются разными фактами. Unknown native events могут остаться
-raw-only.
-
-Generic interactive Codex assistant responses и host subagent responses
-captured only where Codex предоставляет `last_assistant_message`; interim
-streaming output и unavailable provider fields остаются raw-only или absent.
-
-Используйте `tools/pf_runtime/codex_integration.py` только как explicit opt-in
-для merge project-local registration. Он не доказывает, что Codex реально
-загрузил или trusted hooks; проверяйте `/hooks` в целевом Codex client. См.
-[Codex Session Read Layer](../../concepts/codex-session-read.md).
+Если режим workplace по умолчанию — `organized`, инициализация проекта готовит
+восемь обработчиков в `.codex/hooks.json`. В Garage оператор может добавить их
+через `tools/pf_runtime/codex_integration.py`. Активацию показывает `/hooks`
+в конкретном клиенте Codex. [Настройка хуков](../guides/forge-init-hooks.md) ·
+[Чтение данных сессии](../../concepts/codex-session-read.md)
 
 ## Project hooks
 
-Project outbox routing настраивается в `.pf/hooks.yaml`; это отдельно от
-host-native hook registration. Проверить matching project hooks из linked
-project:
+Диспетчер выбирает включённые цели из `.pf/hooks.yaml` по типу события или
+маске `*`. Сухой прогон перечисляет совпадения. В режиме outbox цель типа
+`webhook` может создать локальный файл. Для `command` записывается результат
+`skipped`. [Маршрутизация событий](../../concepts/hooks-and-webhooks.md)
 
 ```bash
 python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assignment.completed --dry-run

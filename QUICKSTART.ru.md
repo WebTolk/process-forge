@@ -32,10 +32,10 @@ Garage не требует автозапуска Runtime. Для ежеднев
 
 | | Garage | Forge |
 |---|---|---|
-| Runtime daemon | не обязателен | обязателен, когда его требует coordination |
-| MCP | необязателен; запускается приложением | необязателен; запускается приложением |
-| Ledger session | не нужна для context/search/resolve/work.start | используется orchestration |
-| hooks | optional host telemetry | optional host-specific telemetry |
+| Служба Runtime | Локальный CLI и Garage MCP работают без службы | Нужна для запросов через MCP Forge |
+| MCP | Хост запускает stdio при подключении | Хост запускает stdio и обращается к Runtime |
+| Сессия Ledger | Для операций проекта и Work можно передать их идентификаторы | Для чтения данных сессии нужна её привязка в Ledger |
+| Хуки Codex | Сбор включается через `runtime.garage_hooks` | Инициализация готовит обработчики в проекте, если режим workplace по умолчанию — `organized` |
 | Director | нет | да, когда его требует coordination |
 | Runtime autostart | не нужен | необязателен при использовании службы |
 

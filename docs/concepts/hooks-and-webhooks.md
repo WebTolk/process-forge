@@ -1,8 +1,9 @@
 # Hooks And Webhooks
 
-Hooks deliver ProcessForge events without requiring a backend or network send.
-The process definition declares which events matter; `.pf/hooks.yaml` declares
-where matching events are delivered.
+The project dispatcher reads enabled targets from `.pf/hooks.yaml` and matches
+their `event_types` against the event name or `*`. The Codex handlers in
+`.codex/hooks.json` feed observations into PF. Each configuration has its own
+handler or target count. [Native hook setup](../guides/forge-init-hooks.md)
 
 Default config:
 
@@ -14,10 +15,11 @@ The schema is `schemas/hooks.schema.json`.
 
 ## Target Types
 
-- `outbox`: writes a delivery payload under `.pf/runtime/hooks/outbox/`.
-- `webhook`: reserved for future network delivery and disabled by default.
-- `command`: declared for future local command execution and disabled unless a
-  runner explicitly supports it.
+- `outbox` writes a local payload and a delivery result.
+- An enabled `webhook` target can also produce a local payload in outbox mode.
+  The project dispatcher has no network sender.
+- An enabled `command` target produces a skipped result during dispatch.
+  Dry-run lists matching targets of each type.
 
 Inline credentials are not allowed in hook config. Webhooks use `url_ref` and
 `secret_ref` only.

@@ -112,6 +112,7 @@ These pages explain implementation and validation; they are not setup steps:
 - [Document reads and cache boundaries](concepts/document-reads.md)
 - [SQLite journal storage and migration](concepts/hook-journal-sqlite.md)
 - [Development audit evidence](audits/canonical-work-selection-20261016.md)
+- [Two-device measurements and Core documentation audit, November 2026](audits/core-measurements-20261120.md)
 - [Validation](validation/validation.md)
 
 ## Layer Order

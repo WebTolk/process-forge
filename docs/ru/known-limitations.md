@@ -1,10 +1,9 @@
 # Ограничения
 
-ProcessForge сейчас остается file-first инструментом с bounded orchestration
-artifacts.
+В Garage можно вести Work через локальный CLI без фоновой службы. В Forge
+также доступны Runtime рабочего места, подключение MCP и координация исполнителей.
 
-- File-only mode является поддерживаемым режимом по умолчанию.
-- Нет live AI session interception.
+- Захват переписки зависит от событий и полей, переданных хостом.
 - Нативные хуки могут проверять допуск Forge и записывать поддерживаемые события
   host. Внешняя доставка ограничена выбранным механизмом outbox или интеграции.
 - Нет обязательного daemon или watch-events service.
@@ -20,7 +19,7 @@ artifacts.
   Windows Task Scheduler autostart. Watch-events service, public network API,
   web UI и database-backed scheduler не реализованы. Поставляемый драйвер
   `codex-exec` требует отдельно доступного Codex CLI и настройки host.
-- WTAICC integration не реализована.
+- Для WTAICC ядро формирует локальные файлы outbox. Для доставки в удалённую службу нужен отдельный потребитель.
 - `--interactive` — marker первого запуска, а не terminal wizard.
 - External documentation mirroring является планом или stub, пока resources не
   импортированы явно.
@@ -36,8 +35,8 @@ artifacts.
 
 ## Runtime Model
 
-- Python CLI служит входом для файлового режима. Необязательные долгоживущие
-  app-server, MCP и Runtime имеют отдельные жизненные циклы и требования к памяти.
+- CLI выполняет одну команду. У app-server рабочего места (PF Runtime) и
+  stdio-транспорта MCP свои жизненные циклы и требования к памяти.
 - Он не запускает background daemons по умолчанию.
 - Optional PF Runtime service является явным workplace lifecycle host, а не
   требованием для default file-first CLI usage.
@@ -46,8 +45,9 @@ artifacts.
 - Codex MCP registration является host-owned: Codex запускает stdio MCP process
   из своей конфигурации для fresh host session.
 - Managed Linux `systemd --user` Runtime autostart не предоставляется.
-- Codex hooks — optional host-specific telemetry, а не требование generic
-  project readiness.
+- При режиме workplace по умолчанию `organized` инициализация проверяет проектную
+  конфигурацию Codex. В Garage сбор необязателен. Запуском обработчиков управляет
+  клиент. [Настройка хуков](guides/forge-init-hooks.md)
 - Hosted MCP зависит от поддержки stdio MCP выбранным agent host.
 - TUF metadata и key management не реализованы; update trust основан на
   HTTPS, SHA-256, immutable release assets и Git provenance.

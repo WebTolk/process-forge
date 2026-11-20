@@ -19,4 +19,6 @@ Blocking gates keep the file model coherent:
 - completed runs must have summary and handoff files;
 - public run and task files must not contain private absolute paths.
 
-The MVP intentionally does not include multi-agent claim or lease files, file locks, background watchers, a scheduler, a runner, WTAICC drivers, live hook interception, GUI, database, marketplace, or process authoring wizard.
+The batch process records tasks and iterations in Work files. Worker launch,
+leases and supervision use the separate runtime interfaces. Project event
+admissions use the SQLite event journal. [Runtime model](../concepts/runtime-model.md)

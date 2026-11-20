@@ -15,11 +15,11 @@
 
 </div>
 
-ProcessForge is a file-first framework for creating, versioning, and executing
-AI-assisted processes. It is independent of concrete implementation platforms
-and AI providers: domains, toolchains, knowledge packages, templates, runtime
-drivers, and platform contracts are attached through versionable files instead
-of being hardcoded into the core.
+ProcessForge defines processes in versioned files. A project keeps its Work
+records, context capsules and artifacts in files, and uses local SQLite for
+event and hook journals and worker execution state. Domains, toolchains,
+knowledge packages, templates, runtime drivers and platform contracts can be
+attached through versioned definitions. [Runtime model](docs/concepts/runtime-model.md)
 
 To develop ProcessForge itself, start with [CONTRIBUTING.md](CONTRIBUTING.md).
 Coding agents must also follow [AGENTS.md](AGENTS.md). Contributors use working
@@ -70,8 +70,9 @@ Ledger session.
 Use this when work must be split into independent branches. An orchestrator can
 create bounded assignments and capsules, launch or coordinate worker sessions,
 collect their outputs, and integrate the result through handoffs and reviews.
-Runtime, host telemetry, and worker orchestration are opt-in infrastructure for
-this mode.
+The Forge MCP connection uses the workplace Runtime. Project initialization on
+a workplace with an `organized` default prepares the project’s Codex hook
+configuration. The client controls activation. [Forge hook setup](docs/guides/forge-init-hooks.md)
 
 ## Quick Start
 

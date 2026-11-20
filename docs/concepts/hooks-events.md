@@ -26,20 +26,24 @@ independently. See [SQLite journals and migration](hook-journal-sqlite.md).
 
 ## Codex adapter and registration
 
-`tools/pf_runtime/codex_hooks.py` is a thin adapter. Its normalized mappings include session lifecycle, compaction and tool facts. Every registered event is accepted raw-first. `UserPromptSubmit` records the user prompt, `Stop` and `SessionEnd` record a supplied `last_assistant_message`, and `SubagentStop` records the supplied subagent final message when their Ledger session and project binding are valid.
+The Codex adapter maps supported lifecycle, compaction and tool events. With
+collection enabled and a valid binding, `UserPromptSubmit` can record a user
+message. `Stop`, `SessionEnd` and `SubagentStop` can record a supplied final
+message. Payload history follows `logging.raw_hooks`. Conversation coverage
+depends on the fields delivered by the host.
 
-This capability is not proof that every Codex hook is registered in an environment. The distribution does not install a host `.codex/hooks.json`. Adapter acceptance, normalized mapping, conversation mapping and actual host registration are separate facts. Unknown native events can remain raw-only.
-
-Generic interactive Codex assistant responses and host subagent responses are captured only where Codex provides `last_assistant_message`; interim streaming output and unavailable provider fields remain raw-only or absent.
-
-Use `tools/pf_runtime/codex_integration.py` only as an explicit opt-in to merge
-project-local registration. It does not prove Codex actually loaded or trusted
-the hooks; inspect `/hooks` in the target Codex client. See
-[Codex Session Read Layer](codex-session-read.md).
+On a workplace with an `organized` default, project initialization prepares
+eight handlers in `.codex/hooks.json`. In Garage an operator can merge them
+with `tools/pf_runtime/codex_integration.py`. Check `/hooks` in the target
+Codex client for activation. [Hook setup](../guides/forge-init-hooks.md) ·
+[Session reads](codex-session-read.md)
 
 ## Project hooks
 
-Project outbox routing is configured in `.pf/hooks.yaml`; it is distinct from host-native hook registration. Test project hook matching from a linked project:
+The dispatcher selects enabled `.pf/hooks.yaml` targets by event type or
+wildcard. A dry-run lists matches without writing delivery payloads. In outbox
+mode a matching webhook can produce a local file, and a command target is
+reported as skipped. [Project hook dispatch](hooks-and-webhooks.md)
 
 ```bash
 python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assignment.completed --dry-run

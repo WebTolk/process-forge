@@ -171,9 +171,9 @@ python bin/pf.py runtime status --workplace <workplace>
 python bin/pf.py runtime doctor --workplace <workplace>
 ```
 
-Moving Python, its virtual environment or the ProcessForge installation changes
-the scheduled command and requires reinstalling the task. Shell activation is
-not inherited by Task Scheduler; the configured interpreter must have PyYAML.
+If Python, its virtual environment or Core moves, reinstall the task with the
+new paths. Task Scheduler uses the interpreter in its command. Install the
+distribution’s `requirements.txt` into that interpreter.
 
 ## Codex MCP Registration
 
