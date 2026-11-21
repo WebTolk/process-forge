@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from itertools import islice
 from pathlib import Path
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, TextIO
 
 LEVELS = dict(
     debug=10,
@@ -573,8 +573,28 @@ class JsonlSink:
                 handle.write(data)
 
 
+_STDERR_STREAM: contextvars.ContextVar[TextIO | None] = contextvars.ContextVar(
+    "pf_diagnostic_stderr", default=None
+)
+
+
+@contextlib.contextmanager
+def stderr_output(stream: TextIO) -> Iterator[None]:
+    """Use the caller's diagnostic stderr for the lifetime of one operation."""
+    token = _STDERR_STREAM.set(stream)
+    try:
+        yield
+    finally:
+        _STDERR_STREAM.reset(token)
+
+
+def _stderr_stream() -> TextIO:
+    stream = _STDERR_STREAM.get()
+    return stream if stream is not None else sys.stderr
+
+
 def stderr_sink(record: dict[str, Any]) -> None:
-    sys.stderr.write(encode(record).decode("utf-8"))
+    _stderr_stream().write(encode(record).decode("utf-8"))
 
 
 class Logger:
@@ -645,7 +665,7 @@ class Logger:
         if LEVELS[level] >= 40 and time.monotonic() - self._last_warning >= 60:
             self._last_warning = time.monotonic()
             try:
-                sys.stderr.write(
+                _stderr_stream().write(
                     "PF diagnostic_delivery_failed: optional serious record lost; inspect diagnostics health.\n"
                 )
             except Exception:
@@ -1013,7 +1033,7 @@ def for_project(
         )
     except Exception:
         try:
-            sys.stderr.write(
+            _stderr_stream().write(
                 "PF diagnostic_setup_failed: optional diagnostics disabled.\n"
             )
         except Exception:
@@ -1063,7 +1083,7 @@ def _for_project(
             _CACHE[key] = logger
             if config["errors"]:
                 try:
-                    sys.stderr.write(
+                    _stderr_stream().write(
                         "PF diagnostics_config_invalid: optional diagnostics disabled; inspect configuration.\n"
                     )
                 except Exception:

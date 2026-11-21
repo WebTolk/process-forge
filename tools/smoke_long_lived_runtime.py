@@ -4,8 +4,9 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import http.client
+from io import StringIO
 import json
 import os
 import signal
@@ -18,10 +19,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from threading import Barrier
+from typing import Any
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 # Capture before raw_ingress_kernel imports Core.
 import processforge  # noqa: E402, F401
+from pf_runtime import host
 from pf_runtime.raw_ingress_kernel import _strip_windows_extended_prefix
 import smoke_worker_run_shell as worker
 
@@ -104,6 +108,159 @@ def check_concurrent_registrations(endpoint: str, bearer: str, project_a: Path, 
         if code != 200 or not isinstance(project, dict) or Path(str(project.get("project_root"))) != expected_project:
             raise AssertionError(f"{session} did not resolve to its registered project (HTTP {code})")
     print(f"PASS: 12 session registrations with six clients, slowest response {max(durations):.3f}s", flush=True)
+
+
+def check_concurrent_native_actions(
+    endpoint: str, bearer: str, instance: str, project: Path
+) -> None:
+    """Exercise separate MCP results while the Runtime runs a Director/Inspector pass."""
+    ready = Barrier(4)
+
+    def call_tool(
+        session: str, name: str, arguments: dict[str, object]
+    ) -> dict[str, Any]:
+        ready.wait(timeout=10)
+        status, body = http_json(
+            "POST",
+            endpoint + "/mcp",
+            bearer=bearer,
+            payload={
+                "expected_instance_id": instance,
+                "session_id": session,
+                "request": {
+                    "jsonrpc": "2.0",
+                    "id": session,
+                    "method": "tools/call",
+                    "params": {"name": name, "arguments": arguments},
+                },
+            },
+        )
+        assert status == 200, (status, body)
+        messages = body["messages"]
+        assert isinstance(messages, list), body
+        (reply,) = messages
+        assert reply["id"] == session, reply
+        result = reply["result"]
+        assert isinstance(result, dict), reply
+        return result
+
+    def tick() -> None:
+        ready.wait(timeout=10)
+        status, body = http_json(
+            "POST",
+            endpoint + "/tick",
+            bearer=bearer,
+            payload={
+                "project_roots": [str(project)],
+                "director": True,
+                "inspector": True,
+            },
+        )
+        assert status == 200, (status, body)
+        projects = body["projects"]
+        assert isinstance(projects, list), body
+        (entry,) = projects
+        assert entry["director"] == entry["inspector"] == "tick", entry
+
+    sessions = (("sess-a", "codex-a"), ("parallel-0", "parallel-agent-0"))
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        heartbeats = [
+            executor.submit(call_tool, session, "pf.session.heartbeat", {"apply": True})
+            for session, _ in sessions
+        ]
+        refusal = executor.submit(
+            call_tool, "sess-a", "pf.runtime_driver.describe", {"driver": "unregistered"}
+        )
+        scheduler = executor.submit(tick)
+        for (session, agent), future in zip(sessions, heartbeats, strict=True):
+            reply = future.result()
+            assert not reply.get("isError"), reply
+            result = json.loads(reply["content"][0]["text"])
+            assert result["status"] == "completed", result
+            expected = f"HEARTBEAT: {agent} session={session}"
+            assert result["native_summary"] == expected, result
+        refused = refusal.result()
+        assert refused.get("isError") is True, refused
+        assert "driver_not_registered" in refused["content"][0]["text"], refused
+        scheduler.result()
+    print("PASS: concurrent Forge MCP replies, refusal and Runtime scheduling", flush=True)
+
+
+def check_native_action_streams(workplace: Path, project: Path) -> None:
+    """Verify independent native result streams in the calling interpreter."""
+    streams = sys.stdout, sys.stderr
+    arguments = ["--workplace", str(workplace), "--project-root", str(project)]
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        listing = executor.submit(
+            processforge.native_action_result, ["runtime-driver", "list", *arguments]
+        )
+        description = executor.submit(
+            processforge.native_action_result,
+            ["runtime-driver", "describe", "--driver", "manual", *arguments],
+        )
+        listed, described = listing.result(), description.result()
+    assert listed.exit_code == described.exit_code == 0, (listed, described)
+    assert isinstance(listed.value, list) and any(
+        row["id"] == "manual" for row in listed.value
+    ), listed
+    assert isinstance(described.value, dict), described
+    assert described.value["id"] == "manual", described
+    assert sys.stdout is streams[0] and sys.stderr is streams[1]
+
+    with StringIO() as escaped, redirect_stderr(escaped):
+        failure = processforge.native_action_result(
+            [
+                "--diagnostic-sink=both",
+                "runtime-driver", "describe", "--driver", "fixture-driver-absent",
+                *arguments,
+            ]
+        )
+        assert not escaped.getvalue(), escaped.getvalue()
+    assert failure.exit_code == 1, failure
+    assert "runtime driver not found" in failure.stderr, failure
+    records = [
+        json.loads(line) for line in failure.stderr.splitlines() if line.startswith("{")
+    ]
+    assert any(record["code"] == "runtime-driver.failed" for record in records), failure
+    logs = processforge.diagnostics.log_files(project / ".pf/runtime/diagnostics")
+    assert any(
+        json.loads(line).get("code") == "runtime-driver.failed"
+        for path in logs
+        for line in path.read_text(encoding="utf-8").splitlines()
+    ), logs
+    print("PASS: native actions retain separate values and the process streams", flush=True)
+
+
+def check_director_output(workplace: Path, project: Path) -> None:
+    """Exercise a quiet Director tick that actually assigns a waiting handoff."""
+    agent = "director-output-agent"
+    handoff = "director-output-handoff"
+    pf(
+        "agent-checkin", "--workplace", str(workplace), "--project-root", str(project),
+        "--agent", agent, "--session", "director-output-session", "--role", "reviewer",
+    )
+    processforge.save_handoff(
+        project,
+        {
+            "schema_version": 1,
+            "id": handoff,
+            "status": "waiting_for_agent",
+            "to": {"required_role": "reviewer"},
+        },
+    )
+    with StringIO() as escaped, redirect_stdout(escaped):
+        result, status = host.tick_payload(
+            workplace, [project], processforge,
+            director=True, projection=False, presence=False,
+        )
+        assert not escaped.getvalue(), escaped.getvalue()
+    assert status == 0, result
+    ready = processforge.load_yaml_document(
+        project / ".pf" / "handoffs" / handoff / "handoff.yaml"
+    )
+    assert ready["status"] == "ready", ready
+    assert ready["assigned_agent"]["lease_id"] == f"lease-{handoff}-{agent}", ready
+    print("PASS: automatic Director can grant a lease without process output", flush=True)
 
 
 def declared_oversized_request(endpoint: str, bearer: str) -> tuple[int, dict[str, object]]:
@@ -279,6 +436,8 @@ def main() -> int:
         pf("workplace-mode", "set", "--workplace", str(workplace), "--director-enabled", "true", "--director-office-enabled", "true")
         project_a = make_project(root, "project-a", workplace, "organized")
         project_b = make_project(root, "project-b", workplace, "simple")
+        check_native_action_streams(workplace, project_a)
+        check_director_output(workplace, project_a)
 
         try:
             first = start_runtime(workplace)
@@ -313,6 +472,9 @@ def main() -> int:
             pf("runtime", "session-register", "--workplace", str(workplace), "--session", "sess-a", "--agent", "codex-a", "--project-root", str(project_a), "--json")
             pf("runtime", "session-register", "--workplace", str(workplace), "--session", "sess-b", "--agent", "codex-b", "--project-root", str(project_b), "--json")
             check_concurrent_registrations(endpoint, token(workplace), project_a, project_b)
+            check_concurrent_native_actions(
+                endpoint, token(workplace), str(initial_service["instance_id"]), project_a
+            )
 
             event_a = write_event(
                 root / "event-a.json",
