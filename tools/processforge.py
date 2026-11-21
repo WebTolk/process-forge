@@ -8957,7 +8957,7 @@ def command_agent_lease_grant(args: argparse.Namespace) -> int:
         "expires_at": expires.isoformat().replace("+00:00", "Z"),
     }
     save_lease(workplace_root, lease)
-    print(f"LEASE_GRANTED: {lease_id}")
+    command_output(args).write(f"LEASE_GRANTED: {lease_id}")
     return 0
 
 
@@ -9280,6 +9280,7 @@ def _director_presence_current(
 
 
 def command_agent_director_tick(args: argparse.Namespace) -> int:
+    output = command_output(args)
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
@@ -9377,6 +9378,7 @@ def command_agent_director_tick(args: argparse.Namespace) -> int:
                     agent=str(agent.get("agent_id")),
                     session=str(agent.get("session_id") or ""),
                     _selected_presence=agent,
+                    _command_output=output,
                     project_id=getattr(args, "project_id", "")
                     or str(agent.get("project_id") or ""),
                     process=str(
@@ -9411,7 +9413,7 @@ def command_agent_director_tick(args: argparse.Namespace) -> int:
             }
             save_handoff(project_root, handoff)
             changed += 1
-    command_output(args).write(f"DIRECTOR_TICK: changed={changed}")
+    output.write(f"DIRECTOR_TICK: changed={changed}")
     return 0
 
 
@@ -19016,16 +19018,19 @@ def main(argv: list[str] | None = None) -> int:
 
 def native_action_result(argv: list[str]) -> NativeResult:
     """Execute an allowlisted native action with a private result for this call."""
-    with io.StringIO() as stream:
-        output = CommandOutput(stream)
-        error = ""
+    with (
+        io.StringIO() as stdout,
+        io.StringIO() as stderr,
+        diagnostics.stderr_output(stderr),
+    ):
+        output = CommandOutput(stdout)
         try:
             code = int(_run_cli_command(argv, output) or 0)
         except SystemExit as exc:
             code = exc.code if isinstance(exc.code, int) else 1
             if isinstance(exc.code, str):
-                error = exc.code
-        return NativeResult(code, stream.getvalue(), error, output.value)
+                stderr.write(exc.code)
+        return NativeResult(code, stdout.getvalue(), stderr.getvalue(), output.value)
 
 
 def _run_cli_command(argv: list[str] | None, output: CommandOutput | None) -> int:

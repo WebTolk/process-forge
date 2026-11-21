@@ -4,8 +4,9 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import http.client
+from io import StringIO
 import json
 import os
 import signal
@@ -24,6 +25,7 @@ from typing import Any
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 # Capture before raw_ingress_kernel imports Core.
 import processforge  # noqa: E402, F401
+from pf_runtime import host
 from pf_runtime.raw_ingress_kernel import _strip_windows_extended_prefix
 import smoke_worker_run_shell as worker
 
@@ -204,7 +206,61 @@ def check_native_action_streams(workplace: Path, project: Path) -> None:
     assert isinstance(described.value, dict), described
     assert described.value["id"] == "manual", described
     assert sys.stdout is streams[0] and sys.stderr is streams[1]
+
+    with StringIO() as escaped, redirect_stderr(escaped):
+        failure = processforge.native_action_result(
+            [
+                "--diagnostic-sink=both",
+                "runtime-driver", "describe", "--driver", "fixture-driver-absent",
+                *arguments,
+            ]
+        )
+        assert not escaped.getvalue(), escaped.getvalue()
+    assert failure.exit_code == 1, failure
+    assert "runtime driver not found" in failure.stderr, failure
+    records = [
+        json.loads(line) for line in failure.stderr.splitlines() if line.startswith("{")
+    ]
+    assert any(record["code"] == "runtime-driver.failed" for record in records), failure
+    logs = processforge.diagnostics.log_files(project / ".pf/runtime/diagnostics")
+    assert any(
+        json.loads(line).get("code") == "runtime-driver.failed"
+        for path in logs
+        for line in path.read_text(encoding="utf-8").splitlines()
+    ), logs
     print("PASS: native actions retain separate values and the process streams", flush=True)
+
+
+def check_director_output(workplace: Path, project: Path) -> None:
+    """Exercise a quiet Director tick that actually assigns a waiting handoff."""
+    agent = "director-output-agent"
+    handoff = "director-output-handoff"
+    pf(
+        "agent-checkin", "--workplace", str(workplace), "--project-root", str(project),
+        "--agent", agent, "--session", "director-output-session", "--role", "reviewer",
+    )
+    processforge.save_handoff(
+        project,
+        {
+            "schema_version": 1,
+            "id": handoff,
+            "status": "waiting_for_agent",
+            "to": {"required_role": "reviewer"},
+        },
+    )
+    with StringIO() as escaped, redirect_stdout(escaped):
+        result, status = host.tick_payload(
+            workplace, [project], processforge,
+            director=True, projection=False, presence=False,
+        )
+        assert not escaped.getvalue(), escaped.getvalue()
+    assert status == 0, result
+    ready = processforge.load_yaml_document(
+        project / ".pf" / "handoffs" / handoff / "handoff.yaml"
+    )
+    assert ready["status"] == "ready", ready
+    assert ready["assigned_agent"]["lease_id"] == f"lease-{handoff}-{agent}", ready
+    print("PASS: automatic Director can grant a lease without process output", flush=True)
 
 
 def declared_oversized_request(endpoint: str, bearer: str) -> tuple[int, dict[str, object]]:
@@ -381,6 +437,7 @@ def main() -> int:
         project_a = make_project(root, "project-a", workplace, "organized")
         project_b = make_project(root, "project-b", workplace, "simple")
         check_native_action_streams(workplace, project_a)
+        check_director_output(workplace, project_a)
 
         try:
             first = start_runtime(workplace)
