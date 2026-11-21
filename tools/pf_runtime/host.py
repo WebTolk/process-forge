@@ -7,9 +7,7 @@ workplace runtime state. Durable project facts remain in existing `.pf` files.
 from __future__ import annotations
 
 import argparse
-import contextlib
 import hashlib
-import io
 import json
 import os
 import re
@@ -664,8 +662,10 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def call_quiet(func: Any, args: argparse.Namespace) -> int:
-    with contextlib.redirect_stdout(io.StringIO()):
-        return int(func(args) or 0)
+    from processforge_core.operations.result import CommandOutput
+
+    args._command_output = CommandOutput(None)
+    return int(func(args) or 0)
 
 
 def load_state(workplace_root: Path) -> dict[str, Any]:
@@ -2787,6 +2787,7 @@ def tick_payload(
 
     from pf_native_control import current_entry
 
+    from processforge_core.operations.result import CommandOutput
     from processforge_core.project.configuration_inputs import configuration_operation
 
     with ExitStack() as operation:
@@ -2832,16 +2833,16 @@ def tick_payload(
                     else:
                         item["director"] = "skipped_simple"
                 if inspector:
-                    with contextlib.redirect_stdout(io.StringIO()):
-                        observation = core.supervisor_tick_result(
-                            argparse.Namespace(
-                                project_root=str(project_root),
-                                run=run,
-                                profile=profile,
-                                driver=driver,
-                                start_allowed=False,
-                            )
+                    observation = core.supervisor_tick_result(
+                        argparse.Namespace(
+                            project_root=str(project_root),
+                            run=run,
+                            profile=profile,
+                            driver=driver,
+                            start_allowed=False,
+                            _command_output=CommandOutput(None),
                         )
+                    )
                     item["inspector"] = "tick"
                     item["inspector_result"] = observation
                     status = status or (1 if observation["failed"] else 0)

@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Callable, Mapping
-from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from dataclasses import dataclass
-import io
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import yaml
+if TYPE_CHECKING:
+    from processforge_core.operations.result import NativeResult
 
 
 TOOL_DESCRIPTIONS = {
@@ -88,41 +87,12 @@ def action_tool_schema(name: str) -> dict[str, Any]:
 @dataclass(frozen=True)
 class ActionToolDependencies:
     parser_factory: Callable[[], argparse.ArgumentParser]
-    native_command: Callable[[list[str]], int]
+    native_command: Callable[[list[str]], NativeResult]
     registered_driver_ref: Callable[[str], str]
     work_state: Callable[..., dict[str, Any]]
     session_record: Callable[[], dict[str, Any]]
     version: str
     identity: Callable[[], dict[str, Any]] | None = None
-
-
-@dataclass(frozen=True)
-class NativeResult:
-    exit_code: int
-    stdout: str
-    stderr: str
-
-    @property
-    def output(self) -> str:
-        return self.stdout + self.stderr
-
-
-class NativeActionGateway:
-    """Invoke an explicitly composed native handler without a shell or subprocess CLI."""
-
-    def __init__(self, execute_command: Callable[[list[str]], int]):
-        self._execute_command = execute_command
-
-    def call(self, argv: list[str]) -> NativeResult:
-        output, errors = io.StringIO(), io.StringIO()
-        with redirect_stdout(output), redirect_stderr(errors):
-            try:
-                code = int(self._execute_command(list(argv)) or 0)
-            except SystemExit as exc:
-                code = exc.code if isinstance(exc.code, int) else 1
-                if isinstance(exc.code, str):
-                    errors.write(exc.code)
-        return NativeResult(code, output.getvalue(), errors.getvalue())
 
 
 class ActionToolService:
@@ -133,7 +103,6 @@ class ActionToolService:
         self._project = project_root
         self._workplace = workplace
         self._session_id = session_id
-        self._native = NativeActionGateway(dependencies.native_command)
 
     def _work(self, arguments: Mapping[str, Any], *, execution: bool) -> dict[str, Any]:
         keys = ("run_id", "assignment_id", "context_id")
@@ -161,7 +130,7 @@ class ActionToolService:
             elif value is not None and value is not False:
                 # Keep values beginning with '-' literal, including chat content.
                 argv.append("--" + key.replace("_", "-") + "=" + str(value))
-        return self._native.call(argv)
+        return self._dependencies.native_command(argv)
 
     @staticmethod
     def _failure(name: str, result: NativeResult) -> dict[str, Any]:
@@ -170,13 +139,11 @@ class ActionToolService:
 
     def _drivers(self) -> tuple[NativeResult, list[dict[str, str]]]:
         result = self._invoke(["runtime-driver", "list"], {}, workplace=True)
-        rows = []
-        if result.exit_code == 0:
-            for line in result.stdout.splitlines():
-                values = line.split("\t")
-                if len(values) >= 2:
-                    rows.append({"id": values[0], "status": values[1]})
-        return result, rows
+        if result.exit_code:
+            return result, []
+        if not isinstance(result.value, list):
+            raise ActionToolError("native_result_invalid")
+        return result, result.value
 
     def execute(self, name: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
         schema = action_tool_schema(name)
@@ -226,7 +193,7 @@ class ActionToolService:
             result = self._invoke(["runtime-driver", "describe"], {"driver": driver_ref}, workplace=True)
             if result.exit_code:
                 return self._failure(name, result)
-            document = yaml.safe_load(result.stdout)
+            document = result.value
             if not isinstance(document, dict):
                 raise ActionToolError("native_result_invalid")
             # Driver manifests may contain argv/environment values; return metadata only.
@@ -248,16 +215,16 @@ class ActionToolService:
                 values["detach"] = True
             result = self._invoke(["worker-run", operation], values)
             if result.exit_code:
-                if operation == "status" and result.stdout.startswith("STATUS: not-prepared "):
+                if operation == "status" and result.value == {"status": "not_prepared"}:
                     return {"schema_version": 1, "kind": name, "status": "not_prepared", "work": {key: arguments[key] for key in ("run_id", "assignment_id", "context_id")}}
                 return self._failure(name, result)
             payload: dict[str, Any] = {"schema_version": 1, "kind": name, "status": "accepted", "native_exit_code": 0,
                                        "work": {key: arguments[key] for key in ("run_id", "assignment_id", "context_id")}}
             if operation == "status":
-                state = yaml.safe_load(result.stdout)
-                if not isinstance(state, dict):
+                worker = result.value
+                if not isinstance(worker, dict):
                     raise ActionToolError("native_result_invalid")
-                payload["worker"] = state
+                payload["worker"] = worker
                 payload["status"] = "ready"
             else:
                 payload["native_summary"] = result.stdout[-2000:].strip()

@@ -95,6 +95,12 @@ PF Runtime — workplace-scoped local lifecycle host, scheduler и IPC transport
 Это не второй PF Core. Agent Ledger владеет canonical session-to-project
 binding; project и session maps Runtime являются только rebuildable caches.
 
+У каждого нативного вызова MCP свой результат с кодом возврата, данными
+операции и диагностикой. Каталог драйверов и статус исполнителя передают
+данные в MCP напрямую. CLI пишет своё представление в поток текущего вызова.
+Director, Inspector и Ledger передают вывод явно и сохраняют потоки
+процесса Runtime.
+
 ## Справка по реализации: исправность и восстановление
 
 Далее приведены подробности для диагностики и сопровождения. Они не добавляют

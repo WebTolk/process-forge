@@ -386,7 +386,8 @@ from processforge_core.process_catalog import (
 from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
 from processforge_core.project import initialization as project_initialization
 from processforge_core import build_configuration_provider, diagnostics
-from pf_cli.application import CliApplication
+from pf_cli.application import CliApplication, command_output
+from processforge_core.operations.result import CommandOutput, NativeResult  # noqa: E402
 from pf_cli.commands.agent_entry import AgentEntryCommand, AgentStartPromptCommand
 from pf_cli.commands.agent_actions import ActionsCommand
 from pf_cli.commands.configuration import ConfigurationCommand
@@ -1983,6 +1984,23 @@ def run_command_capture(func: Any, args: argparse.Namespace) -> tuple[int, str]:
             if exc.code and not isinstance(exc.code, int):
                 print(str(exc.code))
     return status, buffer.getvalue()
+
+
+def run_command_with_output(
+    func: Callable[[argparse.Namespace], int],
+    args: argparse.Namespace,
+    output: CommandOutput,
+) -> int:
+    """Pass the caller's output to an adapted nested command."""
+    args._command_output = output
+    try:
+        return int(func(args) or 0)
+    except SystemExit as exc:
+        if isinstance(exc.code, int):
+            return int(exc.code)
+        if exc.code:
+            output.write(str(exc.code))
+        return 1
 
 
 def path_constant_checks(workplace_root: Path, workplace_manifest: Path) -> list[Check]:
@@ -6657,13 +6675,13 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     _process_event_recorder.emit_process_event(project_root, "assignment.started", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(assignment, project_root)}, correlation_id=f"assignment-{assn_id}")
     _process_event_recorder.emit_process_event(project_root, "assignment.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capsule": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
     _process_event_recorder.emit_process_event(project_root, "artifact.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
-    print(f"WROTE: {rel(capsule_path, project_root)}")
+    command_output(args).write(f"WROTE: {rel(capsule_path, project_root)}")
     if optional_records:
         missing_optional = [item["id"] for item in optional_records if item.get("status") == "missing"]
         if missing_optional:
             for capability in missing_optional:
                 _process_event_recorder.emit_process_event(project_root, "capability.missing", severity="warn", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capability": capability}, correlation_id=f"assignment-{assn_id}")
-            print("WARN: optional capabilities missing: " + ", ".join(missing_optional))
+            command_output(args).write("WARN: optional capabilities missing: " + ", ".join(missing_optional))
     return 0
 
 
@@ -8763,9 +8781,9 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
     )
     write_current_session_refs(workplace_root, project_root, presence)
     if getattr(args, "json", False):
-        print(json.dumps(presence, ensure_ascii=False, indent=2))
+        command_output(args).write(json.dumps(presence, ensure_ascii=False, indent=2))
     else:
-        print(f"CHECKED_IN: {agent_id} session={session_id}")
+        command_output(args).write(f"CHECKED_IN: {agent_id} session={session_id}")
     return 0
 
 
@@ -8777,10 +8795,10 @@ def command_agent_heartbeat(args: argparse.Namespace) -> int:
     raw_session = getattr(args, "session", None) or str(current.get("session_id") or "")
     presence = find_agent_presence(workplace_root, agent_id=raw_agent or None, session_id=raw_session or None)
     if not presence:
-        print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
+        command_output(args).write(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
         return 1
     if raw_session and presence.get("session_id") != raw_session:
-        print(f"FAIL: session mismatch for {presence.get('agent_id')}")
+        command_output(args).write(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "online"
     presence["last_seen_at"] = _core_common_clock.now_utc()
@@ -8789,7 +8807,7 @@ def command_agent_heartbeat(args: argparse.Namespace) -> int:
     write_agent_presence(workplace_root, presence)
     write_current_session_refs(workplace_root, project_root, presence)
     _agent_workplace_registry.append_agent_ledger_event(workplace_root, {"event": "agent.heartbeat", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "task_id": presence.get("task_id")})
-    print(f"HEARTBEAT: {presence.get('agent_id')} session={presence.get('session_id')}")
+    command_output(args).write(f"HEARTBEAT: {presence.get('agent_id')} session={presence.get('session_id')}")
     return 0
 
 
@@ -8801,10 +8819,10 @@ def command_agent_checkout(args: argparse.Namespace) -> int:
     raw_session = getattr(args, "session", None) or str(current.get("session_id") or "")
     presence = find_agent_presence(workplace_root, agent_id=raw_agent or None, session_id=raw_session or None)
     if not presence:
-        print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
+        command_output(args).write(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
         return 1
     if raw_session and presence.get("session_id") != raw_session:
-        print(f"FAIL: session mismatch for {presence.get('agent_id')}")
+        command_output(args).write(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "checked_out"
     presence["last_seen_at"] = _core_common_clock.now_utc()
@@ -8813,7 +8831,7 @@ def command_agent_checkout(args: argparse.Namespace) -> int:
     write_agent_presence(workplace_root, presence)
     write_current_session_refs(workplace_root, project_root, presence)
     _agent_workplace_registry.append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": _core_common_clock.now_utc()})
-    print(f"CHECKED_OUT: {presence.get('agent_id')} session={presence.get('session_id')}")
+    command_output(args).write(f"CHECKED_OUT: {presence.get('agent_id')} session={presence.get('session_id')}")
     return 0
 
 
@@ -9393,7 +9411,7 @@ def command_agent_director_tick(args: argparse.Namespace) -> int:
             }
             save_handoff(project_root, handoff)
             changed += 1
-    print(f"DIRECTOR_TICK: changed={changed}")
+    command_output(args).write(f"DIRECTOR_TICK: changed={changed}")
     return 0
 
 
@@ -9544,8 +9562,15 @@ def command_runtime_driver_list(args: argparse.Namespace) -> int:
     if project_root:
         _run_task_inputs.require_flow_root(project_root)
     workplace_manifest = _workplace_registry_reader.normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
-    for driver_id, status, source in _runtime_driver_catalog_reader.ids(workplace_manifest=workplace_manifest, project_root=project_root):
-        print(f"{driver_id}\t{status}\t{source}")
+    output = command_output(args)
+    rows = _runtime_driver_catalog_reader.ids(
+        workplace_manifest=workplace_manifest, project_root=project_root
+    )
+    output.value = [
+        {"id": driver_id, "status": status} for driver_id, status, _ in rows
+    ]
+    for driver_id, status, source in rows:
+        output.write(f"{driver_id}\t{status}\t{source}")
     return 0
 
 
@@ -9565,7 +9590,9 @@ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     workplace_manifest = _workplace_registry_reader.normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     driver.pop("_source_path", None)
-    print(dump_yaml(driver))
+    output = command_output(args)
+    output.value = driver
+    output.write(dump_yaml(driver))
     return 0
 
 
@@ -11202,11 +11229,13 @@ def prepare_worker_run(
     model_arg: str | None = None,
     reasoning_effort_arg: str | None = None,
     *,
+    output: CommandOutput | None = None,
     _publication: Callable[
         [dict[Path, bytes | None]], contextlib.AbstractContextManager[None]
     ]
     | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
+    output = output or CommandOutput(sys.stdout)
     task = _worker_assignment_service.load(project_root, task_id)
     from processforge_core.prepared.command import require_resolved_preparation
 
@@ -11225,7 +11254,7 @@ def prepare_worker_run(
         return _retry_recover(project_root, task, pending, request, _publication)
     if _publication is None and not any(lease.active and lease.key == _worker_lifecycle_key(project_root, task["run_id"], task_id) for lease in _WORKER_LIFECYCLE_GATES.get()):
         with _worker_planning_phase(project_root, task["run_id"], task_id) as publish:
-            return prepare_worker_run(project_root, task_id, driver_arg, executable_override, model_arg, reasoning_effort_arg, _publication=publish)
+            return prepare_worker_run(project_root, task_id, driver_arg, executable_override, model_arg, reasoning_effort_arg, output=output, _publication=publish)
     require_resolved_preparation(project_root, task, sys.modules[__name__])
     agent_model = _context_contract_inputs.normalize_agent_model(
         model_arg or task.get("agent_model") or task.get("model") or ""
@@ -11253,13 +11282,13 @@ def prepare_worker_run(
             if capsule_status == "legacy"
             else ""
         )
-        print(f"PRESENT: {capsule_rel}{suffix}")
+        output.write(f"PRESENT: {capsule_rel}{suffix}")
     elif capsule_status == "stale":
         raise SystemExit(
             f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create_successor_work; immutable contexts cannot be rebuilt in place"
         )
     else:
-        status, output = run_command_capture(
+        status = run_command_with_output(
             command_assignment_capsule,
             argparse.Namespace(
                 project_root=str(project_root),
@@ -11268,8 +11297,8 @@ def prepare_worker_run(
                     task
                 ),
             ),
+            output,
         )
-        print(output, end="")
         if status:
             raise SystemExit(status)
     task = _worker_assignment_service.load(project_root, task_id)
@@ -11548,7 +11577,7 @@ def _worker_storage_errors(
             MaintenanceError,
             ExecutorError,
         ) as error:
-            print("FAIL: " + error.code)
+            command_output(args).write("FAIL: " + error.code)
             return 1
 
     return execute
@@ -11666,7 +11695,11 @@ def _recover_unpublished_worker_scratch(
 
 
 def _finalize_worker_scratch(
-    project_root: Path, task: dict[str, Any], *, trigger: str
+    project_root: Path,
+    task: dict[str, Any],
+    *,
+    trigger: str,
+    output: CommandOutput | None = None,
 ) -> bool:
     """Exact attempt cleanup outside admission/lifecycle locks and shutdown reads."""
     import processforge_core.prepared.input as prepared_input
@@ -11675,6 +11708,7 @@ def _finalize_worker_scratch(
         release_accepted_scratch,
     )
 
+    output = output or CommandOutput(sys.stdout)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     _retry_refuse_pending(project_root, run_id, task["id"])
     try:
@@ -11788,7 +11822,7 @@ def _finalize_worker_scratch(
         proof = never_launched or collected or (failed and raw_exit)
         if not absent or not proof:
             if trigger == "before_retry":
-                print("FAIL: temporary_cleanup_needed")
+                output.write("FAIL: temporary_cleanup_needed")
                 return False
             return False
         selected = _ProjectMetadataReader(project_root).workplace_manifest()
@@ -11819,17 +11853,18 @@ def _finalize_worker_scratch(
             "already_absent",
             "retained_by_configuration",
         }:
-            print("FAIL: temporary_cleanup_" + receipt.result)
+            output.write("FAIL: temporary_cleanup_" + receipt.result)
             return False
         return True
     except (OSError, ValueError, KeyError, TypeError) as error:
         # Keep durable attempt evidence and never obscure its original exit outcome.
-        print("FAIL: temporary_cleanup_blocked:" + type(error).__name__)
+        output.write("FAIL: temporary_cleanup_blocked:" + type(error).__name__)
         return False
 
 
 @_worker_storage_errors
 def command_worker_run_prepare(args: argparse.Namespace) -> int:
+    output = command_output(args)
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
@@ -11841,21 +11876,21 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
             "cancellation-*.yaml"
         )
     ):
-        print("FAIL: cancellation_recovery_pending")
+        output.write("FAIL: cancellation_recovery_pending")
         return 1
     if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
-        print("FAIL: work_is_terminal")
+        output.write("FAIL: work_is_terminal")
         return 1
     _storage_first_write(project_root)
     if _retry_pending(project_root, run_id, task_id) is not None:
         with _worker_planning_phase(project_root, run_id, task_id) as publish:
             task, driver, paths = prepare_worker_run(
                 project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None),
-                getattr(args, "model", None), getattr(args, "reasoning_effort", None), _publication=publish,
+                getattr(args, "model", None), getattr(args, "reasoning_effort", None), output=output, _publication=publish,
             )
-        print(f"PREPARED: {task_id} driver={driver.get('id')} status={load_agent_run_state(project_root, run_id, task_id).get('status')}")
+        output.write(f"PREPARED: {task_id} driver={driver.get('id')} status={load_agent_run_state(project_root, run_id, task_id).get('status')}")
         return 0
-    if not _finalize_worker_scratch(project_root, task, trigger="before_retry"):
+    if not _finalize_worker_scratch(project_root, task, trigger="before_retry", output=output):
         return 1
     running = existing_running_worker_run(
         project_root, task, getattr(args, "driver", None)
@@ -11876,10 +11911,10 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
                 "cancellation-*.yaml"
             )
         ):
-            print("FAIL: cancellation_recovery_pending")
+            output.write("FAIL: cancellation_recovery_pending")
             return 1
         if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
-            print("FAIL: work_is_terminal")
+            output.write("FAIL: work_is_terminal")
             return 1
         if running:
             state, driver, paths = running
@@ -11887,7 +11922,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
                 emit_worker_run_skip(
                     project_root, task, driver, state, "worker.run.prepare_skipped"
                 )
-            print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
+            output.write(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
             return 0
         try:
             task, driver, paths = prepare_worker_run(
@@ -11897,14 +11932,15 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
                 getattr(args, "executable", None),
                 getattr(args, "model", None),
                 getattr(args, "reasoning_effort", None),
+                output=output,
                 _publication=publish,
             )
         except SystemExit as error:
             if str(error) != "FAIL: temporary_cleanup_needed":
                 raise
-            print(error)
+            output.write(error)
             return 1
-    print(
+    output.write(
         f"PREPARED: {task_id} driver={driver.get('id')} status={load_agent_run_state(project_root, run_id, task_id).get('status')}"
     )
     return 0
@@ -12442,6 +12478,7 @@ def _worker_start_admission(
 @_worker_storage_errors
 def command_worker_run_start(args: argparse.Namespace) -> int:
     """Reserve under admission before launching; never hold SQL across Popen."""
+    output = command_output(args)
     from prepared_executor import ExecutorError
 
     from processforge_core.database import DatabaseError
@@ -12460,14 +12497,14 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
                 "cancellation-*.yaml"
             )
         ):
-            print("FAIL: cancellation_recovery_pending")
+            output.write("FAIL: cancellation_recovery_pending")
             return 1
         if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
-            print("FAIL: work_is_terminal")
+            output.write("FAIL: work_is_terminal")
             return 1
         _host, configuration = _storage_first_write(project_root)
         _retry_refuse_pending(project_root, run_id, task_id)
-        if not _finalize_worker_scratch(project_root, task, trigger="before_retry"):
+        if not _finalize_worker_scratch(project_root, task, trigger="before_retry", output=output):
             return 1
         repository = _execution_storage(
             project_root, configuration=configuration
@@ -12476,13 +12513,14 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
             raise MaintenanceError("execution_storage_not_ready")
         return _sql_worker_run_start(args, project_root, repository)
     except (ExecutionError, DatabaseError, ExecutorError, MaintenanceError) as exc:
-        print("FAIL: " + exc.code)
+        output.write("FAIL: " + exc.code)
         return 1
 
 
 def _sql_worker_run_start(
     args: argparse.Namespace, project_root: Path, repository: SQLiteExecutionRepository
 ) -> int:
+    output = command_output(args)
     from uuid import uuid4
 
     from processforge_core.executions.projection import projected_payload
@@ -12508,12 +12546,12 @@ def _sql_worker_run_start(
                 "cancellation-*.yaml"
             )
         ):
-            print("FAIL: cancellation_recovery_pending")
+            output.write("FAIL: cancellation_recovery_pending")
             return 1
         if _worker_observation_inputs.worker_run_work_is_terminal(
             project_root, task
         ):
-            print("FAIL: work_is_terminal")
+            output.write("FAIL: work_is_terminal")
             return 1
         record = repository.load_latest(run_id, task_id)
         if record is not None and record.phase in {
@@ -12524,7 +12562,7 @@ def _sql_worker_run_start(
         }:
             record = _observe_sql_locked(project_root, repository, record)
             if record.phase != "absent":
-                print(
+                output.write(
                     f"SKIPPED: {task_id} already running pid={projected_payload(record).get('pid')}"
                 )
                 return 0
@@ -12540,6 +12578,7 @@ def _sql_worker_run_start(
                 getattr(args, "executable", None),
                 getattr(args, "model", None),
                 getattr(args, "reasoning_effort", None),
+                output=output,
             )
             record = repository.load_latest(run_id, task_id)
         assert record is not None
@@ -12548,14 +12587,14 @@ def _sql_worker_run_start(
             state["status"] not in {"ready", "manual_required"}
             or record.collection != "pending"
         ):
-            print(
+            output.write(
                 "FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair"
             )
             return 1
         paths = _work_paths.worker_run(project_root, run_id, task_id)
         command = json_read(paths["command"])
         if command.get("driver_id") == "native-maintenance-fixed-v1":
-            print("FAIL: prepared launch blocked: runtime_driver_retired")
+            output.write("FAIL: prepared launch blocked: runtime_driver_retired")
             return 1
         driver = _runtime_driver_selection_service.for_worker_state(
             project_root, task, state
@@ -12566,7 +12605,7 @@ def _sql_worker_run_start(
                 project_root, task, requested
             ).get("id")
         ) != command.get("driver_id"):
-            print("FAIL: prepared driver differs; use explicit worker-run prepare")
+            output.write("FAIL: prepared driver differs; use explicit worker-run prepare")
             return 1
         for option, field in (
             ("model", "agent_model"),
@@ -12575,14 +12614,14 @@ def _sql_worker_run_start(
         ):
             value = getattr(args, option, None)
             if value is not None and value != command.get(field):
-                print(
+                output.write(
                     "FAIL: prepared launch preference differs; use explicit worker-run prepare"
                 )
                 return 1
         if command.get("prepared_input") != state.get("prepared_input") or str(
             command.get("attempt")
         ) != str(record.key.attempt):
-            print("FAIL: prepared command and state identity mismatch")
+            output.write("FAIL: prepared command and state identity mismatch")
             return 1
         for key, relative in command.get("paths", {}).items():
             if key in paths and key != "root":
@@ -12607,10 +12646,10 @@ def _sql_worker_run_start(
         except (OSError, ValueError, RuntimeError) as exc:
             repository._update_unlaunched(record, status="blocked", reason=str(exc))
             _publish_sql_locked(project_root, repository, run_id, task_id)
-            print("FAIL: prepared launch blocked: " + str(exc))
+            output.write("FAIL: prepared launch blocked: " + str(exc))
             return 1
         if str(driver.get("kind")) == "manual":
-            print(
+            output.write(
                 f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}"
             )
             return 0
@@ -12622,7 +12661,7 @@ def _sql_worker_run_start(
             Path(str(item)).resolve() in {wrapper, codex_wrapper}
             for item in argv[1:2]
         ):
-            print("FAIL: execution_receipt_capability_required")
+            output.write("FAIL: execution_receipt_capability_required")
             return 1
         attempt_root = (project_root / command["prepared_input"]["path"]).parent
         if (
@@ -12703,12 +12742,12 @@ def _sql_worker_run_start(
                 )
             except OSError:
                 _publish_sql_locked(project_root, repository, run_id, task_id)
-                print("FAIL: start failed for " + task_id)
+                output.write("FAIL: start failed for " + task_id)
                 return 1  # Ambiguous spawn never retires the committed reservation.
         captured_key, generation = record.key, record.generation
         record = _observe_sql_locked(project_root, repository, record)
         if bool(getattr(args, "detach", False)):
-            print(f"RUNNING: {task_id} pid={process.pid}")
+            output.write(f"RUNNING: {task_id} pid={process.pid}")
             return 0
     try:
         process.wait(timeout=int(str(state.get("timeout_seconds") or 30)))
@@ -12716,27 +12755,27 @@ def _sql_worker_run_start(
         with worker_run_lifecycle_lock(project_root, run_id, task_id):
             exact = repository.load(captured_key)
             if exact is None or exact.generation != generation:
-                print("FAIL: stale_generation")
+                output.write("FAIL: stale_generation")
                 return 1
             exact = _observe_sql_locked(project_root, repository, exact)
             if exact.phase != "absent":
-                print("FAIL: execution_activity_unknown")
+                output.write("FAIL: execution_activity_unknown")
                 return 1
-        print(f"{str(projected_payload(exact)['status']).upper()}: {task_id}")
+        output.write(f"{str(projected_payload(exact)['status']).upper()}: {task_id}")
         return 1
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
         exact = repository.load(captured_key)
         if exact is None or exact.generation != generation:
-            print("FAIL: stale_generation")
+            output.write("FAIL: stale_generation")
             return 1
         exact = _observe_sql_locked(project_root, repository, exact)
         payload = projected_payload(exact)
     if exact.phase != "absent":
-        print("FAIL: execution_activity_unknown")
+        output.write("FAIL: execution_activity_unknown")
         return 1
     if payload["status"] != "completed":
-        _finalize_worker_scratch(project_root, task, trigger="failed_end_use")
-    print(
+        _finalize_worker_scratch(project_root, task, trigger="failed_end_use", output=output)
+    output.write(
         f"{str(payload['status']).upper()}: {task_id} exit_code={payload['exit_code']}"
     )
     return 0 if payload["status"] == "completed" else 1
@@ -13108,10 +13147,13 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
         current = load_agent_run_state(project_root, run_id, task_id)
         if current != state:
             state = current
+    output = command_output(args)
     if not state:
-        print(f"STATUS: not-prepared {task_id}")
+        output.value = {"status": "not_prepared"}
+        output.write(f"STATUS: not-prepared {task_id}")
         return 1
-    print(dump_yaml(state))
+    output.value = state
+    output.write(dump_yaml(state))
     return 0
 
 
@@ -13213,18 +13255,22 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
 
 @_worker_storage_errors
 def command_worker_run_collect(args: argparse.Namespace) -> int:
+    output = command_output(args)
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
-    result = _collect_worker_run_locked(project_root, task)
+    result = _collect_worker_run_locked(project_root, task, output=output)
     if result == 0:
-        if not _finalize_worker_scratch(project_root, task, trigger="final_collection"):
+        if not _finalize_worker_scratch(project_root, task, trigger="final_collection", output=output):
             return 1
     return result
 
 
-def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
+def _collect_worker_run_locked(
+    project_root: Path, task: dict[str, Any], *, output: CommandOutput | None = None
+) -> int:
+    output = output or CommandOutput(sys.stdout)
     task_id, run_id = task["id"], task["run_id"]
     state = load_agent_run_state(project_root, run_id, task_id)
     if state and (
@@ -13246,7 +13292,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
 
             raise ExecutionError("execution_identity_conflict")
         expected = _worker_phase_snapshot(project_root, run_id, task_id)
-        return _collect_worker_run_plan(project_root, task, state, publish, expected)
+        return _collect_worker_run_plan(project_root, task, state, publish, expected, output)
 
 
 def _collect_worker_run_plan(
@@ -13257,13 +13303,14 @@ def _collect_worker_run_plan(
         [dict[Path, bytes | None]], contextlib.AbstractContextManager[None]
     ],
     expected: dict[Path, bytes | None],
+    output: CommandOutput,
 ) -> int:
     task_id, run_id = task["id"], task["run_id"]
     if not state:
-        print(f"FAIL: worker run is not prepared: {task_id}")
+        output.write(f"FAIL: worker run is not prepared: {task_id}")
         return 1
     if state.get("status") not in {"completed", "manual_required"}:
-        print(
+        output.write(
             f"FAIL: worker run is not collectible: {task_id} status={state.get('status', 'unknown')}"
         )
         return 1
@@ -13281,16 +13328,16 @@ def _collect_worker_run_plan(
                 captured.phase == "prepared" and state["status"] == "manual_required"
             )
         ):
-            print("FAIL: execution_activity_unknown")
+            output.write("FAIL: execution_activity_unknown")
             return 1
     missing: list[str] = []
-    for output in _context_contract_inputs.normalize_required_outputs(
+    for required_output in _context_contract_inputs.normalize_required_outputs(
         task.get("required_outputs")
     ):
-        if not bool(output.get("required", True)):
+        if not bool(required_output.get("required", True)):
             continue
-        raw_path = output.get("path") if isinstance(output, dict) else ""
-        out_path = _work_output_policy.task_path(project_root, output)
+        raw_path = required_output.get("path") if isinstance(required_output, dict) else ""
+        out_path = _work_output_policy.task_path(project_root, required_output)
         if out_path is None or not out_path.is_file():
             missing.append(
                 _context_contract_inputs.normalize_assignment_path(str(raw_path))
@@ -13300,7 +13347,7 @@ def _collect_worker_run_plan(
             project_root, _work_output_policy.expected_report(task)
         )
     except (OSError, ValueError) as exc:
-        print(f"FAIL: invalid expected report path: {exc}")
+        output.write(f"FAIL: invalid expected report path: {exc}")
         return 1
     if not report_path.is_file():
         missing.append(_work_output_policy.expected_report(task))
@@ -13346,7 +13393,7 @@ def _collect_worker_run_plan(
                     failure_reason="; ".join(reasons),
                     paths=paths,
                 )
-            print("FAIL: " + "; ".join(reasons))
+            output.write("FAIL: " + "; ".join(reasons))
             return 1
     import processforge_core.prepared.input as prepared_input
 
@@ -13378,23 +13425,23 @@ def _collect_worker_run_plan(
                     _sql_collection_locked(
                         project_root, repository, captured, "refused", str(exc)
                     )
-            print(
+            output.write(
                 f"RECOVERY-REQUIRED: {task_id}; explicit collect or a new prepared attempt is required"
             )
-        print("FAIL: collection blocked: " + str(exc))
+        output.write("FAIL: collection blocked: " + str(exc))
         return 1
     completion_path = receipt_path.with_name("collection-complete.json")
     try:
         prepared_input.private_file(project_root, rel(completion_path, project_root))
     except (OSError, ValueError, RuntimeError) as exc:
-        print("FAIL: collection completion path invalid: " + str(exc))
+        output.write("FAIL: collection completion path invalid: " + str(exc))
         return 1
     expected[receipt_path] = _observation_bytes(receipt_path)
     expected[completion_path] = _observation_bytes(completion_path)
     with publish(expected):
         if completion_path.is_file():
             if json_read(completion_path).get("receipt_id") != receipt["receipt_id"]:
-                print("FAIL: collection completion identity mismatch")
+                output.write("FAIL: collection completion identity mismatch")
                 return 1
             if (
                 repository is not None
@@ -13402,7 +13449,7 @@ def _collect_worker_run_plan(
                 and captured.collection != "collected"
             ):
                 _sql_collection_locked(project_root, repository, captured, "collected")
-            print(
+            output.write(
                 f"COLLECTED: {task_id} already collected for attempt {state['attempt']}"
             )
             return 0
@@ -13459,7 +13506,7 @@ def _collect_worker_run_plan(
             not capture.get("accepted")
             or len(capture.get("chat_message_ids") or []) != 1
         ):
-            print(
+            output.write(
                 "FAIL: collectible expected report was not captured as exactly one assistant transcript message"
             )
             return 1
@@ -13471,7 +13518,7 @@ def _collect_worker_run_plan(
         governed = "process_execution" in run or "process_execution" in task
         status = 0
         if not governed:
-            status, completion_output = run_command_capture(
+            status = run_command_with_output(
                 command_task_complete,
                 argparse.Namespace(
                     project_root=str(project_root),
@@ -13481,8 +13528,8 @@ def _collect_worker_run_plan(
                     dry_run=False,
                     completion_id=receipt["receipt_id"],
                 ),
+                output,
             )
-            print(completion_output, end="")
             if status:
                 return status
         emit_worker_completion_event(
@@ -13513,7 +13560,7 @@ def _collect_worker_run_plan(
         ):
             _sql_collection_locked(project_root, repository, captured, "collected")
         if governed:
-            print(f"COLLECTED: {task_id}; governed stage transition remains required")
+            output.write(f"COLLECTED: {task_id}; governed stage transition remains required")
         return status
 
 
@@ -13621,6 +13668,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
 
 def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
     """Observe one pass, retaining task outcomes separately from execution errors."""
+    output = command_output(args)
     project_root = Path(args.project_root).expanduser().resolve()
     _run_task_inputs.require_flow_root(project_root)
     profile = _supervisor_input_service.load_supervisor_profile(project_root, getattr(args, "profile", None))
@@ -13674,7 +13722,11 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
                         recovery_required.append(recovery)
                         failed.append(task_id)
                     else:
-                        status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
+                        status = command_worker_run_collect(
+                            argparse.Namespace(
+                                project_root=str(project_root), task=task_id, _command_output=output
+                            ),
+                        )
                         if status == 0:
                             collected.append(task_id)
                         else:
@@ -13693,7 +13745,11 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
                     recovery_required.append(recovery)
                     failed.append(task_id)
                 else:
-                    status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
+                    status = command_worker_run_collect(
+                        argparse.Namespace(
+                            project_root=str(project_root), task=task_id, _command_output=output
+                        ),
+                    )
                     if status == 0:
                         collected.append(task_id)
                     else:
@@ -13719,7 +13775,7 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
                 skipped.append(task_id)
                 continue
             if driver_id == "manual":
-                prepare_worker_run(project_root, task_id, driver_id, None)
+                prepare_worker_run(project_root, task_id, driver_id, None, output=output)
                 skipped.append(task_id)
                 continue
             current_scope = _context_contract_inputs.assignment_write_scope(task)
@@ -13734,10 +13790,16 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
                 skipped.append(task_id)
                 continue
             try:
-                status = command_worker_run_start(argparse.Namespace(project_root=str(project_root), task=task_id, driver=driver_id, executable=None, model=None, detach=True, wait=False))
+                status = command_worker_run_start(
+                    argparse.Namespace(
+                        project_root=str(project_root), task=task_id, driver=driver_id,
+                        executable=None, model=None, detach=True, wait=False,
+                        _command_output=output,
+                    ),
+                )
             except SystemExit as exc:
                 status = int(exc.code) if isinstance(exc.code, int) else 1
-                print(exc)
+                output.write(exc)
             if status == 0:
                 started.append(task_id)
                 running_scopes[task_id] = current_scope
@@ -13769,9 +13831,9 @@ def supervisor_tick_result(args: argparse.Namespace) -> dict[str, Any]:
     result = {"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "historical_observed": historical_observed, "recovery_required": recovery_required, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)}
     _process_event_recorder.emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload=result)
     for item in recovery_required:
-        print(f"RECOVERY-REQUIRED: {item['task_id']} attempt={item['attempt']} reason={item['reason']}; explicit collect or a new prepared attempt is required")
-    print(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
-    print(f"WROTE: {rel(report, project_root)}")
+        output.write(f"RECOVERY-REQUIRED: {item['task_id']} attempt={item['attempt']} reason={item['reason']}; explicit collect or a new prepared attempt is required")
+    output.write(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
+    output.write(f"WROTE: {rel(report, project_root)}")
     return result
 
 
@@ -14721,7 +14783,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     if getattr(args, "dry_run", False):
-        print(f"DRY-RUN: would complete task {task_id}")
+        command_output(args).write(f"DRY-RUN: would complete task {task_id}")
         return 0
     waivers = _work_output_policy.waivers(getattr(args, "waive_required_output", []))
     output_failures = [item.message for item in _work_output_policy.checks(project_root, task, waivers) if item.level == "FAIL"]
@@ -14740,7 +14802,7 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
             emit_worker_completion_event(project_root, event_type, args.completion_id, **event_kwargs)
         else:
             _process_event_recorder.emit_process_event(project_root, event_type, **event_kwargs)
-    print(f"DONE: {task_id}")
+    command_output(args).write(f"DONE: {task_id}")
     return 0
 
 
@@ -14909,9 +14971,9 @@ def command_chat_record(args: argparse.Namespace) -> int:
         assignment_id_value=args.assignment_id,
         include_event_content=args.include_content,
     )
-    print(f"TRANSCRIPT: {rel(transcript, project_root)}")
-    print(f"MESSAGE: {record['message_id']}")
-    print(f"EVENT: {_hook_dispatch_policy.event_id_value(event)}")
+    command_output(args).write(f"TRANSCRIPT: {rel(transcript, project_root)}")
+    command_output(args).write(f"MESSAGE: {record['message_id']}")
+    command_output(args).write(f"EVENT: {_hook_dispatch_policy.event_id_value(event)}")
     return 0
 
 
@@ -18949,6 +19011,24 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    return _run_cli_command(argv, None)
+
+
+def native_action_result(argv: list[str]) -> NativeResult:
+    """Execute an allowlisted native action with a private result for this call."""
+    with io.StringIO() as stream:
+        output = CommandOutput(stream)
+        error = ""
+        try:
+            code = int(_run_cli_command(argv, output) or 0)
+        except SystemExit as exc:
+            code = exc.code if isinstance(exc.code, int) else 1
+            if isinstance(exc.code, str):
+                error = exc.code
+        return NativeResult(code, stream.getvalue(), error, output.value)
+
+
+def _run_cli_command(argv: list[str] | None, output: CommandOutput | None) -> int:
     from processforge_core.database import DatabaseError
     from processforge_core.executions.model import ExecutionError
     from processforge_core.maintenance.contracts import MaintenanceError
@@ -18959,15 +19039,15 @@ def main(argv: list[str] | None = None) -> int:
             parser_factory=build_parser,
             project_id_resolver=project_id,
             entry_file=__file__,
-        ).run(argv)
+        ).run(argv, output=output)
     except (DatabaseError, ExecutionError, MaintenanceError, IndexMaintenanceError) as error:
-        print(f"FAIL: {error.code}")
+        (output or CommandOutput(sys.stdout)).write(f"FAIL: {error.code}")
         return 1
     except OSError as error:
         native_error = getattr(_native_module, "NativeControlError", None)
         if native_error is None or not isinstance(error, native_error):
             raise
-        print("FAIL: execution_activity_unknown")
+        (output or CommandOutput(sys.stdout)).write("FAIL: execution_activity_unknown")
         return 1
 
 
