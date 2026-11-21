@@ -16150,6 +16150,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
 
 
 def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path) -> int:
+    from processforge_core.maintenance.package_rollback import package_file_mode
     from processforge_core.maintenance.update_metadata import SubjectMetadataBackup
 
     candidate = _update_candidate_reader.find(workplace_root, args.candidate)
@@ -16165,7 +16166,6 @@ def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path)
     subject = (
         candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
     )
-    subject_type = str(subject.get("type") or "")
     policy = (
         candidate.get("update_policy")
         if isinstance(candidate.get("update_policy"), dict)
@@ -16185,21 +16185,9 @@ def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path)
     artifact_path = path_resolution_to_path(
         workplace_path_resolution(workplace_root, str(artifact_info.get("path") or ""))
     )
-    backup_dir = (
-        _update_document_reader.runtime_root(workplace_root)
-        / "backups"
-        / args.candidate
-    )
-    apply_dir = (
-        _update_document_reader.runtime_root(workplace_root)
-        / "applied"
-        / args.candidate
-    )
-    file_mode = policy.get("mode") == "replace_file" or subject_type in {
-        "tool_definition",
-        "tool_package",
-        "tool",
-    }
+    backup_dir = _update_document_reader.backup_dir(workplace_root, args.candidate)
+    apply_path = _update_document_reader.applied_path(workplace_root, args.candidate)
+    file_mode = package_file_mode(subject, policy)
     if file_mode:
         paths = (
             policy.get("executable_paths")
@@ -16233,6 +16221,7 @@ def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path)
         candidate,
         install_path,
         rel(install_path, workplace_root),
+        payload_kind="file" if file_mode else "tree",
     )
     if file_mode:
         if install_path.exists():
@@ -16253,7 +16242,6 @@ def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path)
             install_path.mkdir(parents=True, exist_ok=True)
             shutil.copy2(artifact_path, install_path / artifact_path.name)
     metadata.publish()
-    apply_dir.mkdir(parents=True, exist_ok=True)
     apply_record = {
         "schema_version": 1,
         "candidate_id": args.candidate,
@@ -16261,13 +16249,13 @@ def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path)
         "status": "applied",
         "subject": subject,
         "installed_version": candidate.get("available_version"),
+        "previous_subject_present": metadata.data["before"] is not None,
+        "previous_version": metadata.previous_version,
         "install_path": rel(install_path, workplace_root),
         "backup_path": rel(backup_dir, workplace_root),
         "post_update_doctor": candidate.get("post_update_doctor", []),
     }
-    (apply_dir / "apply-record.yaml").write_text(
-        dump_yaml(apply_record), encoding="utf-8"
-    )
+    write_yaml_file_atomic(apply_path, apply_record)
     marked = mark_impacted_project_contexts_after_update(
         workplace_root, candidate, reason="update-applied"
     )
@@ -16301,74 +16289,11 @@ def command_update_rollback(args: argparse.Namespace) -> int:
 def _command_update_rollback_locked(
     args: argparse.Namespace, workplace_root: Path
 ) -> int:
-    from processforge_core.maintenance.update_metadata import SubjectMetadataBackup
+    from processforge_core.maintenance.package_rollback import PackageRollback
 
-    candidate = _update_candidate_reader.find(workplace_root, args.candidate)
-    if not candidate:
-        print(f"FAIL: candidate not found: {args.candidate}")
-        return 1
-    subject = (
-        candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
-    )
-    policy = (
-        candidate.get("update_policy")
-        if isinstance(candidate.get("update_policy"), dict)
-        else {}
-    )
-    backup_dir = (
-        _update_document_reader.runtime_root(workplace_root)
-        / "backups"
-        / args.candidate
-    )
-    file_mode = policy.get("mode") == "replace_file" or subject.get("type") in {
-        "tool_definition",
-        "tool_package",
-        "tool",
-    }
-    if file_mode:
-        paths = (
-            policy.get("executable_paths")
-            if isinstance(policy.get("executable_paths"), list)
-            else []
-        )
-        if not paths:
-            print("FAIL: tool rollback requires update_policy.executable_paths")
-            return 1
-        restore_path = path_resolution_to_path(
-            workplace_path_resolution(workplace_root, str(paths[0]))
-        )
-        backup = backup_dir / "previous-file"
-    else:
-        restore_path = _update_registry_reader.install_path(workplace_root, candidate)
-        backup = backup_dir / "previous"
-    metadata = SubjectMetadataBackup.load(
-        _update_document_reader.installed_registry(workplace_root),
-        backup_dir / "installed-subject.yaml",
-        candidate,
-        restore_path,
-    )
-    if metadata.data["phase"] == "prepared":
-        print("FAIL: payload backup is incomplete; preserve it for explicit recovery")
-        return 1
-    if metadata.data["phase"] != "rolled_back":
-        if metadata.data["payload_existed"]:
-            if (file_mode and not backup.is_file()) or (
-                not file_mode and not backup.is_dir()
-            ):
-                print(f"FAIL: backup not found: {backup}")
-                return 1
-            if file_mode:
-                shutil.copy2(backup, restore_path)
-            else:
-                if restore_path.exists():
-                    shutil.rmtree(restore_path)
-                shutil.copytree(backup, restore_path)
-        elif restore_path.exists():
-            if file_mode:
-                restore_path.unlink()
-            else:
-                shutil.rmtree(restore_path)
-        metadata.restore()
+    rollback = PackageRollback.load(_update_document_reader, workplace_root, args.candidate)
+    rollback.restore()
+    restore_path = rollback.destination
     record = {
         "schema_version": 1,
         "candidate_id": args.candidate,
@@ -16381,12 +16306,9 @@ def _command_update_rollback_locked(
         / "rollbacks"
         / args.candidate
     )
-    rollback_dir.mkdir(parents=True, exist_ok=True)
-    (rollback_dir / "rollback-record.yaml").write_text(
-        dump_yaml(record), encoding="utf-8"
-    )
+    write_yaml_file_atomic(rollback_dir / "rollback-record.yaml", record)
     marked = mark_impacted_project_contexts_after_update(
-        workplace_root, candidate, reason="update-rollback"
+        workplace_root, rollback.metadata.data, reason="update-rollback"
     )
     print(f"ROLLED_BACK: {args.candidate}")
     print(f"RESTORE_PATH: {rel(restore_path, workplace_root)}")
