@@ -81,6 +81,8 @@ instance, relative path, hashes, and JSON metadata.
 Workplace catalogue state and project snapshot scopes in the same shared DB.
 The selected instances restrict matching rows before totals, ordering, and
 pagination. Projects selecting the same instance share its documents.
+BM25 scores use the selected corpus in temporary SQLite memory for a matching
+page. Documents from other versions cannot change those scores or page order.
 
 The stored resource fingerprint also binds the complete resolved root set, even
 when a fulltext root contains no documents. Verified status and selected metadata
@@ -121,8 +123,7 @@ These project-scoped commands require a project root and read its context snapsh
 is read-only; `status --verify-files` checks authorized file fingerprints and
 reports stale state when their content changed. `refresh` replaces the indexed
 instances and roots selected by that snapshot, respecting `indexing.mode`.
-`rebuild` replaces the
-derived search set in one SQL transaction without deleting an existing database
+`rebuild` replaces the derived search set in one SQL transaction without deleting an existing database
 file or its store identity envelope; `tick` performs one bounded pass for the
 project snapshot scope.
 
@@ -225,6 +226,7 @@ pending notification; readers inspect names/metadata and never source bodies.
 stale, building or degraded, the result carries that `search_status` and returns no matches
 until maintenance refreshes the derived DB. A resolved selected instance missing
 from a physically fresh index returns `stale` with `resource_not_indexed`.
+The same status applies when a selected root becomes unavailable.
 An indexed empty root counts toward coverage with zero documents.
 
 Context freshness, required-resource readiness, physical search availability and

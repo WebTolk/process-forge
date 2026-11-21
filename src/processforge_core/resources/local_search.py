@@ -30,6 +30,7 @@ from ..database import DatabaseFactory, SQLiteDriver
 from ..project.resource_snapshot import ResourceSnapshotRules
 from ..sqlite_storage import adapter_identity_access
 from .identity import search_root_id
+from .snapshot import search_path_ref_denied, search_resource_records
 
 MAX_FILE_BYTES = 1_000_000
 DEFAULT_LIMIT = 20
@@ -357,9 +358,7 @@ def _resource_records(snapshot: dict[str, Any]) -> Iterable[dict[str, Any]]:
                     _stable_json(item["path_ref"]),
                 )
                 bindings.setdefault(binding_key, []).append(item)
-        for row in rows:
-            if not isinstance(row, dict):
-                continue
+        for row in search_resource_records(snapshot):
             binding_key = (
                 str(row.get("id") or row.get("resource_id") or ""),
                 _stable_json(row.get("path_ref")),
@@ -381,12 +380,7 @@ def _resource_records(snapshot: dict[str, Any]) -> Iterable[dict[str, Any]]:
                 }
                 yield {**row, **identity}
         return
-    # Pre-selection snapshots have no local search grant. Keep compatibility
-    # with their resolved resources, never with the diagnostic available list.
-    for key in ("knowledge_resources", "templates", "template_resources"):
-        rows = resolved.get(key) if isinstance(resolved, dict) else []
-        if isinstance(rows, list):
-            yield from (row for row in rows if isinstance(row, dict))
+    yield from search_resource_records(snapshot)
 
 
 def _fingerprint_value(row: dict[str, Any]) -> str:
@@ -547,12 +541,7 @@ def _denied_path_reference(
         )
     except (OSError, RuntimeError, ValueError):
         raise LocalSearchError("document_scan_failed") from None
-    return resolution.get("status") == "unresolved" and resolution.get("reason") in {
-        "invalid_path_ref: relative_path escapes declared package root",
-        "invalid_path_ref: registry path escapes workplace root",
-        "invalid_path_ref: relative_path escapes declared registry root",
-        "invalid_path_ref: relative_path escapes project flow root",
-    }
+    return search_path_ref_denied(resolution)
 
 
 def authorized_roots(
@@ -562,7 +551,22 @@ def authorized_roots(
     strict: bool = False,
     workplace_root: Path | None = None,
 ) -> list[AuthorizedResource]:
+    resources, _ = _select_roots(
+        project_root, snapshot, strict=strict, workplace_root=workplace_root
+    )
+    return resources
+
+
+def _select_roots(
+    project_root: Path,
+    snapshot: dict[str, Any],
+    *,
+    strict: bool = False,
+    workplace_root: Path | None = None,
+) -> tuple[list[AuthorizedResource], set[str]]:
+    """Return resolved roots and declared grants whose roots are unavailable."""
     result: list[AuthorizedResource] = []
+    unavailable: set[str] = set()
     seen: set[str] = set()
     rules = ResourceSnapshotRules()
     for row in _resource_records(snapshot):
@@ -571,6 +575,11 @@ def authorized_roots(
             continue
         policy = normalize_indexing_policy(row)
         if policy.get("mode") == "none":
+            continue
+        if row.get("_search_root_unavailable"):
+            if strict:
+                raise LocalSearchError("document_scan_failed")
+            unavailable.add(resource_id)
             continue
         raw_paths: list[Any] = []
         for key in ("content_roots", "search_roots", "paths"):
@@ -629,9 +638,10 @@ def authorized_roots(
                 candidate = project_root / candidate
             try:
                 root = candidate.resolve(strict=True)
-            except (OSError, RuntimeError):
+            except (OSError, RuntimeError, ValueError):
                 if strict:
                     raise LocalSearchError("document_scan_failed") from None
+                unavailable.add(resource_id)
                 continue
             resource = AuthorizedResource(
                 resource_id=resource_id,
@@ -654,7 +664,7 @@ def authorized_roots(
             if index_key not in seen:
                 seen.add(index_key)
                 result.append(resource)
-    return result
+    return result, unavailable
 
 
 def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
@@ -960,12 +970,10 @@ def authorized_coverage(
 ) -> dict[str, Any]:
     """Describe physical index coverage, without equating it with material proof."""
     identifiers = authorized_resource_ids(snapshot)
-    instances = {
-        resource.index_key: resource.resource_id
-        for resource in authorized_roots(
-            project_root, snapshot, workplace_root=workplace_root
-        )
-    }
+    resources, unavailable = _select_roots(
+        project_root, snapshot, workplace_root=workplace_root
+    )
+    instances = {resource.index_key: resource.resource_id for resource in resources}
     # Legacy ID-only callers can observe the presence of a logical resource.
     # Only rooted instance grants contribute documents to usable coverage.
     legacy_ids = {
@@ -980,6 +988,7 @@ def authorized_coverage(
         "indexed_resource_count": 0,
         "document_count": 0,
         "missing_resource_ids": identifiers,
+        "unavailable_resource_ids": sorted(unavailable),
         "missing_instance_count": len(instances),
         "status": "empty" if not identifiers else "none",
     }
@@ -1024,7 +1033,7 @@ def authorized_coverage(
     indexed_ids = {instances[key] for key in indexed_keys} | (
         legacy_ids & stored.keys()
     )
-    missing_ids = {instances[key] for key in missing_keys}
+    missing_ids = {instances[key] for key in missing_keys} | unavailable
     missing = [
         identifier
         for identifier in identifiers
@@ -1470,6 +1479,8 @@ def build_index(
                 ),
             )
         for item in documents:
+            # Keep the storage schema v6 shape. The SQLite root_id carries the
+            # versioned key while metadata.root_id identifies the physical root.
             cursor = db.execute(
                 "INSERT INTO documents (resource_id, package_id, kind, relative_path, root_id, title, content_hash, metadata, fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
@@ -1616,7 +1627,7 @@ def index_status(
                     "SELECT status, generation, resource_count, document_count, failed_file_count, last_successful_refresh, last_full_reconciliation, last_error, allowed_resource_ids, snapshot_checksum FROM index_state WHERE scope_key=?",
                     (scope_key,),
                 ).fetchone()
-                current_resources = authorized_roots(
+                current_resources, unavailable = _select_roots(
                     project_root,
                     snapshot or {},
                     strict=verify_files,
@@ -1632,6 +1643,11 @@ def index_status(
                     payload["status"] = "stale"
                     payload["stale_resource_count"] = len(resource_ids) or 1
                     payload["error"] = "snapshot_checksum_changed"
+                    return payload
+                if unavailable:
+                    payload["status"] = "stale"
+                    payload["stale_resource_count"] = len(unavailable)
+                    payload["error"] = "resource_not_indexed"
                     return payload
                 if json.loads(row[8] or "[]") != sorted(resource_ids):
                     payload["status"] = "stale"
@@ -1897,6 +1913,47 @@ def _sqlite_busy(error: sqlite3.Error) -> bool:
     }
 
 
+def _selected_fts_page(
+    db: sqlite3.Connection,
+    query: str,
+    instance_keys: list[str],
+    limit: int,
+    start: int,
+) -> tuple[int, list[Any]]:
+    phrase = '"' + query.replace('"', '""') + '"'
+    marks = ",".join("?" for _ in instance_keys)
+    source = "FROM documents_fts JOIN documents d ON d.id = documents_fts.rowid"
+    selection = f"d.root_id IN ({marks})"
+    total = int(
+        db.execute(
+            f"SELECT count(*) {source} WHERE documents_fts MATCH ? AND {selection}",
+            [phrase, *instance_keys],
+        ).fetchone()[0]
+    )
+    if start >= total:
+        return total, []
+
+    # BM25 uses corpus-wide statistics. Keep a query-local in-memory corpus
+    # of authorized documents so another instance cannot change page order.
+    db.execute("CREATE VIRTUAL TABLE temp.selected_fts USING fts5(title, content)")
+    db.execute(
+        "INSERT INTO temp.selected_fts(rowid, title, content) "
+        f"SELECT d.id, documents_fts.title, documents_fts.content {source} "
+        f"WHERE {selection}",
+        instance_keys,
+    )
+    rows = db.execute(
+        "SELECT d.id, d.resource_id, d.package_id, d.kind, d.relative_path, "
+        "d.metadata, bm25(selected_fts) "
+        "FROM temp.selected_fts JOIN documents d ON d.id = selected_fts.rowid "
+        "WHERE selected_fts MATCH ? "
+        "ORDER BY bm25(selected_fts), d.resource_id, d.relative_path, d.root_id "
+        "LIMIT ? OFFSET ?",
+        (phrase, limit, start),
+    ).fetchall()
+    return total, rows
+
+
 def search(
     project_root: Path,
     snapshot: dict[str, Any],
@@ -1914,12 +1971,10 @@ def search(
     page_limit, start = pagination(limit=limit, limitstart=limitstart, offset=offset)
     path = index_path(project_root, workplace_root)
     scope_key = _scope_key(snapshot)
-    instances = {
-        resource.index_key: resource.resource_id
-        for resource in authorized_roots(
-            project_root, snapshot, workplace_root=workplace_root
-        )
-    }
+    resources, unavailable = _select_roots(
+        project_root, snapshot, workplace_root=workplace_root
+    )
+    instances = {resource.index_key: resource.resource_id for resource in resources}
     # The physical database is maintained from the Workplace resource
     # catalogue.  A project snapshot is deliberately only an authorization
     # filter for the query and must not make a fresh Workplace index appear
@@ -1934,6 +1989,13 @@ def search(
     )
     if state.get("status") != "fresh":
         return _empty_search_result(query, page_limit, start, state)
+    if unavailable:
+        return _empty_search_result(
+            query,
+            page_limit,
+            start,
+            {**state, "status": "stale", "error": "resource_not_indexed"},
+        )
     if not instances:
         return {
             "schema_version": 1,
@@ -1975,15 +2037,9 @@ def search(
                 {**state, "status": "degraded", "error": "search_database_busy"},
             )
         raise LocalSearchError("search_unavailable") from exc
-    fts_query = '"' + query.replace('"', '""') + '"'
-    placeholders = ",".join("?" for _ in instances)
-    args = [fts_query, *instances]
-    selection = (
-        "FROM documents_fts JOIN documents d ON d.id = documents_fts.rowid "
-        f"WHERE documents_fts MATCH ? AND d.root_id IN ({placeholders})"
-    )
     try:
         try:
+            db.execute("PRAGMA temp_store=MEMORY")
             db.execute("BEGIN")
             _check_schema(db)
             stored = _stored_resource_instances(db, set(instances.values()))
@@ -1997,14 +2053,9 @@ def search(
                     start,
                     {**state, "status": "stale", "error": "resource_not_indexed"},
                 )
-            total = int(db.execute(f"SELECT count(*) {selection}", args).fetchone()[0])
-            rows = db.execute(
-                "SELECT d.id, d.resource_id, d.package_id, d.kind, "
-                f"d.relative_path, d.metadata, bm25(documents_fts) {selection} "
-                "ORDER BY bm25(documents_fts), d.resource_id, d.relative_path, "
-                "d.root_id LIMIT ? OFFSET ?",
-                [*args, page_limit, start],
-            ).fetchall()
+            total, rows = _selected_fts_page(
+                db, query, list(instances), page_limit, start
+            )
         except LocalSearchError as exc:
             return _empty_search_result(
                 query,

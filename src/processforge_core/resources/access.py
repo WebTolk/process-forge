@@ -150,7 +150,10 @@ class ResourceSearchService:
         document_count = int(coverage.get("document_count") or 0)
         if status == "fresh" and coverage.get("status") == "unavailable":
             status, after = "degraded", {"error": "index_unreadable"}
-        elif status == "fresh" and coverage.get("missing_instance_count"):
+        elif status == "fresh" and (
+            coverage.get("missing_instance_count")
+            or coverage.get("unavailable_resource_ids")
+        ):
             status, after = "stale", {"error": "resource_not_indexed"}
         if status == "fresh" and document_count == 0:
             return {

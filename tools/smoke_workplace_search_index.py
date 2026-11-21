@@ -157,7 +157,9 @@ def check_version_search(
         for page, name in ((first, "one.md"), (second, "two.md")):
             assert page["search_status"] == "fresh" and page["total"] == 2, page
             assert page["page"]["total"] == 2 and page["page"]["returned"] == 1, page
-            assert page["authorized_coverage"]["document_count"] == 2, page
+            assert page["authorized_coverage"]["document_count"] == (
+                2 if number == 1 else 3
+            ), page
             (match,) = page["results"]
             assert (
                 match["resource_id"] == resource_id and match["canonical_path"] == name
@@ -172,6 +174,69 @@ def check_version_search(
             assert (
                 path.read_text(encoding="utf-8") == f"sharedmatch uniquematch{number}"
             ), match
+
+
+def check_project_search_grants(
+    workplace: Path, project: Path, selected_root: Path, resource_id: str
+) -> None:
+    calls: list[tuple[str, Path, dict[str, Any]]] = [
+        ("pf.search", project, {"query": "sharedmatch"}),
+    ]
+    unavailable = selected_root.with_name("unavailable")
+    selected_root.rename(unavailable)
+    try:
+        (missing,) = call_search_tools(workplace, calls)
+        assert missing["search_status"] == "stale", missing
+        assert missing["results"] == [] and missing["total"] == 0, missing
+        assert missing["degraded_reason"] == "resource_not_indexed", missing
+        assert missing["authorized_coverage"]["unavailable_resource_ids"] == [
+            resource_id
+        ], missing
+    finally:
+        unavailable.rename(selected_root)
+
+    path = project / ".pf/contexts/project-context.snapshot.yaml"
+    original = path.read_bytes()
+    snapshot = yaml.safe_load(original)
+    del snapshot["local_search_resources"]
+    try:
+        path.write_text(yaml.safe_dump(snapshot), encoding="utf-8")
+        (legacy,) = call_search_tools(workplace, calls)
+        assert legacy["search_status"] == "fresh" and legacy["total"] == 2, legacy
+        assert all(
+            Path(match["local_path"]).parent == selected_root.resolve()
+            for match in legacy["results"]
+        ), legacy
+
+        snapshot["local_search_resources"] = []
+        path.write_text(yaml.safe_dump(snapshot), encoding="utf-8")
+        (denied,) = call_search_tools(workplace, calls)
+        assert denied["search_status"] == "fresh" and denied["total"] == 0, denied
+        assert denied["authorized_coverage"]["authorized_resource_count"] == 0, denied
+    finally:
+        path.write_bytes(original)
+
+
+def check_rank_isolation(workplace: Path, project: Path, other_document: Path) -> None:
+    calls: list[tuple[str, Path, dict[str, Any]]] = [
+        ("pf.search", project, {"query": "sharedmatch", "limit": 1, "offset": offset})
+        for offset in (0, 1)
+    ]
+
+    def rank_pages() -> list[tuple[str, float]]:
+        pages = call_search_tools(workplace, calls)
+        assert all(
+            page["search_status"] == "fresh" and page["total"] == 2 for page in pages
+        ), pages
+        return [
+            (page["results"][0]["canonical_path"], page["results"][0]["match"]["rank"])
+            for page in pages
+        ]
+
+    before = rank_pages()
+    other_document.write_text("unselectedfiller " * 10_000, encoding="utf-8")
+    maintain_workplace(workplace)
+    assert rank_pages() == before
 
 
 def smoke_selected_versions() -> None:
@@ -208,6 +273,8 @@ def smoke_selected_versions() -> None:
                 }
             )
             projects.append((root / f"project-{number}", version_root))
+        other_document = projects[1][1] / "filler.md"
+        other_document.write_text("unselectedfiller", encoding="utf-8")
         (package / "package.yaml").write_text(
             yaml.safe_dump(
                 {
@@ -227,6 +294,8 @@ def smoke_selected_versions() -> None:
         maintain_workplace(workplace)
         check_version_search(workplace, projects, resource_id)
         project = projects[0][0]
+        check_project_search_grants(workplace, project, projects[0][1], resource_id)
+        check_rank_isolation(workplace, project, other_document)
         run_cli(
             "search-index",
             "refresh",
@@ -352,7 +421,10 @@ def main() -> int:
         resolved = build_resource_resolve_service(project_a, workplace).resolve(resource_id=guide_id)
         assert Path(resolved["resource"]["local_root"]) == (packages / "guide").resolve(), resolved
     smoke_selected_versions()
-    print("PASS: Workplace FTS legacy resources, versioned MCP pages, scoped refresh and explicit recovery")
+    print(
+        "PASS: Workplace FTS legacy grants, versioned MCP pages and ranking, "
+        "scoped refresh and explicit recovery"
+    )
     return 0
 
 
