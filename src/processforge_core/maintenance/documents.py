@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 from urllib.request import url2pathname
@@ -151,3 +151,9 @@ class UpdateDocumentReader:
 
     def staged_record(self, workplace_root: Path, candidate_id: str) -> dict[str, Any]:
         return self.yaml(self.staged_path(workplace_root, candidate_id))
+
+    def backup_dir(self, workplace_root: Path, candidate_id: str) -> Path:
+        return self.runtime_root(workplace_root) / "backups" / candidate_id
+
+    def applied_path(self, workplace_root: Path, candidate_id: str) -> Path:
+        return self.runtime_root(workplace_root) / "applied" / candidate_id / "apply-record.yaml"
