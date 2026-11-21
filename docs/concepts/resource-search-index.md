@@ -4,7 +4,7 @@ ProcessForge local search has three separate boundaries:
 
 - versioned workplace resources declare what may be indexed;
 - the workplace SQLite FTS5 index stores derived resource documents;
-- the project context snapshot authorizes which resource ids a session may query.
+- the project context snapshot authorizes the selected resource instances and roots.
 
 Projects do not own search documents. They only carry allowed resource
 identities and fingerprints in the snapshot. The private derived DB lives under:
@@ -24,7 +24,8 @@ other projects, home directories, Context7, the web, or a hidden `rg` pass over
 large source trees.
 
 Each result contains a stable `document_id`, `resource_id`, canonical relative
-locator, provenance, and `match_reason` (`content` or `metadata`). The locator
+locator, provenance, and `match_reason` (`content` or `metadata`). Its metadata
+identifies the indexed instance, version or generation, and canonical root. The locator
 is meaningful only while its snapshot remains current; agents use `pf.resolve`
 for authorized private navigation rather than reconstructing resource roots.
 
@@ -73,17 +74,22 @@ documents_fts
 index_state
 ```
 
-`resources` tracks `resource_id`, `resource_type`, `version`, `fingerprint`,
-`indexing_policy_hash`, `root_ref`, and refresh status. `documents` tracks
-`resource_id`, `relative_path`, `kind`, `title`, hashes, and JSON metadata.
+`resources` tracks each logical resource, refresh status, and fingerprints keyed
+by instance and canonical root. `documents` tracks the exact indexed root and
+instance, relative path, hashes, and JSON metadata.
 `documents_fts` stores searchable fulltext fields. `index_state` stores the
 Workplace catalogue state and project snapshot scopes in the same shared DB.
-Project snapshots authorize resource ids per query; documents are not duplicated
-for each project.
+The selected instances restrict matching rows before totals, ordering, and
+pagination. Projects selecting the same instance share its documents.
 
 The stored resource fingerprint also binds the complete resolved root set, even
 when a fulltext root contains no documents. Verified status and selected metadata
 projection detect root remapping without opening unselected document bodies.
+
+An index built before instance tracking reports `degraded` with
+`index_schema_mismatch`. Run `search-index-maintain --workplace <workplace>
+--apply` with Workplace authority to regenerate the derived rows in the existing
+database. Maintenance preserves its storage identity.
 
 ## CLI
 
@@ -113,8 +119,9 @@ python bin/pf.py search-index tick --project-root <project> --workplace <workpla
 
 These project-scoped commands require a project root and read its context snapshot. `status`
 is read-only; `status --verify-files` checks authorized file fingerprints and
-reports stale state when their content changed. `refresh` indexes resources
-authorized by that snapshot, respecting `indexing.mode`. `rebuild` replaces the
+reports stale state when their content changed. `refresh` replaces the indexed
+instances and roots selected by that snapshot, respecting `indexing.mode`.
+`rebuild` replaces the
 derived search set in one SQL transaction without deleting an existing database
 file or its store identity envelope; `tick` performs one bounded pass for the
 project snapshot scope.
@@ -216,7 +223,9 @@ pending notification; readers inspect names/metadata and never source bodies.
 
 `pf.search` never reports known stale data as `fresh`. If the index is missing,
 stale, building or degraded, the result carries that `search_status` and returns no matches
-until maintenance refreshes the derived DB.
+until maintenance refreshes the derived DB. A resolved selected instance missing
+from a physically fresh index returns `stale` with `resource_not_indexed`.
+An indexed empty root counts toward coverage with zero documents.
 
 Context freshness, required-resource readiness, physical search availability and
 authorized coverage are independent observations. A ready context may have no

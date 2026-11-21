@@ -10,6 +10,7 @@ from typing import Any
 from ..common.paths import rel
 from ..project.metadata import ProjectMetadataReader
 from ..work.context_documents import ContextContractInputs
+from .identity import search_root_id
 from .workplace_catalog import WorkplaceCatalogReader
 
 __all__ = ()
@@ -499,31 +500,45 @@ def add_private_navigation(
 ) -> None:
     resources_value = runtime_snapshot.get("local_search_resources")
     resources = resources_value if isinstance(resources_value, list) else []
-    by_id = {
-        str(item.get("id") or item.get("resource_id") or ""): item
-        for item in resources
-        if isinstance(item, dict)
-    }
-    for match in payload.get("results", []):
-        if not isinstance(match, dict):
+    by_root: dict[tuple[str, str], Path] = {}
+    for resource in resources:
+        if not isinstance(resource, dict):
             continue
-        resource = by_id.get(str(match.get("resource_id") or ""))
-        roots_value = (
-            resource.get("content_roots") if isinstance(resource, dict) else None
-        )
-        roots = roots_value if isinstance(roots_value, list) else []
+        resource_id = str(resource.get("id") or resource.get("resource_id") or "")
+        roots = resource.get("content_roots")
+        if not isinstance(roots, list):
+            continue
         for raw_root in roots:
-            root = Path(str(raw_root)).resolve()
-            candidate = (
-                (root / str(match.get("canonical_path") or "")).resolve()
-                if root.is_dir()
-                else root
-            )
             try:
-                candidate.relative_to(root if root.is_dir() else candidate)
-            except ValueError:
+                resolved_root = Path(str(raw_root)).resolve(strict=True)
+            except (OSError, RuntimeError, ValueError):
+                continue
+            by_root[resource_id, search_root_id(resolved_root)] = resolved_root
+    for match in payload.get("results", []):
+        if not isinstance(match, dict) or not isinstance(match.get("metadata"), dict):
+            continue
+        root = by_root.get(
+            (
+                str(match.get("resource_id") or ""),
+                str(match["metadata"].get("root_id") or ""),
+            )
+        )
+        if root is None:
+            continue
+        relative_path = str(match.get("canonical_path") or "")
+        try:
+            if root.is_dir():
+                candidate = (root / relative_path).resolve()
+                if not candidate.is_relative_to(root):
+                    continue
+            elif relative_path in {root.name, "."}:
+                candidate = root.resolve(strict=True)
+                if candidate != root:
+                    continue
+            else:
                 continue
             if candidate.is_file():
                 match["local_path"] = str(candidate)
                 match["navigation"] = "private_runtime_authorized"
-                break
+        except (OSError, RuntimeError, ValueError):
+            continue
