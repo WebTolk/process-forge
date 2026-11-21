@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import subprocess
 import sys
@@ -239,8 +240,10 @@ def check_rank_isolation(workplace: Path, project: Path, other_document: Path) -
     assert rank_pages() == before
 
 
-def smoke_selected_versions() -> None:
-    with tempfile.TemporaryDirectory(prefix="pf-search-versions-") as raw:
+def smoke_selected_versions(scratch_root: Path) -> None:
+    with tempfile.TemporaryDirectory(
+        prefix="pf-search-versions-", dir=scratch_root
+    ) as raw:
         root = Path(raw)
         workplace = root / "workplace"
         run_cli("workplace-init", "--workplace", str(workplace), "--apply")
@@ -355,7 +358,12 @@ def smoke_selected_versions() -> None:
 
 
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="pf-workplace-search-") as raw:
+    scratch_root = Path(
+        os.environ.get("PF_TEST_SCRATCH_ROOT") or tempfile.gettempdir()
+    ).resolve(strict=True)
+    with tempfile.TemporaryDirectory(
+        prefix="pf-workplace-search-", dir=scratch_root
+    ) as raw:
         root = Path(raw)
         workplace = root / "workplace"
         packages = workplace / "packages" / "docs.a"
@@ -420,7 +428,7 @@ def main() -> int:
         (project_a / ".pf" / "contexts" / "project-context.snapshot.yaml").write_text(yaml.safe_dump(project_snapshot, sort_keys=False), encoding="utf-8")
         resolved = build_resource_resolve_service(project_a, workplace).resolve(resource_id=guide_id)
         assert Path(resolved["resource"]["local_root"]) == (packages / "guide").resolve(), resolved
-    smoke_selected_versions()
+    smoke_selected_versions(scratch_root)
     print(
         "PASS: Workplace FTS legacy grants, versioned MCP pages and ranking, "
         "scoped refresh and explicit recovery"
