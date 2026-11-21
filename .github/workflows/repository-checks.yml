@@ -128,6 +128,8 @@ jobs:
           for script in ('smoke_mcp_jsonrpc_validation.py',
                          'smoke_mcp_stdio_unicode.py', 'smoke_mcp_codex_contract.py'):
               subprocess.run([sys.executable, '-B', 'tools/' + script], check=True)
+      - name: Check versioned project search through MCP
+        run: python -B tools/smoke_workplace_search_index.py
       - name: Check six journal producers and dispatch recovery
         shell: python
         run: |

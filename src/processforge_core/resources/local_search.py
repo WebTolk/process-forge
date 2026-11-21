@@ -27,7 +27,10 @@ if TYPE_CHECKING:
 
 from ..configuration import ConfigurationProvider
 from ..database import DatabaseFactory, SQLiteDriver
+from ..project.resource_snapshot import ResourceSnapshotRules
 from ..sqlite_storage import adapter_identity_access
+from .identity import search_root_id
+from .snapshot import search_path_ref_denied, search_resource_records
 
 MAX_FILE_BYTES = 1_000_000
 DEFAULT_LIMIT = 20
@@ -44,9 +47,9 @@ TEXT_SUFFIXES = {
     ".ini",
     ".csv",
 }
-# Version 5 also invalidates derived rows produced before canonical source-root
-# containment, even though the SQL table layout is unchanged.
+# Keep the bound storage schema and version the derived row identities separately.
 SCHEMA_VERSION = 6
+RESOURCE_IDENTITY_FORMAT = "1"
 POLICY_MODES = {"fulltext", "metadata", "none"}
 
 
@@ -72,11 +75,28 @@ class AuthorizedResource:
     title: str
     description: str
     version: str
+    generation: str
+    instance_id: str
     fingerprint: str
     root: Path
     root_ref: str
     indexing: dict[str, Any]
     sources: tuple[IndexSource, ...]
+
+    @property
+    def root_id(self) -> str:
+        return search_root_id(self.root)
+
+    @property
+    def index_key(self) -> str:
+        identity = [
+            self.resource_id,
+            self.instance_id,
+            self.version,
+            self.generation,
+            self.root_id,
+        ]
+        return hashlib.sha256(_stable_json(identity).encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -325,14 +345,42 @@ def _resource_records(snapshot: dict[str, Any]) -> Iterable[dict[str, Any]]:
     )
     rows = snapshot.get("local_search_resources")
     if isinstance(rows, list):
-        yield from (row for row in rows if isinstance(row, dict))
+        # Older search projections omit identity fields available in the
+        # selected record. Join by both ID and reference, never by ID alone.
+        bindings: dict[tuple[str, str], list[dict[str, Any]]] = {}
+        selected = (
+            resolved.get("knowledge_resources") if isinstance(resolved, dict) else None
+        )
+        for item in selected if isinstance(selected, list) else ():
+            if isinstance(item, dict) and item.get("path_ref"):
+                binding_key = (
+                    str(item.get("id") or ""),
+                    _stable_json(item["path_ref"]),
+                )
+                bindings.setdefault(binding_key, []).append(item)
+        for row in search_resource_records(snapshot):
+            binding_key = (
+                str(row.get("id") or row.get("resource_id") or ""),
+                _stable_json(row.get("path_ref")),
+            )
+            matches = bindings.get(binding_key, [])
+            if not matches or row.get("instance_id"):
+                yield row
+                continue
+            for match in matches:
+                identity: dict[str, Any] = {
+                    field: match[field]
+                    for field in (
+                        "instance_id",
+                        "resolved_version",
+                        "resolved_generation",
+                        "versioning_mode",
+                    )
+                    if field in match
+                }
+                yield {**row, **identity}
         return
-    # Pre-selection snapshots have no local search grant. Keep compatibility
-    # with their resolved resources, never with the diagnostic available list.
-    for key in ("knowledge_resources", "templates", "template_resources"):
-        rows = resolved.get(key) if isinstance(resolved, dict) else []
-        if isinstance(rows, list):
-            yield from (row for row in rows if isinstance(row, dict))
+    yield from search_resource_records(snapshot)
 
 
 def _fingerprint_value(row: dict[str, Any]) -> str:
@@ -493,12 +541,7 @@ def _denied_path_reference(
         )
     except (OSError, RuntimeError, ValueError):
         raise LocalSearchError("document_scan_failed") from None
-    return resolution.get("status") == "unresolved" and resolution.get("reason") in {
-        "invalid_path_ref: relative_path escapes declared package root",
-        "invalid_path_ref: registry path escapes workplace root",
-        "invalid_path_ref: relative_path escapes declared registry root",
-        "invalid_path_ref: relative_path escapes project flow root",
-    }
+    return search_path_ref_denied(resolution)
 
 
 def authorized_roots(
@@ -508,14 +551,35 @@ def authorized_roots(
     strict: bool = False,
     workplace_root: Path | None = None,
 ) -> list[AuthorizedResource]:
+    resources, _ = _select_roots(
+        project_root, snapshot, strict=strict, workplace_root=workplace_root
+    )
+    return resources
+
+
+def _select_roots(
+    project_root: Path,
+    snapshot: dict[str, Any],
+    *,
+    strict: bool = False,
+    workplace_root: Path | None = None,
+) -> tuple[list[AuthorizedResource], set[str]]:
+    """Return resolved roots and declared grants whose roots are unavailable."""
     result: list[AuthorizedResource] = []
-    seen: set[tuple[str, str]] = set()
+    unavailable: set[str] = set()
+    seen: set[str] = set()
+    rules = ResourceSnapshotRules()
     for row in _resource_records(snapshot):
         resource_id = str(row.get("id") or row.get("resource_id") or "").strip()
         if not resource_id:
             continue
         policy = normalize_indexing_policy(row)
         if policy.get("mode") == "none":
+            continue
+        if row.get("_search_root_unavailable"):
+            if strict:
+                raise LocalSearchError("document_scan_failed")
+            unavailable.add(resource_id)
             continue
         raw_paths: list[Any] = []
         for key in ("content_roots", "search_roots", "paths"):
@@ -539,11 +603,30 @@ def authorized_roots(
         ):
             # External references have no local body. Anchor metadata identity
             # without scanning the root or fetching the referenced URL.
-            raw_paths.append(project_root)
+            raw_paths.append(workplace_root or project_root)
         if strict and not raw_paths:
             if _denied_path_reference(project_root, reference, workplace_root):
                 continue
             raise LocalSearchError("document_scan_failed")
+        versioning, _, _ = rules.versioning_policy(row)
+        version = str(
+            row.get("resolved_version") or rules.declared_version(row, versioning)
+        )
+        generation = str(row.get("resolved_generation") or row.get("generation") or "")
+        if (
+            not generation
+            and "versioning_mode" not in row
+            and row.get("load_policy") != "snapshot_authorized"
+        ):
+            generation = rules.generation(row)
+        instance_id = rules.instance_id(
+            {**row, "id": resource_id}, versioning, version, generation
+        )
+        sources = tuple(
+            _normalize_source(item, str(policy.get("mode") or "metadata"))
+            for item in policy.get("sources", [])
+            if isinstance(item, dict)
+        )
         for raw_path in raw_paths:
             value = str(raw_path or "").strip()
             if not value or value.startswith("<") or "://" in value:
@@ -555,37 +638,33 @@ def authorized_roots(
                 candidate = project_root / candidate
             try:
                 root = candidate.resolve(strict=True)
-            except (OSError, RuntimeError):
+            except (OSError, RuntimeError, ValueError):
                 if strict:
                     raise LocalSearchError("document_scan_failed") from None
+                unavailable.add(resource_id)
                 continue
-            identity = (resource_id, str(root))
-            if identity in seen:
-                continue
-            seen.add(identity)
-            sources = tuple(
-                _normalize_source(item, str(policy.get("mode") or "metadata"))
-                for item in policy.get("sources", [])
-                if isinstance(item, dict)
+            resource = AuthorizedResource(
+                resource_id=resource_id,
+                package_id=str(row.get("package_id") or row.get("package") or ""),
+                kind=str(row.get("kind") or "knowledge"),
+                title=str(row.get("title") or resource_id),
+                description=str(row.get("description") or ""),
+                version=version,
+                generation=generation,
+                instance_id=instance_id,
+                fingerprint=_fingerprint_value(row),
+                root=root,
+                root_ref=_stable_json(row.get("path_ref"))
+                if isinstance(row.get("path_ref"), dict)
+                else str(root),
+                indexing=policy,
+                sources=sources,
             )
-            result.append(
-                AuthorizedResource(
-                    resource_id=resource_id,
-                    package_id=str(row.get("package_id") or row.get("package") or ""),
-                    kind=str(row.get("kind") or "knowledge"),
-                    title=str(row.get("title") or resource_id),
-                    description=str(row.get("description") or ""),
-                    version=str(row.get("version") or row.get("generation") or ""),
-                    fingerprint=_fingerprint_value(row),
-                    root=root,
-                    root_ref=_stable_json(row.get("path_ref"))
-                    if isinstance(row.get("path_ref"), dict)
-                    else str(root),
-                    indexing=policy,
-                    sources=sources,
-                )
-            )
-    return result
+            index_key = resource.index_key
+            if index_key not in seen:
+                seen.add(index_key)
+                result.append(resource)
+    return result, unavailable
 
 
 def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
@@ -736,7 +815,7 @@ def _metadata_content(
         resource.resource_id,
         resource.package_id,
         resource.kind,
-        resource.version,
+        resource.version or resource.generation,
         resource.root_ref,
     ]
     if source is not None:
@@ -752,7 +831,7 @@ def _resource_metadata_hash(resource: AuthorizedResource) -> str:
         resource.kind,
         resource.title,
         resource.description,
-        resource.version,
+        resource.version or resource.generation,
         resource.root_ref,
         _policy_hash(resource.indexing),
     ]
@@ -761,26 +840,21 @@ def _resource_metadata_hash(resource: AuthorizedResource) -> str:
 
 def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
     documents: list[dict[str, Any]] = []
-    positions: dict[tuple[str, str, str], int] = {}
+    positions: dict[tuple[str, str], int] = {}
     metadata_hashes = {
-        (
-            resource.resource_id,
-            hashlib.sha256(str(resource.root).encode("utf-8")).hexdigest(),
-        ): _resource_metadata_hash(resource)
-        for resource in resources
+        resource.index_key: _resource_metadata_hash(resource) for resource in resources
     }
 
     def append(document: dict[str, Any]) -> None:
         document["metadata"]["resource_metadata_hash"] = metadata_hashes[
-            (str(document["resource_id"]), str(document["metadata"]["root_id"]))
+            document["instance_key"]
         ]
         # Multiple sources may intentionally overlap (for example, a source
         # tree and an explicit file).  A logical document is identified by
-        # its resource and canonical relative path, not by the source that
+        # its indexed instance and canonical relative path, not by the source that
         # happened to discover it first.
         identity = (
-            str(document["resource_id"]),
-            str(document["metadata"]["root_id"]),
+            str(document["instance_key"]),
             str(document["relative_path"]),
         )
         if identity not in positions:
@@ -796,7 +870,13 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
 
     for resource in resources:
         policy_hash = _policy_hash(resource.indexing)
-        root_id = hashlib.sha256(str(resource.root).encode("utf-8")).hexdigest()
+        identity_fields = {
+            "root_id": resource.root_id,
+            "root_ref": resource.root_ref,
+            "instance_id": resource.instance_id,
+            "version": resource.version or resource.generation,
+        }
+        instance_key = resource.index_key
         if all(source.mode != "fulltext" for source in resource.sources):
             content = _metadata_content(
                 resource, resource.sources[0] if resource.sources else None
@@ -804,6 +884,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
             content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
             append(
                 {
+                    "instance_key": instance_key,
                     "resource_id": resource.resource_id,
                     "package_id": resource.package_id,
                     "kind": resource.kind,
@@ -814,9 +895,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                     "fingerprint": f"{resource.fingerprint}:{policy_hash}:{content_hash}",
                     "metadata": {
                         "mode": "metadata",
-                        "root_id": root_id,
-                        "root_ref": resource.root_ref,
-                        "version": resource.version,
+                        **identity_fields,
                     },
                 }
             )
@@ -829,6 +908,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                 content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
                 append(
                     {
+                        "instance_key": instance_key,
                         "resource_id": resource.resource_id,
                         "package_id": resource.package_id,
                         "kind": resource.kind,
@@ -839,10 +919,8 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                         "fingerprint": f"{resource.fingerprint}:{policy_hash}:{content_hash}",
                         "metadata": {
                             "mode": "metadata",
-                            "root_id": root_id,
                             "role": source.role,
-                            "root_ref": resource.root_ref,
-                            "version": resource.version,
+                            **identity_fields,
                         },
                     }
                 )
@@ -856,6 +934,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                 content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
                 append(
                     {
+                        "instance_key": instance_key,
                         "resource_id": resource.resource_id,
                         "package_id": resource.package_id,
                         "kind": resource.kind,
@@ -866,9 +945,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                         "fingerprint": f"{resource.fingerprint}:{policy_hash}:{relative_path}:{content_hash}",
                         "metadata": {
                             "mode": "fulltext",
-                            "root_id": root_id,
-                            "root_ref": resource.root_ref,
-                            "version": resource.version,
+                            **identity_fields,
                         },
                     }
                 )
@@ -893,15 +970,30 @@ def authorized_coverage(
 ) -> dict[str, Any]:
     """Describe physical index coverage, without equating it with material proof."""
     identifiers = authorized_resource_ids(snapshot)
+    resources, unavailable = _select_roots(
+        project_root, snapshot, workplace_root=workplace_root
+    )
+    instances = {resource.index_key: resource.resource_id for resource in resources}
+    # Legacy ID-only callers can observe the presence of a logical resource.
+    # Only rooted instance grants contribute documents to usable coverage.
+    legacy_ids = {
+        str(row.get("id") or row.get("resource_id"))
+        for row in _resource_records(snapshot)
+        if row.keys() <= {"id", "resource_id"}
+        and (row.get("id") or row.get("resource_id"))
+    }
+    selected_ids = set(instances.values()) | legacy_ids
     result: dict[str, Any] = {
         "authorized_resource_count": len(identifiers),
         "indexed_resource_count": 0,
         "document_count": 0,
         "missing_resource_ids": identifiers,
+        "unavailable_resource_ids": sorted(unavailable),
+        "missing_instance_count": len(instances),
         "status": "empty" if not identifiers else "none",
     }
     path = index_path(project_root, workplace_root)
-    if not identifiers or not path.is_file():
+    if not selected_ids or not path.is_file():
         return result
     counts: dict[str, int] = {}
     try:
@@ -916,26 +1008,44 @@ def authorized_coverage(
             )
         )
         try:
-            for start in range(0, len(identifiers), 128):
-                page = identifiers[start : start + 128]
+            db.execute("BEGIN")
+            _check_schema(db)
+            stored = _stored_resource_instances(db, selected_ids)
+            indexed_keys = [
+                key
+                for key, resource_id in instances.items()
+                if key in stored.get(resource_id, {})
+            ]
+            for start in range(0, len(indexed_keys), 128):
+                page = indexed_keys[start : start + 128]
                 marks = ",".join("?" for _ in page)
                 counts.update(
                     db.execute(
-                        f"SELECT resource_id,count(*) FROM documents WHERE resource_id IN ({marks}) GROUP BY resource_id",
+                        f"SELECT root_id, count(*) FROM documents WHERE root_id IN ({marks}) GROUP BY root_id",
                         page,
                     ).fetchall()
                 )
         finally:
             stack.close()
-    except (OSError, sqlite3.Error):
+    except (OSError, sqlite3.Error, LocalSearchError):
         return {**result, "status": "unavailable"}
-    missing = [identifier for identifier in identifiers if identifier not in counts]
+    missing_keys = instances.keys() - set(indexed_keys)
+    indexed_ids = {instances[key] for key in indexed_keys} | (
+        legacy_ids & stored.keys()
+    )
+    missing_ids = {instances[key] for key in missing_keys} | unavailable
+    missing = [
+        identifier
+        for identifier in identifiers
+        if identifier not in indexed_ids or identifier in missing_ids
+    ]
     return {
         **result,
-        "indexed_resource_count": len(counts),
+        "indexed_resource_count": len(indexed_ids),
         "document_count": sum(counts.values()),
         "missing_resource_ids": missing,
-        "status": "complete" if not missing else "partial" if counts else "none",
+        "missing_instance_count": len(missing_keys),
+        "status": "complete" if not missing else "partial" if indexed_ids else "none",
     }
 
 
@@ -1025,7 +1135,15 @@ def _ensure_schema(db: sqlite3.Connection) -> None:
     )
 
 
-def _check_schema(db: sqlite3.Connection) -> None:
+def _identity_format_current(db: sqlite3.Connection) -> bool:
+    return db.execute(
+        "SELECT value FROM meta WHERE key='resource_identity_format'"
+    ).fetchone() == (RESOURCE_IDENTITY_FORMAT,)
+
+
+def _check_schema(
+    db: sqlite3.Connection, *, require_instance_format: bool = True
+) -> None:
     required = {"meta", "resources", "index_state", "documents", "documents_fts"}
     rows = db.execute(
         "SELECT name FROM sqlite_master WHERE name IN ('meta', 'resources', 'index_state', 'documents', 'documents_fts')"
@@ -1036,12 +1154,27 @@ def _check_schema(db: sqlite3.Connection) -> None:
     current = db.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
     if not current or str(current[0]) != str(SCHEMA_VERSION):
         raise LocalSearchError("index_schema_mismatch")
+    if (
+        require_instance_format
+        and not _identity_format_current(db)
+        and db.execute(
+            "SELECT 1 FROM resources UNION ALL SELECT 1 FROM index_state LIMIT 1"
+        ).fetchone()
+    ):
+        raise LocalSearchError("index_schema_mismatch")
 
 
-def _delete_resource(db: sqlite3.Connection, resource_id: str) -> None:
-    db.execute("DELETE FROM documents_fts WHERE resource_id=?", (resource_id,))
-    db.execute("DELETE FROM documents WHERE resource_id=?", (resource_id,))
-    db.execute("DELETE FROM resources WHERE resource_id=?", (resource_id,))
+def _delete_instances(db: sqlite3.Connection, instance_keys: set[str]) -> None:
+    keys = sorted(instance_keys)
+    for start in range(0, len(keys), 128):
+        page = keys[start : start + 128]
+        marks = ",".join("?" for _ in page)
+        db.execute(
+            f"DELETE FROM documents_fts WHERE rowid IN ("
+            f"SELECT id FROM documents WHERE root_id IN ({marks}))",
+            page,
+        )
+        db.execute(f"DELETE FROM documents WHERE root_id IN ({marks})", page)
 
 
 def _error_code(exc: BaseException) -> str:
@@ -1050,57 +1183,81 @@ def _error_code(exc: BaseException) -> str:
     return str(exc) or type(exc).__name__
 
 
-def _document_key(resource_id: str, relative_path: str, root_id: str) -> str:
-    return _stable_json([resource_id, root_id, relative_path])
+def _document_key(instance_key: str, relative_path: str) -> str:
+    return _stable_json([instance_key, relative_path])
 
 
 def _document_fingerprint_map(resources: list[AuthorizedResource]) -> dict[str, str]:
     return {
-        _document_key(
-            item["resource_id"], item["relative_path"], item["metadata"]["root_id"]
-        ): str(item["fingerprint"])
+        _document_key(item["instance_key"], item["relative_path"]): str(
+            item["fingerprint"]
+        )
         for item in _documents(resources)
     }
 
 
 def _stored_fingerprint_map(
-    db: sqlite3.Connection, resource_ids: list[str]
+    db: sqlite3.Connection, instance_keys: list[str]
 ) -> dict[str, str]:
-    if not resource_ids:
+    if not instance_keys:
         return {}
-    placeholders = ",".join("?" for _ in resource_ids)
+    placeholders = ",".join("?" for _ in instance_keys)
     rows = db.execute(
-        f"SELECT resource_id, relative_path, root_id, fingerprint FROM documents WHERE resource_id IN ({placeholders})",
-        resource_ids,
+        f"SELECT root_id, relative_path, fingerprint FROM documents WHERE root_id IN ({placeholders})",
+        instance_keys,
     ).fetchall()
-    return {_document_key(row[0], row[1], row[2]): str(row[3]) for row in rows}
+    return {_document_key(row[0], row[1]): str(row[2]) for row in rows}
+
+
+def _stored_resource_instances(
+    db: sqlite3.Connection, resource_ids: Iterable[str]
+) -> dict[str, dict[str, str]]:
+    ids = list(resource_ids)
+    records: dict[str, dict[str, str]] = {}
+    for start in range(0, len(ids), 128):
+        page = ids[start : start + 128]
+        marks = ",".join("?" for _ in page)
+        for resource_id, fingerprint in db.execute(
+            f"SELECT resource_id, fingerprint FROM resources WHERE resource_id IN ({marks}) AND status='fresh'",
+            page,
+        ):
+            try:
+                instances = json.loads(fingerprint)
+            except (TypeError, ValueError) as exc:
+                raise LocalSearchError("index_schema_mismatch") from exc
+            if not isinstance(instances, dict):
+                raise LocalSearchError("index_schema_mismatch")
+            records[resource_id] = instances
+    return records
+
+
+def _resource_instance_fingerprints(
+    resources: list[AuthorizedResource],
+) -> dict[str, dict[str, str]]:
+    instances: dict[str, dict[str, str]] = {}
+    for resource in resources:
+        fingerprint = hashlib.sha256(
+            _stable_json(
+                [resource.fingerprint, _resource_metadata_hash(resource)]
+            ).encode("utf-8")
+        ).hexdigest()
+        instances.setdefault(resource.resource_id, {})[resource.index_key] = fingerprint
+    return instances
 
 
 def _scope_generation(
-    snapshot: dict[str, Any], resource_ids: list[str], fingerprints: dict[str, str]
+    snapshot: dict[str, Any],
+    resource_ids: list[str],
+    instance_keys: Iterable[str],
+    fingerprints: dict[str, str],
 ) -> str:
     seed = {
         "snapshot": _snapshot_checksum(snapshot),
         "allowed_resource_ids": sorted(resource_ids),
+        "instance_keys": sorted(instance_keys),
         "fingerprints": fingerprints,
     }
     return hashlib.sha256(_stable_json(seed).encode("utf-8")).hexdigest()[:16]
-
-
-def _resource_fingerprints(resources: list[AuthorizedResource]) -> dict[str, str]:
-    """Bind stored resource identity to every actual root, including empty roots."""
-    roots: dict[str, set[str]] = {}
-    for resource in resources:
-        roots.setdefault(resource.resource_id, set()).add(str(resource.root))
-    return {
-        resource.resource_id: "sha256:"
-        + hashlib.sha256(
-            _stable_json(
-                [resource.fingerprint, sorted(roots[resource.resource_id])]
-            ).encode("utf-8")
-        ).hexdigest()
-        for resource in resources
-    }
 
 
 def _refresh_catalogue_metadata(
@@ -1120,62 +1277,40 @@ def _refresh_catalogue_metadata(
     except LocalSearchError:
         return
     resource_ids = indexable_resource_ids(resources)
-    resource_fingerprints = _resource_fingerprints(resources)
-    expected = {
-        item.resource_id: (
-            item.kind,
-            item.version,
-            resource_fingerprints[item.resource_id],
-            _policy_hash(item.indexing),
-            item.root_ref,
-            "fresh",
-            None,
-        )
-        for item in resources
-    }
-    stored = {
-        str(row[0]): tuple(row[1:])
-        for row in db.execute(
-            "SELECT resource_id, resource_type, version, fingerprint, indexing_policy_hash, root_ref, status, last_error FROM resources"
-        )
-    }
-    if expected != stored:
+    expected = _resource_instance_fingerprints(resources)
+    stored_ids = {row[0] for row in db.execute("SELECT resource_id FROM resources")}
+    if (
+        stored_ids != expected.keys()
+        or _stored_resource_instances(db, stored_ids) != expected
+    ):
         return
     expected_metadata = {
-        (
-            resource.resource_id,
-            hashlib.sha256(str(resource.root).encode("utf-8")).hexdigest(),
-        ): _resource_metadata_hash(resource)
-        for resource in resources
+        resource.index_key: _resource_metadata_hash(resource) for resource in resources
     }
-    present_metadata: set[tuple[str, str]] = set()
-    for resource_id, text in db.execute("SELECT resource_id, metadata FROM documents"):
+    present_metadata: set[str] = set()
+    for instance_key, text in db.execute("SELECT root_id, metadata FROM documents"):
         try:
             metadata = json.loads(text)
         except (TypeError, ValueError):
             return
         if not isinstance(metadata, dict):
             return
-        identity = (str(resource_id), str(metadata.get("root_id")))
-        expected_hash = expected_metadata.get(identity)
+        expected_hash = expected_metadata.get(instance_key)
         if (
             expected_hash is None
             or metadata.get("resource_metadata_hash") != expected_hash
         ):
             return
-        present_metadata.add(identity)
+        present_metadata.add(instance_key)
     for resource in resources:
         needs_metadata = all(
             source.mode != "fulltext" for source in resource.sources
         ) or any(source.mode == "metadata" for source in resource.sources)
-        identity = (
-            resource.resource_id,
-            hashlib.sha256(str(resource.root).encode("utf-8")).hexdigest(),
-        )
-        if needs_metadata and identity not in present_metadata:
+        if needs_metadata and resource.index_key not in present_metadata:
             return
-    fingerprints = _stored_fingerprint_map(db, resource_ids)
-    generation = _scope_generation(catalogue, resource_ids, fingerprints)
+    keys = list(expected_metadata)
+    fingerprints = _stored_fingerprint_map(db, keys)
+    generation = _scope_generation(catalogue, resource_ids, keys, fingerprints)
     previous = db.execute(
         "SELECT last_full_reconciliation FROM index_state WHERE scope_key='workplace'"
     ).fetchone()
@@ -1254,19 +1389,20 @@ def build_index(
     else:
         resources, documents = _prepared
     resource_ids = indexable_resource_ids(resources)
-    resource_fingerprints = _resource_fingerprints(resources)
+    instance_keys = {resource.index_key for resource in resources}
+    resource_instances = _resource_instance_fingerprints(resources)
     path = index_path(project_root, workplace_root)
     was_present = path.is_file()
     path.parent.mkdir(parents=True, exist_ok=True)
     scope_key = _scope_key(snapshot)
     refreshed_at = _now_utc()
     fingerprints = {
-        _document_key(
-            item["resource_id"], item["relative_path"], item["metadata"]["root_id"]
-        ): str(item["fingerprint"])
+        _document_key(item["instance_key"], item["relative_path"]): str(
+            item["fingerprint"]
+        )
         for item in documents
     }
-    generation = _scope_generation(snapshot, resource_ids, fingerprints)
+    generation = _scope_generation(snapshot, resource_ids, instance_keys, fingerprints)
     stack = ExitStack()
     db, identity = stack.enter_context(
         _search_database(
@@ -1282,7 +1418,7 @@ def build_index(
         db.execute("BEGIN IMMEDIATE")
         if _rebuild and was_present:
             try:
-                _check_schema(db)
+                _check_schema(db, require_instance_format=False)
             except LocalSearchError as error:
                 if error.code != "index_schema_mismatch":
                     raise
@@ -1297,37 +1433,44 @@ def build_index(
                     db.execute("DROP TABLE " + table)
                 db.execute("DELETE FROM meta WHERE key='schema_version'")
         _ensure_schema(db)
+        retained: dict[str, dict[str, str]] = {}
         if _rebuild:
             for table in ("documents_fts", "documents", "resources", "index_state"):
                 db.execute("DELETE FROM " + table)
-        # A Workplace refresh is an authoritative reconciliation of its
-        # registered catalogue.  Retaining a removed package here would allow
-        # an old project snapshot to query an orphaned document from the shared
-        # DB, so remove every no-longer-registered resource before upserting.
-        if _scope_key(snapshot) == "workplace":
-            stored_ids = [
-                str(row[0])
-                for row in db.execute("SELECT resource_id FROM resources").fetchall()
-            ]
-            for resource_id in stored_ids:
-                if resource_id not in resource_ids:
-                    _delete_resource(db, resource_id)
-        elif snapshot.get("search_index_scope") == "resources":
-            # A selected resource may have been explicitly disabled. Retire its
-            # old derived rows without reconciling any unselected resource.
-            for record in _resource_records(snapshot):
-                resource_id = str(record.get("id") or record.get("resource_id") or "")
-                if resource_id and resource_id not in resource_ids:
-                    _delete_resource(db, resource_id)
-        for resource in resources:
-            _delete_resource(db, resource.resource_id)
+        elif scope_key == "workplace":
+            # The complete catalogue also retires removed instances.
+            for table in ("documents_fts", "documents", "resources"):
+                db.execute("DELETE FROM " + table)
+        else:
+            if (
+                not _identity_format_current(db)
+                and db.execute("SELECT 1 FROM resources LIMIT 1").fetchone()
+            ):
+                raise LocalSearchError("index_schema_mismatch")
+            replaced = instance_keys.copy()
+            if snapshot.get("search_index_scope") == "resources":
+                selected = authorized_resource_ids(snapshot)
+                existing = _stored_resource_instances(db, selected)
+                replaced.update(key for entries in existing.values() for key in entries)
+                db.executemany(
+                    "DELETE FROM resources WHERE resource_id=?",
+                    ((resource_id,) for resource_id in selected),
+                )
+            else:
+                retained = _stored_resource_instances(db, resource_ids)
+            _delete_instances(db, replaced)
+        for resource in {item.resource_id: item for item in resources}.values():
+            instance_fingerprints = {
+                **retained.get(resource.resource_id, {}),
+                **resource_instances[resource.resource_id],
+            }
             db.execute(
                 "INSERT OR REPLACE INTO resources (resource_id, resource_type, version, fingerprint, indexing_policy_hash, root_ref, indexed_at, status, last_error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     resource.resource_id,
                     resource.kind,
-                    resource.version,
-                    resource_fingerprints[resource.resource_id],
+                    resource.version or resource.generation,
+                    _stable_json(instance_fingerprints),
                     _policy_hash(resource.indexing),
                     resource.root_ref,
                     refreshed_at,
@@ -1336,14 +1479,16 @@ def build_index(
                 ),
             )
         for item in documents:
+            # Keep the storage schema v6 shape. The SQLite root_id carries the
+            # versioned key while metadata.root_id identifies the physical root.
             cursor = db.execute(
-                "INSERT OR REPLACE INTO documents (resource_id, package_id, kind, relative_path, root_id, title, content_hash, metadata, fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO documents (resource_id, package_id, kind, relative_path, root_id, title, content_hash, metadata, fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     item["resource_id"],
                     item["package_id"],
                     item["kind"],
                     item["relative_path"],
-                    item["metadata"]["root_id"],
+                    item["instance_key"],
                     item["title"],
                     item["content_hash"],
                     _stable_json(item["metadata"]),
@@ -1351,21 +1496,20 @@ def build_index(
                 ),
             )
             document_id = cursor.lastrowid
-            if not document_id:
-                row = db.execute(
-                    "SELECT id FROM documents WHERE resource_id=? AND root_id=? AND relative_path=?",
-                    (
-                        item["resource_id"],
-                        item["metadata"]["root_id"],
-                        item["relative_path"],
-                    ),
-                ).fetchone()
-                document_id = int(row[0])
-            db.execute("DELETE FROM documents_fts WHERE document_id=?", (document_id,))
             db.execute(
-                "INSERT INTO documents_fts (title, content, document_id, resource_id) VALUES (?, ?, ?, ?)",
-                (item["title"], item["content"], document_id, item["resource_id"]),
+                "INSERT INTO documents_fts (rowid, title, content, document_id, resource_id) VALUES (?, ?, ?, ?, ?)",
+                (
+                    document_id,
+                    item["title"],
+                    item["content"],
+                    document_id,
+                    item["resource_id"],
+                ),
             )
+        db.execute(
+            "INSERT OR REPLACE INTO meta VALUES ('resource_identity_format', ?)",
+            (RESOURCE_IDENTITY_FORMAT,),
+        )
         db.execute(
             "INSERT OR REPLACE INTO index_state (scope_key, snapshot_checksum, allowed_resource_ids, status, generation, resource_count, document_count, failed_file_count, last_successful_refresh, last_full_reconciliation, last_error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -1475,6 +1619,7 @@ def index_status(
             )
         )
         try:
+            db.execute("BEGIN")
             _check_schema(db)
             scope_key = _scope_key(snapshot) if snapshot is not None else None
             if scope_key:
@@ -1482,7 +1627,7 @@ def index_status(
                     "SELECT status, generation, resource_count, document_count, failed_file_count, last_successful_refresh, last_full_reconciliation, last_error, allowed_resource_ids, snapshot_checksum FROM index_state WHERE scope_key=?",
                     (scope_key,),
                 ).fetchone()
-                current_resources = authorized_roots(
+                current_resources, unavailable = _select_roots(
                     project_root,
                     snapshot or {},
                     strict=verify_files,
@@ -1499,18 +1644,22 @@ def index_status(
                     payload["stale_resource_count"] = len(resource_ids) or 1
                     payload["error"] = "snapshot_checksum_changed"
                     return payload
+                if unavailable:
+                    payload["status"] = "stale"
+                    payload["stale_resource_count"] = len(unavailable)
+                    payload["error"] = "resource_not_indexed"
+                    return payload
                 if json.loads(row[8] or "[]") != sorted(resource_ids):
                     payload["status"] = "stale"
                     payload["stale_resource_count"] = len(resource_ids) or 1
                     payload["error"] = "allowed_resources_changed"
                     return payload
-                missing_resources = [
-                    item
-                    for item in resource_ids
-                    if not db.execute(
-                        "SELECT 1 FROM resources WHERE resource_id=?", (item,)
-                    ).fetchone()
-                ]
+                stored_resources = _stored_resource_instances(db, resource_ids)
+                missing_resources = {
+                    item.resource_id
+                    for item in current_resources
+                    if item.index_key not in stored_resources.get(item.resource_id, {})
+                }
                 if missing_resources:
                     payload["status"] = "stale"
                     payload["stale_resource_count"] = len(missing_resources)
@@ -1518,16 +1667,16 @@ def index_status(
                     return payload
                 if verify_files and snapshot is not None:
                     current = _document_fingerprint_map(current_resources)
-                    stored = _stored_fingerprint_map(db, resource_ids)
-                    expected_resources = _resource_fingerprints(current_resources)
-                    stored_resources = {
-                        str(item[0]): str(item[1])
-                        for item in db.execute(
-                            "SELECT resource_id, fingerprint FROM resources"
-                        )
-                        if str(item[0]) in expected_resources
-                    }
-                    if stored != current or expected_resources != stored_resources:
+                    keys = [item.index_key for item in current_resources]
+                    stored = _stored_fingerprint_map(db, keys)
+                    expected_resources = _resource_instance_fingerprints(
+                        current_resources
+                    )
+                    if stored != current or any(
+                        fingerprints[key] != stored_resources[resource_id][key]
+                        for resource_id, fingerprints in expected_resources.items()
+                        for key in fingerprints
+                    ):
                         payload.update(
                             {
                                 "status": "stale",
@@ -1556,7 +1705,7 @@ def index_status(
                     payload["error"] = row[7]
             else:
                 row = db.execute(
-                    "SELECT count(*), count(*), COALESCE((SELECT count(*) FROM documents), 0), 0, max(indexed_at), max(indexed_at) FROM resources"
+                    "SELECT count(*), count(DISTINCT resource_id), COALESCE((SELECT count(*) FROM documents), 0), 0, max(indexed_at), max(indexed_at) FROM resources"
                 ).fetchone()
                 # A completed workplace reconciliation may legitimately leave
                 # no resources. Distinguish that maintained empty corpus from
@@ -1617,7 +1766,7 @@ def mark_index_dirty(
         )
     )
     try:
-        _check_schema(db)
+        _check_schema(db, require_instance_format=False)
         scope_key = (
             _scope_key(snapshot)
             if snapshot is not None
@@ -1764,6 +1913,47 @@ def _sqlite_busy(error: sqlite3.Error) -> bool:
     }
 
 
+def _selected_fts_page(
+    db: sqlite3.Connection,
+    query: str,
+    instance_keys: list[str],
+    limit: int,
+    start: int,
+) -> tuple[int, list[Any]]:
+    phrase = '"' + query.replace('"', '""') + '"'
+    marks = ",".join("?" for _ in instance_keys)
+    source = "FROM documents_fts JOIN documents d ON d.id = documents_fts.rowid"
+    selection = f"d.root_id IN ({marks})"
+    total = int(
+        db.execute(
+            f"SELECT count(*) {source} WHERE documents_fts MATCH ? AND {selection}",
+            [phrase, *instance_keys],
+        ).fetchone()[0]
+    )
+    if start >= total:
+        return total, []
+
+    # BM25 uses corpus-wide statistics. Keep a query-local in-memory corpus
+    # of authorized documents so another instance cannot change page order.
+    db.execute("CREATE VIRTUAL TABLE temp.selected_fts USING fts5(title, content)")
+    db.execute(
+        "INSERT INTO temp.selected_fts(rowid, title, content) "
+        f"SELECT d.id, documents_fts.title, documents_fts.content {source} "
+        f"WHERE {selection}",
+        instance_keys,
+    )
+    rows = db.execute(
+        "SELECT d.id, d.resource_id, d.package_id, d.kind, d.relative_path, "
+        "d.metadata, bm25(selected_fts) "
+        "FROM temp.selected_fts JOIN documents d ON d.id = selected_fts.rowid "
+        "WHERE selected_fts MATCH ? "
+        "ORDER BY bm25(selected_fts), d.resource_id, d.relative_path, d.root_id "
+        "LIMIT ? OFFSET ?",
+        (phrase, limit, start),
+    ).fetchall()
+    return total, rows
+
+
 def search(
     project_root: Path,
     snapshot: dict[str, Any],
@@ -1781,7 +1971,10 @@ def search(
     page_limit, start = pagination(limit=limit, limitstart=limitstart, offset=offset)
     path = index_path(project_root, workplace_root)
     scope_key = _scope_key(snapshot)
-    resource_ids = indexable_resource_ids(authorized_roots(project_root, snapshot))
+    resources, unavailable = _select_roots(
+        project_root, snapshot, workplace_root=workplace_root
+    )
+    instances = {resource.index_key: resource.resource_id for resource in resources}
     # The physical database is maintained from the Workplace resource
     # catalogue.  A project snapshot is deliberately only an authorization
     # filter for the query and must not make a fresh Workplace index appear
@@ -1796,7 +1989,14 @@ def search(
     )
     if state.get("status") != "fresh":
         return _empty_search_result(query, page_limit, start, state)
-    if not resource_ids:
+    if unavailable:
+        return _empty_search_result(
+            query,
+            page_limit,
+            start,
+            {**state, "status": "stale", "error": "resource_not_indexed"},
+        )
+    if not instances:
         return {
             "schema_version": 1,
             "kind": "pf.search",
@@ -1837,21 +2037,32 @@ def search(
                 {**state, "status": "degraded", "error": "search_database_busy"},
             )
         raise LocalSearchError("search_unavailable") from exc
-    fts_query = '"' + query.replace('"', '""') + '"'
-    placeholders = ",".join("?" for _ in resource_ids)
-    args = [fts_query, *resource_ids]
     try:
         try:
-            total = int(
-                db.execute(
-                    f"SELECT count(*) FROM documents_fts WHERE documents_fts MATCH ? AND resource_id IN ({placeholders})",
-                    args,
-                ).fetchone()[0]
+            db.execute("PRAGMA temp_store=MEMORY")
+            db.execute("BEGIN")
+            _check_schema(db)
+            stored = _stored_resource_instances(db, set(instances.values()))
+            if any(
+                key not in stored.get(resource_id, {})
+                for key, resource_id in instances.items()
+            ):
+                return _empty_search_result(
+                    query,
+                    page_limit,
+                    start,
+                    {**state, "status": "stale", "error": "resource_not_indexed"},
+                )
+            total, rows = _selected_fts_page(
+                db, query, list(instances), page_limit, start
             )
-            rows = db.execute(
-                f"SELECT d.id, d.resource_id, d.package_id, d.kind, d.relative_path, d.metadata, bm25(documents_fts) FROM documents_fts JOIN documents d ON d.id = documents_fts.document_id WHERE documents_fts MATCH ? AND documents_fts.resource_id IN ({placeholders}) ORDER BY bm25(documents_fts), d.resource_id, d.relative_path LIMIT ? OFFSET ?",
-                [*args, page_limit, start],
-            ).fetchall()
+        except LocalSearchError as exc:
+            return _empty_search_result(
+                query,
+                page_limit,
+                start,
+                {**state, "status": "degraded", "error": exc.code},
+            )
         except sqlite3.OperationalError as exc:
             if _sqlite_busy(exc):
                 return _empty_search_result(

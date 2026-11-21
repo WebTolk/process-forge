@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
-
 
 RESOURCE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
 
@@ -16,6 +16,11 @@ WINDOWS_RESERVED_DEVICE_BASENAMES = {
     *{f"com{index}" for index in range(1, 10)},
     *{f"lpt{index}" for index in range(1, 10)},
 }
+
+
+def search_root_id(root: Path) -> str:
+    """Identify an already resolved search root without exposing its path."""
+    return hashlib.sha256(str(root).encode("utf-8")).hexdigest()
 
 
 class ResourceIdentityPolicy:
