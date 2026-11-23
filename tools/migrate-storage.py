@@ -194,6 +194,8 @@ def _main_in_operation(
             result = StorageMigrationService._failure(
                 StorageMigrationService._report("storage-" + operation), error
             )
+        if args.project_events:
+            result["requested_target"] = {"kind": "events", "scope": "project"}
         print(
             json.dumps(
                 result,

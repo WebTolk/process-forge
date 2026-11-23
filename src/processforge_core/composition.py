@@ -200,6 +200,7 @@ def build_storage_migration_host(
     )
     from .maintenance.execution_migration import ExecutionMigrationService, _hash, _read
     from .maintenance.project_event_maintenance import (
+        ProjectEventBackupService,
         ordinary_storage_lock,
         require_compatible_runtime,
     )
@@ -247,15 +248,13 @@ def build_storage_migration_host(
             targets.append(
                 StoreTarget("events", flow / events, events, "project", owner_id)
             )
-            project_targets: tuple[tuple[Literal["raw", "main"], str], ...] = ()
-            if not project_events_only:
-                _profile_id, relative, _timeout = _execution_profile(
-                    snapshot.config.database
-                )
-                project_targets = (
-                    ("raw", "runtime/agent-events/hooks.sqlite3"),
-                    ("main", relative),
-                )
+            _profile_id, relative, _timeout = _execution_profile(
+                snapshot.config.database
+            )
+            project_targets: tuple[tuple[Literal["raw", "main"], str], ...] = (
+                ("raw", "runtime/agent-events/hooks.sqlite3"),
+                ("main", relative),
+            )
             for kind, path in project_targets:
                 targets.append(
                     StoreTarget(kind, flow / path, path, "project", owner_id)
@@ -308,6 +307,12 @@ def build_storage_migration_host(
             project_root, workplace_root, device, tuple(targets), tuple(unqualified)
         )
         validate_storage_context(context)
+        if project_events_only:
+            from dataclasses import replace
+
+            context = replace(
+                context, targets=tuple(t for t in context.targets if t.kind == "events")
+            )
         if evidence_dir is not None:
             _safe(evidence_dir)
             roots = (
@@ -542,6 +547,19 @@ def build_storage_migration_host(
     # The closed default is SQLite; the resolved full snapshot is bound when
     # context is first requested, before any service operation connects.
     class FreshAwareStorageService(StorageMigrationService):
+        def _proof(
+            self, context: StorageMigrationContext, expected: str | None = None
+        ) -> MigrationSafety:
+            if not project_events_only:
+                return super()._proof(context, expected)
+            # This host owns the exact selected proof and its fixed refusal codes.
+            proof = safety(context)
+            if proof.state != "proven":
+                raise MaintenanceError(proof.evidence[0])
+            if expected is not None and proof.generation != expected:
+                raise MaintenanceError("storage_safety_changed")
+            return proof
+
         def _execution(
             self,
             context: StorageMigrationContext,
@@ -601,8 +619,11 @@ def build_storage_migration_host(
                     return {"state": "ready"}
             return super()._target(context, target, descriptor, deadline)
 
+    backup_service = (
+        ProjectEventBackupService if project_events_only else SQLiteBackupService
+    )
     service = FreshAwareStorageService(
-        backup=SQLiteBackupService(driver=SQLiteDriver()),
+        backup=backup_service(driver=SQLiteDriver()),
         admission=admission,
         registry_lock=registry_file_lock
         if project_events_only
@@ -618,7 +639,7 @@ def build_storage_migration_host(
         service.driver = DatabaseFactory.resolve_driver(
             configuration.current().database
         )
-        service.backup = SQLiteBackupService(driver=service.driver)
+        service.backup = backup_service(driver=service.driver)
         return context
 
     class AutomaticStorageHost(StorageMigrationHost):

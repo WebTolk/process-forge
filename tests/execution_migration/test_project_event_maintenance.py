@@ -18,6 +18,7 @@ from typing import Any
 
 import smoke_long_lived_runtime as runtime
 import smoke_worker_run_shell as worker
+from pf_runtime.service import http_json
 
 from processforge_core.agents.hook_outbox import delivery_key
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -60,6 +61,18 @@ if "--apply" in arguments:
 raise SystemExit(entry["main"](arguments))
 """
 
+INTERRUPT_BACKUP_COPY = """
+import os, runpy, sys
+tool, *arguments = sys.argv[1:]
+entry = runpy.run_path(tool)
+from processforge_core.maintenance import backup
+def interrupt_copy(source, destination, *args, **kwargs):
+    destination.write_bytes(b"interrupted fixture backup")
+    os._exit(76)
+backup._backup = interrupt_copy
+raise SystemExit(entry["main"](arguments))
+"""
+
 
 def arguments(project: Path, workplace: Path, operation: str) -> list[str]:
     return [
@@ -86,6 +99,18 @@ def migrate(args: list[str], expected: int = 0) -> dict[str, Any]:
     )
     assert result.returncode == expected, result.stdout + result.stderr
     return json.loads(result.stdout)
+
+
+def interrupt_backup(args: list[str]) -> None:
+    child = subprocess.run(
+        [sys.executable, "-B", "-c", INTERRUPT_BACKUP_COPY, str(MIGRATOR), *args],
+        cwd=SOURCE,
+        capture_output=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+    assert child.returncode == 76, child.stdout + child.stderr
 
 
 @contextmanager
@@ -133,10 +158,10 @@ def slot(project: Path) -> dict[str, Any]:
 def request_event(
     endpoint: str, token: str, project: Path, event_id: str, value: int
 ) -> tuple[int, dict[str, object]]:
-    return runtime.http_json(
+    return http_json(
         "POST",
         endpoint + "/event",
-        bearer=token,
+        token=token,
         payload={
             "schema_version": 1,
             "event_id": event_id,
@@ -145,6 +170,7 @@ def request_event(
             "source": {"adapter": "generic", "agent": "journal-test"},
             "payload": {"value": value, "text": "Журнал"},
         },
+        timeout=20.0,
     )
 
 
@@ -210,7 +236,7 @@ def await_events(
 def assert_sibling_visible(
     endpoint: str, token: str, instance: object, sibling: Path, workplace: Path
 ) -> None:
-    status, view = runtime.http_json("GET", endpoint + "/status", bearer=token)
+    status, view = http_json("GET", endpoint + "/status", token=token, timeout=15.0)
     assert status == 200 and view["instance_id"] == instance
     summary = view["last_event"]
     assert isinstance(summary, dict), view
@@ -351,9 +377,23 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
             )
             try:
                 await_events(queue, stream, observed)
+                unplanned = migrate(resume, expected=1)
+                assert (
+                    unplanned["error"]["code"] == "storage_project_event_plan_missing"
+                )
+                interrupt_backup(apply)
+                interrupted = slot(project)
+                assert interrupted["state"] == "pending"
+                evidence_root = project / ".pf/data/storage-migrations/r02-storage-v1"
+                plan = evidence_root / interrupted["plan_checksum"][7:]
+                assert not (plan / "backup").exists()
+                assert (
+                    len(list(plan.glob(".backup-stage-*/backup/database.sqlite3"))) == 1
+                )
+                await_events(queue, stream, observed, after=time.monotonic())
                 with held_migration(apply, tmp_path, "apply") as (child, release):
                     pending = slot(project)
-                    assert pending["state"] == "pending"
+                    assert pending == interrupted
                     # The target is fenced while its backup is being verified.
                     refused = migrate(apply, expected=1)
                     assert (
@@ -381,11 +421,12 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                     assert_sibling_visible(
                         endpoint, token, instance, sibling, workplace
                     )
-                    tick_status, tick = runtime.http_json(
+                    tick_status, tick = http_json(
                         "POST",
                         endpoint + "/tick",
-                        bearer=token,
+                        token=token,
                         payload={"project_roots": [str(project), str(sibling)]},
+                        timeout=15.0,
                     )
                     assert tick_status == 500 and len(tick["projects"]) == 2, tick
                     blocked, continuing = tick["projects"]
@@ -425,13 +466,13 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                     assert json.loads(out)["status"] == "ready"
             finally:
                 stop.set()
-                stream.result(timeout=15)
+                stream.result(timeout=25)
                 while not queue.empty():
                     _, event_id, record = queue.get_nowait()
                     observed[event_id] = record
         assert slot(project) == {**pending, "state": "ready"}
         assert migrate(inspect)["targets"][0]["state"] == "ready"
-        code, view = runtime.http_json("GET", endpoint + "/status", bearer=token)
+        code, view = http_json("GET", endpoint + "/status", token=token, timeout=15.0)
         assert code == 200 and view["instance_id"] == instance
         status, reply = request_event(endpoint, token, project, "evt_after_ready", 2)
         assert status == 200 and reply["duplicate"] is False, reply

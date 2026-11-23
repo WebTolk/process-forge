@@ -186,9 +186,20 @@ def base_state(
     from processforge_core.runtime.schedule import RuntimeSchedule
     from processforge_core.runtime_service_state import (
         PROJECT_EVENT_MAINTENANCE_CAPABILITY,
+        PROJECT_EVENT_RUNTIME_IDENTITY,
+        runtime_process_identity,
     )
 
     properties = build_core_properties()
+    actual_pid = pid if pid is not None else os.getpid()
+    owner_identity = (
+        runtime_process_identity(actual_pid)
+        if instance_id and actual_pid == os.getpid()
+        else None
+    )
+    capabilities = {"guarded_shutdown": 1}
+    if owner_identity is not None:
+        capabilities[PROJECT_EVENT_MAINTENANCE_CAPABILITY] = 1
     identity: dict[str, Any] = dict(properties.report())
     identity["required_action"] = (
         "restart"
@@ -201,7 +212,7 @@ def base_state(
         "protocol_version": RUNTIME_PROTOCOL_VERSION,
         "processforge_core_version": properties.loaded.version,
         "core_identity": identity,
-        "pid": pid if pid is not None else os.getpid(),
+        "pid": actual_pid,
         "instance_id": instance_id,
         "started_at": _core_common_clock.now_utc(),
         "updated_at": _core_common_clock.now_utc(),
@@ -210,10 +221,8 @@ def base_state(
         "workplace_id": workplace_root.name,
         "status": status,
         "health": status,
-        "capabilities": {
-            "guarded_shutdown": 1,
-            PROJECT_EVENT_MAINTENANCE_CAPABILITY: 1,
-        },
+        "capabilities": capabilities,
+        **({PROJECT_EVENT_RUNTIME_IDENTITY: owner_identity} if owner_identity else {}),
         "token_ref": str(token_path(workplace_root)),
         "scheduler": {
             "jobs": {

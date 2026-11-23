@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
+import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from ..runtime.execution_admission import registry_file_lock
+from ..runtime.execution_admission import _registry_lock_read_owner, registry_file_lock
 from ..runtime_service_state import (
     PROJECT_EVENT_MAINTENANCE_CAPABILITY,
+    PROJECT_EVENT_RUNTIME_IDENTITY,
     RuntimeServiceStateStore,
+    runtime_process_identity,
 )
+from .backup import SQLiteBackupService
 from .contracts import JsonObject, MaintenanceError
 from .storage_migration import (
     StorageMigrationHost,
@@ -29,6 +34,24 @@ if TYPE_CHECKING:
     from .contracts import StoreTarget
 
 PROJECT_EVENT_MAINTENANCE_BUSY = "storage_project_event_maintenance_busy"
+
+
+class ProjectEventBackupService(SQLiteBackupService):
+    """Publish a complete verified bundle at its immutable plan location."""
+
+    def create(self, source: Path, bundle: Path) -> JsonObject:
+        # The parent migration retains the project identity gate throughout.
+        # A killed copier can leave staging, but never an incomplete final bundle.
+        with tempfile.TemporaryDirectory(
+            prefix=".backup-stage-", dir=bundle.parent
+        ) as name:
+            staging = Path(name) / bundle.name
+            super().create(source, staging)
+            verified = self.verify(staging)
+            if bundle.exists():
+                raise MaintenanceError("storage_backup_conflict")
+            os.rename(staging, bundle)
+        return verified
 
 
 def _intent(root: Path) -> Path:
@@ -56,9 +79,7 @@ def ordinary_storage_lock(
         yield
 
 
-def require_compatible_runtime(
-    workplace: Path, *, require_live_pid: bool = False
-) -> None:
+def require_compatible_runtime(workplace: Path) -> None:
     """Read bounded control records published by one ready local Runtime."""
     runtime = workplace / "runtime/pf-runtime"
     try:
@@ -88,11 +109,9 @@ def require_compatible_runtime(
     )
     if type(capability) is not int or capability != 1:
         raise MaintenanceError("storage_project_event_runtime_unsupported")
-    if require_live_pid:
-        from ..runtime.observation_inputs import WorkerObservationInputService
-
-        if not WorkerObservationInputService().process_pid_running(pid):
-            raise MaintenanceError("storage_project_event_runtime_unknown")
+    observed = runtime_process_identity(pid)
+    if observed is None or state.get(PROJECT_EVENT_RUNTIME_IDENTITY) != observed:
+        raise MaintenanceError("storage_project_event_runtime_unknown")
 
 
 def require_imported_history(target: StoreTarget, driver: SQLiteDriver) -> None:
@@ -116,6 +135,7 @@ def run_project_event_migration(
 ) -> JsonObject:
     """Run the existing durable transform with a project-owned operation intent."""
     report = StorageMigrationService._report(f"storage-{operation}")
+    report["requested_target"] = {"kind": "events", "scope": "project"}
     try:
         context = host.context
         targets = validate_storage_context(context)
@@ -136,13 +156,12 @@ def run_project_event_migration(
             "target_relative_path": target.target_relative_path,
         }
         report["selected_target"] = selected
+        bound = StorageMigrationHost(context, host.service)
         if operation == "inspect":
-            report = run_storage_migration(host, operation=operation)
+            report = run_storage_migration(bound, operation=operation)
         else:
             if not offline_confirmed:
-                require_compatible_runtime(
-                    context.workplace_root, require_live_pid=True
-                )
+                require_compatible_runtime(context.workplace_root)
             if not target.target.is_file():
                 raise MaintenanceError("storage_project_event_journal_missing")
             intent = _intent(storage_owner_root(context, target))
@@ -151,17 +170,36 @@ def run_project_event_migration(
             with registry_file_lock(
                 intent, timeout_seconds=0.05, stale_after_seconds=0
             ):
+                if (
+                    operation == "resume"
+                    and not host.service._selector(
+                        storage_owner_root(context, target), target
+                    ).is_file()
+                ):
+                    raise MaintenanceError("storage_project_event_plan_missing")
                 require_imported_history(target, host.service.driver)
-                report = run_storage_migration(host, operation=operation)
+                report = run_storage_migration(bound, operation=operation)
         report["selected_target"] = selected
+        if (report.get("error") or {}).get(
+            "code"
+        ) == "storage_project_event_runtime_unknown":
+            report["retryable"] = True
         return report
     except SystemExit as error:
         if getattr(error, "registry_lock_reason", None) != "contention_timeout":
             raise
-        report = StorageMigrationService._failure(
-            report, MaintenanceError(PROJECT_EVENT_MAINTENANCE_BUSY)
+        marker = intent.with_name(f".{intent.name}.lock")
+        unknown = (
+            getattr(error, "registry_lock_phase", None) == "owner"
+            and _registry_lock_read_owner(marker) is None
         )
-        report["retryable"] = True
+        code = (
+            "storage_project_event_intent_unknown"
+            if unknown
+            else PROJECT_EVENT_MAINTENANCE_BUSY
+        )
+        report = StorageMigrationService._failure(report, MaintenanceError(code))
+        report["retryable"] = not unknown
         return report
     except (MaintenanceError, OSError, sqlite3.Error) as error:
         report = StorageMigrationService._failure(report, error)
