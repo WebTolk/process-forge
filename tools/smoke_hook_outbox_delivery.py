@@ -22,8 +22,11 @@ from processforge_subprocess import diagnostic_text, run_command
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from pf_runtime.host import normalize_event  # noqa: E402
+
 from processforge_core.agents import hook_outbox  # noqa: E402
 from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher  # noqa: E402
+from processforge_core.common import ids  # noqa: E402
 
 
 def pf(*args: str) -> str:
@@ -34,7 +37,9 @@ def pf(*args: str) -> str:
     return result.stdout
 
 
-def configure(project: Path, *targets: str) -> None:
+def configure(
+    project: Path, *targets: str, overrides: dict[str, dict[str, Any]] | None = None
+) -> None:
     path = project / ".pf/hooks.yaml"
     config = yaml.safe_load(path.read_bytes())
     config["hooks"]["targets"] = [
@@ -43,6 +48,7 @@ def configure(project: Path, *targets: str) -> None:
             "type": "outbox",
             "enabled": True,
             "event_types": ["assignment.completed"],
+            **(overrides or {}).get(target, {}),
         }
         for target in targets
     ]
@@ -108,7 +114,8 @@ def public_dispatch(project: Path) -> dict[str, Any]:
 
 def replay_gap(workplace: Path, project: Path) -> None:
     target = "Ack Gap"
-    configure(project, target)
+    other = "Disabled Gap"
+    configure(project, target, other)
     results = project / ".pf/runtime/hooks/results"
     database = project / ".pf/runtime/events/events.sqlite3"
     # Remove only the receipt volume from this disposable consumer. Reading a
@@ -150,12 +157,19 @@ def replay_gap(workplace: Path, project: Path) -> None:
     with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as sql:
         pending = sql.execute("SELECT record FROM pending_dispatch").fetchall()
     assert len(pending) == 1, diagnostic_text(failed)
-    event = json.loads(pending[0][0])
+    event, targets = json.loads(pending[0][0])
+    assert [route["id"] for route in targets] == [target, other]
     key = hook_outbox.delivery_key(event["event_id"], target)
     receipt = results / f"{key}.json"
     payload = project / f".pf/runtime/hooks/outbox/{key}.outbox.json"
     captured = payload.read_bytes()
     assert not receipt.exists() and json.loads(captured)["event"] == event
+    configure(
+        project,
+        target,
+        other,
+        overrides={target: {"path": "changed-outbox"}, other: {"enabled": False}},
+    )
     pf(
         "runtime-host",
         "tick",
@@ -166,6 +180,9 @@ def replay_gap(workplace: Path, project: Path) -> None:
         "--json",
     )
     assert verify(project, receipt, target)["event"] == event
+    other_key = hook_outbox.delivery_key(event["event_id"], other)
+    assert verify(project, results / f"{other_key}.json", other)["event"] == event
+    assert not (project / ".pf/changed-outbox").exists()
     with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as sql:
         assert not sql.execute(
             "SELECT 1 FROM pending_dispatch WHERE event_id=?", (event["event_id"],)
@@ -180,6 +197,41 @@ def check_conflict(project: Path, event: dict[str, Any], reason: str) -> None:
         assert str(error) == reason
     else:
         raise AssertionError(f"expected {reason}")
+
+
+def runtime_correlations(project: Path) -> None:
+    target = "Runtime correlations"
+    configure(project, target)
+    raw = {
+        "event_type": "assignment.completed",
+        "event_id": "evt_fallback",
+        "payload": {"run_id": "payload-run"},
+    }
+    first = normalize_event(raw, project, ids)
+    replay = normalize_event(raw, project, ids)
+    assert first["correlation_id"] == replay["correlation_id"]
+    dispatcher = RuntimeHookDispatcher()
+    assert dispatcher.dispatch_hooks(project, first) == dispatcher.dispatch_hooks(
+        project, replay
+    )
+    supplied = {
+        **raw,
+        "event_id": "evt_explicit",
+        "correlation_id": "corr-111111111111",
+    }
+    event = normalize_event(supplied, project, ids)
+    (action,) = dispatcher.dispatch_hooks(project, event)
+    receipt = project / action["result"]
+    original = receipt.read_bytes()
+    assert (
+        verify(project, receipt, target)["event"]["correlation_id"]
+        == supplied["correlation_id"]
+    )
+    changed = normalize_event(
+        {**supplied, "correlation_id": "corr-222222222222"}, project, ids
+    )
+    check_conflict(project, changed, "outbox_delivery_conflict")
+    assert receipt.read_bytes() == original
 
 
 def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
@@ -215,6 +267,11 @@ def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
         ),
         encoding="utf-8",
     )
+    configure(project, "Blue A", overrides={"Blue A": {"path": "changed-outbox"}})
+    prior = receipt.read_bytes()
+    check_conflict(project, event, "outbox_delivery_route_conflict")
+    assert receipt.read_bytes() == prior and path.read_bytes() == original
+    assert not (project / ".pf/changed-outbox").exists()
     configure(project, "blue-a", "Blue A")
     other, legacy = RuntimeHookDispatcher().dispatch_hooks(project, event)
     assert (
@@ -233,10 +290,7 @@ def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
     typed_receipt = project / action["result"]
     proof = typed_receipt.read_bytes()
     check_conflict(project, {**typed, "data": {"value": 1}}, "outbox_delivery_conflict")
-    config_path = project / ".pf/hooks.yaml"
-    config = yaml.safe_load(config_path.read_bytes())
-    config["hooks"]["targets"][0]["path"] = "changed-outbox"
-    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    configure(project, "typed", overrides={"typed": {"path": "changed-outbox"}})
     check_conflict(project, typed, "outbox_delivery_route_conflict")
     assert (
         typed_receipt.read_bytes() == proof
@@ -303,6 +357,7 @@ def main() -> None:
         )
         event = public_dispatch(project)
         replay_gap(workplace, project)
+        runtime_correlations(project)
         legacy_and_concurrent(project, event)
     print(
         f"PASS: outbox dispatch, interrupted replay, legacy and concurrent targets on {platform_name()}, Python {python_version()}"

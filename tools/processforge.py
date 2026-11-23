@@ -5662,8 +5662,7 @@ def project_id(project_root: Path) -> str:
 def flush_pending_event_dispatches(project_root: Path, *, limit: int = 100) -> None:
     path = _run_task_inputs.event_runtime_paths(project_root)[0]
     for pending in _process_event_journal.pending_dispatch(path, limit=limit):
-        _runtime_hook_dispatcher.dispatch_hooks(project_root, pending, dry_run=False, outbox=True)
-        _process_event_journal.complete_dispatch(path, _hook_dispatch_policy.event_id_value(pending))
+        _process_event_recorder.deliver_pending_event(project_root, _process_event_journal, path, pending)
 
 
 

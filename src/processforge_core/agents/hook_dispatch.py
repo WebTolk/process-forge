@@ -51,9 +51,13 @@ class RuntimeHookDispatcher:
         *,
         dry_run: bool = False,
         outbox: bool = True,
+        targets: list[dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
-        hooks_config, _all_hooks = self.policy.hook_targets(project_root)
-        hooks = self.policy.selected_hooks(project_root, event)
+        hooks = (
+            self.policy.selected_hooks(project_root, event)
+            if targets is None
+            else targets
+        )
         actions: list[dict[str, Any]] = []
         event_id = self.policy.event_id_value(event)
         if not (event.get("event_id") or event.get("id")):
@@ -125,7 +129,9 @@ class RuntimeHookDispatcher:
                     self.write_hook_result(project_root, result), project_root
                 )
             elif hook_type == "webhook" and (
-                not hooks_config.get("network_send_enabled", False)
+                not self.policy.hook_targets(project_root)[0].get(
+                    "network_send_enabled", False
+                )
             ):
                 action["status"] = "skipped"
                 action["reason"] = "network send is disabled by default"

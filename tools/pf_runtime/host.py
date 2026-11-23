@@ -978,6 +978,12 @@ def normalize_event(
         data["task_id"] = task_id
     from processforge_core.agents.telemetry import TelemetryEventService
 
+    event_id = stable_event_id(raw)
+    correlation = raw.get("correlation_id") or session_id or run_id
+    if not correlation:
+        correlation = (
+            "corr-" + hashlib.sha256(event_id.encode("utf-8")).hexdigest()[:12]
+        )
     event = TelemetryEventService().processforge_event(
         project_root,
         event_type,
@@ -985,8 +991,8 @@ def normalize_event(
         assignment_id_value=task_id or None,
         subject=subject,
         data=data,
-        correlation_id=str(raw.get("correlation_id") or session_id or run_id or ""),
-        event_id=stable_event_id(raw),
+        correlation_id=str(correlation),
+        event_id=event_id,
         actor={
             "type": "agent",
             "id": core.safe_id(agent_id, "agent"),

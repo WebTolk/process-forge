@@ -44,7 +44,11 @@ Each event and exact target ID has its own delivery key. The CLI prints the
 payload and receipt paths. The receipt records the target, event ID and
 `payload_sha256` of the published file. A retry uses the first complete
 payload, including its timestamp. If receipt publication was interrupted,
-journal replay finishes the receipt from those same bytes.
+journal replay finishes the receipt from those same bytes. Admission stores
+the selected targets and their routes with the pending event. Changing a route
+or disabling a target affects subsequent events. The pending event finishes
+its original deliveries before acknowledgement. For an older event-only
+pending row, restore its hook configuration before the first replay.
 
 Older ordinary deliveries can retain their paths when the original envelope
 and receipt identify the event and exact target. Historical WTAICC envelopes

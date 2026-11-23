@@ -37,6 +37,29 @@ def _identifier(event: dict[str, Any]) -> str:
     return str(event.get("event_id") or event.get("id") or "")
 
 
+def _pending_record(encoded: str) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
+    record = json.loads(encoded)
+    if isinstance(record, dict):
+        # Historical event-only rows have no selection until their first retry.
+        return record, None
+    if (
+        isinstance(record, list)
+        and len(record) == 2
+        and isinstance(record[0], dict)
+        and isinstance(record[1], list)
+        and record[1]
+        and all(isinstance(target, dict) for target in record[1])
+    ):
+        return record[0], record[1]
+    raise JournalError("journal_dispatch_record_invalid")
+
+
+def _encode_dispatch(event: dict[str, Any], targets: list[dict[str, Any]]) -> str:
+    return json.dumps(
+        [event, targets], ensure_ascii=False, sort_keys=True, allow_nan=False
+    )
+
+
 class ProcessEventJournal:
     """Commit each admission before the caller dispatches project effects.
 
@@ -130,6 +153,7 @@ class ProcessEventJournal:
         event_id_value: Callable[[dict[str, Any]], str],
         record: bool,
         queue_dispatch: bool,
+        dispatch_targets: list[dict[str, Any]] | None = None,
     ) -> tuple[bool, list[dict[str, Any]]]:
         """Admit the event and read its pending delivery in the same transaction."""
         with self.connection(
@@ -142,6 +166,7 @@ class ProcessEventJournal:
                     event_id_value,
                     record,
                     queue_dispatch=queue_dispatch,
+                    dispatch_targets=dispatch_targets,
                 )
                 pending = self._pending_for_event(connection, event_id_value(event))
         return inserted, pending
@@ -151,11 +176,42 @@ class ProcessEventJournal:
         rows = connection.execute(
             "SELECT record FROM pending_dispatch WHERE event_id = ?", (event_id,)
         )
-        return [json.loads(row[0]) for row in rows]
+        return [_pending_record(row[0])[0] for row in rows]
+
+    def bind_dispatch_targets(
+        self, path: Path, event_id: str, select: Callable[[], list[dict[str, Any]]]
+    ) -> list[dict[str, Any]] | None:
+        """Read the original selection, or atomically bind a legacy pending event."""
+        with self.connection(
+            path, writable=True, driver=self.driver, storage_host=self.storage_host
+        ) as connection:
+            with transaction(connection):
+                row = connection.execute(
+                    "SELECT record FROM pending_dispatch WHERE event_id = ?",
+                    (event_id,),
+                ).fetchone()
+                if row is None:
+                    return None
+                event, targets = _pending_record(row[0])
+                if targets is None:
+                    targets = select()
+                    if not targets:
+                        raise JournalError("journal_legacy_dispatch_targets_unknown")
+                    connection.execute(
+                        "UPDATE pending_dispatch SET record = ? WHERE event_id = ?",
+                        (_encode_dispatch(event, targets), event_id),
+                    )
+                return targets
 
     @staticmethod
     def _append(
-        connection, event, event_id_value, record, migrating=False, queue_dispatch=False
+        connection,
+        event,
+        event_id_value,
+        record,
+        migrating=False,
+        queue_dispatch=False,
+        dispatch_targets=None,
     ) -> bool:
         event_id = event_id_value(event)
         if not isinstance(event_id, str) or not event_id:
@@ -216,9 +272,14 @@ class ProcessEventJournal:
             )
             set_metadata(connection, "verification_revision", str(sequence))
         if queue_dispatch:
+            pending = (
+                encoded
+                if dispatch_targets is None
+                else _encode_dispatch(event, dispatch_targets)
+            )
             connection.execute(
                 "INSERT INTO pending_dispatch VALUES (?, ?, ?)",
-                (event_id, sequence, encoded),
+                (event_id, sequence, pending),
             )
         return True
 
@@ -236,7 +297,7 @@ class ProcessEventJournal:
                 rows = connection.execute(
                     "SELECT record FROM pending_dispatch ORDER BY seq LIMIT ?", (limit,)
                 )
-                return [json.loads(row[0]) for row in rows]
+                return [_pending_record(row[0])[0] for row in rows]
         except FileNotFoundError:
             return []
 

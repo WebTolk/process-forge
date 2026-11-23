@@ -22,6 +22,7 @@ from processforge_core.configuration import ConfigurationProvider, PFConfig
 from processforge_core.executions.model import ExecutionError
 from processforge_core.process_event_journal import ProcessEventJournal
 from processforge_core.runtime.execution_admission import ExecutionAdmission
+from processforge_core.sqlite_storage import JournalError
 from processforge_core.work.capsule_publication import publish_capsule_bytes
 from processforge_core.work.start_intent import (
     RENDERING_START,
@@ -473,6 +474,29 @@ def test_standalone_retry_delivers_the_committed_event(case, monkeypatch):
     assert not recorder.admit_process_event(case.root, retry)
     assert delivered == [event]
     assert recorder.journal.pending_dispatch(path) == []
+
+
+def test_legacy_pending_routes_remain_bound_until_receipt(case):
+    recorder = case.recorder
+    journal = recorder.journal
+    path = recorder.inputs.event_runtime_paths(case.root)[0]
+    event = {"event_id": "legacy-pending", "event_type": "assignment.completed"}
+    assert journal.append(path, event, queue_dispatch=True)
+    with pytest.raises(JournalError, match="journal_legacy_dispatch_targets_unknown"):
+        journal.bind_dispatch_targets(path, event["event_id"], lambda: [])
+    assert journal.pending_dispatch(path) == [event]
+    routes = [{"id": "old target", "type": "outbox", "path": "old-outbox"}]
+    assert (
+        journal.bind_dispatch_targets(path, event["event_id"], lambda: routes) == routes
+    )
+    assert journal.pending_dispatch(path) == [event]
+    (action,) = recorder.deliver_pending_event(case.root, journal, path, event)
+    receipt = json.loads((case.root / action["result"]).read_bytes())
+    payload = case.root / receipt["outbox"]
+    assert payload.parent == case.flow / "old-outbox"
+    assert receipt["payload_sha256"] == hashlib.sha256(payload.read_bytes()).hexdigest()
+    assert json.loads(payload.read_bytes())["event"] == event
+    assert journal.pending_dispatch(path) == []
 
 
 def test_corrupt_intent_cannot_bypass_pending_readiness(case):

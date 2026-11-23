@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import re
 from pathlib import Path
 from typing import Any
 
@@ -81,9 +80,8 @@ def write_receipt(path: Path, result: dict[str, Any], *, first: bool = False) ->
 def _original_observation(
     event: dict[str, Any], first: dict[str, Any]
 ) -> dict[str, Any]:
-    # Runtime can reconstruct an admitted event from raw ingress. Its host
-    # observation time and the fallback correlation for a sessionless event
-    # are generated anew. Keep the originally delivered values on replay.
+    # Runtime observes a fresh time when reconstructing an admitted event.
+    # All other fields, including the correlation, describe the delivery.
     source = event.get("source")
     if (
         not isinstance(source, str)
@@ -94,19 +92,6 @@ def _original_observation(
     restored = dict(event)
     if isinstance(event.get("time"), str) and isinstance(first.get("time"), str):
         restored["time"] = first["time"]
-    session = event.get("session") or {}
-    data = event.get("data") or {}
-    if (
-        isinstance(session, dict)
-        and isinstance(data, dict)
-        and not session.get("id")
-        and not data.get("run_id")
-        and all(
-            isinstance(value, str) and re.fullmatch(r"corr-[0-9a-f]{12}", value)
-            for value in (event.get("correlation_id"), first.get("correlation_id"))
-        )
-    ):
-        restored["correlation_id"] = first["correlation_id"]
     return restored
 
 
@@ -130,7 +115,8 @@ def _legacy_pair(
         or not all(c.isalnum() or c in "-_." for c in event_id)
     ):
         return None
-    path = directory / f"{event_id}.{slug}.json"
+    filename = f"{event_id}.{slug}.json"
+    configured = directory / filename
     bound = False
     try:
         receipt = json.loads(raw_receipt)
@@ -146,10 +132,12 @@ def _legacy_pair(
             and receipt.get("target_id") == target_id
             and "payload_sha256" in receipt
         )
-        if receipt.get("outbox") != rel(path, project):
+        recorded = receipt.get("outbox")
+        if not isinstance(recorded, str) or Path(recorded).name != filename:
             if bound:
                 raise ValueError("outbox_delivery_route_conflict")
             return None
+        path = project / recorded
         data = _read(path)
         if data is None:
             if bound:
@@ -183,6 +171,8 @@ def _legacy_pair(
         and receipt["payload_sha256"] != hashlib.sha256(data).hexdigest()
     ):
         raise ValueError("outbox_receipt_payload_mismatch")
+    if path != configured:
+        raise ValueError("outbox_delivery_route_conflict")
     return legacy_id, path, data, receipt
 
 
