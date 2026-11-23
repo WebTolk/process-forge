@@ -40,6 +40,17 @@ Hook delivery results are written to:
 
 Both paths are private runtime state and ignored by git.
 
+Each event and exact target ID has its own delivery key. The CLI prints the
+payload and receipt paths. The receipt records the target, event ID and
+`payload_sha256` of the published file. A retry uses the first complete
+payload, including its timestamp. If receipt publication was interrupted,
+journal replay finishes the receipt from those same bytes.
+
+Older ordinary deliveries can retain their paths when the original envelope
+and receipt identify the event and exact target. Historical WTAICC envelopes
+contain only the shared integration name. Replay preserves those files and
+writes a separately identified delivery for the configured target.
+
 ## Dry Run And Outbox
 
 Use dry-run to see which targets would match:
