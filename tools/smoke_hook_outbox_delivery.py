@@ -26,6 +26,7 @@ from pf_runtime.host import normalize_event  # noqa: E402
 
 from processforge_core.agents import hook_outbox  # noqa: E402
 from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher  # noqa: E402
+from processforge_core.agents.process_events import ProcessEventRecorder  # noqa: E402
 from processforge_core.common import ids  # noqa: E402
 
 
@@ -234,6 +235,53 @@ def runtime_correlations(project: Path) -> None:
     assert receipt.read_bytes() == original
 
 
+def interrupted_v1(
+    workplace: Path, project: Path, original_event: dict[str, Any]
+) -> None:
+    target = "Legacy Gap"
+    configure(project, target)
+    event = {**original_event, "event_id": "evt_журнал gap"}
+    event_id = event["event_id"]
+    key = "del_" + hashlib.sha256(f"{event_id}:legacy-gap".encode()).hexdigest()[:32]
+    hooks = project / ".pf/runtime/hooks"
+    payload = hooks / "outbox" / f"{event_id}.legacy-gap.json"
+    first = (
+        json.dumps(
+            {
+                "schema_version": 1,
+                "delivery_id": key,
+                "target_id": target,
+                "mode": "outbox",
+                "delivery_time": "2026-01-01T00:00:00Z",
+                "event": event,
+            },
+            ensure_ascii=False,
+        ).encode()
+        + b"\r\n"
+    )
+    payload.write_bytes(first)
+    receipt = hooks / "results" / f"{key}.json"
+    database = project / ".pf/runtime/events/events.sqlite3"
+    journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
+    assert journal.append(database, event, queue_dispatch=True)
+    before = set(payload.parent.glob("*.json"))
+    assert not receipt.exists()
+    pf(
+        "runtime-host",
+        "tick",
+        "--workplace",
+        str(workplace),
+        "--project-root",
+        str(project),
+        "--json",
+    )
+    assert verify(project, receipt, target)["event"] == event
+    assert (
+        set(payload.parent.glob("*.json")) == before and payload.read_bytes() == first
+    )
+    assert journal.pending_dispatch(database, event_id=event_id) == []
+
+
 def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
     hooks = project / ".pf/runtime/hooks"
     old_key = (
@@ -358,6 +406,7 @@ def main() -> None:
         event = public_dispatch(project)
         replay_gap(workplace, project)
         runtime_correlations(project)
+        interrupted_v1(workplace, project, event)
         legacy_and_concurrent(project, event)
     print(
         f"PASS: outbox dispatch, interrupted replay, legacy and concurrent targets on {platform_name()}, Python {python_version()}"

@@ -8,6 +8,7 @@ import json
 import sqlite3
 import threading
 import time
+from argparse import Namespace
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -15,6 +16,7 @@ from unittest.mock import patch
 import pytest
 import yaml
 
+from processforge_core.agents import hook_outbox
 from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher
 from processforge_core.agents.hook_policy import HookDispatchPolicy
 from processforge_core.agents.process_events import ProcessEventRecorder
@@ -497,6 +499,66 @@ def test_legacy_pending_routes_remain_bound_until_receipt(case):
     assert receipt["payload_sha256"] == hashlib.sha256(payload.read_bytes()).hexdigest()
     assert json.loads(payload.read_bytes())["event"] == event
     assert journal.pending_dispatch(path) == []
+
+
+def test_cli_reports_receipts_when_host_acknowledges_first(
+    tmp_path, monkeypatch, capsys
+):
+    import processforge as core
+
+    case = PublicationCase(tmp_path / "project")
+    target = {
+        "id": "admitted",
+        "type": "outbox",
+        "enabled": True,
+        "event_types": ["assignment.completed"],
+    }
+    (case.flow / "hooks.yaml").write_text(
+        yaml.safe_dump({"hooks": {"targets": [target]}}), encoding="utf-8"
+    )
+    recorder = case.recorder
+    monkeypatch.setattr(core, "_process_event_recorder", recorder)
+    monkeypatch.setattr(core, "_process_event_journal", recorder.journal)
+    append = recorder.journal.append_for_dispatch
+
+    def admit_then_flush(*args, **kwargs):
+        inserted, pending = append(*args, **kwargs)
+        if inserted and pending:
+            core.flush_pending_event_dispatches(case.root)
+            monkeypatch.setattr(
+                hook_outbox,
+                "_publish",
+                lambda *a, **kw: pytest.fail("republished acknowledged file"),
+            )
+        return inserted, pending
+
+    monkeypatch.setattr(recorder.journal, "append_for_dispatch", admit_then_flush)
+    args = Namespace(
+        project_root=str(case.root),
+        event_type="assignment.completed",
+        severity="info",
+        session_id=None,
+        assignment_id=None,
+        since=None,
+        dry_run=False,
+        outbox=True,
+    )
+    assert core.command_hooks_dispatch(args) == 0
+    output = capsys.readouterr().out.splitlines()
+    assert "HOOK: admitted outbox outbox_written" in output
+    event_id = next(
+        line.removeprefix("EVENT: ") for line in output if line.startswith("EVENT: ")
+    )
+    key = hook_outbox.delivery_key(event_id, "admitted")
+    receipt_path = f".pf/runtime/hooks/results/{key}.json"
+    receipt = json.loads((case.root / receipt_path).read_bytes())
+    assert (
+        f"RESULT: {receipt_path}" in output and f"OUTBOX: {receipt['outbox']}" in output
+    )
+    assert (
+        receipt["payload_sha256"]
+        == hashlib.sha256((case.root / receipt["outbox"]).read_bytes()).hexdigest()
+    )
 
 
 def test_corrupt_intent_cannot_bypass_pending_readiness(case):

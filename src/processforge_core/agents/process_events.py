@@ -77,11 +77,17 @@ class ProcessEventRecorder:
         journal: ProcessEventJournal,
         path: Path,
         event: dict[str, Any],
+        *,
+        admitted_targets: list[dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
         event_id = self.hooks.event_id_value(event)
-        targets = journal.bind_dispatch_targets(
-            path, event_id, lambda: self.delivery_targets(project_root, event)
-        )
+        # The admitting transaction already selected these routes. Its caller
+        # can still verify and report the receipts if a host tick finishes first.
+        targets = admitted_targets
+        if targets is None:
+            targets = journal.bind_dispatch_targets(
+                path, event_id, lambda: self.delivery_targets(project_root, event)
+            )
         if targets is None:
             return []  # A concurrent dispatcher already acknowledged this event.
         delivered = self.dispatcher.dispatch_hooks(project_root, event, targets=targets)
@@ -125,7 +131,11 @@ class ProcessEventRecorder:
         )
         for pending in deliveries:
             delivered = self.deliver_pending_event(
-                project_root, journal, events_path, pending
+                project_root,
+                journal,
+                events_path,
+                pending,
+                admitted_targets=targets if inserted else None,
             )
             if actions is not None:
                 actions.extend(delivered)

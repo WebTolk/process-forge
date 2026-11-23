@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import os
@@ -72,7 +73,7 @@ def write_receipt(path: Path, result: dict[str, Any], *, first: bool = False) ->
     if first:
         if _first_bytes(path, raw) != raw:
             raise ValueError("outbox_receipt_conflict")
-    else:
+    elif _read(path) != raw:
         _publish(path, raw, replace=True)
     return path
 
@@ -105,45 +106,57 @@ def _legacy_pair(
 ) -> tuple[str, Path, bytes, dict[str, Any]] | None:
     slug = safe_id(target_id, "hook")
     legacy_id = "del_" + opaque_identity_digest(f"{event_id}:{slug}")[:32]
-    raw_receipt = _read(results / f"{legacy_id}.json")
-    if raw_receipt is None:
-        return None
     # A legacy WTAICC envelope cannot prove which exact configured target wrote it.
     if (
         slug.startswith("wtaicc")
-        or not event_id.isascii()
-        or not all(c.isalnum() or c in "-_." for c in event_id)
+        or not event_id
+        or any(char in event_id for char in ("/", "\\", "\0"))
     ):
         return None
     filename = f"{event_id}.{slug}.json"
+    if os.name == "nt" and (
+        Path(filename).is_reserved()
+        or any(char in '<>:"|?*' or ord(char) < 32 for char in filename)
+    ):
+        return None
     configured = directory / filename
+    path = configured
+    receipt: dict[str, Any] = {}
     bound = False
     try:
-        receipt = json.loads(raw_receipt)
-        if not isinstance(receipt, dict) or not (
-            receipt.get("schema_version") == 1
-            and receipt.get("delivery_id") == legacy_id
-            and receipt.get("target_id") in (slug, target_id)
-            and receipt.get("status") == "written"
-        ):
-            return None
-        bound = (
-            receipt.get("event_id") == event_id
-            and receipt.get("target_id") == target_id
-            and "payload_sha256" in receipt
-        )
-        recorded = receipt.get("outbox")
-        if not isinstance(recorded, str) or Path(recorded).name != filename:
-            if bound:
-                raise ValueError("outbox_delivery_route_conflict")
-            return None
-        path = project / recorded
+        raw_receipt = _read(results / f"{legacy_id}.json")
+        if raw_receipt is not None:
+            receipt = json.loads(raw_receipt)
+            if not isinstance(receipt, dict) or not (
+                receipt.get("schema_version") == 1
+                and receipt.get("delivery_id") == legacy_id
+                and receipt.get("target_id") in (slug, target_id)
+                and receipt.get("status") == "written"
+            ):
+                return None
+            bound = (
+                receipt.get("event_id") == event_id
+                and receipt.get("target_id") == target_id
+                and "payload_sha256" in receipt
+            )
+            recorded = receipt.get("outbox")
+            if not isinstance(recorded, str) or Path(recorded).name != filename:
+                if bound:
+                    raise ValueError("outbox_delivery_route_conflict")
+                return None
+            path = project / recorded
         data = _read(path)
         if data is None:
             if bound:
                 raise ValueError("outbox_legacy_payload_missing")
             return None
         envelope = json.loads(data)
+    except OSError as error:
+        if not bound and (
+            error.errno == errno.ENAMETOOLONG or getattr(error, "winerror", None) == 206
+        ):
+            return None
+        raise
     except (json.JSONDecodeError, UnicodeDecodeError) as error:
         if bound:
             raise ValueError("outbox_legacy_payload_invalid") from error

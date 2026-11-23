@@ -51,7 +51,9 @@ its original deliveries before acknowledgement. For an older event-only
 pending row, restore its hook configuration before the first replay.
 
 Older ordinary deliveries can retain their paths when the original envelope
-and receipt identify the event and exact target. Historical WTAICC envelopes
+identifies the event and exact target. If publication stopped before the old
+receipt was written, replay completes that receipt from the original file.
+Historical WTAICC envelopes
 contain only the shared integration name. Replay preserves those files and
 writes a separately identified delivery for the configured target.
 
