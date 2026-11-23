@@ -62,7 +62,11 @@ def verify(project: Path, receipt_path: Path, target: str) -> dict[str, Any]:
     payload = json.loads(raw)
     assert receipt["target_id"] == target == payload["target_id"]
     assert receipt["event_id"] == payload["event"]["event_id"]
-    assert receipt["delivery_id"] == payload["delivery_id"] == receipt_path.stem
+    assert receipt["delivery_id"] == receipt_path.stem
+    assert (
+        receipt.get("payload_delivery_id", receipt["delivery_id"])
+        == payload["delivery_id"]
+    )
     assert (
         receipt["status"] == "written"
         and receipt["payload_sha256"] == hashlib.sha256(raw).hexdigest()
@@ -235,17 +239,14 @@ def runtime_correlations(project: Path) -> None:
     assert receipt.read_bytes() == original
 
 
-def interrupted_v1(
-    workplace: Path, project: Path, original_event: dict[str, Any]
-) -> None:
-    target = "Legacy Gap"
-    configure(project, target)
-    event = {**original_event, "event_id": "evt_журнал gap"}
+def v1_file(
+    directory: Path, target: str, event: dict[str, Any]
+) -> tuple[Path, bytes, str]:
     event_id = event["event_id"]
-    key = "del_" + hashlib.sha256(f"{event_id}:legacy-gap".encode()).hexdigest()[:32]
-    hooks = project / ".pf/runtime/hooks"
-    payload = hooks / "outbox" / f"{event_id}.legacy-gap.json"
-    first = (
+    slug = ids.safe_id(target, "hook")
+    key = "del_" + hashlib.sha256(f"{event_id}:{slug}".encode()).hexdigest()[:32]
+    path = directory / f"{event_id}.{slug}.json"
+    original = (
         json.dumps(
             {
                 "schema_version": 1,
@@ -259,13 +260,15 @@ def interrupted_v1(
         ).encode()
         + b"\r\n"
     )
-    payload.write_bytes(first)
-    receipt = hooks / "results" / f"{key}.json"
+    directory.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(original)
+    return path, original, key
+
+
+def replay_v1(workplace: Path, project: Path, event: dict[str, Any]) -> None:
     database = project / ".pf/runtime/events/events.sqlite3"
     journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
     assert journal.append(database, event, queue_dispatch=True)
-    before = set(payload.parent.glob("*.json"))
-    assert not receipt.exists()
     pf(
         "runtime-host",
         "tick",
@@ -275,11 +278,120 @@ def interrupted_v1(
         str(project),
         "--json",
     )
-    assert verify(project, receipt, target)["event"] == event
-    assert (
-        set(payload.parent.glob("*.json")) == before and payload.read_bytes() == first
-    )
-    assert journal.pending_dispatch(database, event_id=event_id) == []
+    assert journal.pending_dispatch(database, event_id=event["event_id"]) == []
+
+
+def interrupted_v1(
+    workplace: Path, project: Path, original_event: dict[str, Any]
+) -> None:
+    target = "Legacy Gap"
+    configure(project, target)
+    hooks = project / ".pf/runtime/hooks"
+    for number, torn in enumerate((None, b"", b'{"outbox":')):
+        event = {**original_event, "event_id": f"evt_журнал gap{number}"}
+        path, first, key = v1_file(hooks / "outbox", target, event)
+        historical = hooks / "results" / f"{key}.json"
+        before = set(path.parent.glob("*.json"))
+        assert not historical.exists()
+        if torn is not None:
+            historical.write_bytes(torn)
+        replay_v1(workplace, project, event)
+        receipt = historical
+        if torn is not None:
+            current = hook_outbox.delivery_key(event["event_id"], target)
+            receipt = historical.with_name(f"{current}.json")
+        assert verify(project, receipt, target)["event"] == event
+        proof = receipt.read_bytes()
+        (action,) = RuntimeHookDispatcher().dispatch_hooks(project, event)
+        assert project / action["result"] == receipt and receipt.read_bytes() == proof
+        assert project / action["outbox"] == path
+        assert set(path.parent.glob("*.json")) == before and path.read_bytes() == first
+        if torn is None:
+            assert receipt == historical
+        else:
+            assert receipt != historical and historical.read_bytes() == torn
+
+
+def separate_v1_targets(
+    workplace: Path, project: Path, original_event: dict[str, Any]
+) -> None:
+    targets = ("Build A", "build-a")
+    routes = {
+        target: {"path": f"legacy-{index}"} for index, target in enumerate(targets)
+    }
+    results = project / ".pf/runtime/hooks/results"
+    for case in ("first", "second", "unclaimed"):
+        event = {**original_event, "event_id": f"evt_legacy_routes_{case}"}
+        files = {
+            target: v1_file(project / ".pf" / routes[target]["path"], target, event)
+            for target in targets
+        }
+        first_path, _, key = files[targets[0]]
+        primary = results / f"{key}.json"
+        if case != "unclaimed":
+            primary.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "delivery_id": key,
+                        "target_id": "build-a",
+                        "status": "written",
+                        "outbox": first_path.relative_to(project).as_posix(),
+                    }
+                ),
+                encoding="utf-8",
+            )
+        order = targets if case == "first" else targets[::-1]
+        configure(project, *order, overrides=routes)
+        before = {
+            t: set(path.parent.glob("*.json")) for t, (path, _, _) in files.items()
+        }
+        dispatcher = RuntimeHookDispatcher()
+        if case == "unclaimed":
+            # Independent publishers can race to claim the single historical receipt.
+            selected = dispatcher.policy.selected_hooks(project, event)
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                pending = [
+                    executor.submit(
+                        dispatcher.dispatch_hooks, project, event, targets=[target]
+                    )
+                    for target in selected
+                ]
+                for future in pending:
+                    future.result()
+        replay_v1(workplace, project, event)
+        owner = json.loads(primary.read_bytes())["target_id"]
+        assert owner in targets and (case == "unclaimed" or owner == targets[0])
+        proofs = {}
+        for target in targets:
+            receipt = (
+                primary
+                if target == owner
+                else results
+                / (hook_outbox.delivery_key(event["event_id"], target) + ".json")
+            )
+            path, original, _ = files[target]
+            assert verify(project, receipt, target)["delivery_id"] == key
+            assert project / json.loads(receipt.read_bytes())["outbox"] == path
+            assert path.read_bytes() == original
+            assert set(path.parent.glob("*.json")) == before[target]
+            proofs[receipt] = receipt.read_bytes()
+        actions = dispatcher.dispatch_hooks(project, event)
+        assert {project / a["result"] for a in actions} == set(proofs)
+        assert all(path.read_bytes() == proof for path, proof in proofs.items())
+        if case == "second":
+            alias = next(a for a in actions if project / a["result"] != primary)
+            configure(
+                project,
+                alias["target_id"],
+                overrides={alias["target_id"]: {"path": "moved"}},
+            )
+            check_conflict(project, event, "outbox_delivery_route_conflict")
+            configure(project, alias["target_id"], overrides=routes)
+            check_conflict(
+                project, {**event, "subject": "changed"}, "outbox_delivery_conflict"
+            )
+            assert not (project / ".pf/moved").exists()
 
 
 def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
@@ -407,6 +519,7 @@ def main() -> None:
         replay_gap(workplace, project)
         runtime_correlations(project)
         interrupted_v1(workplace, project, event)
+        separate_v1_targets(workplace, project, event)
         legacy_and_concurrent(project, event)
     print(
         f"PASS: outbox dispatch, interrupted replay, legacy and concurrent targets on {platform_name()}, Python {python_version()}"

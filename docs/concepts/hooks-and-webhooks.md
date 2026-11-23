@@ -53,7 +53,10 @@ pending row, restore its hook configuration before the first replay.
 Older ordinary deliveries can retain their paths when the original envelope
 identifies the event and exact target. If publication stopped before the old
 receipt was written, replay completes that receipt from the original file.
-Historical WTAICC envelopes
+If the old receipt is truncated or belongs to a different target with the
+same normalized name, the exact target gets its own receipt for the original
+bytes. Its `payload_delivery_id` identifies the historical envelope and
+`payload_sha256` verifies the file at `outbox`. Historical WTAICC envelopes
 contain only the shared integration name. Replay preserves those files and
 writes a separately identified delivery for the configured target.
 

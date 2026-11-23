@@ -96,6 +96,56 @@ def _original_observation(
     return restored
 
 
+def _legacy_object(raw: bytes) -> dict[str, Any]:
+    try:
+        value = json.loads(raw)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _legacy_payload(
+    path: Path,
+    legacy_id: str,
+    target_id: str,
+    event_id: str,
+    event: dict[str, Any],
+    *,
+    bound: bool = False,
+) -> bytes | None:
+    try:
+        data = _read(path)
+    except OSError as error:
+        if not bound and (
+            error.errno == errno.ENAMETOOLONG or getattr(error, "winerror", None) == 206
+        ):
+            return None
+        raise
+    if data is None:
+        if bound:
+            raise ValueError("outbox_legacy_payload_missing")
+        return None
+    envelope = _legacy_object(data)
+    if not (
+        envelope.get("schema_version") == 1
+        and envelope.get("delivery_id") == legacy_id
+        and envelope.get("mode") == "outbox"
+        and envelope.get("target_id") == target_id
+        and isinstance(envelope.get("event"), dict)
+        and (envelope["event"].get("event_id") or envelope["event"].get("id"))
+        == event_id
+        and isinstance(envelope.get("delivery_time"), str)
+    ):
+        if bound:
+            raise ValueError("outbox_legacy_payload_invalid")
+        return None
+    if _encode(envelope["event"]) != _encode(
+        _original_observation(event, envelope["event"])
+    ):
+        raise ValueError("outbox_delivery_conflict")
+    return data
+
+
 def _legacy_pair(
     project: Path,
     directory: Path,
@@ -103,6 +153,8 @@ def _legacy_pair(
     event_id: str,
     target_id: str,
     event: dict[str, Any],
+    delivery_id: str,
+    previous: dict[str, Any],
 ) -> tuple[str, Path, bytes, dict[str, Any]] | None:
     slug = safe_id(target_id, "hook")
     legacy_id = "del_" + opaque_identity_digest(f"{event_id}:{slug}")[:32]
@@ -120,73 +172,66 @@ def _legacy_pair(
     ):
         return None
     configured = directory / filename
-    path = configured
-    receipt: dict[str, Any] = {}
-    bound = False
-    try:
-        raw_receipt = _read(results / f"{legacy_id}.json")
-        if raw_receipt is not None:
-            receipt = json.loads(raw_receipt)
-            if not isinstance(receipt, dict) or not (
-                receipt.get("schema_version") == 1
-                and receipt.get("delivery_id") == legacy_id
-                and receipt.get("target_id") in (slug, target_id)
-                and receipt.get("status") == "written"
-            ):
-                return None
-            bound = (
-                receipt.get("event_id") == event_id
-                and receipt.get("target_id") == target_id
-                and "payload_sha256" in receipt
-            )
-            recorded = receipt.get("outbox")
-            if not isinstance(recorded, str) or Path(recorded).name != filename:
-                if bound:
-                    raise ValueError("outbox_delivery_route_conflict")
-                return None
-            path = project / recorded
-        data = _read(path)
+    if previous:
+        if previous.get("payload_delivery_id") != legacy_id:
+            raise ValueError("outbox_receipt_invalid")
+        if previous.get("outbox") != rel(configured, project):
+            raise ValueError("outbox_delivery_route_conflict")
+        data = _legacy_payload(
+            configured, legacy_id, target_id, event_id, event, bound=True
+        )
+        if data is not None:
+            return delivery_id, configured, data, previous
+        return None
+
+    receipt_path = results / f"{legacy_id}.json"
+    raw = _read(receipt_path)
+    if raw is None:
+        data = _legacy_payload(configured, legacy_id, target_id, event_id, event)
         if data is None:
-            if bound:
-                raise ValueError("outbox_legacy_payload_missing")
             return None
-        envelope = json.loads(data)
-    except OSError as error:
-        if not bound and (
-            error.errno == errno.ENAMETOOLONG or getattr(error, "winerror", None) == 206
-        ):
-            return None
-        raise
-    except (json.JSONDecodeError, UnicodeDecodeError) as error:
-        if bound:
-            raise ValueError("outbox_legacy_payload_invalid") from error
-        # Preserve unreadable history and use the disjoint current key.
-        return None
-    if not isinstance(envelope, dict) or not (
-        envelope.get("schema_version") == 1
-        and envelope.get("delivery_id") == legacy_id
-        and envelope.get("mode") == "outbox"
-        and envelope.get("target_id") == target_id
-        and isinstance(envelope.get("event"), dict)
-        and (envelope["event"].get("event_id") or envelope["event"].get("id"))
-        == event_id
-        and isinstance(envelope.get("delivery_time"), str)
-    ):
-        if bound:
-            raise ValueError("outbox_legacy_payload_invalid")
-        return None
-    if _encode(envelope["event"]) != _encode(
-        _original_observation(event, envelope["event"])
-    ):
-        raise ValueError("outbox_delivery_conflict")
+        # More than one exact target may qualify for the same historical receipt.
+        # Elect its owner once, using the immutable payload as evidence.
+        claim = _written_receipt(
+            project, configured, data, {}, legacy_id, event_id, target_id
+        )
+        raw = _first_bytes(receipt_path, _encode(claim))
+
+    receipt = _legacy_object(raw)
     if (
-        "payload_sha256" in receipt
-        and receipt["payload_sha256"] != hashlib.sha256(data).hexdigest()
+        receipt.get("schema_version") == 1
+        and receipt.get("delivery_id") == legacy_id
+        and receipt.get("target_id") in (slug, target_id)
+        and receipt.get("status") == "written"
     ):
-        raise ValueError("outbox_receipt_payload_mismatch")
-    if path != configured:
-        raise ValueError("outbox_delivery_route_conflict")
-    return legacy_id, path, data, receipt
+        bound = (
+            receipt.get("event_id") == event_id
+            and receipt.get("target_id") == target_id
+            and "payload_sha256" in receipt
+        )
+        recorded = receipt.get("outbox")
+        if (
+            isinstance(recorded, str)
+            and "\0" not in recorded
+            and Path(recorded).name == filename
+        ):
+            path = project / recorded
+            data = _legacy_payload(
+                path, legacy_id, target_id, event_id, event, bound=bound
+            )
+            if data is not None:
+                if path != configured:
+                    raise ValueError("outbox_delivery_route_conflict")
+                return legacy_id, path, data, receipt
+        elif bound:
+            raise ValueError("outbox_delivery_route_conflict")
+
+    # A torn receipt or a sibling target's receipt says nothing about this
+    # directory's envelope. Preserve the old record and bind our exact key.
+    data = _legacy_payload(configured, legacy_id, target_id, event_id, event)
+    if data is None:
+        return None
+    return delivery_id, configured, data, {}
 
 
 def _payload_bytes(
@@ -222,6 +267,48 @@ def _payload_bytes(
     return data
 
 
+def _written_receipt(
+    project: Path,
+    path: Path,
+    data: bytes,
+    previous: dict[str, Any],
+    delivery_id: str,
+    event_id: str,
+    target_id: str,
+) -> dict[str, Any]:
+    envelope = json.loads(data)
+    digest = hashlib.sha256(data).hexdigest()
+    if "payload_sha256" in previous and previous["payload_sha256"] != digest:
+        raise ValueError("outbox_receipt_payload_mismatch")
+    timestamp = "delivery_time" if "delivery_time" in envelope else "created_at"
+    receipt = {
+        **previous,
+        "schema_version": 1,
+        "delivery_id": delivery_id,
+        "target_id": target_id,
+        "event_id": event_id,
+        "delivery_time": envelope[timestamp],
+        "payload_sha256": digest,
+        "status": "written",
+        "exit_code": 0,
+        "blocking": False,
+        "message": "Outbox payload written",
+        "outbox": rel(path, project),
+    }
+    if envelope["delivery_id"] != delivery_id:
+        receipt["payload_delivery_id"] = envelope["delivery_id"]
+    original = envelope["event"]
+    if isinstance(original.get("source"), str) and original["source"].startswith(
+        "processforge.runtime."
+    ):
+        receipt["runtime_observation"] = {
+            key: original[key]
+            for key in ("source", "time", "correlation_id")
+            if key in original
+        }
+    return receipt
+
+
 def publish_outbox(
     project: Path,
     directory: Path,
@@ -235,58 +322,43 @@ def publish_outbox(
     receipt_path = results / f"{delivery_id}.json"
     raw_receipt = _read(receipt_path)
     previous: dict[str, Any] = {}
-    timestamp = "created_at" if "created_at" in payload else "delivery_time"
+    if raw_receipt is not None:
+        previous = json.loads(raw_receipt)
+        if not isinstance(previous, dict) or not (
+            previous.get("delivery_id") == delivery_id
+            and previous.get("event_id") == event_id
+            and previous.get("target_id") == target_id
+            and previous.get("status") == "written"
+            and isinstance(previous.get("delivery_time"), str)
+            and isinstance(previous.get("payload_sha256"), str)
+            and isinstance(previous.get("runtime_observation", {}), dict)
+        ):
+            raise ValueError("outbox_receipt_invalid")
     legacy = None
-    if raw_receipt is None:
+    if not previous or "payload_delivery_id" in previous:
         legacy = _legacy_pair(
-            project, directory, results, event_id, target_id, payload["event"]
+            project,
+            directory,
+            results,
+            event_id,
+            target_id,
+            payload["event"],
+            delivery_id,
+            previous,
         )
+        if legacy is None and previous:
+            raise ValueError("outbox_receipt_invalid")
     if legacy is not None:
         delivery_id, path, data, previous = legacy
         receipt_path = results / f"{delivery_id}.json"
     else:
-        if raw_receipt is not None:
-            previous = json.loads(raw_receipt)
-            if not isinstance(previous, dict) or not (
-                previous.get("delivery_id") == delivery_id
-                and previous.get("event_id") == event_id
-                and previous.get("target_id") == target_id
-                and previous.get("status") == "written"
-                and isinstance(previous.get("delivery_time"), str)
-                and isinstance(previous.get("payload_sha256"), str)
-                and isinstance(previous.get("runtime_observation", {}), dict)
-            ):
-                raise ValueError("outbox_receipt_invalid")
         if previous and previous.get("outbox") != rel(path, project):
             raise ValueError("outbox_delivery_route_conflict")
+        timestamp = "created_at" if "created_at" in payload else "delivery_time"
         data = _payload_bytes(path, payload, timestamp, previous)
-        if previous and hashlib.sha256(data).hexdigest() != previous["payload_sha256"]:
-            raise ValueError("outbox_receipt_payload_mismatch")
-    envelope = json.loads(data)
-    outbox = rel(path, project)
-    receipt = {
-        **previous,
-        "schema_version": 1,
-        "delivery_id": delivery_id,
-        "target_id": target_id,
-        "event_id": event_id,
-        "delivery_time": envelope[timestamp],
-        "payload_sha256": hashlib.sha256(data).hexdigest(),
-        "status": "written",
-        "exit_code": 0,
-        "blocking": False,
-        "message": "Outbox payload written",
-        "outbox": outbox,
-    }
-    original = envelope["event"]
-    if isinstance(original.get("source"), str) and original["source"].startswith(
-        "processforge.runtime."
-    ):
-        receipt["runtime_observation"] = {
-            key: original[key]
-            for key in ("source", "time", "correlation_id")
-            if key in original
-        }
+    receipt = _written_receipt(
+        project, path, data, previous, delivery_id, event_id, target_id
+    )
     if receipt != previous:
         write_receipt(receipt_path, receipt, first=not previous)
-    return delivery_id, outbox, rel(receipt_path, project)
+    return delivery_id, rel(path, project), rel(receipt_path, project)
