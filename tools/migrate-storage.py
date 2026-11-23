@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect or explicitly migrate storage while the operator/updater keeps PF stopped."""
+"""Inspect storage or perform an explicit, admitted storage migration."""
 
 from __future__ import annotations
 
@@ -91,6 +91,9 @@ def _main_in_operation(
     with operation_lease():
         from processforge_core.configuration import ConfigurationProvider
         from processforge_core.maintenance.contracts import MaintenanceError
+        from processforge_core.maintenance.project_event_maintenance import (
+            run_project_event_migration,
+        )
         from processforge_core.maintenance.storage_migration import (
             StorageMigrationHost,
             StorageMigrationService,
@@ -102,6 +105,11 @@ def _main_in_operation(
         parser.add_argument("--workplace-root", type=_absolute)
         parser.add_argument("--device-config", type=_absolute)
         parser.add_argument("--evidence-dir", type=_absolute)
+        parser.add_argument(
+            "--project-events",
+            action="store_true",
+            help="Select only the enrolled project's SQLite event journal.",
+        )
         modes = parser.add_mutually_exclusive_group()
         modes.add_argument("--inspect", action="store_true")
         modes.add_argument("--apply", action="store_true")
@@ -115,6 +123,12 @@ def _main_in_operation(
         args = parser.parse_args(argv)
         if args.project_root is None and args.workplace_root is None:
             parser.error("--project-root or --workplace-root required")
+        if args.project_events and (
+            args.project_root is None or args.workplace_root is None
+        ):
+            parser.error(
+                "--project-events requires --project-root and --workplace-root"
+            )
         operation: Literal["inspect", "apply", "resume"] = (
             "apply" if args.apply else "resume" if args.resume else "inspect"
         )
@@ -148,6 +162,7 @@ def _main_in_operation(
                 configuration=pinned,
                 evidence_dir=args.evidence_dir,
                 **({"offline_confirmed": True} if args.offline_confirmed else {}),
+                **({"project_events_only": True} if args.project_events else {}),
             )
             if not isinstance(host, StorageMigrationHost):
                 raise MaintenanceError("storage_host_factory_invalid")
@@ -169,7 +184,12 @@ def _main_in_operation(
                     for root in roots
                 ):
                     raise MaintenanceError("storage_evidence_unsafe")
-            result = run_storage_migration(host, operation=operation)
+            if args.project_events:
+                result = run_project_event_migration(
+                    host, operation=operation, offline_confirmed=args.offline_confirmed
+                )
+            else:
+                result = run_storage_migration(host, operation=operation)
         except Exception as error:
             result = StorageMigrationService._failure(
                 StorageMigrationService._report("storage-" + operation), error

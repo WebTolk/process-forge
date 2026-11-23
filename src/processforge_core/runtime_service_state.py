@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 SERVICE_STATE_MAX_BYTES = 65536
+PROJECT_EVENT_MAINTENANCE_CAPABILITY = "project_event_maintenance"
 _DETAILS = "_runtime_state_details"
 _DETAIL_KIND = "pf.runtime.service-details"
 _CONTROL_FIELDS = frozenset(

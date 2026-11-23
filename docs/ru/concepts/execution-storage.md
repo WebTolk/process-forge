@@ -185,6 +185,34 @@ workplace gate, объявляя себя standalone. Guard с бюджетом 
 projects сохраняют прежний bounded observer. File-only operation не требует
 bootstrap Runtime/MCP, network или LLM.
 
+## Миграция журнала событий одного проекта при работающем Runtime
+
+Для существующего SQLite-журнала событий зарегистрированного проекта
+используйте `--project-events` и передайте корни проекта и его Workplace.
+Runtime должен объявлять возможность `project_event_maintenance`. Перед
+переносом остановите внешних писателей, которые обращаются к выбранному
+журналу напрямую.
+
+```text
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --inspect --json
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --apply --json
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --resume --json
+```
+
+В отчёте указан выбранный журнал. Мигратор ждёт окончания начатых операций с
+хранилищами этого проекта, сохраняет проверенную резервную копию и точный план.
+Пока журнал занят, операции проекта могут получить
+`storage_project_event_maintenance_busy` или `storage_resume_required`.
+Конкурирующий мигратор получает временный отказ. Остальные проекты продолжают
+записывать события, доставлять хуки и выполнять Work через тот же Runtime.
+
+После прерывания вызовите `--resume` с теми же корнями и конфигурацией.
+Запись о незавершённом переносе закрывает обычный доступ к журналу до окончания
+проверки. Если Runtime уже остановлен, для восстановления можно добавить
+`--offline-confirmed` к той же команде после остановки всех писателей журнала.
+Проверьте `ready` через `--inspect`, затем обновите контекст проекта.
+Для общих хранилищ, базы исполнения и импорта старых NDJSON действует процедура ниже.
+
 ## Явная миграция и ответственность за обновление
 
 Новые проекты сразу используют SQL. Старые проекты с legacy-журналами блокируют

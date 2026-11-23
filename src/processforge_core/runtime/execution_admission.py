@@ -168,7 +168,11 @@ def _registry_guard_signal(pid: int, guard_path: Path) -> threading.Condition:
 
 @contextmanager
 def registry_file_lock(
-    path: Path, *, timeout_seconds: float = 30.0, stale_after_seconds: float = 300.0
+    path: Path,
+    *,
+    timeout_seconds: float = 30.0,
+    stale_after_seconds: float = 300.0,
+    on_contention: Callable[[], None] | None = None,
 ) -> Iterator[None]:
     path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = path.with_name(f".{path.name}.lock")
@@ -202,6 +206,8 @@ def registry_file_lock(
 
     def wait_for_owner(phase: str) -> None:
         nonlocal retry_delay
+        if on_contention is not None:
+            on_contention()
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             error = SystemExit(

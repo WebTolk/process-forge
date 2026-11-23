@@ -184,6 +184,9 @@ def base_state(
     import processforge_core.common.clock as _core_common_clock
     from processforge_core.composition import build_core_properties
     from processforge_core.runtime.schedule import RuntimeSchedule
+    from processforge_core.runtime_service_state import (
+        PROJECT_EVENT_MAINTENANCE_CAPABILITY,
+    )
 
     properties = build_core_properties()
     identity: dict[str, Any] = dict(properties.report())
@@ -207,7 +210,10 @@ def base_state(
         "workplace_id": workplace_root.name,
         "status": status,
         "health": status,
-        "capabilities": {"guarded_shutdown": 1},
+        "capabilities": {
+            "guarded_shutdown": 1,
+            PROJECT_EVENT_MAINTENANCE_CAPABILITY: 1,
+        },
         "token_ref": str(token_path(workplace_root)),
         "scheduler": {
             "jobs": {
@@ -1529,6 +1535,22 @@ class RuntimeProcess:
                 except NativeControlError:
                     raise
                 except Exception as exc:  # noqa: BLE001 - return structured local IPC errors.
+                    from processforge_core.maintenance.contracts import MaintenanceError
+                    from processforge_core.maintenance.project_event_maintenance import (
+                        PROJECT_EVENT_MAINTENANCE_BUSY,
+                    )
+
+                    if (
+                        self.path == "/event"
+                        and isinstance(exc, MaintenanceError)
+                        and exc.code
+                        in {
+                            PROJECT_EVENT_MAINTENANCE_BUSY,
+                            "storage_resume_required",
+                        }
+                    ):
+                        self.send_json(409, {"error": exc.code, "retryable": True})
+                        return
                     if isinstance(exc, PermissionError):
                         with operation_lease():
                             append_operator_log(
