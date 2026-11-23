@@ -77,6 +77,7 @@ jobs:
               'smoke_official_software_process_available.py',
               'smoke_software_profile_activates_official_pack.py',
               'smoke_runtime_driver_registry.py',
+              'smoke_hook_outbox_delivery.py',
           ):
               subprocess.run([sys.executable, 'tools/' + script], check=True)
       - name: Check report containment through the public CLI
