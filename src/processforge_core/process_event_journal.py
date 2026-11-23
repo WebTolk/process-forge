@@ -310,6 +310,46 @@ class ProcessEventJournal:
                     "DELETE FROM pending_dispatch WHERE event_id = ?", (event_id,)
                 )
 
+    def next_dispatch_batch(self, path: Path, *, limit: int = 100) -> list[str]:
+        """Select a bounded retry page without changing admission or acknowledging it."""
+        if type(limit) is not int or not 1 <= limit <= 1000:
+            raise ValueError("journal_limit_invalid")
+        try:
+            with self.connection(
+                path, driver=self.driver, storage_host=self.storage_host
+            ) as connection:
+                first = connection.execute(
+                    "SELECT event_id FROM pending_dispatch ORDER BY seq LIMIT ?",
+                    (limit + 1,),
+                ).fetchall()
+        except FileNotFoundError:
+            return []
+        if len(first) <= limit:
+            return [row[0] for row in first]
+
+        # Reserve a page only when the queue spans multiple ticks. A fixed upper
+        # bound lets older failed rows get another turn even as new events arrive.
+        page = (
+            "SELECT seq, event_id FROM pending_dispatch WHERE seq > ? AND seq <= ? "
+            "ORDER BY seq LIMIT ?"
+        )
+        with self.connection(
+            path, writable=True, driver=self.driver, storage_host=self.storage_host
+        ) as connection:
+            with transaction(connection):
+                after = int(metadata(connection, "dispatch_retry_after") or 0)
+                through = int(metadata(connection, "dispatch_retry_through") or 0)
+                rows = connection.execute(page, (after, through, limit)).fetchall()
+                if not rows:
+                    through = connection.execute(
+                        "SELECT COALESCE(MAX(seq), 0) FROM pending_dispatch"
+                    ).fetchone()[0]
+                    rows = connection.execute(page, (0, through, limit)).fetchall()
+                if rows:
+                    set_metadata(connection, "dispatch_retry_after", str(rows[-1][0]))
+                    set_metadata(connection, "dispatch_retry_through", str(through))
+        return [row[1] for row in rows]
+
     def contains(self, path: Path, event_id: str, *, event_id_value=None) -> bool:
         try:
             with self.connection(

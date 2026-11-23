@@ -27,15 +27,18 @@ from pf_runtime.host import normalize_event  # noqa: E402
 
 from processforge_core.agents import hook_outbox  # noqa: E402
 from processforge_core.agents.hook_dispatch import RuntimeHookDispatcher  # noqa: E402
-from processforge_core.agents.process_events import ProcessEventRecorder  # noqa: E402
+from processforge_core.agents.process_events import (  # noqa: E402
+    PendingDispatchError,
+    ProcessEventRecorder,
+)
 from processforge_core.common import ids  # noqa: E402
 
 
-def pf(*args: str) -> str:
+def pf(*args: str, expect: int = 0) -> str:
     result = run_command(
         [sys.executable, str(ROOT / "bin/pf.py"), *args], cwd=ROOT, timeout=120
     )
-    assert result.returncode == 0, diagnostic_text(result)
+    assert result.returncode == expect, diagnostic_text(result)
     return result.stdout
 
 
@@ -562,6 +565,93 @@ def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
     assert (historical.read_bytes(), old_receipt.read_bytes()) == before
 
 
+def independent_pending_rows(
+    workplace: Path, project: Path, original_event: dict[str, Any]
+) -> None:
+    target = "Retry"
+    configure(project, target)
+    database = project / ".pf/runtime/events/events.sqlite3"
+    recorder = ProcessEventRecorder()
+    journal = recorder.event_journal_for_project(project, workplace)
+    blocked = [
+        {
+            **original_event,
+            "event_id": f"evt_retired_{i}",
+            "event_type": "retired.event",
+        }
+        for i in range(3)
+    ]
+    assert journal.append_many(database, blocked, queue_dispatch=True) == 3
+    healthy = {**original_event, "event_id": "evt_healthy_retry"}
+    routes = recorder.delivery_targets(project, healthy)
+    inserted, pending = journal.append_for_dispatch(
+        database,
+        healthy,
+        event_id_value=recorder.hooks.event_id_value,
+        record=True,
+        queue_dispatch=True,
+        dispatch_targets=routes,
+    )
+    assert inserted and pending == [healthy]
+    with patch.object(
+        hook_outbox, "write_receipt", side_effect=PermissionError("receipt offline")
+    ):
+        try:
+            recorder.deliver_pending_event(project, journal, database, healthy)
+        except PermissionError:
+            pass
+        else:
+            raise AssertionError("expected interrupted receipt")
+    key = hook_outbox.delivery_key(healthy["event_id"], target)
+    root = project / ".pf/runtime/hooks"
+    payload = root / "outbox" / f"{key}.outbox.json"
+    receipt = root / "results" / f"{key}.json"
+    original = payload.read_bytes()
+    assert not receipt.exists()
+    reason = "journal_legacy_dispatch_targets_unknown"
+    for expected in (blocked[:2], blocked[2:]):
+        try:
+            recorder.flush_pending_dispatches(project, journal, database, limit=2)
+        except PendingDispatchError as error:
+            assert error.failures == [
+                {"event_id": e["event_id"], "reason": reason} for e in expected
+            ]
+        else:
+            raise AssertionError("unresolved routes must remain visible")
+    assert verify(project, receipt, target)["event"] == healthy
+    assert payload.read_bytes() == original
+    assert journal.pending_dispatch(database) == blocked
+
+    later = {**healthy, "event_id": "evt_runtime_healthy_retry"}
+    assert journal.append(database, later, queue_dispatch=True)
+    # The completed scan revisits its oldest pending rows despite this new arrival.
+    assert journal.next_dispatch_batch(database, limit=2) == [
+        event["event_id"] for event in blocked[:2]
+    ]
+    tick = (
+        "runtime-host",
+        "tick",
+        "--workplace",
+        str(workplace),
+        "--project-root",
+        str(project),
+        "--json",
+    )
+    outcome = json.loads(pf(*tick, expect=1))
+    assert outcome["projects"][0]["dispatch_failures"] == [
+        {"event_id": event["event_id"], "reason": reason} for event in blocked
+    ]
+    later_key = hook_outbox.delivery_key(later["event_id"], target)
+    assert (
+        verify(project, root / "results" / f"{later_key}.json", target)["event"]
+        == later
+    )
+    assert journal.pending_dispatch(database) == blocked
+    configure(project, target, overrides={target: {"event_types": ["retired.event"]}})
+    pf(*tick)
+    assert journal.pending_dispatch(database) == []
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(
         dir=os.environ.get("PF_TEST_SCRATCH_ROOT")
@@ -588,6 +678,7 @@ def main() -> None:
         v1_platform_filename(workplace, project, event)
         v1_independent_route(workplace, project, event)
         legacy_and_concurrent(project, event)
+        independent_pending_rows(workplace, project, event)
     print(
         f"PASS: outbox dispatch, interrupted replay, legacy and concurrent targets on {platform_name()}, Python {python_version()}"
     )

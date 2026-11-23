@@ -2793,6 +2793,7 @@ def tick_payload(
 
     from pf_native_control import current_entry
 
+    from processforge_core.agents.process_events import PendingDispatchError
     from processforge_core.operations.result import CommandOutput
     from processforge_core.project.configuration_inputs import configuration_operation
 
@@ -2858,7 +2859,11 @@ def tick_payload(
                     route_project(str(project_root), workplace_root, core)
                 # Dispatch can scan journals and run hooks. Journal completion
                 # owns its readiness checks; the native operation remains live.
-                core.flush_pending_event_dispatches(project_root)
+                try:
+                    core.flush_pending_event_dispatches(project_root)
+                except PendingDispatchError as error:
+                    item["dispatch_failures"] = error.failures
+                    status = status or 1
                 if projection:
                     stage_projection = refresh_stage_obligations(project_root, core)
                     item["projection"] = core.rel(stage_projection, project_root)

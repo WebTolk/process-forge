@@ -28,6 +28,13 @@ from .hook_policy import HookDispatchPolicy
 from .telemetry import TelemetryEventService
 
 
+class PendingDispatchError(JournalError):
+    def __init__(self, failures: list[dict[str, str]]) -> None:
+        self.failures = failures
+        first = failures[0]
+        super().__init__(f"{first['event_id']}: {first['reason']}")
+
+
 class ProcessEventRecorder:
     def __init__(
         self,
@@ -93,6 +100,24 @@ class ProcessEventRecorder:
         delivered = self.dispatcher.dispatch_hooks(project_root, event, targets=targets)
         journal.complete_dispatch(path, event_id)
         return delivered
+
+    def flush_pending_dispatches(
+        self,
+        project_root: Path,
+        journal: ProcessEventJournal,
+        path: Path,
+        *,
+        limit: int,
+    ) -> None:
+        failures = []
+        for event_id in journal.next_dispatch_batch(path, limit=limit):
+            try:
+                for pending in journal.pending_dispatch(path, event_id=event_id):
+                    self.deliver_pending_event(project_root, journal, path, pending)
+            except (JournalError, OSError, ValueError) as error:
+                failures.append({"event_id": event_id, "reason": str(error)})
+        if failures:
+            raise PendingDispatchError(failures)
 
     def admit_process_event(
         self,

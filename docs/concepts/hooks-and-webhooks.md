@@ -49,6 +49,10 @@ the selected targets and their routes with the pending event. Changing a route
 or disabling a target affects subsequent events. The pending event finishes
 its original deliveries before acknowledgement. For an older event-only
 pending row, restore its hook configuration before the first replay.
+Runtime tick reports deliveries it could not finish in the project's
+`dispatch_failures`, with the event ID and reason. These events stay pending.
+The tick processes the rest of its batch, and successive ticks revisit
+pending events in bounded batches.
 
 Older ordinary deliveries can retain their paths when the original envelope
 identifies the event and exact target. If publication stopped before the old
