@@ -68,6 +68,7 @@ class ProcessEventRecorder:
         *,
         dispatch: bool = True,
         workplace_root: Path | None = None,
+        actions: list[dict[str, Any]] | None = None,
     ) -> bool:
         if not (event.get("event_id") or event.get("id")):
             raise JournalError("journal_event_id_required")
@@ -94,9 +95,11 @@ class ProcessEventRecorder:
             queue_dispatch=bool(self.hooks.selected_hooks(project_root, event)),
         )
         for pending in deliveries:
-            self.dispatcher.dispatch_hooks(
+            delivered = self.dispatcher.dispatch_hooks(
                 project_root, pending, dry_run=False, outbox=True
             )
+            if actions is not None:
+                actions.extend(delivered)
             journal.complete_dispatch(events_path, self.hooks.event_id_value(pending))
         return inserted
 

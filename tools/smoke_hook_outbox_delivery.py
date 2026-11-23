@@ -15,7 +15,6 @@ from pathlib import Path
 from platform import platform as platform_name
 from platform import python_version
 from typing import Any
-from unittest.mock import patch
 
 import yaml
 from processforge_subprocess import diagnostic_text, run_command
@@ -107,36 +106,56 @@ def public_dispatch(project: Path) -> dict[str, Any]:
     return first["event"]
 
 
-def replay_gap(workplace: Path, project: Path, event: dict[str, Any]) -> None:
+def replay_gap(workplace: Path, project: Path) -> None:
     target = "Ack Gap"
     configure(project, target)
     results = project / ".pf/runtime/hooks/results"
     database = project / ".pf/runtime/events/events.sqlite3"
-    # Restore the pending row for this actually admitted CLI event in the fixture.
-    with closing(sqlite3.connect(database.as_uri() + "?mode=rw", uri=True)) as sql, sql:
-        added = sql.execute(
-            "INSERT INTO pending_dispatch SELECT event_id, seq, ? FROM admissions WHERE event_id = ?",
-            (json.dumps(event), event["event_id"]),
+    # Remove only the receipt volume from this disposable consumer. Reading a
+    # missing receipt returns ENOENT; publishing it after the envelope fails.
+    saved = results.with_name("saved-results")
+    volume = results.with_name("fixture-volume")
+    results.rename(saved)
+    volume.mkdir()
+    if os.name == "nt":
+        linked = run_command(
+            ["cmd", "/d", "/c", "mklink", "/J", results.name, volume.name],
+            cwd=results.parent,
+            timeout=20,
         )
-        assert added.rowcount == 1
-    receipt = results / f"{hook_outbox.delivery_key(event['event_id'], target)}.json"
-    publish = hook_outbox.write_receipt
-    captured: dict[Path, bytes] = {}
-
-    def obstruct(path: Path, result: dict[str, Any]) -> Path:
-        payload = project / result["outbox"]
-        captured[payload] = payload.read_bytes()
-        path.mkdir()
-        return publish(path, result)  # Real native replacement of a directory fails.
-
-    with patch.object(hook_outbox, "write_receipt", side_effect=obstruct):
-        try:
-            RuntimeHookDispatcher().dispatch_hooks(project, event)
-        except OSError:
-            assert receipt.is_dir() and captured
-        else:
-            raise AssertionError("receipt publication unexpectedly succeeded")
-    receipt.rmdir()
+        assert linked.returncode == 0, diagnostic_text(linked)
+    else:
+        results.symlink_to(volume, target_is_directory=True)
+    volume.rmdir()
+    failed = run_command(
+        [
+            sys.executable,
+            str(ROOT / "bin/pf.py"),
+            "hooks-dispatch",
+            "--project-root",
+            str(project),
+            "--event-type",
+            "assignment.completed",
+            "--outbox",
+        ],
+        cwd=ROOT,
+        timeout=120,
+    )
+    if os.name == "nt":
+        results.rmdir()
+    else:
+        results.unlink()
+    saved.rename(results)
+    assert failed.returncode != 0
+    with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as sql:
+        pending = sql.execute("SELECT record FROM pending_dispatch").fetchall()
+    assert len(pending) == 1, diagnostic_text(failed)
+    event = json.loads(pending[0][0])
+    key = hook_outbox.delivery_key(event["event_id"], target)
+    receipt = results / f"{key}.json"
+    payload = project / f".pf/runtime/hooks/outbox/{key}.outbox.json"
+    captured = payload.read_bytes()
+    assert not receipt.exists() and json.loads(captured)["event"] == event
     pf(
         "runtime-host",
         "tick",
@@ -151,7 +170,16 @@ def replay_gap(workplace: Path, project: Path, event: dict[str, Any]) -> None:
         assert not sql.execute(
             "SELECT 1 FROM pending_dispatch WHERE event_id=?", (event["event_id"],)
         ).fetchone()
-    assert all(path.read_bytes() == raw for path, raw in captured.items())
+    assert payload.read_bytes() == captured
+
+
+def check_conflict(project: Path, event: dict[str, Any], reason: str) -> None:
+    try:
+        RuntimeHookDispatcher().dispatch_hooks(project, event)
+    except ValueError as error:
+        assert str(error) == reason
+    else:
+        raise AssertionError(f"expected {reason}")
 
 
 def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
@@ -194,6 +222,26 @@ def legacy_and_concurrent(project: Path, event: dict[str, Any]) -> None:
     )
     verify(project, project / other["result"], "blue-a")
     assert other["outbox"] != legacy["outbox"] and path.read_bytes() == original
+    configure(project, "Blue A")
+    proof = receipt.read_bytes()
+    check_conflict(project, {**event, "subject": "changed"}, "outbox_delivery_conflict")
+    assert receipt.read_bytes() == proof and path.read_bytes() == original
+
+    configure(project, "typed")
+    typed = {**event, "data": {"value": True}}
+    (action,) = RuntimeHookDispatcher().dispatch_hooks(project, typed)
+    typed_receipt = project / action["result"]
+    proof = typed_receipt.read_bytes()
+    check_conflict(project, {**typed, "data": {"value": 1}}, "outbox_delivery_conflict")
+    config_path = project / ".pf/hooks.yaml"
+    config = yaml.safe_load(config_path.read_bytes())
+    config["hooks"]["targets"][0]["path"] = "changed-outbox"
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    check_conflict(project, typed, "outbox_delivery_route_conflict")
+    assert (
+        typed_receipt.read_bytes() == proof
+        and not (project / ".pf/changed-outbox").exists()
+    )
 
     configure(project, "WTAICC Side", "wtaicc-side")
     wtaicc = hooks / "outbox/wtaicc"
@@ -254,7 +302,7 @@ def main() -> None:
             "--apply",
         )
         event = public_dispatch(project)
-        replay_gap(workplace, project, event)
+        replay_gap(workplace, project)
         legacy_and_concurrent(project, event)
     print(
         f"PASS: outbox dispatch, interrupted replay, legacy and concurrent targets on {platform_name()}, Python {python_version()}"

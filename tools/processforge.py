@@ -14900,7 +14900,11 @@ def command_hooks_dispatch(args: argparse.Namespace) -> int:
         payload={"dry_run": bool(args.dry_run), "outbox": bool(args.outbox), "since": args.since, "source": "hooks-dispatch"},
         privacy="sanitized",
     )
-    actions = _runtime_hook_dispatcher.dispatch_hooks(project_root, event, dry_run=args.dry_run, outbox=args.outbox or not args.dry_run)
+    actions: list[dict[str, Any]] = []
+    if args.dry_run:
+        actions = _runtime_hook_dispatcher.dispatch_hooks(project_root, event, dry_run=True)
+    else:
+        _process_event_recorder.admit_process_event(project_root, event, actions=actions)
     if not actions:
         print("HOOKS: none")
     else:
@@ -14911,7 +14915,6 @@ def command_hooks_dispatch(args: argparse.Namespace) -> int:
             if "result" in action:
                 print(f"RESULT: {action['result']}")
     if not args.dry_run:
-        _process_event_recorder.append_process_event(project_root, event, dispatch=False)
         if actions:
             _process_event_recorder.emit_process_event(project_root, "hook.dispatched", payload={"event_id": _hook_dispatch_policy.event_id_value(event), "actions": actions}, privacy="sanitized", correlation_id=str(event.get("correlation_id")))
         print(f"EVENT: {_hook_dispatch_policy.event_id_value(event)}")

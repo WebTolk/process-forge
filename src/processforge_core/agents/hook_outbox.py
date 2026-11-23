@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -54,9 +55,59 @@ def _publish(path: Path, raw: bytes, *, replace: bool) -> None:
             staging.unlink()
 
 
-def write_receipt(path: Path, result: dict[str, Any]) -> Path:
-    _publish(path, _encode(result), replace=True)
+def _first_bytes(path: Path, raw: bytes) -> bytes:
+    try:
+        _publish(path, raw, replace=False)
+    except (FileExistsError, PermissionError):
+        # A Windows reader may deny a competing rename. Confirm the winner
+        # from the actual file before accepting the operation as a replay.
+        winner = _read(path)
+        if winner is None:
+            raise
+        return winner
+    return raw
+
+
+def write_receipt(path: Path, result: dict[str, Any], *, first: bool = False) -> Path:
+    raw = _encode(result)
+    if first:
+        if _first_bytes(path, raw) != raw:
+            raise ValueError("outbox_receipt_conflict")
+    else:
+        _publish(path, raw, replace=True)
     return path
+
+
+def _original_observation(
+    event: dict[str, Any], first: dict[str, Any]
+) -> dict[str, Any]:
+    # Runtime can reconstruct an admitted event from raw ingress. Its host
+    # observation time and the fallback correlation for a sessionless event
+    # are generated anew. Keep the originally delivered values on replay.
+    source = event.get("source")
+    if (
+        not isinstance(source, str)
+        or not source.startswith("processforge.runtime.")
+        or first.get("source") != source
+    ):
+        return event
+    restored = dict(event)
+    if isinstance(event.get("time"), str) and isinstance(first.get("time"), str):
+        restored["time"] = first["time"]
+    session = event.get("session") or {}
+    data = event.get("data") or {}
+    if (
+        isinstance(session, dict)
+        and isinstance(data, dict)
+        and not session.get("id")
+        and not data.get("run_id")
+        and all(
+            isinstance(value, str) and re.fullmatch(r"corr-[0-9a-f]{12}", value)
+            for value in (event.get("correlation_id"), first.get("correlation_id"))
+        )
+    ):
+        restored["correlation_id"] = first["correlation_id"]
+    return restored
 
 
 def _legacy_pair(
@@ -80,6 +131,7 @@ def _legacy_pair(
     ):
         return None
     path = directory / f"{event_id}.{slug}.json"
+    bound = False
     try:
         receipt = json.loads(raw_receipt)
         if not isinstance(receipt, dict) or not (
@@ -87,14 +139,26 @@ def _legacy_pair(
             and receipt.get("delivery_id") == legacy_id
             and receipt.get("target_id") in (slug, target_id)
             and receipt.get("status") == "written"
-            and receipt.get("outbox") == rel(path, project)
         ):
+            return None
+        bound = (
+            receipt.get("event_id") == event_id
+            and receipt.get("target_id") == target_id
+            and "payload_sha256" in receipt
+        )
+        if receipt.get("outbox") != rel(path, project):
+            if bound:
+                raise ValueError("outbox_delivery_route_conflict")
             return None
         data = _read(path)
         if data is None:
+            if bound:
+                raise ValueError("outbox_legacy_payload_missing")
             return None
         envelope = json.loads(data)
-    except (ValueError, UnicodeError):
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        if bound:
+            raise ValueError("outbox_legacy_payload_invalid") from error
         # Preserve unreadable history and use the disjoint current key.
         return None
     if not isinstance(envelope, dict) or not (
@@ -102,10 +166,18 @@ def _legacy_pair(
         and envelope.get("delivery_id") == legacy_id
         and envelope.get("mode") == "outbox"
         and envelope.get("target_id") == target_id
-        and envelope.get("event") == event
+        and isinstance(envelope.get("event"), dict)
+        and (envelope["event"].get("event_id") or envelope["event"].get("id"))
+        == event_id
         and isinstance(envelope.get("delivery_time"), str)
     ):
+        if bound:
+            raise ValueError("outbox_legacy_payload_invalid")
         return None
+    if _encode(envelope["event"]) != _encode(
+        _original_observation(event, envelope["event"])
+    ):
+        raise ValueError("outbox_delivery_conflict")
     if (
         "payload_sha256" in receipt
         and receipt["payload_sha256"] != hashlib.sha256(data).hexdigest()
@@ -121,20 +193,28 @@ def _payload_bytes(
     if data is None:
         if previous:
             payload[timestamp] = previous["delivery_time"]
+            payload["event"] = _original_observation(
+                payload["event"], previous.get("runtime_observation", {})
+            )
         raw = _encode(payload)
         if previous and hashlib.sha256(raw).hexdigest() != previous["payload_sha256"]:
             raise ValueError("outbox_receipt_payload_mismatch")
-        try:
-            _publish(path, raw, replace=False)
-        except FileExistsError:
-            # Another replay published the first complete envelope. Its time is authoritative.
-            data = path.read_bytes()
-        else:
+        data = _first_bytes(path, raw)
+        if data == raw:
             return raw
     stored = json.loads(data)
-    if not isinstance(stored, dict) or not isinstance(stored.get(timestamp), str):
+    if (
+        not isinstance(stored, dict)
+        or not isinstance(stored.get(timestamp), str)
+        or not isinstance(stored.get("event"), dict)
+    ):
         raise ValueError("outbox_payload_invalid")
-    if stored != {**payload, timestamp: stored[timestamp]}:
+    expected = {
+        **payload,
+        timestamp: stored[timestamp],
+        "event": _original_observation(payload["event"], stored["event"]),
+    }
+    if _encode(stored) != _encode(expected):
         raise ValueError("outbox_delivery_conflict")
     return data
 
@@ -161,7 +241,6 @@ def publish_outbox(
     if legacy is not None:
         delivery_id, path, data, previous = legacy
         receipt_path = results / f"{delivery_id}.json"
-        delivery_time = json.loads(data)["delivery_time"]
     else:
         if raw_receipt is not None:
             previous = json.loads(raw_receipt)
@@ -172,16 +251,15 @@ def publish_outbox(
                 and previous.get("status") == "written"
                 and isinstance(previous.get("delivery_time"), str)
                 and isinstance(previous.get("payload_sha256"), str)
+                and isinstance(previous.get("runtime_observation", {}), dict)
             ):
                 raise ValueError("outbox_receipt_invalid")
-        same_path = previous if previous.get("outbox") == rel(path, project) else {}
-        data = _payload_bytes(path, payload, timestamp, same_path)
-        if (
-            same_path
-            and hashlib.sha256(data).hexdigest() != same_path["payload_sha256"]
-        ):
+        if previous and previous.get("outbox") != rel(path, project):
+            raise ValueError("outbox_delivery_route_conflict")
+        data = _payload_bytes(path, payload, timestamp, previous)
+        if previous and hashlib.sha256(data).hexdigest() != previous["payload_sha256"]:
             raise ValueError("outbox_receipt_payload_mismatch")
-        delivery_time = json.loads(data)[timestamp]
+    envelope = json.loads(data)
     outbox = rel(path, project)
     receipt = {
         **previous,
@@ -189,7 +267,7 @@ def publish_outbox(
         "delivery_id": delivery_id,
         "target_id": target_id,
         "event_id": event_id,
-        "delivery_time": delivery_time,
+        "delivery_time": envelope[timestamp],
         "payload_sha256": hashlib.sha256(data).hexdigest(),
         "status": "written",
         "exit_code": 0,
@@ -197,6 +275,15 @@ def publish_outbox(
         "message": "Outbox payload written",
         "outbox": outbox,
     }
+    original = envelope["event"]
+    if isinstance(original.get("source"), str) and original["source"].startswith(
+        "processforge.runtime."
+    ):
+        receipt["runtime_observation"] = {
+            key: original[key]
+            for key in ("source", "time", "correlation_id")
+            if key in original
+        }
     if receipt != previous:
-        write_receipt(receipt_path, receipt)
+        write_receipt(receipt_path, receipt, first=not previous)
     return delivery_id, outbox, rel(receipt_path, project)
