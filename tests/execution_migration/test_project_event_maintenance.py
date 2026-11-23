@@ -470,7 +470,7 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                         continuing["inspector"] == "tick"
                         and "storage_error" not in continuing
                     )
-                    assert continuing["inspector_result"]["failed"] == 0
+                    assert continuing["inspector_result"]["failed"] == []
                     release.touch()
                     out, err = child.communicate(timeout=30)
                     assert child.returncode == 0, out + err
