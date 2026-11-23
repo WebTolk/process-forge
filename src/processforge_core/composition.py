@@ -203,6 +203,7 @@ def build_storage_migration_host(
         ProjectEventBackupService,
         ordinary_storage_lock,
         require_compatible_runtime,
+        selected_storage_lock,
     )
     from .maintenance.storage_migration import (
         MIGRATION_ID,
@@ -625,7 +626,7 @@ def build_storage_migration_host(
     service = FreshAwareStorageService(
         backup=backup_service(driver=SQLiteDriver()),
         admission=admission,
-        registry_lock=registry_file_lock
+        registry_lock=selected_storage_lock
         if project_events_only
         else ordinary_storage_lock,
         safety=safety,

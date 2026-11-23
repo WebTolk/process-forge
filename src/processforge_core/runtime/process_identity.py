@@ -14,7 +14,7 @@ from ..executions.model import ExecutionError, ProcessIdentity
 
 
 def _linux_identity(
-    pid: int, host_id: str, tree_id: str | None
+    pid: int, host_id: str, tree_id: str | None, *, require_running: bool = False
 ) -> ProcessIdentity | None:
     try:
         boot = (
@@ -24,6 +24,8 @@ def _linux_identity(
         # comm may contain spaces and parentheses; fields after its final ')'
         # start at field 3 (state), making starttime (field 22) index 19.
         fields = stat[stat.rindex(")") + 2 :].split()
+        if require_running and fields[0] in {"Z", "X", "x"}:
+            return None
         ticks = fields[19]
         if not boot or not ticks.isdecimal() or int(ticks) < 1:
             raise ValueError("invalid process birth")
@@ -85,11 +87,14 @@ def _windows_identity(
         kernel.CloseHandle(handle)
 
 
-def capture_process(pid: int, *, tree_id: str | None = None) -> ProcessIdentity | None:
+def capture_process(
+    pid: int, *, tree_id: str | None = None, require_running: bool = False
+) -> ProcessIdentity | None:
     """Capture OS creation identity; None proves only this root PID is absent.
 
     The caller may supply a separately verified owned job/group identity. Merely
     capturing a process never claims that its descendants are owned or absent.
+    With require_running, a Linux zombie cannot provide a live owner identity.
     """
     if type(pid) is not int or not 1 <= pid <= 0xFFFFFFFF:
         raise ValueError("invalid pid")
@@ -97,7 +102,7 @@ def capture_process(pid: int, *, tree_id: str | None = None) -> ProcessIdentity 
     if sys.platform == "win32":
         return _windows_identity(pid, host_id, tree_id)
     if sys.platform.startswith("linux"):
-        return _linux_identity(pid, host_id, tree_id)
+        return _linux_identity(pid, host_id, tree_id, require_running=require_running)
     raise ExecutionError("execution_activity_unknown")
 
 

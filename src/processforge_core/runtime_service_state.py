@@ -48,7 +48,7 @@ def runtime_process_identity(pid: int) -> str | None:
     from .runtime.process_identity import capture_process
 
     try:
-        observed = capture_process(pid)
+        observed = capture_process(pid, require_running=True)
     except (ExecutionError, OSError, ValueError):
         return None
     if observed is None:

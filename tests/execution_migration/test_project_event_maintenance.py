@@ -24,6 +24,7 @@ from processforge_core.agents.hook_outbox import delivery_key
 from processforge_core.agents.process_events import ProcessEventRecorder
 from processforge_core.process_event_journal import ProcessEventJournal
 from processforge_core.raw_hook_journal import RawHookJournal
+from processforge_core.runtime_service_state import runtime_process_identity
 
 SOURCE = Path(__file__).resolve().parents[2]
 EVENT_PATH = Path(".pf/runtime/events/events.sqlite3")
@@ -421,19 +422,6 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                     assert_sibling_visible(
                         endpoint, token, instance, sibling, workplace
                     )
-                    tick_status, tick = http_json(
-                        "POST",
-                        endpoint + "/tick",
-                        token=token,
-                        payload={"project_roots": [str(project), str(sibling)]},
-                        timeout=15.0,
-                    )
-                    assert tick_status == 500 and len(tick["projects"]) == 2, tick
-                    blocked, continuing = tick["projects"]
-                    assert blocked["storage_error"]["retryable"] is True
-                    assert (
-                        "projection" in continuing and "storage_error" not in continuing
-                    )
                     release.touch()
                     out, err = child.communicate(timeout=30)
                     assert child.returncode == 77, out + err
@@ -460,6 +448,29 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                         worker.wait_status(sibling, names[0], "running")["pid"]
                         == first_worker
                     )
+                    # The continuous stream has already crossed each held phase.
+                    # Finish its last write before deliberately triggering a
+                    # second observation of B's own journal in the compound tick.
+                    stop.set()
+                    stream.result(timeout=25)
+                    tick_status, tick = http_json(
+                        "POST",
+                        endpoint + "/tick",
+                        token=token,
+                        payload={
+                            "project_roots": [str(project), str(sibling)],
+                            "inspector": True,
+                        },
+                        timeout=20.0,
+                    )
+                    assert tick_status == 500 and len(tick["projects"]) == 2, tick
+                    blocked, continuing = tick["projects"]
+                    assert blocked["storage_error"]["retryable"] is True
+                    assert (
+                        continuing["inspector"] == "tick"
+                        and "storage_error" not in continuing
+                    )
+                    assert continuing["inspector_result"]["failed"] == 0
                     release.touch()
                     out, err = child.communicate(timeout=30)
                     assert child.returncode == 0, out + err
@@ -514,3 +525,16 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                 worker.ensure_stopped(sibling, name)
         finally:
             runtime.stop_runtime(workplace)
+
+
+def test_exited_runtime_cannot_supply_live_owner_identity():
+    with subprocess.Popen([sys.executable, "-B", "-c", "pass"]) as child:
+        if sys.platform.startswith("linux"):
+            proc = Path(f"/proc/{child.pid}/stat")
+            deadline = time.monotonic() + 5
+            while proc.read_text(encoding="ascii").rsplit(")", 1)[1].split()[0] != "Z":
+                assert time.monotonic() < deadline, "child did not exit"
+                time.sleep(0.01)
+        else:
+            child.wait(timeout=5)
+        assert runtime_process_identity(child.pid) is None

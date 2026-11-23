@@ -6,7 +6,7 @@ import os
 import sqlite3
 import tempfile
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -56,6 +56,50 @@ class ProjectEventBackupService(SQLiteBackupService):
 
 def _intent(root: Path) -> Path:
     return root / "runtime/project-event-maintenance"
+
+
+def _unknown_lock_owner(path: Path, error: SystemExit) -> bool:
+    if getattr(error, "registry_lock_phase", None) != "owner":
+        return False
+    owner = _registry_lock_read_owner(path.with_name(f".{path.name}.lock"))
+    if not owner:
+        return True
+    pid = owner.get("pid")
+    return (
+        type(pid) is not int
+        or pid <= 0
+        or not owner.get("host")
+        or not owner.get("token")
+    )
+
+
+@contextmanager
+def selected_storage_lock(
+    path: Path, *, timeout_seconds: float = 30.0, stale_after_seconds: float = 300.0
+) -> Iterator[None]:
+    """Keep admitted short try-locks and classify the subsequent owner wait."""
+    with ExitStack() as access:
+        try:
+            access.enter_context(
+                registry_file_lock(
+                    path,
+                    timeout_seconds=timeout_seconds,
+                    stale_after_seconds=stale_after_seconds,
+                )
+            )
+        except SystemExit as error:
+            if (
+                timeout_seconds <= 0.001
+                or getattr(error, "registry_lock_reason", None) != "contention_timeout"
+            ):
+                raise
+            code = (
+                "storage_project_event_target_owner_unknown"
+                if _unknown_lock_owner(path, error)
+                else PROJECT_EVENT_MAINTENANCE_BUSY
+            )
+            raise MaintenanceError(code) from None
+        yield
 
 
 @contextmanager
@@ -180,19 +224,16 @@ def run_project_event_migration(
                 require_imported_history(target, host.service.driver)
                 report = run_storage_migration(bound, operation=operation)
         report["selected_target"] = selected
-        if (report.get("error") or {}).get(
-            "code"
-        ) == "storage_project_event_runtime_unknown":
+        if (report.get("error") or {}).get("code") in {
+            "storage_project_event_runtime_unknown",
+            PROJECT_EVENT_MAINTENANCE_BUSY,
+        }:
             report["retryable"] = True
         return report
     except SystemExit as error:
         if getattr(error, "registry_lock_reason", None) != "contention_timeout":
             raise
-        marker = intent.with_name(f".{intent.name}.lock")
-        unknown = (
-            getattr(error, "registry_lock_phase", None) == "owner"
-            and _registry_lock_read_owner(marker) is None
-        )
+        unknown = _unknown_lock_owner(intent, error)
         code = (
             "storage_project_event_intent_unknown"
             if unknown
