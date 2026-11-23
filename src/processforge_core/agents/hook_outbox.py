@@ -159,13 +159,11 @@ def _legacy_pair(
     slug = safe_id(target_id, "hook")
     legacy_id = "del_" + opaque_identity_digest(f"{event_id}:{slug}")[:32]
     # A legacy WTAICC envelope cannot prove which exact configured target wrote it.
-    if (
-        slug.startswith("wtaicc")
-        or not event_id
-        or any(char in event_id for char in ("/", "\\", "\0"))
-    ):
+    if slug.startswith("wtaicc") or not event_id or "\0" in event_id:
         return None
     filename = f"{event_id}.{slug}.json"
+    if Path(filename).name != filename:
+        return None
     if os.name == "nt" and (
         Path(filename).is_reserved()
         or any(char in '<>:"|?*' or ord(char) < 32 for char in filename)
@@ -198,17 +196,15 @@ def _legacy_pair(
         raw = _first_bytes(receipt_path, _encode(claim))
 
     receipt = _legacy_object(raw)
+    # Original receipts used a slug. An upgraded receipt names its exact owner.
+    bound = receipt.get("event_id") == event_id and "payload_sha256" in receipt
+    possible_owners = (target_id,) if bound else (slug, target_id)
     if (
         receipt.get("schema_version") == 1
         and receipt.get("delivery_id") == legacy_id
-        and receipt.get("target_id") in (slug, target_id)
+        and receipt.get("target_id") in possible_owners
         and receipt.get("status") == "written"
     ):
-        bound = (
-            receipt.get("event_id") == event_id
-            and receipt.get("target_id") == target_id
-            and "payload_sha256" in receipt
-        )
         recorded = receipt.get("outbox")
         if (
             isinstance(recorded, str)

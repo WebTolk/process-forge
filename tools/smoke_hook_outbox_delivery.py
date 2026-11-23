@@ -15,6 +15,7 @@ from pathlib import Path
 from platform import platform as platform_name
 from platform import python_version
 from typing import Any
+from unittest.mock import patch
 
 import yaml
 from processforge_subprocess import diagnostic_text, run_command
@@ -281,6 +282,81 @@ def replay_v1(workplace: Path, project: Path, event: dict[str, Any]) -> None:
     assert journal.pending_dispatch(database, event_id=event["event_id"]) == []
 
 
+def v1_receipt(project: Path, path: Path, key: str, target: str) -> Path:
+    receipt = project / ".pf/runtime/hooks/results" / f"{key}.json"
+    receipt.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "delivery_id": key,
+                "target_id": ids.safe_id(target, "hook"),
+                "status": "written",
+                "outbox": path.relative_to(project).as_posix(),
+            }
+        ),
+        encoding="utf-8",
+    )
+    return receipt
+
+
+def v1_platform_filename(
+    workplace: Path, project: Path, original_event: dict[str, Any]
+) -> None:
+    target = "Build"
+    event = {**original_event, "event_id": r"evt_batch\17"}
+    configure(project, target)
+    directory = project / ".pf/runtime/hooks/outbox"
+    if os.name == "nt":
+        replay_v1(workplace, project, event)
+        key = hook_outbox.delivery_key(event["event_id"], target)
+        receipt = project / ".pf/runtime/hooks/results" / f"{key}.json"
+        assert verify(project, receipt, target)["event"] == event
+        assert not (directory / "evt_batch").exists()
+    else:
+        path, original, key = v1_file(directory, target, event)
+        receipt = v1_receipt(project, path, key, target)
+        before = set(directory.glob("*.json"))
+        replay_v1(workplace, project, event)
+        assert verify(project, receipt, target)["event"] == event
+        assert set(directory.glob("*.json")) == before and path.read_bytes() == original
+
+
+def v1_independent_route(
+    workplace: Path, project: Path, original_event: dict[str, Any]
+) -> None:
+    owner, other = "build-a", "Build A"
+    event = {**original_event, "event_id": "evt_independent_legacy_routes"}
+    routes = {owner: {"path": "owner-route"}, other: {"path": "other-route"}}
+    owner_file, _, key = v1_file(project / ".pf/owner-route", owner, event)
+    other_file, original, _ = v1_file(project / ".pf/other-route", other, event)
+    configure(project, owner, overrides=routes)
+    (first,) = RuntimeHookDispatcher().dispatch_hooks(project, event)
+    assert first["delivery_id"] == key
+    assert verify(project, project / first["result"], owner)["event"] == event
+    configure(project, other, overrides=routes)
+
+    database = project / ".pf/runtime/events/events.sqlite3"
+    recorder = ProcessEventRecorder()
+    journal = recorder.event_journal_for_project(project, workplace)
+    assert journal.append(database, event, queue_dispatch=True)
+    (pending,) = journal.pending_dispatch(database, event_id=event["event_id"])
+    read_file = hook_outbox._read
+
+    def read_without_owner(path: Path) -> bytes | None:
+        if path == owner_file:
+            raise PermissionError("sibling envelope is inaccessible")
+        return read_file(path)
+
+    with patch.object(hook_outbox, "_read", read_without_owner):
+        recorder.deliver_pending_event(project, journal, database, pending)
+    assert journal.pending_dispatch(database, event_id=event["event_id"]) == []
+    receipt_key = hook_outbox.delivery_key(event["event_id"], other)
+    receipt = project / ".pf/runtime/hooks/results" / f"{receipt_key}.json"
+    assert verify(project, receipt, other)["event"] == event
+    assert list(other_file.parent.glob("*.json")) == [other_file]
+    assert other_file.read_bytes() == original
+
+
 def interrupted_v1(
     workplace: Path, project: Path, original_event: dict[str, Any]
 ) -> None:
@@ -329,18 +405,7 @@ def separate_v1_targets(
         first_path, _, key = files[targets[0]]
         primary = results / f"{key}.json"
         if case != "unclaimed":
-            primary.write_text(
-                json.dumps(
-                    {
-                        "schema_version": 1,
-                        "delivery_id": key,
-                        "target_id": "build-a",
-                        "status": "written",
-                        "outbox": first_path.relative_to(project).as_posix(),
-                    }
-                ),
-                encoding="utf-8",
-            )
+            v1_receipt(project, first_path, key, targets[0])
         order = targets if case == "first" else targets[::-1]
         configure(project, *order, overrides=routes)
         before = {
@@ -520,6 +585,8 @@ def main() -> None:
         runtime_correlations(project)
         interrupted_v1(workplace, project, event)
         separate_v1_targets(workplace, project, event)
+        v1_platform_filename(workplace, project, event)
+        v1_independent_route(workplace, project, event)
         legacy_and_concurrent(project, event)
     print(
         f"PASS: outbox dispatch, interrupted replay, legacy and concurrent targets on {platform_name()}, Python {python_version()}"
