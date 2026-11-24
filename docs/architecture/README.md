@@ -101,10 +101,11 @@ records later changes and open findings against a fixed revision.
   [Execution storage](../concepts/execution-storage.md)
 - **D17 — Journal migration.** Preserve store UUIDs, source data, necessary
   metadata and a recoverable checkpoint. New projects start with SQL journals.
-  The revised rule requires explicit offline maintenance for historical stores
-  before ordinary Work or worker writes. Preserve recovery for existing
-  attempts according to the journal contract.
-  [Journal maintenance](../concepts/sqlite-journal-maintenance.md)
+  Explicit migration must precede ordinary writes to historical stores. The
+  enrolled project event journal can be migrated under a compatible active
+  Runtime with project-owned admission and a durable pending pin. Offline
+  maintenance covers shared and other historical stores and unmanaged writers.
+  [Project event migration](../concepts/execution-storage.md#migrate-one-project-event-journal-with-runtime-online).
 - **D18 — Full merged PFConfig.** All components consume the effective
   configuration. Keep the presence-aware merge across builtin, device,
   Workplace, project and context settings, including allowed and locked keys.

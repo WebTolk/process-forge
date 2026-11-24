@@ -428,6 +428,7 @@ jobs:
               "--junitxml=runtime-public-event-reads.xml",
               "tests/process_journal/test_event_owner_reads.py",
               "tests/runtime/test_event_reads.py",
+              "tests/execution_migration/test_project_event_maintenance.py",
               "tests/native_control/test_capability_retirement.py",
               "tests/native_control/test_source_origin.py",
           ], env=environment, check=True)

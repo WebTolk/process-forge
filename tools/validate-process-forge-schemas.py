@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_EVENT_MIGRATION_DESCRIPTOR = "project-event-migration-v2.json"
 
 REQUIRED_FILES = [
     "AGENTS.md",
@@ -817,7 +818,7 @@ def process_definition_files(root: Path) -> list[Path]:
 
 
 def validate_migration_descriptor(root: Path, path: Path, data: object) -> None:
-    """Validate the two code-pinned migration documents as typed descriptors."""
+    """Validate the code-pinned migration documents as typed descriptors."""
     sys.path.insert(0, str(root / "src"))
     from processforge_core.executions.schema import EXECUTION_SCHEMA
     from processforge_core.maintenance.storage_migration import STORE_IDENTITY_SCHEMA
@@ -856,6 +857,26 @@ def validate_migration_descriptor(root: Path, path: Path, data: object) -> None:
             "target_schema_checksum": EXECUTION_SCHEMA.checksum,
         }
         paths = common
+    elif path.name == PROJECT_EVENT_MIGRATION_DESCRIPTOR:
+        expected = {
+            "migration_id": "r02-project-events-v2",
+            "descriptor_version": 2,
+            "min_reader_capability": "storage-identity-v1",
+            "min_writer_capability": "storage-identity-v1",
+            "legacy_descriptor_checksum": (
+                "sha256:a56d3dc302dd9556d72bc93390c65590233d69fcee8e303c2a8461fa8286cdfc"
+            ),
+        }
+        paths = [
+            "src/processforge_core/maintenance/project_event_coordinator.py",
+            "src/processforge_core/maintenance/project_event_maintenance.py",
+            "src/processforge_core/maintenance/project_event_owner.py",
+            "src/processforge_core/maintenance/project_event_publication.py",
+            "src/processforge_core/runtime/execution_admission.py",
+            "src/processforge_core/runtime/process_identity.py",
+            "src/processforge_core/runtime_service_state.py",
+            "src/processforge_platforms/linux_process_identity.py",
+        ]
     else:
         expected = {
             "migration_id": "r02-storage-v1",
@@ -923,12 +944,27 @@ def validate_migration_descriptor(root: Path, path: Path, data: object) -> None:
 
 
 def validate_json_schemas(root: Path) -> None:
+    def unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        data = dict(pairs)
+        if len(data) != len(pairs):
+            raise ValueError("duplicate object key")
+        return data
+
     for path in sorted((root / "schemas").glob("*.json")):
+        strict_keys = (
+            unique_json_object
+            if path.name == PROJECT_EVENT_MIGRATION_DESCRIPTOR
+            else None
+        )
         try:
-            data = json.loads(read_text(path))
-        except json.JSONDecodeError as exc:
+            data = json.loads(read_text(path), object_pairs_hook=strict_keys)
+        except ValueError as exc:
             fail(f"{path.relative_to(root)} is invalid JSON: {exc}")
-        if path.name in {"execution-migration-v1.json", "storage-migration-v1.json"}:
+        if path.name in {
+            "execution-migration-v1.json",
+            PROJECT_EVENT_MIGRATION_DESCRIPTOR,
+            "storage-migration-v1.json",
+        }:
             validate_migration_descriptor(root, path, data)
             continue
         for key in ("$schema", "title", "type"):

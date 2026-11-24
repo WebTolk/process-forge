@@ -2278,6 +2278,10 @@ def command_project_mode_status(args: argparse.Namespace) -> int:
 
 
 def command_project_mode_set(args: argparse.Namespace) -> int:
+    from processforge_core.maintenance.project_event_owner import (
+        project_event_binding_writer_guard,
+    )
+
     project_root = Path(args.project_root).expanduser().resolve()
     flow_root = _run_task_inputs.require_flow_root(project_root)
     mode = _project_coordination_reader.project_mode(args.mode)
@@ -2291,15 +2295,20 @@ def command_project_mode_set(args: argparse.Namespace) -> int:
         elif not status.get("director_office_exists"):
             raise SystemExit("FAIL: organized project mode requires an initialized Director Office; rerun with --init-office or enable workplace Director Office")
     manifest = flow_root / "process-forge.yaml"
-    data = read_yaml_file(manifest)
-    coordination = data.get("coordination") if isinstance(data.get("coordination"), dict) else _project_coordination_reader.project_defaults()
-    director = coordination.get("director") if isinstance(coordination.get("director"), dict) else {}
-    coordination["mode"] = mode
-    director.setdefault("use_workplace_director", True)
-    director.setdefault("inbox_submit_required", False)
-    coordination["director"] = director
-    data["coordination"] = coordination
-    _core_common_yaml_io.write_yaml_file(manifest, data)
+    with project_event_binding_writer_guard(project_root):
+        data = read_yaml_file(manifest)
+        coordination = data.get("coordination")
+        if not isinstance(coordination, dict):
+            coordination = _project_coordination_reader.project_defaults()
+        director = coordination.get("director")
+        if not isinstance(director, dict):
+            director = {}
+        coordination["mode"] = mode
+        director.setdefault("use_workplace_director", True)
+        director.setdefault("inbox_submit_required", False)
+        coordination["director"] = director
+        data["coordination"] = coordination
+        _core_common_yaml_io.write_yaml_file(manifest, data)
     write_project_context_snapshot_outputs(project_root)
     print(f"UPDATED: {rel(manifest, project_root)}")
     return command_project_mode_status(argparse.Namespace(project_root=str(project_root), workplace=getattr(args, "workplace", None), json=args.json))
@@ -2819,14 +2828,22 @@ diagnostic output.
     write_file(report, content, force=True)
 
 
-def _project_bootstrap_preflight(
+@dataclass(frozen=True)
+class _ProjectBootstrapBinding:
+    receipt: dict[str, Any] | None
+    project_id: str
+    workplace_root: Path | None
+
+
+def _project_bootstrap_binding(
     request: dict[str, Any], files: dict[Path, str]
-) -> None:
-    """Validate current and effective bootstrap facts without authoring them."""
-    from processforge_core.composition import build_storage_migration_host
-    from processforge_core.configuration import ConfigurationProvider
+) -> _ProjectBootstrapBinding:
+    """Check only the binding files and receipt, without touching storage."""
     from processforge_core.maintenance.contracts import MaintenanceError
-    from processforge_core.maintenance.fresh_project import _domain, _receipt
+    from processforge_core.maintenance.fresh_project import _receipt
+    from processforge_core.maintenance.project_event_owner import (
+        INERT_LEGACY_PROJECT_TEMPLATE,
+    )
     from processforge_core.maintenance.storage_migration import _safe
 
     project = request["project_root"]
@@ -2836,25 +2853,19 @@ def _project_bootstrap_preflight(
     except (TypeError, ValueError) as error:
         # Malformed JSON field types must not escape the receipt boundary.
         raise MaintenanceError("storage_fresh_receipt_invalid") from error
-    if document is None:
-        return
-    unbound = document["domains"] is None
-    if unbound and (
-        document["state"] != "pending"
-        or document["project_id"] is not None
-        or document["workplace"] is not None
-    ):
-        raise MaintenanceError("storage_fresh_receipt_invalid")
-    if not unbound and not isinstance(document["domains"], list):
-        raise MaintenanceError("storage_fresh_receipt_invalid")
+    if document is not None:
+        if document["domains"] is None:
+            if (
+                document["state"] != "pending"
+                or document["project_id"] is not None
+                or document["workplace"] is not None
+            ):
+                raise MaintenanceError("storage_fresh_receipt_invalid")
+        elif not isinstance(document["domains"], list):
+            raise MaintenanceError("storage_fresh_receipt_invalid")
 
-    def read_manifest(name: str, *, proposed: bool) -> dict[str, Any]:
-        path = _safe(flow / name)
-        if (
-            proposed
-            and path in files
-            and (request.get("force", False) or not path.exists())
-        ):
+    def read_manifest(path: Path, *, planned: bool = False) -> dict[str, Any]:
+        if planned and path in files:
             try:
                 import yaml
             except ModuleNotFoundError:
@@ -2873,50 +2884,114 @@ def _project_bootstrap_preflight(
     def owner(manifest: dict[str, Any]) -> str:
         section = manifest.get("project")
         value = section.get("id") if isinstance(section, dict) else None
-        if not isinstance(value, str) or not value.strip():
+        if not isinstance(value, str) or not value.strip() or "\x00" in value:
             raise MaintenanceError("project_identity_required")
         return value
 
-    selected = request.get("workplace")
-    workplace = Path(selected).parent if selected is not None else None
-    proposed_owner = owner(read_manifest("process-forge.yaml", proposed=True))
     manifest_path = _safe(flow / "process-forge.yaml")
-    if not unbound or manifest_path.exists():
-        current_owner = owner(read_manifest("process-forge.yaml", proposed=False))
-        if proposed_owner != current_owner or (
-            not unbound and current_owner != document["project_id"]
-        ):
-            raise MaintenanceError("storage_fresh_target_conflict")
-    if not unbound and document["workplace"] != str(workplace or ""):
-        raise MaintenanceError("storage_fresh_target_conflict")
+    local_path = _safe(flow / "process-forge.local.yaml")
+    has_manifest, has_local = manifest_path.exists(), local_path.exists()
+    force = bool(request.get("force", False))
+    repair = request.get("command") == "project-init-repair"
+    inert_template = (
+        has_manifest
+        and not has_local
+        and force
+        and not repair
+        and document is None
+        and manifest_path.stat().st_size == len(INERT_LEGACY_PROJECT_TEMPLATE)
+        and manifest_path.read_bytes() == INERT_LEGACY_PROJECT_TEMPLATE
+    )
+    current_owner = (
+        owner(read_manifest(manifest_path))
+        if has_manifest and not inert_template
+        else None
+    )
+    proposed_owner = (
+        owner(read_manifest(manifest_path, planned=True))
+        if force or current_owner is None
+        else current_owner
+    )
 
-    # Match ProjectMetadataReader routing, including project-relative references.
-    current_reference = None
-    for proposed in (False, True):
-        local = read_manifest("process-forge.local.yaml", proposed=proposed)
+    def reference(local: dict[str, Any]) -> Path | None:
         section = local.get("workplace", {})
         if not isinstance(section, dict):
             raise MaintenanceError("storage_configuration_invalid")
-        reference = section.get("manifest")
-        if not proposed:
-            current_reference = reference
-        elif current_reference and not reference:
-            raise MaintenanceError("storage_enrollment_conflict")
-        if reference:
-            if not isinstance(reference, str):
-                raise MaintenanceError("storage_configuration_invalid")
-            declared = Path(reference).expanduser()
-            if not declared.is_absolute():
-                declared = (project / declared).resolve()
-            if workplace is None or declared.absolute() != workplace / "workplace.yaml":
-                raise MaintenanceError("storage_enrollment_conflict")
+        value = section.get("manifest")
+        if not value:
+            return None
+        if not isinstance(value, str) or not value.strip() or "\x00" in value:
+            raise MaintenanceError("storage_configuration_invalid")
+        declared = Path(value).expanduser()
+        return declared if declared.is_absolute() else (project / declared).resolve()
 
+    current_reference = reference(read_manifest(local_path))
+    proposed_reference = (
+        reference(read_manifest(local_path, planned=True))
+        if force or not has_local
+        else current_reference
+    )
+    if repair:
+        # Repair builds its proposal before the writer runs. A missing file may
+        # be restored only against the same surviving half of the binding.
+        if has_manifest and not has_local and current_owner != owner(
+            read_manifest(manifest_path, planned=True)
+        ):
+            raise MaintenanceError("storage_enrollment_conflict")
+        if has_local and not has_manifest and current_reference != reference(
+            read_manifest(local_path, planned=True)
+        ):
+            raise MaintenanceError("storage_enrollment_conflict")
+
+    selected = request.get("workplace")
+    workplace = Path(selected).parent if selected is not None else None
+    # A non-forced legacy initialization can leave the effective route intact.
+    if proposed_reference is not None and (
+        repair or (document is None and has_local and not force)
+    ):
+        workplace = proposed_reference.parent
+    expected = workplace / "workplace.yaml" if workplace is not None else None
+
+    if document is not None:
+        if current_owner is not None and proposed_owner != current_owner:
+            raise MaintenanceError("storage_fresh_target_conflict")
+        if document["domains"] is not None and (
+            current_owner is None
+            or proposed_owner != document["project_id"]
+            or document["workplace"] != str(workplace or "")
+        ):
+            raise MaintenanceError("storage_fresh_target_conflict")
+        if current_reference is not None and current_reference != proposed_reference:
+            raise MaintenanceError("storage_enrollment_conflict")
+    if proposed_reference is not None and proposed_reference != expected:
+        raise MaintenanceError("storage_enrollment_conflict")
+
+    return _ProjectBootstrapBinding(document, proposed_owner, workplace)
+
+
+def _project_bootstrap_preflight(
+    request: dict[str, Any], files: dict[Path, str]
+) -> _ProjectBootstrapBinding:
+    """Verify receipt-backed storage before acquiring the binding writer guard."""
+    from processforge_core.composition import build_storage_migration_host
+    from processforge_core.configuration import ConfigurationProvider
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.maintenance.fresh_project import _domain
+
+    bootstrap_binding = _project_bootstrap_binding(request, files)
+    document = bootstrap_binding.receipt
+    if document is None:
+        return bootstrap_binding
+    proposed_owner = bootstrap_binding.project_id
+    workplace = bootstrap_binding.workplace_root
+    project = request["project_root"]
+    flow = project / PROJECT_FLOW_ROOT
     snapshot = build_configuration_provider(
         project_root=project, workplace_root=workplace
     ).snapshot()
     if snapshot.errors:
         raise MaintenanceError("storage_configuration_invalid")
-    if not unbound:
+    if document["domains"] is not None:
         host = build_storage_migration_host(
             project_root=project,
             workplace_root=workplace,
@@ -3048,6 +3123,7 @@ def _project_bootstrap_preflight(
             or not selected_storage.repository.readiness().ready
         ):
             raise MaintenanceError("execution_storage_not_ready")
+    return bootstrap_binding
 
 
 def execute_project_initialization(
@@ -3071,17 +3147,21 @@ def execute_project_initialization(
     from processforge_core.maintenance.contracts import MaintenanceError
 
     try:
-        _project_bootstrap_preflight(request, files)
+        binding = _project_bootstrap_preflight(request, files)
     except OSError as error:
         raise MaintenanceError("storage_activity_unknown") from error
-    return _execute_project_initialization(request, files)
+    return _execute_project_initialization(request, files, binding)
 
 
 def _execute_project_initialization(
-    request: dict[str, Any], files: dict[Path, str]
+    request: dict[str, Any], files: dict[Path, str], preflight: _ProjectBootstrapBinding
 ) -> dict[str, Any]:
-    """CLI writer adapter used only by project_initialization.initialize_project()."""
+    """Publish the deterministic files shared by onboarding and repair."""
     from processforge_core.agent_entry.migration import TARGETS as entry_targets
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.maintenance.project_event_owner import (
+        project_event_binding_writer_guard,
+    )
 
     project_root = request["project_root"]
     entry_plan = request.get("agent_entry_plan")
@@ -3101,19 +3181,27 @@ def _execute_project_initialization(
     protected.add(flow_root / "START_AGENT_HERE.md")
     # Publish identity and enrollment before the first owned journal access.
     # Retain each write result in the original public file order; do not rewrite.
-    bootstrap = {
-        path: write_file(path, files[path], force=force)
-        for path in (
-            flow_root / "process-forge.yaml",
-            flow_root / "process-forge.local.yaml",
-        )
-        if path in files and path not in protected
-    }
+    with project_event_binding_writer_guard(project_root):
+        try:
+            binding = _project_bootstrap_binding(request, files)
+        except OSError as error:
+            raise MaintenanceError("storage_activity_unknown") from error
+        if binding.receipt != preflight.receipt or (
+            binding.receipt is not None and binding != preflight
+        ):
+            raise MaintenanceError("storage_fresh_target_conflict")
+        bootstrap = {
+            path: write_file(path, files[path], force=force)
+            for path in (
+                flow_root / "process-forge.yaml",
+                flow_root / "process-forge.local.yaml",
+            )
+            if path in files and path not in protected
+        }
     from processforge_core.configuration import ConfigurationProvider
     from processforge_core.maintenance.fresh_project import initialize_project_storage
 
-    selected = request.get("workplace")
-    workplace = Path(selected).parent if selected is not None else None
+    workplace = binding.workplace_root
     snapshot = build_configuration_provider(
         project_root=project_root, workplace_root=workplace
     ).snapshot()

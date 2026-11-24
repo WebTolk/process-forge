@@ -179,6 +179,41 @@ history scan. The 400,000-history zero-terminal-read acceptance concerns SQL-rea
 operation; legacy projects retain their existing bounded observer semantics.
 File-only operation requires no Runtime/MCP bootstrap, network or LLM.
 
+## Migrate one project event journal with Runtime online
+
+Use `--project-events` for an existing SQLite event journal in an enrolled
+project. Pass the project and its actual Workplace. The Runtime must advertise
+the `project_event_maintenance` capability. Any unmanaged writers to the
+selected journal must be stopped before applying.
+
+```text
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --inspect --json
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --apply --json
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --resume --json
+```
+
+The migrator reports the selected target. It admits the operation for that
+project, waits for its managed storage accesses to finish, and retains a
+verified backup and the exact migration plan. While the journal is fenced,
+the selected project can receive `storage_project_event_maintenance_busy`
+or `storage_resume_required`. A competing migration returns a retryable
+busy result. Other enrolled projects keep using the same Runtime for Work,
+events and hook delivery.
+
+After interruption, retry `--resume` with the same roots and configuration
+while a compatible Runtime is running. The pending identity pin fences ordinary
+access until verification succeeds. Use `--inspect` to confirm `ready`, then
+refresh the project's context.
+
+Import historical NDJSON before starting the selected migration. If unimported
+NDJSON appears after the plan is pending, resume returns
+`storage_project_event_import_required` and the public importer refuses the
+pending target with `storage_resume_required`. Preserve the sidecar, SQLite
+journal and migration evidence for recovery.
+
+The offline procedure below covers shared Workplace stores, execution storage
+and historical NDJSON imports.
+
 ## Explicit migration and update responsibility
 
 New projects use SQL immediately. Existing projects with legacy journals refuse

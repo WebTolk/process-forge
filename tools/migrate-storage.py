@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect or explicitly migrate storage while the operator/updater keeps PF stopped."""
+"""Inspect storage or perform an explicit, admitted storage migration."""
 
 from __future__ import annotations
 
@@ -91,6 +91,9 @@ def _main_in_operation(
     with operation_lease():
         from processforge_core.configuration import ConfigurationProvider
         from processforge_core.maintenance.contracts import MaintenanceError
+        from processforge_core.maintenance.project_event_maintenance import (
+            run_project_event_migration,
+        )
         from processforge_core.maintenance.storage_migration import (
             StorageMigrationHost,
             StorageMigrationService,
@@ -102,6 +105,11 @@ def _main_in_operation(
         parser.add_argument("--workplace-root", type=_absolute)
         parser.add_argument("--device-config", type=_absolute)
         parser.add_argument("--evidence-dir", type=_absolute)
+        parser.add_argument(
+            "--project-events",
+            action="store_true",
+            help="Select only the enrolled project's SQLite event journal.",
+        )
         modes = parser.add_mutually_exclusive_group()
         modes.add_argument("--inspect", action="store_true")
         modes.add_argument("--apply", action="store_true")
@@ -110,11 +118,17 @@ def _main_in_operation(
         parser.add_argument(
             "--offline-confirmed",
             action="store_true",
-            help="Confirm that you stopped PF and all writers for the selected roots.",
+            help="Confirm that you stopped PF and its writers for general storage maintenance.",
         )
         args = parser.parse_args(argv)
         if args.project_root is None and args.workplace_root is None:
             parser.error("--project-root or --workplace-root required")
+        if args.project_events and (
+            args.project_root is None or args.workplace_root is None
+        ):
+            parser.error(
+                "--project-events requires --project-root and --workplace-root"
+            )
         operation: Literal["inspect", "apply", "resume"] = (
             "apply" if args.apply else "resume" if args.resume else "inspect"
         )
@@ -147,21 +161,33 @@ def _main_in_operation(
                 device_config_path=args.device_config,
                 configuration=pinned,
                 evidence_dir=args.evidence_dir,
-                **({"offline_confirmed": True} if args.offline_confirmed else {}),
+                **(
+                    {"offline_confirmed": True}
+                    if args.offline_confirmed and not args.project_events
+                    else {}
+                ),
+                **({"project_events_only": True} if args.project_events else {}),
             )
             if not isinstance(host, StorageMigrationHost):
                 raise MaintenanceError("storage_host_factory_invalid")
+            context = (
+                host.context
+                if args.evidence_dir is not None
+                or (args.project_events and operation != "inspect")
+                else None
+            )
             # Host verifies enrollment, effective target/profile/owner and evidence
             # containment. An explicit selector must stay in owner maintenance roots.
             if args.evidence_dir is not None:
+                assert context is not None
                 from processforge_core.maintenance.storage_migration import (
                     storage_owner_root,
                     validate_storage_context,
                 )
 
                 roots = {
-                    storage_owner_root(host.context, t)
-                    for t in validate_storage_context(host.context)
+                    storage_owner_root(context, t)
+                    for t in validate_storage_context(context)
                 }
                 if not any(
                     args.evidence_dir.is_relative_to(root / "maintenance")
@@ -169,11 +195,40 @@ def _main_in_operation(
                     for root in roots
                 ):
                     raise MaintenanceError("storage_evidence_unsafe")
-            result = run_storage_migration(host, operation=operation)
+            if not args.project_events:
+                result = run_storage_migration(host, operation=operation)
+            elif operation == "inspect":
+                result = run_project_event_migration(
+                    host, operation=operation, offline_confirmed=False
+                )
+            else:
+                from processforge_core.maintenance.project_event_coordinator import (
+                    run_online_project_event_migration,
+                )
+                from processforge_core.maintenance.project_event_maintenance import (
+                    selected_project_event_target,
+                )
+
+                if (
+                    context is None
+                    or context.project_root is None
+                    or context.workplace_root is None
+                ):
+                    raise MaintenanceError("storage_project_event_target_invalid")
+                result = run_online_project_event_migration(
+                    project_root=context.project_root,
+                    workplace_root=context.workplace_root,
+                    device_config_path=context.device_config_path,
+                    configuration=pinned,
+                    operation=operation,
+                    expected_target=selected_project_event_target(context),
+                )
         except Exception as error:
             result = StorageMigrationService._failure(
                 StorageMigrationService._report("storage-" + operation), error
             )
+        if args.project_events:
+            result["requested_target"] = {"kind": "events", "scope": "project"}
         print(
             json.dumps(
                 result,

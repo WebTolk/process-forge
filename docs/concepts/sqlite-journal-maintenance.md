@@ -238,15 +238,30 @@ supported storage migration entrypoint below for the composed offline procedure.
 Storage migration is an explicit operator/updater operation.
 `tools/migrate-storage.py` accepts `--project-root` and/or `--workplace-root`,
 optional `--device-config`, and one of `--inspect` (default), `--apply`,
-`--resume`. Apply/resume also require `--offline-confirmed`: the operator has
-stopped PF and all writers in Garage; the Forge updater manages its single PF
-executor. Exit codes are 0 for planned/ready, 1 for blocked/failed, argparse 2.
+`--resume`. General storage apply and resume require `--offline-confirmed`.
+The operator stops PF and all writers in Garage, and the Forge updater manages
+its single PF executor. Exit codes are 0 for planned/ready, 1 for blocked/failed,
+and 2 for invalid arguments.
 
 Import event/raw journals with the command above, then run:
 
 ```text
 python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --apply --offline-confirmed --json
 ```
+
+Run this command to migrate the enrolled project's event journal in place
+while its compatible Runtime is online.
+
+```text
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --apply --json
+```
+
+Import any legacy NDJSON event history for that project before applying. Use the
+same roots and `--project-events --resume` after interruption. A verified v1 plan
+keeps its original checksum, UUID, and verified backup. The online route
+requires Runtime authority even if the command includes `--offline-confirmed`.
+Finish pending recovery with the compatible coordinator before allowing a
+predecessor to open that project's journal.
 
 Ordinary Work/worker writes only check readiness and refuse legacy storage with
 `storage_migration_required`. They do not launch automatic import. Pure reads
