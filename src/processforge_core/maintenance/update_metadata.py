@@ -6,7 +6,7 @@ import copy
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 
@@ -131,6 +131,8 @@ class SubjectMetadataBackup:
         candidate: dict[str, Any],
         install_path: Path,
         installed_path_value: str,
+        *,
+        payload_kind: Literal["file", "tree"] | None = None,
     ) -> SubjectMetadataBackup:
         subject = candidate.get("subject", {})
         before = copy.deepcopy(_selected(_read(registry), subject))
@@ -145,6 +147,8 @@ class SubjectMetadataBackup:
             "phase": "prepared",
             "payload_existed": install_path.exists(),
         }
+        if payload_kind is not None:
+            data["payload_kind"] = payload_kind
         _write(path, data)
         return cls(registry, path, data)
 
@@ -154,24 +158,32 @@ class SubjectMetadataBackup:
         registry: Path,
         path: Path,
         candidate: dict[str, Any],
-        install_path: Path,
+        install_path: Path | None,
     ) -> SubjectMetadataBackup:
         if not path.is_file():
             raise ValueError("package_metadata_preimage_missing")
         data = _read(path)
         subject = candidate.get("subject", {})
         identity = {"type": subject.get("type"), "id": subject.get("id")}
+        recorded_path = data.get("install_path")
         if (
-            data.get("schema_version") != 1
+            type(data.get("schema_version")) is not int
+            or data["schema_version"] != 1
             or data.get("candidate_id") != candidate.get("id")
             or data.get("subject") != identity
-            or data.get("install_path") != str(install_path.resolve())
+            or not isinstance(recorded_path, str)
+            or not Path(recorded_path).is_absolute()
+            or (
+                install_path is not None
+                and recorded_path != str(install_path.resolve())
+            )
             or not isinstance(data.get("after"), dict)
             or "before" not in data
             or data["after"].get("version") != candidate.get("available_version")
             or data.get("phase")
-            not in {"prepared", "backup_ready", "applied", "rolled_back"}
+            not in ("prepared", "backup_ready", "applied", "rolled_back")
             or not isinstance(data.get("payload_existed"), bool)
+            or ("payload_kind" in data and data["payload_kind"] not in ("file", "tree"))
             or (data.get("before") is not None and not isinstance(data["before"], dict))
         ):
             raise ValueError("package_metadata_preimage_mismatch")
@@ -189,6 +201,15 @@ class SubjectMetadataBackup:
         if current not in allowed:
             raise ValueError("installed_subject_changed")
         return cls(registry, path, data)
+
+    @property
+    def install_path(self) -> Path:
+        return Path(self.data["install_path"])
+
+    @property
+    def previous_version(self) -> object:
+        before = self.data["before"]
+        return before.get("version") if before is not None else None
 
     def phase(self, value: str) -> None:
         self.data["phase"] = value
