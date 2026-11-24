@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 from .contracts import MaintenanceError
+from .fresh_project import RECEIPT as PROJECT_INITIALIZATION_RECEIPT
+from .journal_scan import _check_links
 from .project_event_owner import INERT_LEGACY_PROJECT_TEMPLATE
 from .release_sources import ReleaseSourcePolicy
 from .update import (
@@ -31,23 +33,85 @@ _LEGACY_PROJECT_MANIFEST = ".pf/process-forge.yaml"
 _LEGACY_BINDING_REFUSAL = (
     "cannot prove .pf/process-forge.yaml is disjoint from project binding"
 )
+_INERT_TEMPLATE_PIN = {
+    "size": len(INERT_LEGACY_PROJECT_TEMPLATE),
+    "sha256": hashlib.sha256(INERT_LEGACY_PROJECT_TEMPLATE).hexdigest(),
+}
+# The public v1.2.0 Core archive owned this file-only configuration.
+_RELEASED_CORE_TEMPLATE_PIN = {
+    "size": 5133,
+    "sha256": "57b456d34fa1e08c2e6142a4aa9870f01f8896e893e62891e2b9680472664b86",
+}
+_PROJECT_STATE_MARKERS = (
+    PROJECT_INITIALIZATION_RECEIPT,
+    "data/storage-identities.json",
+    "contexts/project-context.snapshot.yaml",
+    "runtime/events/events.ndjson",
+    "runtime/events/events.sqlite3",
+    "runtime/events/events.sqlite3-wal",
+    "runtime/events/events.sqlite3-shm",
+    "runtime/events/events.sqlite3-journal",
+)
+
+
+def _marker_exists(path: Path) -> bool:
+    _check_links(path, "storage_path_unsafe")
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def _has_project_records(flow: Path) -> bool:
+    for directory, suffixes in (
+        (flow / "assignments", (".yaml", ".yml")),
+        (flow / "contexts/assignment-capsules", (".capsule.yaml",)),
+    ):
+        if _marker_exists(directory) and any(
+            child.name.casefold().endswith(suffixes) for child in directory.iterdir()
+        ):
+            return True
+    runs = flow / "runs"
+    if _marker_exists(runs):
+        for child in runs.iterdir():
+            _check_links(child, "storage_path_unsafe")
+            if stat.S_ISDIR(child.lstat().st_mode) and _marker_exists(child / "run.yaml"):
+                return True
+    return False
+
+
+def _owns_released_core_template(manifest: dict[str, Any]) -> bool:
+    row = manifest_file_map(manifest).get(_LEGACY_PROJECT_MANIFEST, {})
+    return all(
+        row.get(key) == value for key, value in _RELEASED_CORE_TEMPLATE_PIN.items()
+    )
 
 
 def _require_disjoint_legacy_project_manifest(
-    root: Path, raw: bytes | None, saved: bytes | None = None
+    root: Path,
+    live: dict[str, Any] | None,
+    saved: dict[str, Any] | None,
+    release_owned: bool,
 ) -> None:
-    """Qualify only the inert historical stub on a root without enrollment."""
-    if any(
-        content not in (None, INERT_LEGACY_PROJECT_TEMPLATE) for content in (raw, saved)
-    ):
+    """Qualify the observed and sealed preimages at the exact update target."""
+    allowed: tuple[dict[str, Any] | None, ...] = (None, _INERT_TEMPLATE_PIN)
+    if release_owned:
+        allowed += (_RELEASED_CORE_TEMPLATE_PIN,)
+    if live not in allowed or saved not in allowed:
         raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
+    flow = root / ".pf"
     try:
-        (root / ".pf/process-forge.local.yaml").lstat()
-    except FileNotFoundError:
-        return
-    except OSError as error:
+        bound = _marker_exists(flow / "process-forge.local.yaml")
+        released = _RELEASED_CORE_TEMPLATE_PIN in (live, saved)
+        if not bound and released:
+            bound = any(
+                _marker_exists(flow / marker) for marker in _PROJECT_STATE_MARKERS
+            ) or _has_project_records(flow)
+    except (MaintenanceError, OSError) as error:
         raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL) from error
-    raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
+    if bound:
+        raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
 
 
 def _target_root(core_root: Path) -> Path:
@@ -278,26 +342,37 @@ def apply_file_update(
             raise
 
     def check_legacy_manifest(
-        relative: str, saved: bytes | None = None
+        relative: str, release_owned: bool, saved: dict[str, Any] | None = None
     ) -> bytes | None:
         raw = current(relative)
         if relative != _LEGACY_PROJECT_MANIFEST and current(
             _LEGACY_PROJECT_MANIFEST
         ) not in (None, INERT_LEGACY_PROJECT_TEMPLATE):
             raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
-        _require_disjoint_legacy_project_manifest(root, raw, saved)
+        _require_disjoint_legacy_project_manifest(
+            root,
+            pin(raw) if raw is not None else None,
+            saved,
+            release_owned and relative == _LEGACY_PROJECT_MANIFEST,
+        )
         return raw
 
     def check_legacy_removals(
-        removed: list[str], saved: dict[str, bytes | None] | None = None
+        removed: list[str],
+        release_owned: bool,
+        initial: dict[str, Any] | None = None,
     ) -> None:
         for relative in removed:
             if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
                 check_legacy_manifest(
-                    relative, saved[relative] if saved is not None else None
+                    relative,
+                    release_owned,
+                    initial[relative] if initial is not None else None,
                 )
 
-    def delete_legacy_manifest(relative: str, initial: dict[str, Any] | None) -> None:
+    def delete_legacy_manifest(
+        relative: str, initial: dict[str, Any] | None, release_owned: bool
+    ) -> None:
         from .project_event_owner import project_event_binding_writer_guard
 
         with ExitStack() as guard:
@@ -307,7 +382,7 @@ def apply_file_update(
                 except FileNotFoundError:
                     # A missing flow root has no writer lock. There is no
                     # pathname to unlink, even if a writer creates it later.
-                    if check_legacy_manifest(relative) is None:
+                    if check_legacy_manifest(relative, release_owned, initial) is None:
                         return
                     raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
                 guard.enter_context(project_event_binding_writer_guard(root))
@@ -317,7 +392,7 @@ def apply_file_update(
                 ) from error
 
             try:
-                raw = check_legacy_manifest(relative)
+                raw = check_legacy_manifest(relative, release_owned, initial)
                 if raw is not None:
                     if pin(raw) != initial:
                         refuse()
@@ -349,7 +424,7 @@ def apply_file_update(
             "plan_blocked", "file recovery proof or target state differs"
         )
 
-    def resume_inputs() -> tuple[dict[str, Any], dict[str, Any], Any, dict[str, Any]]:
+    def resume_inputs() -> tuple[dict[str, Any], dict[str, Any], Any, dict[str, Any], bool]:
         progress = json.loads(
             read("runtime/core-update/in-progress.json", MAX_MANIFEST)
         )
@@ -458,7 +533,6 @@ def apply_file_update(
             or set(proof["initial"]) != set(paths) | set(writes)
         ):
             refuse()
-        legacy_preimages: dict[str, bytes | None] = {}
         for relative, initial in proof["initial"].items():
             if relative in plan["added"] and initial is not None:
                 refuse()
@@ -467,18 +541,16 @@ def apply_file_update(
                 if initial is None:
                     if saved is not None:
                         refuse()
-                    preimage = None
                 else:
                     if saved != "files/" + relative:
                         refuse()
                     preimage = read(prefix + "/" + saved)
                     if pin(preimage) != initial:
                         refuse()
-                if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
-                    legacy_preimages[relative] = preimage
-        check_legacy_removals(plan["removed"], legacy_preimages)
+        release_owned = _owns_released_core_template(old)
+        check_legacy_removals(plan["removed"], release_owned, proof["initial"])
         validate_current(proof, plan, frozen)
-        return progress, plan, frozen, proof
+        return progress, plan, frozen, proof, release_owned
 
     def replaced_by_directory(relative: str, frozen: Any) -> bool:
         if not any(name.startswith(relative + "/") for name in frozen.payload):
@@ -519,8 +591,8 @@ def apply_file_update(
         require_update_target(root)
         require_offline()
         if resume:
-            progress, plan, frozen, proof = resume_inputs()
-            return execute(progress, plan, frozen, proof, resuming=True)
+            progress, plan, frozen, proof, release_owned = resume_inputs()
+            return execute(progress, plan, frozen, proof, release_owned, resuming=True)
         old_raw = read(CORE_MANIFEST_NAME, MAX_MANIFEST)
         old = json.loads(old_raw)
         checked_paths(old, installed_legacy=True)
@@ -555,7 +627,8 @@ def apply_file_update(
             raise CoreUpdateError(
                 "plan_blocked", "installed manifest changed during planning"
             )
-        check_legacy_removals(plan["removed"])
+        release_owned = _owns_released_core_template(old)
+        check_legacy_removals(plan["removed"], release_owned)
 
         update_id = (
             "core-update-"
@@ -606,13 +679,14 @@ def apply_file_update(
             {k: v for k, v in plan.items() if k != "new_manifest"},
         )
         write_json(journal, progress)
-        return execute(progress, plan, frozen, None, resuming=False)
+        return execute(progress, plan, frozen, None, release_owned, resuming=False)
 
     def execute(
         progress: dict[str, Any],
         plan: dict[str, Any],
         frozen: Any,
         proof: dict[str, Any] | None,
+        release_owned: bool,
         *,
         resuming: bool,
     ) -> dict[str, Any]:
@@ -648,7 +722,6 @@ def apply_file_update(
                     stream.flush()
                     os.fsync(stream.fileno())
             initial: dict[str, Any] = {}
-            legacy_preimages: dict[str, bytes | None] = {}
             for relative in [] if resuming else paths:
                 require_update_target(root)
                 preimage = current(relative)
@@ -662,8 +735,6 @@ def apply_file_update(
                     "files/" + relative if preimage is not None else None
                 )
                 initial[relative] = pin(preimage) if preimage is not None else None
-                if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
-                    legacy_preimages[relative] = preimage
                 complete("backup", relative)
             if not resuming:
                 for relative in plan["added"]:
@@ -691,9 +762,7 @@ def apply_file_update(
                 }
                 write_json(journal, progress)
             assert proof is not None
-            check_legacy_removals(
-                plan["removed"], None if resuming else legacy_preimages
-            )
+            check_legacy_removals(plan["removed"], release_owned, proof["initial"])
             validate_current(proof, plan, frozen)
             for relative in plan["removed"]:
                 require_update_target(root)
@@ -701,7 +770,9 @@ def apply_file_update(
                 if proof["binding"] != binding():
                     refuse()
                 if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
-                    delete_legacy_manifest(relative, proof["initial"][relative])
+                    delete_legacy_manifest(
+                        relative, proof["initial"][relative], release_owned
+                    )
                     complete("delete", relative)
                     continue
                 if replaced_by_directory(relative, frozen):

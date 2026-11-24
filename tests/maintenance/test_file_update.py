@@ -945,6 +945,156 @@ def prepare_legacy_project_template(fixture: Harness) -> str:
     return relative
 
 
+RELEASED_TEMPLATE = (
+    b"schema_version: 1\nprocess_forge: {mode: file_only}\n"
+    b"project: {id: process-forge}\n"
+)
+
+
+def prepare_release_project_template(
+    fixture: Harness, *, owned: bytes = RELEASED_TEMPLATE
+) -> tuple[str, str]:
+    path = ".pf/process-forge.yaml"
+    put(fixture.target, path, RELEASED_TEMPLATE)
+    put(
+        fixture.target,
+        "processforge-core.manifest.json",
+        old_manifest({**OLD, path: owned}, version="1.2.0"),
+    )
+    # The public upgrade workflow runs the production pin against release bytes.
+    # This fixture can vary project state while using a small pinned file.
+    pin = {"size": len(RELEASED_TEMPLATE), "sha256": sha(RELEASED_TEMPLATE)}
+    return path, f"file_update._RELEASED_CORE_TEMPLATE_PIN = {pin!r}\n"
+
+
+def test_removes_pinned_core_template_and_preserves_loose_history(
+    fixture: Harness,
+) -> None:
+    relative, configure = prepare_release_project_template(fixture)
+    result = fixture.run(configure + "emit(invoke())")
+    assert result["ok"], result
+    receipt = result["result"]
+    assert not (fixture.target / relative).exists()
+    assert (
+        Path(receipt["backup_dir"]) / receipt["backed_up"][relative]
+    ).read_bytes() == RELEASED_TEMPLATE
+    for name, raw in PRIVATE.items():
+        assert (fixture.target / name).read_bytes() == raw
+
+
+@pytest.mark.parametrize(
+    "marker",
+    (
+        "process-forge.local.yaml",
+        "maintenance/project-initialization.json",
+        "data/storage-identities.json",
+        "contexts/project-context.snapshot.yaml",
+        "assignments/work.yaml",
+        "contexts/assignment-capsules/work.capsule.yaml",
+        "runs/work/run.yaml",
+        "runtime/events/events.ndjson",
+        "runtime/events/events.sqlite3",
+        "runtime/events/events.sqlite3-wal",
+        "runtime/events/events.sqlite3-shm",
+        "runtime/events/events.sqlite3-journal",
+    ),
+)
+def test_pinned_release_template_cannot_remove_project_binding(
+    fixture: Harness, marker: str
+) -> None:
+    relative, configure = prepare_release_project_template(fixture)
+    put(fixture.target, f".pf/{marker}", b"")
+    before = fixture.snapshot()
+
+    result = fixture.run(configure + "emit(invoke(force_local_modifications=True))")
+
+    assert result.get("code") == "plan_blocked", result
+    assert (fixture.target / relative).read_bytes() == RELEASED_TEMPLATE
+    assert (fixture.target / ".pf" / marker).read_bytes() == b""
+    fixture.assert_no_apply(before)
+
+
+@pytest.mark.parametrize(
+    ("owned", "live"),
+    (
+        (RELEASED_TEMPLATE + b"# different owner row\n", RELEASED_TEMPLATE),
+        (RELEASED_TEMPLATE, RELEASED_TEMPLATE.replace(b"\n", b"\r\n")),
+    ),
+)
+def test_release_template_requires_exact_owned_and_live_bytes(
+    fixture: Harness, owned: bytes, live: bytes
+) -> None:
+    relative, configure = prepare_release_project_template(fixture, owned=owned)
+    put(fixture.target, relative, live)
+    before = fixture.snapshot()
+
+    result = fixture.run(configure + "emit(invoke(force_local_modifications=True))")
+
+    assert result.get("code") == "plan_blocked", result
+    assert (fixture.target / relative).read_bytes() == live
+    fixture.assert_no_apply(before)
+
+
+def test_resume_rechecks_saved_release_classification_when_live_path_is_absent(
+    fixture: Harness,
+) -> None:
+    relative, configure = prepare_release_project_template(fixture)
+    result = fixture.run(
+        configure
+        + """
+from contextlib import contextmanager
+from processforge_core.maintenance import project_event_owner as owner
+from processforge_core.maintenance.update import resume_file_update
+
+legacy=target/RELATIVE
+original_unlink=Path.unlink
+def interrupt(path,*args,**kwargs):
+    if path==legacy:
+        raise PermissionError(13,'fixture interruption before guarded unlink')
+    return original_unlink(path,*args,**kwargs)
+Path.unlink=interrupt
+try:
+    assert invoke()['code']=='file_operation_failed'
+finally:
+    Path.unlink=original_unlink
+
+journal=target/'runtime/core-update/in-progress.json'
+prior=json.loads(journal.read_bytes())
+backup=Path(prior['backup_dir'])
+proof_path=backup/'control/recovery-proof.json'
+proof=proof_path.read_bytes()
+saved=backup/prior['backed_up'][RELATIVE]
+preimage=saved.read_bytes()
+legacy.unlink()
+receipt=target/'.pf/maintenance/project-initialization.json'
+real_guard=owner.project_event_binding_writer_guard
+
+@contextmanager
+def guard(root):
+    with real_guard(root):
+        receipt.parent.mkdir(parents=True)
+        receipt.write_bytes(b'pending project receipt')
+        yield
+
+owner.project_event_binding_writer_guard=guard
+try:
+    resume_file_update(target,archive,confirm=True)
+except CoreUpdateError as error:
+    assert error.code=='plan_blocked', error.code
+else:
+    raise AssertionError('resume ignored ownership after preflight')
+assert not legacy.exists()
+assert proof_path.read_bytes()==proof and saved.read_bytes()==preimage
+after=json.loads(journal.read_bytes())
+assert after['update_id']==prior['update_id']
+assert after['pending_operations']==prior['pending_operations']
+assert after['failure_history'][:-1]==prior['failure_history']
+emit({'blocked':True})
+""".replace("RELATIVE", repr(relative)),
+    )
+    assert result == {"blocked": True}
+
+
 def test_absent_legacy_project_template_needs_no_unlink(fixture: Harness) -> None:
     relative = prepare_legacy_project_template(fixture)
     (fixture.target / relative).unlink()
