@@ -1,4 +1,4 @@
-"""Exercise online migration against one actual Runtime and two project journals."""
+"""Exercise migration and context isolation with two projects on one Runtime."""
 
 from __future__ import annotations
 
@@ -35,12 +35,18 @@ ConfirmedEvent = tuple[float, str, dict[str, Any]]
 
 HOLD_DURING_BACKUP = """
 import os, runpy, sys, time
+from functools import partial
 from pathlib import Path
 
 tool, held, release, *arguments = sys.argv[1:]
 entry = runpy.run_path(tool)
+from processforge_core.maintenance import project_event_coordinator as coordinator
 from processforge_core.maintenance.backup import SQLiteBackupService
-from processforge_core.maintenance.storage_migration import StorageMigrationService
+
+# This child waits for unrelated CLI probes while intentionally paused.
+coordinator.run_online_project_event_migration = partial(
+    coordinator.run_online_project_event_migration, deadline=time.monotonic() + 180
+)
 
 verify_backup = SQLiteBackupService.verify
 def hold_backup(self, bundle):
@@ -54,11 +60,11 @@ def hold_backup(self, bundle):
 
 SQLiteBackupService.verify = hold_backup
 if "--apply" in arguments:
-    apply_target = StorageMigrationService._apply_target
+    apply_identity = coordinator._Coordinator.apply_identity
     def crash_after_apply(self, *args, **kwargs):
-        apply_target(self, *args, **kwargs)
+        apply_identity(self, *args, **kwargs)
         os._exit(77)
-    StorageMigrationService._apply_target = crash_after_apply
+    coordinator._Coordinator.apply_identity = crash_after_apply
 raise SystemExit(entry["main"](arguments))
 """
 
@@ -175,6 +181,33 @@ def request_event(
     )
 
 
+def confirm_event(
+    endpoint: str,
+    token: str,
+    project: Path,
+    journal: ProcessEventJournal,
+    event_id: str,
+    value: int,
+) -> dict[str, Any]:
+    status, response = request_event(endpoint, token, project, event_id, value)
+    assert status == 200 and response.get("event_id") == event_id, response
+    assert response.get("duplicate") is False, response
+    record = journal.get(project / EVENT_PATH, event_id)
+    assert record is not None and record["data"] == {
+        "value": value,
+        "text": "Журнал",
+    }
+    key = delivery_key(event_id, TARGET)
+    receipt = json.loads(
+        (project / ".pf/runtime/hooks/results" / f"{key}.json").read_bytes()
+    )
+    envelope = (project / receipt["outbox"]).read_bytes()
+    assert receipt["event_id"] == event_id and receipt["target_id"] == TARGET
+    assert hashlib.sha256(envelope).hexdigest() == receipt["payload_sha256"]
+    assert json.loads(envelope)["event"] == record
+    return record
+
+
 def append_stream(
     endpoint: str,
     token: str,
@@ -188,22 +221,7 @@ def append_stream(
     while not stop.is_set():
         event_id = f"evt_live_append_{number}"
         started = time.monotonic()
-        status, response = request_event(endpoint, token, project, event_id, number)
-        assert status == 200 and response.get("event_id") == event_id, response
-        assert response.get("duplicate") is False, response
-        record = journal.get(project / EVENT_PATH, event_id)
-        assert record is not None and record["data"] == {
-            "value": number,
-            "text": "Журнал",
-        }
-        key = delivery_key(event_id, TARGET)
-        receipt = json.loads(
-            (project / ".pf/runtime/hooks/results" / f"{key}.json").read_bytes()
-        )
-        envelope = (project / receipt["outbox"]).read_bytes()
-        assert receipt["event_id"] == event_id and receipt["target_id"] == TARGET
-        assert hashlib.sha256(envelope).hexdigest() == receipt["payload_sha256"]
-        assert json.loads(envelope)["event"] == record
+        record = confirm_event(endpoint, token, project, journal, event_id, number)
         observed.put((started, event_id, record))
         number += 1
         stop.wait(0.15)
@@ -361,12 +379,22 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
     for name in names:
         worker.create_task(sibling, name, title=name)
     driver = worker.driver_yaml_path(sibling, "migration-probe", sleep_seconds=180)
+    no_runtime = migrate(
+        [*arguments(project, workplace, "--apply"), "--offline-confirmed"],
+        expected=1,
+    )
+    assert no_runtime["error"] == {"code": "storage_project_event_runtime_unknown"}
     runtime.start_runtime(workplace)
     try:
         initial = runtime.service_state(workplace)
         instance = initial["instance_id"]
         endpoint = str(initial["endpoint"]).rstrip("/")
         token = runtime.token(workplace)
+        # The unfenced legacy journal already refuses ordinary event writes.
+        status, response = request_event(
+            endpoint, token, project, "evt_refused_before_migration", 0
+        )
+        assert (status, response) == (400, {"error": "storage_activity_unknown"})
         worker.start_task(names[0], sibling, driver=driver)
         first_worker = worker.wait_status(sibling, names[0], "running")["pid"]
         stop = threading.Event()
@@ -449,8 +477,8 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                         == first_worker
                     )
                     # The continuous stream has already crossed each held phase.
-                    # Finish its last write before deliberately triggering a
-                    # second observation of B's own journal in the compound tick.
+                    # Join the writer before explicitly requesting Inspector so
+                    # both operations do not contend for B's own journal.
                     stop.set()
                     stream.result(timeout=25)
                     tick_status, tick = http_json(
@@ -464,13 +492,21 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
                         timeout=20.0,
                     )
                     assert tick_status == 500 and len(tick["projects"]) == 2, tick
-                    blocked, continuing = tick["projects"]
+                    by_project = {row["project_id"]: row for row in tick["projects"]}
+                    assert by_project.keys() == {project.name, sibling.name}, tick
+                    blocked = by_project[project.name]
+                    continuing = by_project[sibling.name]
                     assert blocked["storage_error"]["retryable"] is True
                     assert (
                         continuing["inspector"] == "tick"
                         and "storage_error" not in continuing
                     )
-                    assert continuing["inspector_result"]["failed"] == []
+                    inspector = continuing["inspector_result"]
+                    assert inspector["failed"] == [], inspector
+                    assert names[0] in inspector["observed"] + inspector["running"], (
+                        inspector
+                    )
+                    assert child.poll() is None
                     release.touch()
                     out, err = child.communicate(timeout=30)
                     assert child.returncode == 0, out + err
@@ -485,11 +521,22 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
         assert migrate(inspect)["targets"][0]["state"] == "ready"
         code, view = http_json("GET", endpoint + "/status", token=token, timeout=15.0)
         assert code == 200 and view["instance_id"] == instance
-        status, reply = request_event(endpoint, token, project, "evt_after_ready", 2)
-        assert status == 200 and reply["duplicate"] is False, reply
+        after_ready = "evt_after_ready"
+        status, reply = request_event(endpoint, token, project, after_ready, 2)
+        assert status == 200 and reply["event_id"] == after_ready, reply
+        assert reply["duplicate"] is False, reply
         a = ProcessEventRecorder().event_journal_for_project(project, workplace)
-        assert a.get(project / EVENT_PATH, "evt_refused") is None
-        assert a.get(project / EVENT_PATH, "evt_refused_during_recovery") is None
+        reopened = a.get(project / EVENT_PATH, after_ready)
+        assert reopened is not None and reopened["data"] == {
+            "value": 2,
+            "text": "Журнал",
+        }
+        for event_id in (
+            "evt_refused_before_migration",
+            "evt_refused",
+            "evt_refused_during_recovery",
+        ):
+            assert a.get(project / EVENT_PATH, event_id) is None
         runtime.pf(
             "project-context-refresh",
             "--project-root",
@@ -508,16 +555,167 @@ def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: 
         assert "STATUS: fresh" in checked.stdout
         for event_id, expected in original.items():
             assert a.get(project / EVENT_PATH, event_id) == expected
-        # Cross-check both ID uniqueness and the exact committed payload for each ack.
-        for root, events in ((project, original), (sibling, observed)):
+        # Compare every fixture event in both journals, including the reopened A
+        # event. Extra rows from refused requests or cross-project writes fail parity.
+        for root, events in (
+            (project, {**original, after_ready: reopened}),
+            (sibling, observed),
+        ):
             with closing(sqlite3.connect(root / EVENT_PATH)) as sql:
-                rows = sql.execute("SELECT event_id, record FROM events").fetchall()
-            relevant = [
-                (event_id, json.loads(body))
-                for event_id, body in rows
-                if event_id in events
-            ]
-            assert len(relevant) == len(events) and dict(relevant) == events
+                rows = sql.execute(
+                    "SELECT event_id, record FROM events WHERE event_type IN (?, ?)",
+                    ("fixture.old", EVENT_TYPE),
+                ).fetchall()
+            assert len(rows) == len(events)
+            assert {event_id: json.loads(body) for event_id, body in rows} == events
+    finally:
+        try:
+            for name in names:
+                worker.stop_if_running(sibling, name)
+                worker.ensure_stopped(sibling, name)
+        finally:
+            runtime.stop_runtime(workplace)
+
+
+def check_context(
+    project: Path, workplace: Path, *, expected: int = 0
+) -> dict[str, Any]:
+    result = runtime.pf(
+        "project-context-check",
+        "--project-root",
+        str(project),
+        "--workplace",
+        str(workplace),
+        "--json",
+        "--strict",
+        expect=expected,
+    )
+    return json.loads(result.stdout)
+
+
+def test_stale_project_context_preserves_fresh_sibling_work(tmp_path: Path) -> None:
+    project, sibling = tmp_path / "project-a", tmp_path / "project-b"
+    workplace = tmp_path / "workplace"
+    runtime.pf("workplace-init", "--workplace", str(workplace), "--apply")
+    runtime.pf(
+        "config",
+        "update",
+        "--workplace",
+        str(workplace),
+        "--key",
+        "runtime.garage_hooks",
+        "--value",
+        "true",
+    )
+    for root in (project, sibling):
+        root.mkdir()
+        onboard(root, workplace)
+    (sibling / ".pf/hooks.yaml").write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    "targets": [
+                        {
+                            "id": TARGET,
+                            "type": "outbox",
+                            "enabled": True,
+                            "event_types": [EVENT_TYPE],
+                        }
+                    ]
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    runtime.pf(
+        "runtime-host",
+        "init",
+        "--workplace",
+        str(workplace),
+        "--project-root",
+        str(project),
+        "--project-root",
+        str(sibling),
+    )
+    runtime.pf(
+        "run-create",
+        "--project-root",
+        str(sibling),
+        "--id",
+        worker.RUN_ID,
+        "--title",
+        "Workers during sibling context staleness",
+        "--process",
+        "task-batch-execution",
+        "--apply",
+    )
+    names = ("before-stale", "while-stale")
+    for name in names:
+        worker.create_task(sibling, name, title=name)
+    driver = worker.driver_yaml_path(
+        sibling, "stale-context-probe", sleep_seconds=180, timeout_seconds=240
+    )
+
+    baseline = {}
+    for root in (project, sibling):
+        runtime.pf(
+            "project-context-refresh",
+            "--project-root",
+            str(root),
+            "--workplace",
+            str(workplace),
+            "--apply",
+        )
+        checked = check_context(root, workplace)
+        assert checked["status"] == "fresh", checked
+        assert checked["policy_action"] == "continue", checked
+        baseline[root] = checked["snapshot_id"]
+
+    runtime.start_runtime(workplace)
+    try:
+        initial = runtime.service_state(workplace)
+        instance = initial["instance_id"]
+        assert isinstance(instance, str) and instance
+        endpoint = str(initial["endpoint"]).rstrip("/")
+        token = runtime.token(workplace)
+        journal = ProcessEventRecorder().event_journal_for_project(sibling, workplace)
+
+        worker.start_task(names[0], sibling, driver=driver)
+        first_worker = worker.wait_status(sibling, names[0], "running")["pid"]
+        assert first_worker > 0
+        confirm_event(endpoint, token, sibling, journal, "evt_before_stale", 0)
+
+        subject = "fixture.project-a"
+        reason = "readiness isolation fixture marked project A stale"
+        runtime.pf(
+            "project-context-mark-stale",
+            "--project-root",
+            str(project),
+            "--subject",
+            subject,
+            "--reason",
+            reason,
+        )
+
+        def assert_selected_contexts() -> None:
+            stale = check_context(project, workplace, expected=1)
+            assert stale["status"] == "stale", stale
+            assert stale["snapshot_id"] == baseline[project], stale
+            assert {"id": subject, "reason": reason} in stale["stale_resources"], stale
+            fresh = check_context(sibling, workplace)
+            assert fresh["status"] == "fresh", fresh
+            assert fresh["policy_action"] == "continue", fresh
+            assert fresh["snapshot_id"] == baseline[sibling], fresh
+
+        assert_selected_contexts()
+        confirm_event(endpoint, token, sibling, journal, "evt_while_stale", 1)
+        worker.start_task(names[1], sibling, driver=driver)
+        second_worker = worker.wait_status(sibling, names[1], "running")["pid"]
+        assert second_worker > 0 and second_worker != first_worker
+        assert worker.wait_status(sibling, names[0], "running")["pid"] == first_worker
+        status, view = http_json("GET", endpoint + "/status", token=token, timeout=15.0)
+        assert status == 200 and view["instance_id"] == instance, view
+        assert_selected_contexts()
     finally:
         try:
             for name in names:

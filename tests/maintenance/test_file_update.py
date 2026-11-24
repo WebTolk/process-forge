@@ -828,6 +828,372 @@ def test_old_owned_entry_templates_are_backed_up_and_removed(
 
 
 @pytest.mark.parametrize(
+    "relative", [".pf/process-forge.yaml", ".PF/PROCESS-FORGE.YAML"]
+)
+def test_apply_refuses_legacy_project_manifest_removal_without_workplace(
+    fixture: Harness, relative: str
+) -> None:
+    canonical = ".pf/process-forge.yaml"
+    manifest = b"schema_version: 1\nproject:\n  id: enrolled-project\n"
+    put(fixture.target, canonical, manifest)
+    put(fixture.target, relative, manifest)
+    local = b"workplace:\n  manifest: ../workplace/workplace.yaml\n"
+    put(fixture.target, ".pf/process-forge.local.yaml", local)
+    put(
+        fixture.root,
+        "workplace/workplace.yaml",
+        b"schema_version: 1\nworkplace:\n  id: fixture-workplace\n",
+    )
+    put(
+        fixture.target,
+        "processforge-core.manifest.json",
+        old_manifest({**OLD, relative: manifest}, version="1.2.0"),
+    )
+    before = fixture.snapshot()
+    result = fixture.run("emit(invoke(force_local_modifications=True))")
+    assert result.get("code") == "plan_blocked", result
+    assert canonical in result["message"]
+    assert (fixture.target / canonical).read_bytes() == manifest
+    assert (fixture.target / relative).read_bytes() == manifest
+    assert (fixture.target / ".pf/process-forge.local.yaml").read_bytes() == local
+    fixture.assert_no_apply(before)
+
+
+def test_resume_refuses_legacy_project_manifest_removal_and_preserves_proof(
+    fixture: Harness,
+) -> None:
+    relative = ".pf/process-forge.yaml"
+    manifest = b"schema_version: 1\nproject:\n  id: enrolled-project\n"
+    put(fixture.target, relative, manifest)
+    put(
+        fixture.target,
+        "processforge-core.manifest.json",
+        old_manifest({**OLD, relative: manifest}, version="1.2.0"),
+    )
+    # Model the predecessor's missing guard and interrupt its first planned
+    # deletion after the real backup, plan and journal have been published.
+    interrupted = fixture.run("""
+file_update._require_disjoint_legacy_project_manifest = lambda *args: None
+original_unlink = Path.unlink
+def interrupt(path, *args, **kwargs):
+    if path == target / '.pf/process-forge.yaml':
+        raise PermissionError(13, 'fixture interruption before unlink')
+    return original_unlink(path, *args, **kwargs)
+Path.unlink = interrupt
+emit(invoke())
+""")
+    assert interrupted.get("code") == "file_operation_failed", interrupted
+    control = fixture.target / "runtime/core-update"
+    progress = json.loads((control / "in-progress.json").read_bytes())
+    backup = Path(progress["backup_dir"])
+    plan = json.loads((backup / "control/plan.json").read_bytes())
+    assert relative in plan["removed"]
+    assert progress["pending_operations"][0] == {"op": "delete", "path": relative}
+    assert (backup / progress["backed_up"][relative]).read_bytes() == manifest
+    before = evidence_snapshot(fixture)
+    code, result = recovery_cli(
+        fixture, "--resume", "--archive", str(fixture.archive), "--confirm"
+    )
+    assert code == 1 and result["error"]["code"] == "plan_blocked", result
+    assert ".pf/process-forge.yaml" in result["error"]["message"]
+    assert evidence_snapshot(fixture) == before
+
+
+def test_legacy_template_disjointness_is_rechecked_at_removal(
+    fixture: Harness,
+) -> None:
+    earlier = ".pf/AGENTS.md"
+    relative = ".pf/process-forge.yaml"
+    released = {earlier: b"public startup template\n", relative: b"schema_version: 1\n"}
+    for name, raw in released.items():
+        put(fixture.target, name, raw)
+    put(
+        fixture.target,
+        "processforge-core.manifest.json",
+        old_manifest({**OLD, **released}, version="1.2.0"),
+    )
+    result = fixture.run("""
+original_unlink = Path.unlink
+def introduce_enrollment(path, *args, **kwargs):
+    if path == target / '.pf/AGENTS.md':
+        local = target / '.pf/process-forge.local.yaml'
+        local.write_bytes(b'workplace:\\n  manifest: ../workplace/workplace.yaml\\n')
+    return original_unlink(path, *args, **kwargs)
+Path.unlink = introduce_enrollment
+emit(invoke())
+""")
+    assert result.get("code") == "plan_blocked", result
+    assert ".pf/process-forge.yaml" in result["message"]
+    assert (fixture.target / relative).read_bytes() == released[relative]
+    control = fixture.target / "runtime/core-update"
+    progress = json.loads((control / "in-progress.json").read_bytes())
+    backup = Path(progress["backup_dir"])
+    assert progress["pending_operations"][0] == {"op": "delete", "path": relative}
+    assert (backup / progress["backed_up"][relative]).read_bytes() == released[relative]
+    assert (backup / "control/recovery-proof.json").is_file()
+
+
+def prepare_legacy_project_template(fixture: Harness) -> str:
+    relative = ".pf/process-forge.yaml"
+    raw = b"schema_version: 1\n"
+    put(fixture.target, relative, raw)
+    put(
+        fixture.target,
+        "processforge-core.manifest.json",
+        old_manifest({**OLD, relative: raw}, version="1.2.0"),
+    )
+    return relative
+
+
+def test_absent_legacy_project_template_needs_no_unlink(fixture: Harness) -> None:
+    relative = prepare_legacy_project_template(fixture)
+    (fixture.target / relative).unlink()
+    result = fixture.run(
+        """
+original_unlink=Path.unlink
+def unlink(path,*args,**kwargs):
+    assert path!=target/RELATIVE,'attempted unlink of absent manifest'
+    return original_unlink(path,*args,**kwargs)
+Path.unlink=unlink
+emit(invoke())
+""".replace("RELATIVE", repr(relative))
+    )
+    assert result["ok"], result
+    assert result["result"]["backed_up"][relative] is None
+
+
+def test_apply_refuses_saved_binding_when_live_manifest_disappears(
+    fixture: Harness,
+) -> None:
+    relative = prepare_legacy_project_template(fixture)
+    manifest = b"schema_version: 1\nproject:\n  id: enrolled-project\n"
+    result = fixture.run(
+        """
+legacy=target/RELATIVE
+journal=target/'runtime/core-update/in-progress.json'
+original_replace=file_update.os.replace
+def capture_binding(source,destination):
+    original_replace(source,destination)
+    dest=Path(destination)
+    if dest==journal and not json.loads(dest.read_bytes())['completed_operations']:
+        legacy.write_bytes(BINDING)
+    if dest.name==legacy.name and dest.parent.name=='.pf':
+        assert dest.read_bytes()==BINDING
+        legacy.unlink()
+file_update.os.replace=capture_binding
+emit(invoke(force_local_modifications=True))
+""".replace("RELATIVE", repr(relative)).replace("BINDING", repr(manifest))
+    )
+    assert result["code"] == "plan_blocked", result
+    assert relative in result["message"]
+    assert not (fixture.target / relative).exists()
+    assert (fixture.target / "removed.txt").read_bytes() == OLD["removed.txt"]
+    journal = fixture.target / "runtime/core-update/in-progress.json"
+    progress = json.loads(journal.read_bytes())
+    assert progress["error"]["code"] == "plan_blocked"
+    assert progress["pending_operations"][0] == {"op": "delete", "path": relative}
+    backup = Path(progress["backup_dir"])
+    assert (backup / progress["backed_up"][relative]).read_bytes() == manifest
+    assert (
+        relative in json.loads((backup / "control/plan.json").read_bytes())["removed"]
+    )
+    proof_raw = (backup / "control/recovery-proof.json").read_bytes()
+    assert progress["recovery_evidence"]["sha256"] == sha(proof_raw)
+    assert json.loads(proof_raw)["initial"][relative]["sha256"] == sha(manifest)
+    before = evidence_snapshot(fixture)
+    code, assessment = recovery_cli(fixture)
+    assert code == 0 and assessment["status"] == "safe_to_rollback"
+    assert evidence_snapshot(fixture) == before
+    code, refusal = recovery_cli(
+        fixture, "--resume", "--archive", str(fixture.archive), "--confirm"
+    )
+    assert code == 1 and refusal["error"]["code"] == "plan_blocked", refusal
+    assert relative in refusal["error"]["message"]
+    assert evidence_snapshot(fixture) == before
+
+
+@pytest.mark.parametrize("resume", [False, True])
+@pytest.mark.parametrize("writer_first", [False, True])
+def test_binding_writer_and_legacy_unlink_are_serialized(
+    fixture: Harness, resume: bool, writer_first: bool
+) -> None:
+    relative = prepare_legacy_project_template(fixture)
+    result = fixture.run(
+        """
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from threading import Event, current_thread
+from processforge import write_file
+from processforge_core.maintenance import project_event_owner as owner
+from processforge_core.maintenance.update import resume_file_update
+
+legacy=target/RELATIVE
+enrollment=legacy.with_name('process-forge.local.yaml')
+stub=legacy.read_bytes()
+manifest='schema_version: 1\\nproject:\\n  id: new-owner\\n'
+local='workplace:\\n  manifest: ../workplace/workplace.yaml\\n'
+original_unlink=Path.unlink
+if RESUME:
+    def interrupt(path,*args,**kwargs):
+        if path==legacy:
+            raise PermissionError(13,'stop before guarded unlink')
+        return original_unlink(path,*args,**kwargs)
+    Path.unlink=interrupt
+    try:
+        assert invoke()['code']=='file_operation_failed'
+    finally:
+        Path.unlink=original_unlink
+
+updater=current_thread()
+writer_start,writer_locked,contention=Event(),Event(),Event()
+sequence=[]
+original_lock=owner.registry_file_lock
+original_guard=owner.project_event_binding_writer_guard
+
+def observed_lock(path):
+    assert path==owner.project_event_binding_path(target)
+    return original_lock(path,on_contention=contention.set)
+
+@contextmanager
+def observed_guard(root):
+    if current_thread() is updater and WRITER_FIRST:
+        writer_start.set()
+        assert writer_locked.wait(10)
+    with original_guard(root):
+        yield
+
+def publish():
+    assert writer_start.wait(10)
+    # Use the binding writer guard and the onboarding file writer on the
+    # physical target, with a different spelling of the caller's root.
+    with owner.project_event_binding_writer_guard(target/'..'/target.name):
+        if WRITER_FIRST:
+            writer_locked.set()
+            assert contention.wait(10)
+            assert legacy.read_bytes()==stub
+        else:
+            assert not legacy.exists()
+        write_file(legacy,manifest,force=True)
+        write_file(enrollment,local,force=True)
+        sequence.append('writer_published')
+
+def unlink_at_boundary(path,*args,**kwargs):
+    if path!=legacy:
+        return original_unlink(path,*args,**kwargs)
+    assert not WRITER_FIRST,'updater tried to unlink the winning binding'
+    writer_start.set()
+    assert contention.wait(10)
+    assert legacy.read_bytes()==stub and not enrollment.exists()
+    original_unlink(path,*args,**kwargs)
+    assert not legacy.exists()
+    sequence.append('template_unlinked')
+
+owner.registry_file_lock=observed_lock
+owner.project_event_binding_writer_guard=observed_guard
+Path.unlink=unlink_at_boundary
+try:
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        publication=pool.submit(publish)
+        try:
+            if RESUME:
+                try:
+                    result={'ok':True,'result':resume_file_update(target,archive,confirm=True)}
+                except CoreUpdateError as error:
+                    result={'ok':False,'code':error.code,'message':error.message}
+            else:
+                result=invoke()
+        finally:
+            publication.result(timeout=12)
+finally:
+    Path.unlink=original_unlink
+assert legacy.read_text(encoding='utf-8')==manifest
+assert enrollment.read_text(encoding='utf-8')==local
+emit({'update':result,'sequence':sequence})
+""".replace("RELATIVE", repr(relative))
+        .replace("WRITER_FIRST", repr(writer_first))
+        .replace("RESUME", repr(resume)),
+        timeout=55,
+    )
+    if writer_first:
+        assert result["update"]["code"] == "plan_blocked", result
+        assert result["sequence"] == ["writer_published"]
+        journal = fixture.target / "runtime/core-update/in-progress.json"
+        progress = json.loads(journal.read_bytes())
+        assert progress["pending_operations"][0] == {"op": "delete", "path": relative}
+        assert progress["error"]["code"] == "plan_blocked"
+    else:
+        assert result["update"]["result"]["status"] == "applied", result
+        assert result["sequence"] == ["template_unlinked", "writer_published"]
+
+
+@pytest.mark.parametrize(
+    ("fault", "code"),
+    [
+        ("manifest", "plan_blocked"),
+        ("enrollment", "plan_blocked"),
+        ("guard", "plan_blocked"),
+        ("backup", "file_operation_failed"),
+        ("unlink", "file_operation_failed"),
+    ],
+)
+def test_legacy_binding_inspection_and_file_io_report_distinct_failures(
+    fixture: Harness, fault: str, code: str
+) -> None:
+    relative = prepare_legacy_project_template(fixture)
+    result = fixture.run(
+        """
+from processforge_core.maintenance import project_event_owner as owner
+legacy=target/RELATIVE
+original_guard=owner.project_event_binding_writer_guard
+original_read=native._read_regular
+original_lstat=Path.lstat
+original_unlink=Path.unlink
+original_replace=file_update.os.replace
+at_boundary=False
+def guard(root):
+    global at_boundary
+    at_boundary=True
+    if FAULT=='guard':
+        raise PermissionError(13,'injected guard denial')
+    return original_guard(root)
+def read(root,relative,limit):
+    if at_boundary and FAULT=='manifest' and relative==RELATIVE:
+        raise PermissionError(13,'injected manifest read denial')
+    return original_read(root,relative,limit)
+def lstat(path,*args,**kwargs):
+    if at_boundary and FAULT=='enrollment' and path==legacy.with_name('process-forge.local.yaml'):
+        raise PermissionError(13,'injected enrollment inspection denial')
+    return original_lstat(path,*args,**kwargs)
+def unlink(path,*args,**kwargs):
+    if FAULT=='unlink' and path==legacy:
+        raise PermissionError(13,'injected unlink denial')
+    return original_unlink(path,*args,**kwargs)
+def replace(source,destination):
+    dest=Path(destination)
+    if FAULT=='backup' and dest.name==legacy.name and dest.parent.name=='.pf':
+        raise PermissionError(13,'injected backup denial')
+    return original_replace(source,destination)
+owner.project_event_binding_writer_guard=guard
+native._read_regular=read
+Path.lstat=lstat
+Path.unlink=unlink
+file_update.os.replace=replace
+emit(invoke())
+""".replace("RELATIVE", repr(relative)).replace("FAULT", repr(fault))
+    )
+    assert result["code"] == code, result
+    if code == "plan_blocked":
+        assert relative in result["message"]
+    assert (fixture.target / relative).read_bytes() == b"schema_version: 1\n"
+    progress = json.loads(
+        (fixture.target / "runtime/core-update/in-progress.json").read_bytes()
+    )
+    assert progress["error"]["code"] == code
+    if code == "file_operation_failed":
+        assert progress["error"]["errno"] == 13
+
+
+@pytest.mark.parametrize(
     "relative", [".pf/contexts/private.yaml", ".pf/configuration.yaml"]
 )
 def test_public120_manifest_cannot_claim_other_private_state(

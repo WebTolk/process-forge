@@ -5,12 +5,23 @@ from __future__ import annotations
 import os
 import sqlite3
 import tempfile
+import time
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from ..runtime.execution_admission import _registry_lock_read_owner, registry_file_lock
+from ..runtime.execution_admission import (
+    ExecutionAdmission,
+    PreparedRegistryOwner,
+    RegistryLockTimeout,
+    prepare_registry_owner,
+    registry_file_lock,
+    try_registry_file_lock,
+    wait_registry_file_lock,
+)
 from ..runtime_service_state import (
     PROJECT_EVENT_MAINTENANCE_CAPABILITY,
     PROJECT_EVENT_RUNTIME_IDENTITY,
@@ -23,15 +34,17 @@ from .storage_migration import (
     StorageMigrationHost,
     StorageMigrationService,
     _connection,
+    _deadline,
     _safe,
     run_storage_migration,
+    storage_identity_gate,
     storage_owner_root,
     validate_storage_context,
 )
 
 if TYPE_CHECKING:
     from ..database import SQLiteDriver
-    from .contracts import StoreTarget
+    from .contracts import StorageMigrationContext, StoreTarget
 
 PROJECT_EVENT_MAINTENANCE_BUSY = "storage_project_event_maintenance_busy"
 
@@ -58,47 +71,127 @@ def _intent(root: Path) -> Path:
     return root / "runtime/project-event-maintenance"
 
 
-def _unknown_lock_owner(path: Path, error: SystemExit) -> bool:
-    if getattr(error, "registry_lock_phase", None) != "owner":
-        return False
-    owner = _registry_lock_read_owner(path.with_name(f".{path.name}.lock"))
-    if not owner:
-        return True
-    pid = owner.get("pid")
-    return (
-        type(pid) is not int
-        or pid <= 0
-        or not owner.get("host")
-        or not owner.get("token")
+@dataclass(frozen=True)
+class _SelectedTargetAdmission:
+    gate: Path
+    workplace: Path
+    owner: PreparedRegistryOwner
+
+
+_SELECTED_TARGET_ADMISSION: ContextVar[_SelectedTargetAdmission | None] = ContextVar(
+    "project_event_target_admission", default=None
+)
+
+
+@contextmanager
+def _bind_selected_target(
+    gate: Path, workplace: Path
+) -> Iterator[PreparedRegistryOwner]:
+    # The selected storage gate lives under the project's flow root.
+    project_root = gate.parents[2]
+    if ExecutionAdmission.held(None, workplace) or ExecutionAdmission.held(
+        project_root, None
+    ):
+        raise MaintenanceError("storage_activity_unknown")
+    owner = prepare_registry_owner()
+    token = _SELECTED_TARGET_ADMISSION.set(
+        _SelectedTargetAdmission(gate, workplace, owner)
     )
+    try:
+        yield owner
+    finally:
+        _SELECTED_TARGET_ADMISSION.reset(token)
+
+
+@contextmanager
+def _selected_registry_wait(
+    path: Path, *, deadline: float, stale_after_seconds: float, unknown_code: str
+) -> Iterator[None]:
+    with ExitStack() as access:
+        try:
+            access.enter_context(
+                wait_registry_file_lock(
+                    path, deadline=deadline, stale_after_seconds=stale_after_seconds
+                )
+            )
+        except RegistryLockTimeout as error:
+            if error.assessment in {"guard_busy", "owner_live"}:
+                code = PROJECT_EVENT_MAINTENANCE_BUSY
+            elif error.assessment in {"owner_dead", "deadline_expired"}:
+                code = "storage_deadline_exceeded"
+            else:
+                code = unknown_code
+            raise MaintenanceError(code) from error
+        yield
+
+
+@contextmanager
+def project_event_operation_intent(
+    path: Path, owner: PreparedRegistryOwner, *, deadline: float
+) -> Iterator[None]:
+    """Fence duplicate maintenance requests without shortening free acquisition."""
+    _deadline(deadline)
+    for suffix in (".lock", ".lock.guard"):
+        _safe(path.with_name(f".{path.name}{suffix}"))
+    with try_registry_file_lock(path, owner=owner) as result:
+        if result == "acquired":
+            _deadline(deadline)
+            yield
+            return
+    with ExitStack() as access:
+        try:
+            access.enter_context(
+                _selected_registry_wait(
+                    path,
+                    deadline=min(deadline, time.monotonic() + 0.05),
+                    stale_after_seconds=0,
+                    unknown_code="storage_project_event_intent_unknown",
+                )
+            )
+        except MaintenanceError as error:
+            if error.code != "storage_deadline_exceeded":
+                raise
+            # The expired attempt may have reclaimed its stale marker before
+            # sync consumed the remaining contention budget. Prove an empty
+            # guard with a new try under the original operation deadline.
+            _deadline(deadline)
+            result = access.enter_context(try_registry_file_lock(path, owner=owner))
+            if result != "acquired":
+                raise error
+        _deadline(deadline)
+        yield
 
 
 @contextmanager
 def selected_storage_lock(
     path: Path, *, timeout_seconds: float = 30.0, stale_after_seconds: float = 300.0
 ) -> Iterator[None]:
-    """Keep admitted short try-locks and classify the subsequent owner wait."""
-    with ExitStack() as access:
-        try:
-            access.enter_context(
-                registry_file_lock(
-                    path,
-                    timeout_seconds=timeout_seconds,
-                    stale_after_seconds=stale_after_seconds,
-                )
-            )
-        except SystemExit as error:
-            if (
-                timeout_seconds <= 0.001
-                or getattr(error, "registry_lock_reason", None) != "contention_timeout"
-            ):
-                raise
-            code = (
-                "storage_project_event_target_owner_unknown"
-                if _unknown_lock_owner(path, error)
-                else PROJECT_EVENT_MAINTENANCE_BUSY
-            )
-            raise MaintenanceError(code) from None
+    """Adapt the frozen target lock callback to operation-local admission."""
+    selection = _SELECTED_TARGET_ADMISSION.get()
+    if selection is None or path != selection.gate:
+        raise MaintenanceError("storage_activity_unknown")
+    if ExecutionAdmission.held(None, selection.workplace):
+        # The frozen full-wait caller also floors its timeout at 1 ms.
+        if timeout_seconds != 0.001:
+            raise MaintenanceError("storage_activity_unknown")
+        with try_registry_file_lock(path, owner=selection.owner) as result:
+            if result == "acquired":
+                yield
+                return
+        # The frozen engine recognizes this signal and unwinds admission.
+        error = SystemExit("registry lock contention")
+        error.__dict__.update(
+            registry_lock_reason="contention_timeout",
+            registry_lock_phase="guard" if result == "guard_busy" else "owner",
+        )
+        raise error
+
+    with _selected_registry_wait(
+        path,
+        deadline=time.monotonic() + timeout_seconds,
+        stale_after_seconds=stale_after_seconds,
+        unknown_code="storage_project_event_target_owner_unknown",
+    ):
         yield
 
 
@@ -171,6 +264,21 @@ def require_imported_history(target: StoreTarget, driver: SQLiteDriver) -> None:
         raise MaintenanceError("storage_project_event_import_required")
 
 
+def selected_project_event_target(context: StorageMigrationContext) -> StoreTarget:
+    """Return the validated event target selected by the host."""
+    targets = validate_storage_context(context)
+    if (
+        context.project_root is None
+        or context.workplace_root is None
+        or len(targets) != 1
+        or targets[0].scope != "project"
+        or targets[0].kind != "events"
+        or context.unqualified_targets
+    ):
+        raise MaintenanceError("storage_project_event_target_invalid")
+    return targets[0]
+
+
 def run_project_event_migration(
     host: StorageMigrationHost,
     *,
@@ -179,71 +287,50 @@ def run_project_event_migration(
 ) -> JsonObject:
     """Run the existing durable transform with a project-owned operation intent."""
     report = StorageMigrationService._report(f"storage-{operation}")
-    report["requested_target"] = {"kind": "events", "scope": "project"}
+    selected: JsonObject | None = None
     try:
         context = host.context
-        targets = validate_storage_context(context)
-        if (
-            context.project_root is None
-            or context.workplace_root is None
-            or len(targets) != 1
-            or targets[0].scope != "project"
-            or targets[0].kind != "events"
-            or context.unqualified_targets
-        ):
-            raise MaintenanceError("storage_project_event_target_invalid")
-        target = targets[0]
+        target = selected_project_event_target(context)
         selected = {
             "kind": target.kind,
             "scope": target.scope,
             "owner_id": target.owner_id,
             "target_relative_path": target.target_relative_path,
         }
-        report["selected_target"] = selected
         bound = StorageMigrationHost(context, host.service)
         if operation == "inspect":
             report = run_storage_migration(bound, operation=operation)
         else:
+            assert context.workplace_root is not None
             if not offline_confirmed:
                 require_compatible_runtime(context.workplace_root)
             if not target.target.is_file():
                 raise MaintenanceError("storage_project_event_journal_missing")
-            intent = _intent(storage_owner_root(context, target))
-            for suffix in (".lock", ".lock.guard"):
-                _safe(intent.with_name(f".{intent.name}{suffix}"))
-            with registry_file_lock(
-                intent, timeout_seconds=0.05, stale_after_seconds=0
+            root = storage_owner_root(context, target)
+            intent = _intent(root)
+            with (
+                _bind_selected_target(
+                    storage_identity_gate(root), context.workplace_root
+                ) as owner,
+                project_event_operation_intent(
+                    intent, owner, deadline=time.monotonic() + 30.0
+                ),
             ):
                 if (
                     operation == "resume"
-                    and not host.service._selector(
-                        storage_owner_root(context, target), target
-                    ).is_file()
+                    and not host.service._selector(root, target).is_file()
                 ):
                     raise MaintenanceError("storage_project_event_plan_missing")
                 require_imported_history(target, host.service.driver)
                 report = run_storage_migration(bound, operation=operation)
-        report["selected_target"] = selected
-        if (report.get("error") or {}).get("code") in {
-            "storage_project_event_runtime_unknown",
-            PROJECT_EVENT_MAINTENANCE_BUSY,
-        }:
-            report["retryable"] = True
-        return report
-    except SystemExit as error:
-        if getattr(error, "registry_lock_reason", None) != "contention_timeout":
-            raise
-        unknown = _unknown_lock_owner(intent, error)
-        code = (
-            "storage_project_event_intent_unknown"
-            if unknown
-            else PROJECT_EVENT_MAINTENANCE_BUSY
-        )
-        report = StorageMigrationService._failure(report, MaintenanceError(code))
-        report["retryable"] = not unknown
-        return report
     except (MaintenanceError, OSError, sqlite3.Error) as error:
         report = StorageMigrationService._failure(report, error)
-        if report["error"]["code"] == "storage_project_event_runtime_unknown":
-            report["retryable"] = True
-        return report
+    report["requested_target"] = {"kind": "events", "scope": "project"}
+    if selected is not None:
+        report["selected_target"] = selected
+    if (report.get("error") or {}).get("code") in {
+        "storage_project_event_runtime_unknown",
+        PROJECT_EVENT_MAINTENANCE_BUSY,
+    }:
+        report["retryable"] = True
+    return report

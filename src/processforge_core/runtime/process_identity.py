@@ -24,7 +24,10 @@ def _linux_identity(
         # comm may contain spaces and parentheses; fields after its final ')'
         # start at field 3 (state), making starttime (field 22) index 19.
         fields = stat[stat.rindex(")") + 2 :].split()
-        if require_running and fields[0] in {"Z", "X", "x"}:
+        if require_running and (
+            fields[0] not in {"R", "S", "D", "T", "t", "P", "I"}
+            or stat.partition(" ")[0] != str(pid)
+        ):
             return None
         ticks = fields[19]
         if not boot or not ticks.isdecimal() or int(ticks) < 1:
@@ -94,7 +97,7 @@ def capture_process(
 
     The caller may supply a separately verified owned job/group identity. Merely
     capturing a process never claims that its descendants are owned or absent.
-    With require_running, a Linux zombie cannot provide a live owner identity.
+    With require_running, Linux must report a recognized nonterminal state.
     """
     if type(pid) is not int or not 1 <= pid <= 0xFFFFFFFF:
         raise ValueError("invalid pid")

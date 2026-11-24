@@ -16,6 +16,8 @@ from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, NoReturn
 
+from .contracts import MaintenanceError
+from .project_event_owner import INERT_LEGACY_PROJECT_TEMPLATE
 from .release_sources import ReleaseSourcePolicy
 from .update import (
     CORE_MANIFEST_NAME,
@@ -24,6 +26,28 @@ from .update import (
     apply_workplace_migration,
     manifest_file_map,
 )
+
+_LEGACY_PROJECT_MANIFEST = ".pf/process-forge.yaml"
+_LEGACY_BINDING_REFUSAL = (
+    "cannot prove .pf/process-forge.yaml is disjoint from project binding"
+)
+
+
+def _require_disjoint_legacy_project_manifest(
+    root: Path, raw: bytes | None, saved: bytes | None = None
+) -> None:
+    """Qualify only the inert historical stub on a root without enrollment."""
+    if any(
+        content not in (None, INERT_LEGACY_PROJECT_TEMPLATE) for content in (raw, saved)
+    ):
+        raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
+    try:
+        (root / ".pf/process-forge.local.yaml").lstat()
+    except FileNotFoundError:
+        return
+    except OSError as error:
+        raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL) from error
+    raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
 
 
 def _target_root(core_root: Path) -> Path:
@@ -103,6 +127,7 @@ def apply_file_update(
         _PHYSICAL_OPEN,
         MAX_FILE,
         MAX_MANIFEST,
+        Refusal,
         _freeze_update_archive,
         _read_regular,
         _update_now,
@@ -212,7 +237,7 @@ def apply_file_update(
         manifest: dict[str, Any], *, installed_legacy: bool = False
     ) -> None:
         policy = ReleaseSourcePolicy()
-        public_pf = {".pf/agents.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"}
+        public_pf = {".pf/agents.md", _LEGACY_PROJECT_MANIFEST, ".pf/hooks.yaml"}
         for relative in manifest_file_map(manifest):
             folded = relative.casefold()
             # Older manifests owned these entry templates. Permit their
@@ -232,14 +257,73 @@ def apply_file_update(
         return {"sha256": hashlib.sha256(raw).hexdigest(), "size": len(raw)}
 
     def current(relative: str) -> bytes | None:
-        target = _update_target(root, relative)
         try:
-            target.lstat()
-        except (FileNotFoundError, NotADirectoryError):
-            # A child of an owned file is absent until the planned removal
-            # permits its parent directory. Other inspection errors still fail.
-            return None
-        return read(relative)
+            target = _update_target(root, relative)
+            try:
+                target.lstat()
+            except FileNotFoundError:
+                return None
+            except NotADirectoryError:
+                # A child of an owned file is absent until the planned removal
+                # permits its parent directory.
+                if relative.casefold() != _LEGACY_PROJECT_MANIFEST:
+                    return None
+                raise
+            return read(relative)
+        except (OSError, Refusal, RuntimeError) as error:
+            if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
+                raise CoreUpdateError(
+                    "plan_blocked", _LEGACY_BINDING_REFUSAL
+                ) from error
+            raise
+
+    def check_legacy_manifest(
+        relative: str, saved: bytes | None = None
+    ) -> bytes | None:
+        raw = current(relative)
+        if relative != _LEGACY_PROJECT_MANIFEST and current(
+            _LEGACY_PROJECT_MANIFEST
+        ) not in (None, INERT_LEGACY_PROJECT_TEMPLATE):
+            raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
+        _require_disjoint_legacy_project_manifest(root, raw, saved)
+        return raw
+
+    def check_legacy_removals(
+        removed: list[str], saved: dict[str, bytes | None] | None = None
+    ) -> None:
+        for relative in removed:
+            if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
+                check_legacy_manifest(
+                    relative, saved[relative] if saved is not None else None
+                )
+
+    def delete_legacy_manifest(relative: str, initial: dict[str, Any] | None) -> None:
+        from .project_event_owner import project_event_binding_writer_guard
+
+        with ExitStack() as guard:
+            try:
+                try:
+                    (root / ".pf").lstat()
+                except FileNotFoundError:
+                    # A missing flow root has no writer lock. There is no
+                    # pathname to unlink, even if a writer creates it later.
+                    if check_legacy_manifest(relative) is None:
+                        return
+                    raise CoreUpdateError("plan_blocked", _LEGACY_BINDING_REFUSAL)
+                guard.enter_context(project_event_binding_writer_guard(root))
+            except (MaintenanceError, OSError, RuntimeError, SystemExit) as error:
+                raise CoreUpdateError(
+                    "plan_blocked", _LEGACY_BINDING_REFUSAL
+                ) from error
+
+            try:
+                raw = check_legacy_manifest(relative)
+                if raw is not None:
+                    if pin(raw) != initial:
+                        refuse()
+                    (root / relative).unlink(missing_ok=True)
+            except CoreUpdateError as error:
+                raise _Failure(error.code, error.message) from error
 
     def binding() -> dict[str, Any]:
         info = require_update_target(root).stat()
@@ -374,6 +458,7 @@ def apply_file_update(
             or set(proof["initial"]) != set(paths) | set(writes)
         ):
             refuse()
+        legacy_preimages: dict[str, bytes | None] = {}
         for relative, initial in proof["initial"].items():
             if relative in plan["added"] and initial is not None:
                 refuse()
@@ -382,11 +467,16 @@ def apply_file_update(
                 if initial is None:
                     if saved is not None:
                         refuse()
-                elif (
-                    saved != "files/" + relative
-                    or pin(read(prefix + "/" + saved)) != initial
-                ):
-                    refuse()
+                    preimage = None
+                else:
+                    if saved != "files/" + relative:
+                        refuse()
+                    preimage = read(prefix + "/" + saved)
+                    if pin(preimage) != initial:
+                        refuse()
+                if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
+                    legacy_preimages[relative] = preimage
+        check_legacy_removals(plan["removed"], legacy_preimages)
         validate_current(proof, plan, frozen)
         return progress, plan, frozen, proof
 
@@ -465,6 +555,7 @@ def apply_file_update(
             raise CoreUpdateError(
                 "plan_blocked", "installed manifest changed during planning"
             )
+        check_legacy_removals(plan["removed"])
 
         update_id = (
             "core-update-"
@@ -557,6 +648,7 @@ def apply_file_update(
                     stream.flush()
                     os.fsync(stream.fileno())
             initial: dict[str, Any] = {}
+            legacy_preimages: dict[str, bytes | None] = {}
             for relative in [] if resuming else paths:
                 require_update_target(root)
                 preimage = current(relative)
@@ -570,6 +662,8 @@ def apply_file_update(
                     "files/" + relative if preimage is not None else None
                 )
                 initial[relative] = pin(preimage) if preimage is not None else None
+                if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
+                    legacy_preimages[relative] = preimage
                 complete("backup", relative)
             if not resuming:
                 for relative in plan["added"]:
@@ -597,19 +691,26 @@ def apply_file_update(
                 }
                 write_json(journal, progress)
             assert proof is not None
+            check_legacy_removals(
+                plan["removed"], None if resuming else legacy_preimages
+            )
             validate_current(proof, plan, frozen)
             for relative in plan["removed"]:
                 require_update_target(root)
                 require_offline()
                 if proof["binding"] != binding():
                     refuse()
+                if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
+                    delete_legacy_manifest(relative, proof["initial"][relative])
+                    complete("delete", relative)
+                    continue
                 if replaced_by_directory(relative, frozen):
                     complete("delete", relative)
                     continue
                 raw = current(relative)
+                target = _update_target(root, relative)
                 if raw is not None and pin(raw) != proof["initial"][relative]:
                     refuse()
-                target = _update_target(root, relative)
                 target.unlink(missing_ok=True)
                 parent = target.parent
                 while parent != root:
@@ -645,6 +746,10 @@ def apply_file_update(
             ):
                 refuse()
             for relative in plan["removed"]:
+                if relative.casefold() == _LEGACY_PROJECT_MANIFEST:
+                    # After the guarded deletion, a supported writer may
+                    # publish a new manifest at this now-unowned path.
+                    continue
                 if (
                     not replaced_by_directory(relative, frozen)
                     and current(relative) is not None
@@ -689,7 +794,7 @@ def apply_file_update(
         except Exception as error:
             message = (
                 error.message
-                if isinstance(error, CoreUpdateError)
+                if isinstance(error, (CoreUpdateError, _Failure))
                 else "file update operation failed"
             )
             failure = dict(

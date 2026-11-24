@@ -6,6 +6,7 @@ import errno
 import json
 import math
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -19,7 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from .. import diagnostics
 from ..common.clock import now_utc
@@ -166,6 +167,302 @@ def _registry_guard_signal(pid: int, guard_path: Path) -> threading.Condition:
     return threading.Condition(threading.Lock())
 
 
+@dataclass(frozen=True)
+class PreparedRegistryOwner:
+    """Platform identity to collect before entering an admitted section."""
+
+    fields: dict[str, Any]
+
+
+def prepare_registry_owner() -> PreparedRegistryOwner:
+    fields = {"pid": os.getpid(), "host": socket.gethostname()}
+    if sys.platform.startswith("linux"):
+        from processforge_platforms.linux_process_identity import lock_owner_identity
+
+        fields.update(lock_owner_identity())
+    return PreparedRegistryOwner(fields)
+
+
+def _registry_lock_paths(path: Path) -> tuple[Path, Path]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # All writers and reapers must use the same permanent guard inode.
+    return (
+        path.with_name(f".{path.name}.lock"),
+        path.with_name(f".{path.name}.lock.guard"),
+    )
+
+
+def _registry_create_marker(path: Path) -> int:
+    return os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+
+
+def _registry_remove_marker(path: Path, primary: BaseException | None) -> None:
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as error:
+        if primary is None:
+            raise
+        primary.add_note(f"registry_lock_owner_cleanup_failed:{type(error).__name__}")
+
+
+@contextmanager
+def _registry_publish_marker(
+    fd: int, marker: Path, path: Path, prepared: PreparedRegistryOwner
+) -> Iterator[None]:
+    try:
+        owner = {
+            **prepared.fields,
+            "path": str(path),
+            "created_at": now_utc(),
+            "token": uuid.uuid4().hex,
+        }
+        stream = os.fdopen(fd, "wb")
+    except BaseException as error:
+        try:
+            os.close(fd)
+        except OSError as cleanup:
+            error.add_note(
+                f"registry_lock_marker_close_failed:{type(cleanup).__name__}"
+            )
+        _registry_remove_marker(marker, error)
+        raise
+    try:
+        with stream:
+            # Preserve the newline previously supplied by text-mode translation.
+            payload = (
+                json.dumps(owner, ensure_ascii=False, sort_keys=True) + os.linesep
+            ).encode("utf-8")
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except BaseException as error:
+        _registry_remove_marker(marker, error)
+        raise
+
+    primary: BaseException | None = None
+    try:
+        yield
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        if _registry_marker_bytes(marker) == payload:
+            _registry_remove_marker(marker, primary)
+
+
+RegistryTryResult = Literal["acquired", "guard_busy", "owner_marker"]
+RegistryWaitAssessment = Literal[
+    "guard_busy", "owner_live", "owner_dead", "owner_unknown", "deadline_expired"
+]
+_RegistryOwnerObservation = tuple[bytes | None, RegistryWaitAssessment]
+
+
+class RegistryLockTimeout(TimeoutError):
+    """Deadline expired with the last contention assessment, when observed."""
+
+    def __init__(
+        self, phase: Literal["guard", "owner"], assessment: RegistryWaitAssessment
+    ) -> None:
+        super().__init__(f"registry_lock_timeout:{phase}:{assessment}")
+        self.phase = phase
+        self.assessment = assessment
+
+
+@contextmanager
+def _open_registry_guard(path: Path) -> Iterator[int]:
+    fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+    primary: BaseException | None = None
+    try:
+        yield fd
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        try:
+            os.close(fd)
+        except OSError as error:
+            if primary is None:
+                raise
+            primary.add_note(f"registry_lock_guard_close_failed:{type(error).__name__}")
+
+
+@contextmanager
+def try_registry_file_lock(
+    path: Path, *, owner: PreparedRegistryOwner
+) -> Iterator[RegistryTryResult]:
+    """Try once without inspecting a competing marker or waiting for a guard."""
+    marker, guard = _registry_lock_paths(path)
+    with _open_registry_guard(guard) as guard_fd:
+        if not _registry_lock_try_os_lock(guard_fd):
+            miss: RegistryTryResult = "guard_busy"
+        else:
+            try:
+                marker_fd = _registry_create_marker(marker)
+            except FileExistsError:
+                miss = "owner_marker"
+            else:
+                with _registry_publish_marker(marker_fd, marker, path, owner):
+                    yield "acquired"
+                return
+    yield miss
+
+
+def _selected_registry_owner_alive(owner: dict[str, Any]) -> bool | None:
+    """Return only positive presence or absence, with unknown for unusable evidence."""
+    pid, host, token = owner.get("pid"), owner.get("host"), owner.get("token")
+    limit = 0xFFFFFFFF if sys.platform == "win32" else 0x7FFFFFFF
+    if (
+        type(pid) is not int
+        or not 1 <= pid <= limit
+        or not isinstance(host, str)
+        or not host.strip()
+        or host != socket.gethostname()
+        or not isinstance(token, str)
+        or not token.strip()
+        or "\x00" in token
+    ):
+        return None
+    if "linux_identity" in owner:
+        value = owner["linux_identity"]
+        if not sys.platform.startswith("linux") or not isinstance(value, dict):
+            return None
+        device, boot, ticks = (
+            value.get("procfs_device"),
+            value.get("boot_id"),
+            value.get("start_ticks"),
+        )
+        if (
+            not isinstance(device, str)
+            or not device.isascii()
+            or not device.isdecimal()
+            or not isinstance(boot, str)
+            or re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", boot)
+            is None
+            or not isinstance(ticks, str)
+            or not ticks.isascii()
+            or not ticks.isdecimal()
+            or not ticks.lstrip("0")
+        ):
+            return None
+        from processforge_platforms.linux_process_identity import lock_owner_alive
+
+        return lock_owner_alive(owner)
+    if sys.platform == "win32":
+        from .process_identity import capture_process
+
+        try:
+            return capture_process(pid, require_running=True) is not None
+        except (ExecutionError, OSError):
+            return None
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return None
+    return True
+
+
+def _registry_marker_bytes(marker: Path) -> bytes | None:
+    try:
+        return marker.read_bytes()
+    except OSError:
+        return None
+
+
+def _assess_registry_marker(
+    marker: Path,
+    previous: _RegistryOwnerObservation,
+    *,
+    deadline: float,
+    stale_after_seconds: float,
+) -> _RegistryOwnerObservation | None:
+    """Return the observed owner assessment, or None after reclaiming its marker."""
+    raw = _registry_marker_bytes(marker)
+    if raw is None:
+        return None, "owner_unknown"
+    try:
+        owner = json.loads(raw.decode("utf-8"))
+    except ValueError:
+        return raw, "owner_unknown"
+    if not isinstance(owner, dict):
+        return raw, "owner_unknown"
+    if time.monotonic() >= deadline:
+        # Exact bytes keep a changed marker from borrowing the previous proof.
+        return previous if previous[0] == raw else (raw, "owner_unknown")
+    alive = _selected_registry_owner_alive(owner)
+    if alive is None:
+        return raw, "owner_unknown"
+    if alive:
+        return raw, "owner_live"
+    if (
+        time.monotonic() < deadline
+        and _registry_lock_stale(owner, marker, stale_after_seconds)
+        and _registry_marker_bytes(marker) == raw
+        and time.monotonic() < deadline
+    ):
+        marker.unlink(missing_ok=True)
+        return None
+    return raw, "owner_dead"
+
+
+@contextmanager
+def wait_registry_file_lock(
+    path: Path,
+    *,
+    deadline: float,
+    stale_after_seconds: float = 300.0,
+    on_contention: Callable[[], None] | None = None,
+) -> Iterator[None]:
+    """Wait outside admission and retain the attempt's terminal assessment."""
+    if not math.isfinite(deadline):
+        raise ValueError("registry deadline must be finite")
+    if time.monotonic() >= deadline:
+        raise RegistryLockTimeout("guard", "deadline_expired")
+    owner = prepare_registry_owner()
+    marker, guard = _registry_lock_paths(path)
+    delay = 0.001
+    previous: _RegistryOwnerObservation = (None, "owner_unknown")
+    while True:
+        phase: Literal["guard", "owner"] = "guard"
+        assessment: RegistryWaitAssessment = "guard_busy"
+        with _open_registry_guard(guard) as guard_fd:
+            locked = _registry_lock_try_os_lock(guard_fd)
+            while locked:
+                if time.monotonic() >= deadline:
+                    raise RegistryLockTimeout("guard", "deadline_expired")
+                try:
+                    marker_fd = _registry_create_marker(marker)
+                except FileExistsError:
+                    phase = "owner"
+                    observed = _assess_registry_marker(
+                        marker,
+                        previous,
+                        deadline=deadline,
+                        stale_after_seconds=stale_after_seconds,
+                    )
+                    if observed is not None:
+                        previous = observed
+                        assessment = observed[1]
+                        break
+                    previous = (None, "owner_unknown")
+                else:
+                    with _registry_publish_marker(marker_fd, marker, path, owner):
+                        if time.monotonic() >= deadline:
+                            raise RegistryLockTimeout("owner", "deadline_expired")
+                        yield
+                    return
+        if on_contention is not None:
+            on_contention()
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RegistryLockTimeout(phase, assessment)
+        time.sleep(min(delay, remaining))
+        if time.monotonic() >= deadline:
+            raise RegistryLockTimeout(phase, assessment)
+        delay = min(delay * 2, 0.1)
+
+
 @contextmanager
 def registry_file_lock(
     path: Path,
@@ -174,35 +471,10 @@ def registry_file_lock(
     stale_after_seconds: float = 300.0,
     on_contention: Callable[[], None] | None = None,
 ) -> Iterator[None]:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = path.with_name(f".{path.name}.lock")
-    # Never unlink this guard: all new writers and stale-owner recovery must
-    # lock the same inode, including across Windows close-before-unlink.
-    guard_path = path.with_name(f".{path.name}.lock.guard")
+    lock_path, guard_path = _registry_lock_paths(path)
     signal = _registry_guard_signal(os.getpid(), guard_path.absolute())
-    guard_fd = os.open(str(guard_path), os.O_CREAT | os.O_RDWR, 0o600)
     deadline = time.monotonic() + timeout_seconds
-    owner = {
-        "path": str(path),
-        "pid": os.getpid(),
-        "host": socket.gethostname(),
-        "created_at": now_utc(),
-        "token": uuid.uuid4().hex,
-    }
-    acquired = False
-    primary_error: BaseException | None = None
     retry_delay = 0.001
-
-    def remove_owner(primary: BaseException | None = None) -> None:
-        try:
-            lock_path.unlink(missing_ok=True)
-        except OSError as cleanup_error:
-            if primary is None:
-                raise
-            BaseException.add_note(
-                primary,
-                f"registry_lock_owner_cleanup_failed:{type(cleanup_error).__name__}",
-            )
 
     def wait_for_owner(phase: str) -> None:
         nonlocal retry_delay
@@ -224,61 +496,36 @@ def registry_file_lock(
             time.sleep(delay)
         retry_delay = min(retry_delay * 2, 0.1)
 
+    # Close the guard before notifying legacy waiters.
     try:
-        if sys.platform.startswith("linux"):
-            from processforge_platforms.linux_process_identity import (
-                lock_owner_identity,
-            )
-
-            owner.update(lock_owner_identity())
-        with signal:
-            while not _registry_lock_try_os_lock(guard_fd):
-                wait_for_owner("guard")
-        while True:
-            try:
-                fd = os.open(
-                    str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600
-                )
-            except FileExistsError:
-                existing = _registry_lock_read_owner(lock_path)
-                if (
-                    existing
-                    and _registry_lock_stale(existing, lock_path, stale_after_seconds)
-                    and _registry_lock_owner_alive(existing) is False
-                ):
-                    # The persistent guard serializes reapers with acquisition
-                    # and release. Unknown/foreign/live legacy owners stay put.
-                    if _registry_lock_read_owner(lock_path) == existing:
-                        try:
-                            lock_path.unlink()
-                        except FileNotFoundError:
-                            pass
-                        continue
-                wait_for_owner("owner")
-                continue
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as handle:
-                    json.dump(owner, handle, ensure_ascii=False, sort_keys=True)
-                    handle.write("\n")
-                    handle.flush()
-                    os.fsync(handle.fileno())
-            except BaseException as publication_error:
-                remove_owner(publication_error)
-                raise
-            acquired = True
-            break
-        yield
-    except BaseException as error:
-        primary_error = error
-        raise
-    finally:
-        try:
-            if acquired and _registry_lock_read_owner(lock_path) == owner:
-                remove_owner(primary_error)
-        finally:
+        with _open_registry_guard(guard_path) as guard_fd:
+            owner = prepare_registry_owner()
             with signal:
-                os.close(guard_fd)
-                signal.notify()
+                while not _registry_lock_try_os_lock(guard_fd):
+                    wait_for_owner("guard")
+            while True:
+                try:
+                    fd = _registry_create_marker(lock_path)
+                except FileExistsError:
+                    existing = _registry_lock_read_owner(lock_path)
+                    if (
+                        existing
+                        and _registry_lock_stale(
+                            existing, lock_path, stale_after_seconds
+                        )
+                        and _registry_lock_owner_alive(existing) is False
+                        and _registry_lock_read_owner(lock_path) == existing
+                    ):
+                        lock_path.unlink(missing_ok=True)
+                        continue
+                    wait_for_owner("owner")
+                else:
+                    break
+            with _registry_publish_marker(fd, lock_path, path, owner):
+                yield
+    finally:
+        with signal:
+            signal.notify()
 
 
 @dataclass
