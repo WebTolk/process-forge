@@ -200,12 +200,19 @@ or `storage_resume_required`. A competing migration returns a retryable
 busy result. Other enrolled projects keep using the same Runtime for Work,
 events and hook delivery.
 
-After interruption, retry `--resume` with the same roots and configuration.
-The pending identity pin fences ordinary access until verification succeeds.
-For recovery with Runtime stopped, add `--offline-confirmed` to the same
-selected command after stopping all writers to that journal. Use `--inspect`
-to confirm `ready`, then refresh the project's context. The offline procedure
-below covers shared Workplace stores, execution storage and older NDJSON imports.
+After interruption, retry `--resume` with the same roots and configuration
+while a compatible Runtime is running. The pending identity pin fences ordinary
+access until verification succeeds. Use `--inspect` to confirm `ready`, then
+refresh the project's context.
+
+Import historical NDJSON before starting the selected migration. If unimported
+NDJSON appears after the plan is pending, resume returns
+`storage_project_event_import_required` and the public importer refuses the
+pending target with `storage_resume_required`. Preserve the sidecar, SQLite
+journal and migration evidence for recovery.
+
+The offline procedure below covers shared Workplace stores, execution storage
+and historical NDJSON imports.
 
 ## Explicit migration and update responsibility
 
