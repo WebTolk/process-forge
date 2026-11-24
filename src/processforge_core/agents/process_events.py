@@ -28,6 +28,13 @@ from .hook_policy import HookDispatchPolicy
 from .telemetry import TelemetryEventService
 
 
+class PendingDispatchError(JournalError):
+    def __init__(self, failures: list[dict[str, str]]) -> None:
+        self.failures = failures
+        first = failures[0]
+        super().__init__(f"{first['event_id']}: {first['reason']}")
+
+
 class ProcessEventRecorder:
     def __init__(
         self,
@@ -61,6 +68,57 @@ class ProcessEventRecorder:
             else RuntimeHookDispatcher(policy=self.hooks)
         )
 
+    def delivery_targets(
+        self, project_root: Path, event: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        # Only fields consumed by local dispatch belong in the pending journal.
+        fields = ("id", "type", "path", "outbox", "blocking")
+        return [
+            {key: hook[key] for key in fields if key in hook}
+            for hook in self.hooks.selected_hooks(project_root, event)
+        ]
+
+    def deliver_pending_event(
+        self,
+        project_root: Path,
+        journal: ProcessEventJournal,
+        path: Path,
+        event: dict[str, Any],
+        *,
+        admitted_targets: list[dict[str, Any]] | None = None,
+    ) -> list[dict[str, Any]]:
+        event_id = self.hooks.event_id_value(event)
+        # The admitting transaction already selected these routes. Its caller
+        # can still verify and report the receipts if a host tick finishes first.
+        targets = admitted_targets
+        if targets is None:
+            targets = journal.bind_dispatch_targets(
+                path, event_id, lambda: self.delivery_targets(project_root, event)
+            )
+        if targets is None:
+            return []  # A concurrent dispatcher already acknowledged this event.
+        delivered = self.dispatcher.dispatch_hooks(project_root, event, targets=targets)
+        journal.complete_dispatch(path, event_id)
+        return delivered
+
+    def flush_pending_dispatches(
+        self,
+        project_root: Path,
+        journal: ProcessEventJournal,
+        path: Path,
+        *,
+        limit: int,
+    ) -> None:
+        failures = []
+        for event_id in journal.next_dispatch_batch(path, limit=limit):
+            try:
+                for pending in journal.pending_dispatch(path, event_id=event_id):
+                    self.deliver_pending_event(project_root, journal, path, pending)
+            except (JournalError, OSError, ValueError) as error:
+                failures.append({"event_id": event_id, "reason": str(error)})
+        if failures:
+            raise PendingDispatchError(failures)
+
     def admit_process_event(
         self,
         project_root: Path,
@@ -68,6 +126,7 @@ class ProcessEventRecorder:
         *,
         dispatch: bool = True,
         workplace_root: Path | None = None,
+        actions: list[dict[str, Any]] | None = None,
     ) -> bool:
         if not (event.get("event_id") or event.get("id")):
             raise JournalError("journal_event_id_required")
@@ -86,18 +145,25 @@ class ProcessEventRecorder:
                 event_id_value=self.hooks.event_id_value,
                 record=config.logging.events,
             )
+        targets = self.delivery_targets(project_root, event)
         inserted, deliveries = journal.append_for_dispatch(
             events_path,
             event,
             event_id_value=self.hooks.event_id_value,
             record=config.logging.events,
-            queue_dispatch=bool(self.hooks.selected_hooks(project_root, event)),
+            queue_dispatch=bool(targets),
+            dispatch_targets=targets,
         )
         for pending in deliveries:
-            self.dispatcher.dispatch_hooks(
-                project_root, pending, dry_run=False, outbox=True
+            delivered = self.deliver_pending_event(
+                project_root,
+                journal,
+                events_path,
+                pending,
+                admitted_targets=targets if inserted else None,
             )
-            journal.complete_dispatch(events_path, self.hooks.event_id_value(pending))
+            if actions is not None:
+                actions.extend(delivered)
         return inserted
 
     def latest_process_event(
@@ -261,13 +327,16 @@ class ProcessEventPublication:
     def append(self, event: dict[str, Any], *, dispatch: bool) -> bool:
         if self.connection is None:
             raise JournalError("journal_publication_inactive")
+        targets = (
+            self.recorder.delivery_targets(self.project_root, event) if dispatch else []
+        )
         inserted = self.journal._append(
             self.connection,
             event,
             self.recorder.hooks.event_id_value,
             self.config.logging.events,
-            queue_dispatch=dispatch
-            and bool(self.recorder.hooks.selected_hooks(self.project_root, event)),
+            queue_dispatch=bool(targets),
+            dispatch_targets=targets,
         )
         if dispatch:
             self.pending.append(self.recorder.hooks.event_id_value(event))
@@ -288,9 +357,6 @@ class ProcessEventPublication:
                 for pending in self.journal.pending_dispatch(
                     self.path, event_id=event_id
                 ):
-                    self.recorder.dispatcher.dispatch_hooks(
-                        self.project_root, pending, dry_run=False, outbox=True
-                    )
-                    self.journal.complete_dispatch(
-                        self.path, self.recorder.hooks.event_id_value(pending)
+                    self.recorder.deliver_pending_event(
+                        self.project_root, self.journal, self.path, pending
                     )

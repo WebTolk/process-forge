@@ -1,0 +1,42 @@
+{
+  "migration_id": "r02-project-events-v2",
+  "descriptor_version": 2,
+  "min_reader_capability": "storage-identity-v1",
+  "min_writer_capability": "storage-identity-v1",
+  "legacy_descriptor_checksum": "sha256:a56d3dc302dd9556d72bc93390c65590233d69fcee8e303c2a8461fa8286cdfc",
+  "transform_files": [
+    {
+      "relative_path": "src/processforge_core/maintenance/project_event_coordinator.py",
+      "sha256": "sha256:53677bc07fe6683967449a174343eccca5ee244eeed9f7b9d8df188cdca7f07f"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/project_event_maintenance.py",
+      "sha256": "sha256:29fb65686a5e0bff1da0ad362b519a3431e8266abdcd4b4b5804b84026c99b16"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/project_event_owner.py",
+      "sha256": "sha256:28d8a11a06aac3d1844d1d313911ecb5a6de71d41f0bc725a3b04f5622b99244"
+    },
+    {
+      "relative_path": "src/processforge_core/maintenance/project_event_publication.py",
+      "sha256": "sha256:d2a06cecd697a9e702e218e418cf672b187c70357af9683c72491b31221a74b3"
+    },
+    {
+      "relative_path": "src/processforge_core/runtime/execution_admission.py",
+      "sha256": "sha256:0ceb7fcc9ef35870fd3789c23f5cb8f21cf1703310d9a19aaeaf765ee8053df7"
+    },
+    {
+      "relative_path": "src/processforge_core/runtime/process_identity.py",
+      "sha256": "sha256:99fc64bf2fe56d15475540d3ed2fd97dcdae8b3428096affdf7f9dbd6f150898"
+    },
+    {
+      "relative_path": "src/processforge_core/runtime_service_state.py",
+      "sha256": "sha256:dfe7d5f73bd2d99426f31ac2d70ac78e0e759d596bd695b4226b681ee5b7d238"
+    },
+    {
+      "relative_path": "src/processforge_platforms/linux_process_identity.py",
+      "sha256": "sha256:3220d110cc9ad11c6e1bf3517517677e66b11e54c30403c162321a7b9659a887"
+    }
+  ],
+  "transform_checksum": "sha256:2a9e53e14ceb6e133d1e1464cc20c25d2c8bc5007ee3dfac3939fe7b5d20b850"
+}
