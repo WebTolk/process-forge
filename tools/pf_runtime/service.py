@@ -19,8 +19,6 @@ import subprocess
 import sys
 import threading
 import time
-import urllib.error
-import urllib.request
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -57,6 +55,7 @@ else:
 from pf_native_control import NativeControlError, operation_lease  # noqa: E402
 
 from . import RUNTIME_PROTOCOL_VERSION, host  # noqa: E402
+from .loopback_http import LoopbackHttpClient, LoopbackTransportError  # noqa: E402
 
 
 def metrics_core():
@@ -268,25 +267,26 @@ def http_json(
         if payload is None
         else json.dumps(payload, ensure_ascii=False).encode("utf-8")
     )
-    request = urllib.request.Request(url, data=data, method=method)
-    request.add_header("Accept", "application/json")
+    headers = {"Accept": "application/json"}
     if data is not None:
-        request.add_header("Content-Type", "application/json")
+        headers["Content-Type"] = "application/json"
     if token:
-        request.add_header("Authorization", f"Bearer {token}")
+        headers["Authorization"] = f"Bearer {token}"
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            text = response.read().decode("utf-8")
-            return response.status, json.loads(text) if text.strip() else {}
-    except urllib.error.HTTPError as exc:
-        text = exc.read().decode("utf-8", errors="replace")
-        try:
-            body = json.loads(text) if text.strip() else {}
-        except json.JSONDecodeError:
-            body = {"error": text}
-        return exc.code, body
-    except (urllib.error.URLError, OSError) as exc:
+        status, response_body = LoopbackHttpClient().request(
+            method, url, headers=headers, body=data, timeout=timeout
+        )
+    except LoopbackTransportError as exc:
         return 0, {"error": str(exc)}
+    if 200 <= status < 300:
+        text = response_body.decode("utf-8")
+        return status, json.loads(text) if text.strip() else {}
+    text = response_body.decode("utf-8", errors="replace")
+    try:
+        body = json.loads(text) if text.strip() else {}
+    except json.JSONDecodeError:
+        body = {"error": text}
+    return status, body
 
 
 def classify_lifecycle(
