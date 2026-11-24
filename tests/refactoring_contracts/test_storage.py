@@ -11,14 +11,11 @@ import subprocess
 import sys
 from contextlib import closing
 from pathlib import Path
-from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
+from zipfile import ZipFile
 
 import pytest
-
-if TYPE_CHECKING:
-    from conftest import ContractDistribution
-
+from conftest import ContractDistribution, verify_published_archive
 
 ARCHIVE_SHA256 = "80a4f15b1f4cfdce66dec44d15fbc9a9cc1fd615d8dc4c9c75ab872be679684a"
 MANIFEST_SHA256 = "7c338d0546c3c081cf7b568a79922caa8ef4cc0f76f4b2cdd3039a1b21442518"
@@ -167,6 +164,8 @@ def _run_archive(
     archive: Path,
     manifest: Path,
     extraction: Path,
+    *,
+    extracted_test: str,
 ) -> subprocess.CompletedProcess[str]:
     extraction.mkdir()
     env = distribution.environment
@@ -182,7 +181,7 @@ def _run_archive(
             "--manifest",
             str(manifest),
             "--extracted-test",
-            "quick",
+            extracted_test,
         ],
         cwd=driver,
         env=env,
@@ -202,37 +201,61 @@ def _verify_driver_reference(
         assert _sha256(distribution.root / name) == expected, name
 
 
-def test_release_archive_quick(
+def _save_result(
+    destination: Path, name: str, result: subprocess.CompletedProcess[str]
+) -> None:
+    (destination / f"{name}-stdout.log").write_text(result.stdout, encoding="utf-8")
+    (destination / f"{name}-stderr.log").write_text(result.stderr, encoding="utf-8")
+    (destination / f"{name}-result.json").write_text(
+        json.dumps({"args": result.args, "returncode": result.returncode}) + "\n",
+        encoding="utf-8",
+    )
+
+
+def test_release_archive_validation_and_extracted_cli(
     contract_distribution: ContractDistribution, tmp_path: Path
 ) -> None:
     archive, manifest = _assets()
     driver = tmp_path / "driver"
     digests = _copy_driver(contract_distribution, driver)
-    result = _run_archive(
-        contract_distribution, driver, archive, manifest, tmp_path / "t"
+    inspected = _run_archive(
+        contract_distribution,
+        driver,
+        archive,
+        manifest,
+        tmp_path / "t",
+        extracted_test="skip",
     )
+    _save_result(tmp_path, "manifest", inspected)
+    assert inspected.returncode == 0 and not inspected.stderr, inspected
+    assert "PASS: release manifest archive sha256 matches zip bytes" in inspected.stdout
+    assert inspected.stdout.splitlines()[-1] == "RESULT: PASS", inspected
+    assert not (driver / ARCHIVE_EVIDENCE).exists()
 
-    # PF retains failed child commands. Capture the successful child transcript
-    # as well, before asserting the outcome, so both runs leave durable proof.
-    (tmp_path / "stdout.log").write_text(result.stdout, encoding="utf-8")
-    (tmp_path / "stderr.log").write_text(result.stderr, encoding="utf-8")
-    (tmp_path / "result.json").write_text(
-        json.dumps({"args": result.args, "returncode": result.returncode}) + "\n",
-        encoding="utf-8",
+    extracted = tmp_path / "extracted"
+    with ZipFile(archive) as distribution:
+        distribution.extractall(extracted)
+    verify_published_archive(extracted, archive)
+    checks = ("schema validation", "public cleanliness", "checksum")
+    tested = ContractDistribution(extracted, "published-1.3.0").run(
+        "release-test",
+        "--root",
+        extracted,
+        *(arg for check in checks for arg in ("--only", check)),
+        timeout=360,
     )
+    _save_result(tmp_path, "extracted", tested)
     _verify_assets(archive, manifest)
     _verify_driver_reference(contract_distribution, digests)
-    assert result.returncode == 0, result
-    lines = result.stdout.splitlines()
-    assert lines and lines[-1] == "RESULT: PASS", result
-    for label in (
-        "bin/pf.py --help",
-        "tools/processforge.py --help",
-        "release-test extracted archive",
-    ):
-        assert f"RUN {label}:" in lines, result
-        assert f"PASS {label}" in lines, result
-    print(f"archive: quick exit={result.returncode} sha256={ARCHIVE_SHA256}")
+    assert tested.returncode == 0 and not tested.stderr, tested
+    lines = tested.stdout.splitlines()
+    for check in checks:
+        assert f"PASS {check}" in lines, tested
+    assert [line for line in lines if line.startswith("WARN ")] == [
+        "WARN git diff --check skipped: not a git repo"
+    ], tested
+    assert lines[-1] == "RESULT: PASS with warnings", tested
+    print(f"archive: manifest and extracted CLI passed sha256={ARCHIVE_SHA256}")
 
 
 def test_release_archive_refuses_mismatched_manifest(
@@ -248,7 +271,12 @@ def test_release_archive_refuses_mismatched_manifest(
     extraction = tmp_path / "t"
 
     result = _run_archive(
-        contract_distribution, driver, archive, mismatched, extraction
+        contract_distribution,
+        driver,
+        archive,
+        mismatched,
+        extraction,
+        extracted_test="quick",
     )
 
     _verify_assets(archive, manifest)

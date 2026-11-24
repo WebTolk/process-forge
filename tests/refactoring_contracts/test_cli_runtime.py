@@ -17,6 +17,9 @@ from threading import Barrier
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
+import pytest
+from conftest import HARNESS_ROOT, git_checkout_identity
+
 if TYPE_CHECKING:
     from conftest import ContractDistribution
 
@@ -163,9 +166,17 @@ def test_native_refusals(
             assert not absent.exists()
 
 
+def test_nested_distribution_has_no_git_identity(
+    contract_distribution: ContractDistribution,
+) -> None:
+    with pytest.raises(pytest.UsageError, match="not a checkout root"):
+        git_checkout_identity(HARNESS_ROOT / "tests", contract_distribution.environment)
+
+
+@pytest.mark.skipif(
+    not sys.platform.startswith("linux"), reason="Linux wrapper mode scenario"
+)
 def test_posix_direct_invocation(contract_distribution: ContractDistribution) -> None:
-    if not sys.platform.startswith("linux"):
-        return
     for entry in ("pf", "pf-server"):
         launcher = contract_distribution.root / "bin" / entry
         assert S_IMODE(launcher.stat().st_mode) == 0o644, launcher
@@ -310,15 +321,20 @@ def _check_native_actions(
     (scheduled,) = tick["response"]["projects"]
     assert scheduled["director"] == scheduled["inspector"] == "tick", scheduled
 
+    published = distribution.profile == "published-1.3.0"
     observed = []
     for reply in replies[:2]:
-        assert not reply.get("isError"), reply
         result = json.loads(reply["content"][0]["text"])
+        if published and reply.get("isError") is True:
+            assert result == {"error": {"code": "read_failed"}}, reply
+            observed.append("read_failed")
+            continue
+        assert not reply.get("isError"), reply
         assert result["status"] == "completed", result
         assert isinstance(result.get("native_summary", ""), str), result
         observed.append(result.get("native_summary", ""))
     expected = [f"HEARTBEAT: {agent} session={session}" for session, agent in sessions]
-    if distribution.profile == "published-1.3.0":
+    if published:
         print(f"Published response ownership: {observed!r}")
     else:
         assert observed == expected

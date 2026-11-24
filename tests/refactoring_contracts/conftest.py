@@ -70,7 +70,19 @@ def _git(root: Path, environment: dict[str, str], *args: str) -> str:
     ).stdout.strip()
 
 
-def _verify_published(root: Path, archive: Path) -> None:
+def git_checkout_identity(root: Path, environment: dict[str, str]) -> tuple[str, str]:
+    checkout = Path(_git(root, environment, "rev-parse", "--show-toplevel"))
+    if checkout.resolve() != root:
+        raise pytest.UsageError(
+            f"Selected Git-backed distribution is not a checkout root: {root}"
+        )
+    commit, tree = _git(
+        root, environment, "rev-parse", "HEAD", "HEAD^{tree}"
+    ).splitlines()
+    return commit, tree
+
+
+def verify_published_archive(root: Path, archive: Path) -> None:
     with archive.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     assert digest == PUBLISHED_ARCHIVE_SHA256, (archive, digest)
@@ -115,7 +127,7 @@ def contract_distribution() -> ContractDistribution:
                 raise pytest.UsageError(
                     "PF_CONTRACT_ARCHIVE must name the official 1.3.0 ZIP"
                 )
-            _verify_published(root, Path(archive_value))
+            verify_published_archive(root, Path(archive_value))
             commit, tree = PUBLISHED_COMMIT, PUBLISHED_TREE
         case "post-119-120" | "candidate":
             expected_commit = (
@@ -123,9 +135,7 @@ def contract_distribution() -> ContractDistribution:
                 if profile == "post-119-120"
                 else os.environ.get("PF_CONTRACT_EXPECTED_COMMIT")
             )
-            commit, tree = _git(
-                root, environment, "rev-parse", "HEAD", "HEAD^{tree}"
-            ).splitlines()
+            commit, tree = git_checkout_identity(root, environment)
             if expected_commit:
                 assert commit == expected_commit, (expected_commit, commit)
                 assert not _git(root, environment, "status", "--porcelain"), root

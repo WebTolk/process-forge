@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import patch
 
 import pytest
+from conftest import verify_published_archive
 
 if TYPE_CHECKING:
     from conftest import ContractDistribution
@@ -292,6 +294,50 @@ def assert_forge_recovery(
     assert client.process.pid == pid and client.process.poll() is None
 
 
+def assert_forge_stage_receipt(
+    client: Any, bridge_support: ModuleType, project: Path, selectors: dict[str, Any]
+) -> None:
+    flow = project / ".pf"
+    outbox_path = "runtime/hooks/contract-stage"
+    hook = {
+        "id": "contract-stage",
+        "type": "outbox",
+        "enabled": True,
+        "path": outbox_path,
+        "event_types": ["process.stage.completed"],
+    }
+    (flow / "hooks.yaml").write_text(
+        json.dumps({"schema_version": 1, "hooks": {"targets": [hook]}}),
+        encoding="utf-8",
+    )
+    state = tool_body(call(client, "pf.work.state", selectors, "stage-before"))
+    evidence = state["evidence_guidance"]["transition_template"]["evidence"]
+    path = ".pf/artifacts/mcp-contract/observation.md"
+    artifact = project / path
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text("Observed the exact Forge Work binding.\n", encoding="utf-8")
+    transitioned = tool_body(
+        call(
+            client,
+            "pf.work.transition",
+            {
+                **selectors,
+                "outcome": "completed",
+                "notes": "Observed the exact Forge Work binding.",
+                "evidence": [{**item, "path": path} for item in evidence],
+            },
+            "stage-completed",
+        )
+    )
+    assert transitioned["action"] == "stage_transitioned", transitioned
+    journal = flow / "runtime/events/events.sqlite3"
+    events = bridge_support.StdioBridgeTest().work_events(journal, selectors["run_id"])
+    (event_id,) = [key for kind, key in events if kind == "process.stage.completed"]
+    (receipt,) = (flow / outbox_path).glob("*.json")
+    assert json.loads(receipt.read_bytes())["event"]["event_id"] == event_id
+    print(f"forge stage completed receipt: {event_id}")
+
+
 @pytest.mark.parametrize("mode", ["garage", "forge"])
 def test_work_stdio_contract(
     contract_distribution: ContractDistribution,
@@ -413,6 +459,7 @@ def test_work_stdio_contract(
                 assert_forge_recovery(
                     client, distribution, workplace, runtime, selectors
                 )
+                assert_forge_stage_receipt(client, bridge_support, project, selectors)
     finally:
         if mode == "forge":
             stop_runtime(distribution, workplace)
@@ -425,10 +472,12 @@ def source_consumer(support: ModuleType, root: Path, consumer: Path) -> None:
         shutil.copy2(source, target)
 
 
-def sealed_replacement(distribution: Path, consumer: Path) -> str:
-    native = load_module(
-        "_pf_contract_native_publication", distribution / "tools/pf_native_control.py"
-    )
+def sealed_replacement(consumer: Path) -> str:
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(sys, "dont_write_bytecode", True)
+        native = load_module(
+            "_pf_contract_native_publication", consumer / "tools/pf_native_control.py"
+        )
     manifest_path = consumer / native.MANIFEST
     manifest = native.parse_manifest(manifest_path.read_bytes())
     publication = native.accept_publication(
@@ -462,7 +511,7 @@ def sealed_replacement(distribution: Path, consumer: Path) -> str:
     return "manifest:sha256:" + hashlib.sha256(build.manifest).hexdigest()
 
 
-def assert_sealed_replacement(client: Any, distribution: Path, consumer: Path) -> None:
+def assert_sealed_replacement(client: Any, consumer: Path) -> None:
     exchange(client, "initialize", identifier="sealed-init")
     client.notify("notifications/initialized")
     before = exchange(client, "tools/list", identifier="sealed-tools")["result"][
@@ -474,7 +523,7 @@ def assert_sealed_replacement(client: Any, distribution: Path, consumer: Path) -
     )
     pid = client.process.pid
 
-    replacement_build = sealed_replacement(distribution, consumer)
+    replacement_build = sealed_replacement(consumer)
     assert replacement_build != before_build
     reply, notices = client.exchange(
         "resources/read", {"uri": IDENTITY_URI}, request_id="replacement-identity"
@@ -566,9 +615,12 @@ def test_garage_stdio_backend_lifecycle(
             bridge_support, distribution, workplace, consumer=consumer
         ) as client:
             if scenario == "replacement":
-                assert_sealed_replacement(client, distribution.root, consumer)
+                assert_sealed_replacement(client, consumer)
             else:
                 assert_sealed_failure(client, consumer, tmp_path)
+        verify_published_archive(
+            distribution.root, Path(os.environ["PF_CONTRACT_ARCHIVE"])
+        )
         return
 
     source_consumer(bridge_support, distribution.root, consumer)

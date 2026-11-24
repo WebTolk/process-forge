@@ -339,10 +339,7 @@ def check_search(
 ) -> None:
     own_marker = f"uniquematch{number}"
     other_marker = f"uniquematch{3 - number}"
-    first, second, own, other, resolved, work, excluded, material = calls(
-        distribution,
-        workplace,
-        project,
+    requests = (
         ("pf.search", {"query": "sharedmatch", "limit": 1}),
         ("pf.search", {"query": "sharedmatch", "limit": 1, "offset": 1}),
         ("pf.search", {"query": own_marker}),
@@ -352,6 +349,17 @@ def check_search(
         ("pf.work.search", {**selectors, "query": other_marker}),
         ("pf.work.resolve", {**selectors, "resource_id": RESOURCE}),
     )
+    replies = calls(distribution, workplace, project, *requests)
+    exchanges = [
+        {"id": number, "tool": name, "arguments": arguments, "result": payload}
+        for number, ((name, arguments), payload) in enumerate(
+            zip(requests, replies, strict=True), 1
+        )
+    ]
+    (project.parent / f"{project.name}-search.json").write_text(
+        json.dumps(exchanges, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    first, second, own, other, resolved, work, excluded, material = replies
     assert Path(resolved["resource"]["local_root"]) == root.resolve(), resolved
     assert own["total"] == 2, own
     assert first["page"]["next_limitstart"] == 1, first

@@ -72,9 +72,11 @@ and `bin\pf-server.bat` wrappers or Linux `sh "$root/bin/pf"` and
 On the published ZIP, native Windows status calls observed the two distinct
 JSON shapes in the table. Direct invocation of the extracted POSIX wrapper
 on Linux returned permission denied with its supplied mode `100644`. Preserve
-that observation separately from the `sh` rows. For #119 record the actual
-published exchanges. The published adapter redirects process-wide streams and
-a single run can return the expected summaries.
+that observation alongside the `sh` rows. For #119 record the actual
+published exchanges. The published adapter redirects process-wide streams.
+Observed outcomes include the expected heartbeat, text from another action,
+and a correctly correlated tool error with code `read_failed`. The fixed
+profiles require the two exact heartbeat summaries.
 
 ## MCP bridge
 
@@ -108,14 +110,15 @@ and drives the selected stdio entry.
 | --- | --- | --- |
 | Project selection (#120) | `tools/call` for `pf.search` with `project_root`, `query`, `limit` and `offset`, then `pf.resolve` with the matching `resource_id` | The fixed profiles filter to the selected instance before totals and pagination. Record the selected version and root, exclusion of the other marker, total, page results and resolved material bytes. |
 | Work selection and pinned material | `tools/call` for `pf.work.start` with fixture `project_root` and `objective`, then `pf.work.state`, `pf.work.search` and `pf.work.resolve` with the returned selectors and applicable query or resource ID | The Work identity remains pinned. Record `work`, `resource_provenance`, `coverage.source` and the material result independently of project search. |
-| Denial and replay | `tools/call` for `pf.work.transition` with explicit `run_id`, `assignment_id`, `context_id`, `outcome` and stage `evidence`. Exercise denial and replay the accepted request. | Compare identity, stage, evidence count, journal event IDs and sibling-project state. Correlate the Forge delivery receipt with the committed event ID. |
+| Denial and replay | `tools/call` for `pf.work.transition` with explicit `run_id`, `assignment_id`, `context_id`, `outcome` and stage `evidence`. Exercise denial and replay the accepted request. | Compare identity, stage, evidence count, journal event IDs and sibling-project state. The Forge bridge test correlates the outbox delivery receipt with the committed event ID. |
 
 The supplemental native Windows Core probe returned four shared matches and
 two other-version matches for the published driver. The post-fix and
 development-base drivers returned two selected-version matches and zero
 other-version matches. Published pagination continued past the second page.
 Fixed pagination ended there. This probe used synthetic project snapshots.
-Retain the public MCP and Work results alongside that Core observation.
+The native Work/search test retains each public request and its correlated
+reply from both projects in fixture-local `project-*-search.json` files.
 
 ## Storage and archive
 
@@ -137,19 +140,24 @@ After the native event call, record `events.event_id`, `event_type: run.created`
 and `subject: <run_id>`. Reopen after status and compare the event and UUID.
 
 The archive probe verifies the driver's copied bytes before executing from its
-disposable copy. Set `TMPDIR`, `TMP` and `TEMP` to owned extraction scratch.
+disposable copy. It validates the archive and sidecar through the selected
+driver, then verifies the extracted bytes and invokes the published CLI in
+the extraction. Set `TMPDIR`, `TMP` and `TEMP` to owned extraction scratch.
 
 ```sh
-python "$driver/bin/pf.py" release-archive-test --archive "$archive" --manifest "$manifest" --extracted-test quick
+python "$driver/bin/pf.py" release-archive-test --archive "$archive" --manifest "$manifest" --extracted-test skip
+python "$extracted/bin/pf.py" release-test --root "$extracted" --only "schema validation" --only "public cleanliness" --only checksum
 ```
 
-Omit `--root` so the disposable driver receives native child evidence
-under `.pf/runtime/release-test/commands`. Require exit 0, `RESULT: PASS` and
-passing launcher help, CLI help and extracted `release-test` child records.
-Retain the child transcript and result under the test base. Recheck the driver
-reference, archive and sidecar bytes. Run a separate refusal with a disposable
+Require exit 0 and `RESULT: PASS` from the manifest check. Require exit 0
+and all three named checks from the extracted CLI. Its only expected warning
+is that the extracted archive lacks Git metadata for `git diff --check`.
+Retain both transcripts and recheck the driver reference, archive and
+sidecar bytes. Run a refusal with `--extracted-test quick` and a disposable
 manifest copy whose `archive.sha256` differs. Require exit 1, the archive SHA
-mismatch diagnostic, and no extraction or new driver evidence.
+mismatch diagnostic, no extraction and no new driver evidence. The broader
+extracted quick smoke additionally starts a Runtime. Two native Linux
+published runs observed its guarded shutdown refusal.
 
 ## Evidence and review
 
