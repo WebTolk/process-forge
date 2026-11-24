@@ -75,6 +75,7 @@ if TYPE_CHECKING:
     )
     from processforge_core.executions.sqlite_repository import SQLiteExecutionRepository
     from processforge_core.maintenance.storage_migration import StorageMigrationHost
+    from processforge_core.project.bootstrap_binding import ProjectBootstrapBinding
     from processforge_core.resources.local_search import ResourceSearchIndex
     from processforge_core.work.resources import WorkResourceService
 
@@ -2828,150 +2829,24 @@ diagnostic output.
     write_file(report, content, force=True)
 
 
-@dataclass(frozen=True)
-class _ProjectBootstrapBinding:
-    receipt: dict[str, Any] | None
-    project_id: str
-    workplace_root: Path | None
-
-
 def _project_bootstrap_binding(
     request: dict[str, Any], files: dict[Path, str]
-) -> _ProjectBootstrapBinding:
+) -> ProjectBootstrapBinding:
     """Check only the binding files and receipt, without touching storage."""
-    from processforge_core.maintenance.contracts import MaintenanceError
-    from processforge_core.maintenance.fresh_project import _receipt
-    from processforge_core.maintenance.project_event_owner import (
-        INERT_LEGACY_PROJECT_TEMPLATE,
+    from processforge_core.project.bootstrap_binding import ProjectBootstrapBindingReader
+
+    return ProjectBootstrapBindingReader().read(
+        request["project_root"],
+        files,
+        workplace_manifest=request.get("workplace"),
+        force=bool(request.get("force", False)),
+        repair=request.get("command") == "project-init-repair",
     )
-    from processforge_core.maintenance.storage_migration import _safe
-
-    project = request["project_root"]
-    flow = project / PROJECT_FLOW_ROOT
-    try:
-        document = _receipt(project)
-    except (TypeError, ValueError) as error:
-        # Malformed JSON field types must not escape the receipt boundary.
-        raise MaintenanceError("storage_fresh_receipt_invalid") from error
-    if document is not None:
-        if document["domains"] is None:
-            if (
-                document["state"] != "pending"
-                or document["project_id"] is not None
-                or document["workplace"] is not None
-            ):
-                raise MaintenanceError("storage_fresh_receipt_invalid")
-        elif not isinstance(document["domains"], list):
-            raise MaintenanceError("storage_fresh_receipt_invalid")
-
-    def read_manifest(path: Path, *, planned: bool = False) -> dict[str, Any]:
-        if planned and path in files:
-            try:
-                import yaml
-            except ModuleNotFoundError:
-                value = parse_simple_yaml(files[path])
-            else:
-                try:
-                    value = yaml.safe_load(files[path])
-                except yaml.YAMLError as error:
-                    raise MaintenanceError("storage_configuration_invalid") from error
-        else:
-            value = load_yaml_document(path)
-        if not isinstance(value, dict) or "__yaml_error__" in value:
-            raise MaintenanceError("storage_configuration_invalid")
-        return value
-
-    def owner(manifest: dict[str, Any]) -> str:
-        section = manifest.get("project")
-        value = section.get("id") if isinstance(section, dict) else None
-        if not isinstance(value, str) or not value.strip() or "\x00" in value:
-            raise MaintenanceError("project_identity_required")
-        return value
-
-    manifest_path = _safe(flow / "process-forge.yaml")
-    local_path = _safe(flow / "process-forge.local.yaml")
-    has_manifest, has_local = manifest_path.exists(), local_path.exists()
-    force = bool(request.get("force", False))
-    repair = request.get("command") == "project-init-repair"
-    inert_template = (
-        has_manifest
-        and not has_local
-        and force
-        and not repair
-        and document is None
-        and manifest_path.stat().st_size == len(INERT_LEGACY_PROJECT_TEMPLATE)
-        and manifest_path.read_bytes() == INERT_LEGACY_PROJECT_TEMPLATE
-    )
-    current_owner = (
-        owner(read_manifest(manifest_path))
-        if has_manifest and not inert_template
-        else None
-    )
-    proposed_owner = (
-        owner(read_manifest(manifest_path, planned=True))
-        if force or current_owner is None
-        else current_owner
-    )
-
-    def reference(local: dict[str, Any]) -> Path | None:
-        section = local.get("workplace", {})
-        if not isinstance(section, dict):
-            raise MaintenanceError("storage_configuration_invalid")
-        value = section.get("manifest")
-        if not value:
-            return None
-        if not isinstance(value, str) or not value.strip() or "\x00" in value:
-            raise MaintenanceError("storage_configuration_invalid")
-        declared = Path(value).expanduser()
-        return declared if declared.is_absolute() else (project / declared).resolve()
-
-    current_reference = reference(read_manifest(local_path))
-    proposed_reference = (
-        reference(read_manifest(local_path, planned=True))
-        if force or not has_local
-        else current_reference
-    )
-    if repair:
-        # Repair builds its proposal before the writer runs. A missing file may
-        # be restored only against the same surviving half of the binding.
-        if has_manifest and not has_local and current_owner != owner(
-            read_manifest(manifest_path, planned=True)
-        ):
-            raise MaintenanceError("storage_enrollment_conflict")
-        if has_local and not has_manifest and current_reference != reference(
-            read_manifest(local_path, planned=True)
-        ):
-            raise MaintenanceError("storage_enrollment_conflict")
-
-    selected = request.get("workplace")
-    workplace = Path(selected).parent if selected is not None else None
-    # A non-forced legacy initialization can leave the effective route intact.
-    if proposed_reference is not None and (
-        repair or (document is None and has_local and not force)
-    ):
-        workplace = proposed_reference.parent
-    expected = workplace / "workplace.yaml" if workplace is not None else None
-
-    if document is not None:
-        if current_owner is not None and proposed_owner != current_owner:
-            raise MaintenanceError("storage_fresh_target_conflict")
-        if document["domains"] is not None and (
-            current_owner is None
-            or proposed_owner != document["project_id"]
-            or document["workplace"] != str(workplace or "")
-        ):
-            raise MaintenanceError("storage_fresh_target_conflict")
-        if current_reference is not None and current_reference != proposed_reference:
-            raise MaintenanceError("storage_enrollment_conflict")
-    if proposed_reference is not None and proposed_reference != expected:
-        raise MaintenanceError("storage_enrollment_conflict")
-
-    return _ProjectBootstrapBinding(document, proposed_owner, workplace)
 
 
 def _project_bootstrap_preflight(
     request: dict[str, Any], files: dict[Path, str]
-) -> _ProjectBootstrapBinding:
+) -> ProjectBootstrapBinding:
     """Verify receipt-backed storage before acquiring the binding writer guard."""
     from processforge_core.composition import build_storage_migration_host
     from processforge_core.configuration import ConfigurationProvider
@@ -3154,7 +3029,7 @@ def execute_project_initialization(
 
 
 def _execute_project_initialization(
-    request: dict[str, Any], files: dict[Path, str], preflight: _ProjectBootstrapBinding
+    request: dict[str, Any], files: dict[Path, str], preflight: ProjectBootstrapBinding
 ) -> dict[str, Any]:
     """Publish the deterministic files shared by onboarding and repair."""
     from processforge_core.agent_entry.migration import TARGETS as entry_targets
