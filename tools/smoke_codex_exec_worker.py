@@ -23,7 +23,30 @@ from context_lock_smoke_helpers import (
 from smoke_sql_project import initialize_sql_project
 
 MODEL = "chatgpt-5.3-codex-spark"
+NEW_MODEL = "fixture-Codex-V2"
+NEW_EFFORT = "effort-V2"
 WORKER = Path(__file__).with_name("codex_exec_worker.py")
+
+
+def write_catalog(bin_dir: Path, *, enabled: bool) -> None:
+    models = [(MODEL, ["high"])]
+    if enabled:
+        models.append((NEW_MODEL, [NEW_EFFORT]))
+    (bin_dir / "catalog.json").write_text(
+        json.dumps(
+            [
+                {
+                    "id": name,
+                    "model": name,
+                    "supportedReasoningEfforts": [
+                        {"reasoningEffort": effort} for effort in efforts
+                    ],
+                }
+                for name, efforts in models
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 def write_fake_codex(bin_dir: Path) -> None:
@@ -38,6 +61,31 @@ import sys
 from pathlib import Path
 
 argv = sys.argv[1:]
+if argv == ["app-server"]:
+    for line in sys.stdin:
+        request = json.loads(line)
+        method = request["method"]
+        if method == "initialized":
+            continue
+        if method == "initialize":
+            result = {}
+        elif method == "model/list":
+            result = {
+                "data": json.loads(Path(__file__).with_name("catalog.json").read_text(encoding="utf-8")),
+                "nextCursor": None,
+            }
+            race = Path(__file__).with_name("change-task.flag")
+            if race.is_file():
+                race.unlink()
+                task = Path.cwd() / ".pf/assignments/codex-task.yaml"
+                with task.open("ab") as stream:
+                    stream.write(b"\\n# catalog test changes the task during the probe\\n")
+        elif method == "config/read":
+            result = {"config": {}}
+        else:
+            raise AssertionError(method)
+        print(json.dumps({"id": request["id"], "result": result}), flush=True)
+    raise SystemExit(0)
 Path(__file__).with_name("invocation.json").write_text(
     json.dumps({"argv": argv}), encoding="utf-8"
 )
@@ -178,7 +226,7 @@ process: task-batch-execution
 status: open
 objective: "Execute codex-exec with workspace access and verify UTF-8 payload: Проверка кириллицы."
 allowed_files:
-  - .pf/artifacts/**
+  - .pf/artifacts/codex-exec-report.json
 workspace_access:
   knowledge_resources:
     - joomla-core
@@ -204,15 +252,55 @@ expected_report:
         # The driver inherits explicit executable overrides before consulting PATH.
         os.environ["PF_CODEX_EXECUTABLE"] = str(fake_executable)
         try:
-            result = run_pf(
-                "worker-run",
-                "start",
+            worker = (
                 "--project-root",
                 str(project),
                 "--task",
                 "codex-task",
                 "--driver",
                 "codex-exec",
+            )
+            options = ("--model", NEW_MODEL, "--reasoning-effort", NEW_EFFORT)
+            run_dir = project / ".pf/runtime/agent-runs/codex-run/codex-task"
+            task_path = project / ".pf/assignments/codex-task.yaml"
+            task_bytes = task_path.read_bytes()
+            write_catalog(fake_bin, enabled=False)
+            refused = run_pf("worker-run", "prepare", *worker, *options)
+            assert refused.returncode != 0
+            assert "codex_model_unavailable" in (refused.stdout or "") + (
+                refused.stderr or ""
+            )
+            assert task_path.read_bytes() == task_bytes
+            assert not (run_dir / "attempts").exists()
+            write_catalog(fake_bin, enabled=True)
+            (fake_bin / "change-task.flag").touch()
+            refused = run_pf("worker-run", "prepare", *worker, *options)
+            assert refused.returncode != 0
+            assert "execution_identity_conflict" in (refused.stdout or "")
+            assert not (run_dir / "attempts").exists()
+            assert task_path.read_bytes().startswith(task_bytes)
+            task_path.write_bytes(task_bytes)
+            require_ok(run_pf("worker-run", "prepare", *worker, *options))
+            assert task_path.read_bytes() == task_bytes
+            state_path, command_path = run_dir / "status.json", run_dir / "command.json"
+            state_bytes = state_path.read_bytes()
+            command_bytes = command_path.read_bytes()
+            write_catalog(fake_bin, enabled=False)
+            refused = run_pf("worker-run", "start", *worker, *options)
+            assert refused.returncode != 0
+            assert "codex_model_unavailable" in (refused.stdout or "") + (
+                refused.stderr or ""
+            )
+            assert task_path.read_bytes() == task_bytes
+            assert state_path.read_bytes() == state_bytes
+            assert command_path.read_bytes() == command_bytes
+            assert not (fake_bin / "invocation.json").exists()
+            write_catalog(fake_bin, enabled=True)
+            result = run_pf(
+                "worker-run",
+                "start",
+                *worker,
+                *options,
             )
             if result.returncode != 0:
                 run_dir = (
@@ -248,10 +336,16 @@ expected_report:
                     "--json",
                     "--add-dir",
                     MODEL,
+                    NEW_MODEL,
+                    NEW_EFFORT,
                     "high",
                     "read-only",
                     "workspace-write",
                     'model_reasoning_effort="high"',
+                    f'model_reasoning_effort="{NEW_EFFORT}"',
+                    "execution_identity_conflict",
+                    "codex_model_unavailable",
+                    "codex_reasoning_effort_unavailable",
                     "features.memories=false",
                     'mcp_servers.processforge.default_tools_approval_mode="approve"',
                     "planned",
@@ -403,6 +497,60 @@ expected_report:
                 raise AssertionError(
                     f"codex-exec worker-run failed (exit {result.returncode}); sanitized receipts emitted before cleanup"
                 )
+            default_task = "codex-defaults"
+            require_ok(
+                run_pf(
+                    "task-create",
+                    "--project-root",
+                    str(project),
+                    "--run",
+                    "codex-run",
+                    "--id",
+                    default_task,
+                    "--title",
+                    "Codex defaults",
+                    "--process",
+                    "task-batch-execution",
+                    "--apply",
+                )
+            )
+            default_report = "codex-defaults-report.json"
+            default_task_text = task_bytes.decode("utf-8")
+            default_task_text = "\n".join(
+                line
+                for line in default_task_text.splitlines()
+                if not line.startswith(("agent_model:", "agent_reasoning_effort:"))
+            )
+            write_yaml(
+                task_path.with_name(default_task + ".yaml"),
+                default_task_text.replace(
+                    "id: codex-task", f"id: {default_task}"
+                ).replace("codex-exec-report.json", default_report),
+            )
+            previous_model = os.environ.pop("PF_CODEX_MODEL", None)
+            try:
+                require_ok(
+                    run_pf(
+                        "worker-run",
+                        "start",
+                        "--project-root",
+                        str(project),
+                        "--task",
+                        default_task,
+                        "--driver",
+                        "codex-exec",
+                    )
+                )
+            finally:
+                if previous_model is not None:
+                    os.environ["PF_CODEX_MODEL"] = previous_model
+            default_args = json.loads(
+                (project / ".pf/artifacts" / default_report).read_text(encoding="utf-8")
+            )["argv"]
+            assert "-m" not in default_args
+            assert not any(
+                value.startswith("model_reasoning_effort=") for value in default_args
+            )
         finally:
             if env_path is None:
                 os.environ.pop("PATH", None)
@@ -449,19 +597,22 @@ expected_report:
             raise AssertionError(
                 "fake Codex process did not receive PF_WORKSPACE_ACCESS_FILE"
             )
-        if report.get("agent_model") != MODEL:
+        if (
+            report.get("agent_model") != NEW_MODEL
+            or argv[argv.index("-m") + 1] != NEW_MODEL
+        ):
             raise AssertionError("fake Codex process did not receive PF_AGENT_MODEL")
-        if report.get("agent_reasoning_effort") != "high":
+        if report.get("agent_reasoning_effort") != NEW_EFFORT:
             raise AssertionError(
                 "fake Codex process did not receive PF_AGENT_REASONING_EFFORT"
             )
-        if report.get("codex_reasoning_effort") != "high":
+        if report.get("codex_reasoning_effort") != NEW_EFFORT:
             raise AssertionError(
                 "fake Codex process did not receive PF_CODEX_REASONING_EFFORT"
             )
-        if 'model_reasoning_effort="high"' not in argv:
+        if f'model_reasoning_effort="{NEW_EFFORT}"' not in argv:
             raise AssertionError(
-                "codex-exec did not pass selected high reasoning effort"
+                "codex-exec did not pass the selected reasoning effort"
             )
         direct_exit = root / "direct-worker-exit.json"
         direct_output = root / "direct-worker-output.json"

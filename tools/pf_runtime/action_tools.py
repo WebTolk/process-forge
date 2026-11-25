@@ -17,7 +17,7 @@ TOOL_DESCRIPTIONS = {
     "pf.actions.list": "List supported CLI/MCP actions with bounded filtering and truthful native-validation requirements; discovery grants no permissions.",
     "pf.actions.describe": "Describe one exact supported action, its actual arguments/schema, effects and preconditions; never execute it.",
     "pf.runtime_driver.list": "List registered native runtime driver IDs and status for this project/workplace; never launch a worker.",
-    "pf.runtime_driver.describe": "Read safe metadata for one registered driver ID; no executable override, environment values or arbitrary manifest paths.",
+    "pf.runtime_driver.describe": "Read safe metadata for one registered driver ID and optionally query its live model catalog.",
     "pf.worker.prepare": "With apply true, prepare the exact active Work using an explicitly selected registered driver; preserve native scope/input checks.",
     "pf.worker.start": "With apply true, start the exact active Work through its native registered driver and return immediately; no shell/executable override.",
     "pf.worker.status": "With apply true, observe the exact Work's native worker status; observation may reconcile runtime records and collect completed output.",
@@ -67,10 +67,12 @@ def action_tool_schema(name: str) -> dict[str, Any]:
     if name in {"pf.runtime_driver.describe", "pf.worker.prepare", "pf.worker.start"}:
         properties["driver"] = {"type": "string", "minLength": 1, "maxLength": 128}
         required.append("driver")
+    if name == "pf.runtime_driver.describe":
+        properties["catalog"] = {"type": "boolean"}
     if name in {"pf.worker.prepare", "pf.worker.start"}:
         properties.update({
             "model": {"type": "string", "minLength": 1, "maxLength": 256},
-            "reasoning_effort": {"type": "string", "enum": ["minimal", "low", "medium", "high"]},
+            "reasoning_effort": {"type": "string", "minLength": 1, "maxLength": 128},
         })
     if name in MUTATING_TOOL_NAMES:
         properties["apply"] = {"type": "boolean"}
@@ -190,7 +192,12 @@ class ActionToolService:
             if arguments["driver"] not in {row["id"] for row in rows}:
                 raise ActionToolError("driver_not_registered")
             driver_ref = self._dependencies.registered_driver_ref(arguments["driver"])
-            result = self._invoke(["runtime-driver", "describe"], {"driver": driver_ref}, workplace=True)
+            catalog = arguments.get("catalog") is True
+            result = self._invoke(
+                ["runtime-driver", "describe"],
+                {"driver": driver_ref, "catalog": catalog},
+                workplace=True,
+            )
             if result.exit_code:
                 return self._failure(name, result)
             document = result.value
@@ -198,6 +205,11 @@ class ActionToolService:
                 raise ActionToolError("native_result_invalid")
             # Driver manifests may contain argv/environment values; return metadata only.
             metadata = {key: deepcopy(document[key]) for key in ("schema_version", "id", "name", "version", "status", "kind", "description") if key in document}
+            if catalog:
+                model_catalog = document.get("model_catalog")
+                if not isinstance(model_catalog, dict):
+                    raise ActionToolError("native_result_invalid")
+                metadata["model_catalog"] = model_catalog
             return {"schema_version": 1, "kind": name, "status": "ready", "driver": metadata, "native_validation_required": True}
         if name in WORK_TOOL_NAMES:
             self._work(arguments, execution=name != "pf.worker.status")

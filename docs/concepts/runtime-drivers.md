@@ -90,17 +90,26 @@ prepared input path, checksum and identity before passing fixed instructions
 and that manifest to Codex. In prepared mode it does not reread the mutable
 worker prompt, capsule body or workspace-access pointer.
 
-The driver does not choose the model. The orchestrator must provide one through
-`agent_model`, `--model`, plan-level `runtime.model`, or worker-level `model`.
-As an operator override, `PF_CODEX_MODEL` is accepted when `PF_AGENT_MODEL` is
-empty; if neither is set, `codex-exec` fails before starting Codex.
+Run `pf runtime-driver describe --driver codex-exec --catalog --project-root <path>`
+or call `pf.runtime_driver.describe` with `catalog: true` to read the configured
+Codex model catalog. Each model reports its supported reasoning efforts and its
+recommended effort. `configured_defaults` reports the effective Codex profile
+separately. A confirmed empty list means the model offers no effort options.
+A null list means Codex did not provide the options. If the catalog cannot be
+read, its status is `unknown`. These calls read live data on Windows and Linux.
 
-Reasoning effort is selected separately. Valid values are `minimal`, `low`,
-`medium`, and `high`. ProcessForge stores the selected value as
-`agent_reasoning_effort`, exposes it as `PF_AGENT_REASONING_EFFORT`, and the
-`codex-exec` manifest maps it to `PF_CODEX_REASONING_EFFORT`. The wrapper then
-passes it to Codex as `-c model_reasoning_effort="<value>"`. When the value is
-empty, no reasoning config argument is added.
+A worker can specify the model with `agent_model`, `--model`, plan-level
+`runtime.model`, or worker-level `model`. `PF_CODEX_MODEL` provides an operator
+override when `PF_AGENT_MODEL` is empty. When no model override is set, Codex
+chooses the model from its profile.
+
+Prepare and start use the configured Codex catalog to check the selected model
+and its reasoning effort. If only the effort is set, PF checks it against the
+effective Codex model. The wrapper forwards the chosen value as
+`-c model_reasoning_effort="<value>"`. With no effort override, Codex uses its
+own settings. The CLI and MCP return a diagnostic if an explicit selection
+cannot be confirmed. Restarting preparation or start reads the live catalog
+again.
 
 Access to knowledge resources, templates and tools is resolved privately at
 runtime. Public assignments and capsules may contain resource ids or `path_ref`

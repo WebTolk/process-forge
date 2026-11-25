@@ -89,11 +89,15 @@ def successful(root: Path, label: str, *arguments: str) -> str:
 @pytest.mark.parametrize("history_owner", ["foreign", "own"])
 @pytest.mark.parametrize("distribution", ["source", "sealed"])
 def test_initialized_project_first_raw_and_worker_preparation(
-    tmp_path: Path, history_owner: str, distribution: str
+    tmp_path: Path,
+    history_owner: str,
+    distribution: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from execution_migration.test_fresh_native_sql import publish, source_cli
 
     cli = source_cli(tmp_path) if distribution == "source" else publish(tmp_path)
+    monkeypatch.delenv("PF_CODEX_MODEL", raising=False)
     workplace, project = tmp_path / "workplace", tmp_path / "project"
     successful(
         tmp_path,
@@ -251,10 +255,6 @@ def test_initialized_project_first_raw_and_worker_preparation(
         created["assignment_id"],
         "--driver",
         "codex-exec",
-        "--model",
-        "gpt-6.1-sol",
-        "--reasoning-effort",
-        "high",
     )
     assert "status=ready" in prepared
     runtime = (
@@ -265,7 +265,9 @@ def test_initialized_project_first_raw_and_worker_preparation(
     )
     attempt = runtime / "attempts/1"
     assert (attempt / "prepared-input.json").is_file()
-    assert (runtime / "command.json").is_file()
+    command = json.loads((runtime / "command.json").read_text(encoding="utf-8"))
+    assert command["agent_model"] == ""
+    assert command["agent_reasoning_effort"] == ""
     status = json.loads((runtime / "status.json").read_text(encoding="utf-8"))
     assert status["status"] == "ready"
     assert status["task_id"] == created["assignment_id"]

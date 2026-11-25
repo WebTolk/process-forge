@@ -454,12 +454,19 @@ class ContextContractInputs:
             )
         return text
 
-    def normalize_agent_reasoning_effort(self, value: Any) -> str:
+    def normalize_agent_reasoning_effort(
+        self, value: Any, *, legacy: bool = False
+    ) -> str:
         if value in (None, ""):
             return ""
-        text = str(value).strip().lower()
+        text = str(value).strip()
         if not text:
             return ""
+        if not isinstance(value, str) or len(text) > 128 or not text.isprintable():
+            raise SystemExit("FAIL: invalid agent reasoning effort")
+        if not legacy:
+            return text
+        text = text.lower()
         if text not in {"minimal", "low", "medium", "high"}:
             raise SystemExit(
                 f"FAIL: agent reasoning effort must be one of minimal, low, medium, high; got {text}"

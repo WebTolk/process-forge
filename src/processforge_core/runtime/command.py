@@ -13,6 +13,7 @@ from typing import Any
 from processforge_core.common.ids import safe_id
 from processforge_core.common.paths import rel
 from processforge_core.configuration import ConfigurationProvider, PFConfig
+from processforge_core.runtime.codex_catalog import is_codex_exec_driver
 from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from processforge_core.runtime.environment import WorkerEnvironmentPolicy
 from processforge_core.work.context_documents import ContextContractInputs
@@ -276,7 +277,8 @@ class WorkerCommandBuilder:
                 task.get("agent_model") or task.get("model") or ""
             ),
             "agent_reasoning_effort": self.inputs.normalize_agent_reasoning_effort(
-                task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""
+                task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "",
+                legacy=not is_codex_exec_driver(driver, self.distribution_root),
             ),
             "agent_sandbox": self.sandbox(task),
         }
