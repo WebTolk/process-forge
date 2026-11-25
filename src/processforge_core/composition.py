@@ -198,10 +198,10 @@ def build_storage_migration_host(
         StorageMigrationContext,
         StoreTarget,
     )
+    from .maintenance.event_ingress import ordinary_journal_lock
     from .maintenance.execution_migration import ExecutionMigrationService, _hash, _read
     from .maintenance.project_event_maintenance import (
         ProjectEventBackupService,
-        ordinary_storage_lock,
         require_compatible_runtime,
         selected_storage_lock,
     )
@@ -628,7 +628,7 @@ def build_storage_migration_host(
         admission=admission,
         registry_lock=selected_storage_lock
         if project_events_only
-        else ordinary_storage_lock,
+        else ordinary_journal_lock,
         safety=safety,
         execution_factory=engine,
         driver=SQLiteDriver(),

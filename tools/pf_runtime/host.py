@@ -37,10 +37,12 @@ PENDING_CONVERSATION_CAPTURES: dict[
 ] = {}
 
 
-def event_journal(project_root: Path):
+def event_journal(project_root: Path, workplace_root: Path | None = None):
     from processforge_core.agents.process_events import ProcessEventRecorder
 
-    return ProcessEventRecorder().event_journal_for_project(project_root)
+    return ProcessEventRecorder().event_journal_for_project(
+        project_root, workplace_root
+    )
 
 
 def state_lock() -> threading.RLock:
@@ -1170,7 +1172,12 @@ def _ingest_derived_event(
     workplace_root = workplace_root or core.resolve_workplace_root(
         None, project_root=project_root
     )
-    with registration_admission(workplace_root, [project_root]):
+    from processforge_core.maintenance.event_ingress import event_ingress_admission
+
+    journal = event_journal(project_root, workplace_root)
+    with event_ingress_admission(
+        project_root, workplace_root, journal.storage_host, writing=True
+    ):
         handle = route_project(str(project_root), workplace_root, core)
         source = raw.get("source")
         if not isinstance(source, dict):
@@ -2108,12 +2115,12 @@ def _ingest_event(
     settings = configuration.config.logging
     # Take admission before the journal's identity gate, just as the derived
     # event writer does. Release both before starting the raw receipt.
+    from processforge_core.maintenance.event_ingress import event_ingress_admission
     from processforge_core.work.consistency import RunTaskInputReader
 
-    with registration_admission(workplace_root, [project_root]):
-        event_journal(project_root).count(
-            RunTaskInputReader().event_runtime_paths(project_root)[0]
-        )
+    journal = event_journal(project_root, workplace_root)
+    with event_ingress_admission(project_root, workplace_root, journal.storage_host):
+        journal.count(RunTaskInputReader().event_runtime_paths(project_root)[0])
     from processforge_core.configuration import ConfigurationProvider
 
     pinned = ConfigurationProvider.pinned(

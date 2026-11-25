@@ -35,6 +35,7 @@ class CatalogError(ValueError):
 @dataclass(frozen=True)
 class CodexLaunchProfile:
     cwd: Path
+    project_root: Path
     environment: dict[str, str]
     executable: str | None
     model: str
@@ -48,8 +49,6 @@ class CodexLaunchProfile:
         cwd = Path(spec.get("working_directory") or project_root).resolve()
         environment = WorkerEnvironmentPolicy().materialize(spec)
         model, effort = codex_preferences(environment)
-        if (model or effort) and cwd != project_root:
-            raise CatalogError("codex_profile_unavailable")
         # These receipt and input identifiers are assigned by PF after catalog
         # validation. They are separate from the Codex process configuration.
         for name in (
@@ -62,7 +61,12 @@ class CodexLaunchProfile:
         ):
             environment.pop(name, None)
         return cls(
-            cwd, environment, resolve_codex_executable(environment, cwd), model, effort
+            cwd,
+            project_root,
+            environment,
+            resolve_codex_executable(environment, cwd),
+            model,
+            effort,
         )
 
     def validate(self, launch: CatalogProcess) -> None:
@@ -76,6 +80,7 @@ class CodexLaunchProfile:
             launch,
             include_hidden=True,
             executable=self.executable,
+            project_root=self.project_root,
         )
         verify_codex_preferences(result, self.model, self.effort)
 
@@ -184,12 +189,12 @@ def describe_codex_driver(
         explicit = policy.expand(profile_variables, variables)
     except (OSError, TypeError, ValueError, SystemExit):
         return {"status": "unknown", "reason": "codex_profile_unavailable"}
-    if cwd != project_root or not isinstance(explicit, dict):
+    if not isinstance(explicit, dict):
         return {"status": "unknown", "reason": "codex_profile_unavailable"}
     environment = policy.materialize(
         {"environment": explicit, "environment_inherit": spec.get("inherit", True)}
     )
-    return read_codex_catalog(project_root, environment, launch)
+    return read_codex_catalog(cwd, environment, launch, project_root=project_root)
 
 
 def _identifier(value: Any, limit: int = 256) -> str | None:
@@ -394,6 +399,7 @@ def read_codex_catalog(
     include_hidden: bool = False,
     timeout: float = RPC_TIMEOUT_SECONDS,
     executable: str | None = None,
+    project_root: Path | None = None,
 ) -> dict[str, Any]:
     executable = executable or resolve_codex_executable(environment, cwd)
     if executable is None:
@@ -406,7 +412,8 @@ def read_codex_catalog(
             try:
                 client.initialize()
                 models = client.catalog(include_hidden=include_hidden)
-                defaults = client.configured_defaults(cwd)
+                # The wrapper starts in cwd and passes the project to codex exec --cd.
+                defaults = client.configured_defaults(project_root or cwd)
             finally:
                 client.finished.set()
     except CatalogError as exc:

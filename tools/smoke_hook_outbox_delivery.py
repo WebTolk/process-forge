@@ -199,6 +199,55 @@ def replay_gap(workplace: Path, project: Path) -> None:
     assert payload.read_bytes() == captured
 
 
+def unavailable_first_target(workplace: Path, project: Path) -> None:
+    blocked = project / ".pf/blocked-route"
+    healthy = project / ".pf/healthy-route"
+    blocked.write_text("temporarily unavailable", encoding="utf-8")
+    configure(
+        project,
+        "first",
+        "second",
+        overrides={"first": {"path": blocked.name}, "second": {"path": healthy.name}},
+    )
+    pf(
+        "hooks-dispatch",
+        "--project-root",
+        str(project),
+        "--event-type",
+        "assignment.completed",
+        "--outbox",
+        expect=1,
+    )
+    (published,) = healthy.glob("*.json")
+    original = published.read_bytes()
+    event = json.loads(original)["event"]
+    results = project / ".pf/runtime/hooks/results"
+    second = results / (hook_outbox.delivery_key(event["event_id"], "second") + ".json")
+    proof = second.read_bytes()
+    assert verify(project, second, "second")["event"] == event
+    tick = (
+        "runtime-host",
+        "tick",
+        "--workplace",
+        str(workplace),
+        "--project-root",
+        str(project),
+        "--json",
+    )
+    outcome = json.loads(pf(*tick, expect=1))
+    assert [
+        failure["event_id"] for failure in outcome["projects"][0]["dispatch_failures"]
+    ] == [event["event_id"]]
+    blocked.unlink()
+    pf(*tick)
+    first = results / (hook_outbox.delivery_key(event["event_id"], "first") + ".json")
+    assert verify(project, first, "first")["event"] == event
+    assert list(healthy.glob("*.json")) == [published]
+    assert published.read_bytes() == original and second.read_bytes() == proof
+    journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
+    assert not journal.pending_dispatch(project / ".pf/runtime/events/events.sqlite3")
+
+
 def check_conflict(project: Path, event: dict[str, Any], reason: str) -> None:
     try:
         RuntimeHookDispatcher().dispatch_hooks(project, event)
@@ -267,6 +316,86 @@ def v1_file(
     directory.mkdir(parents=True, exist_ok=True)
     path.write_bytes(original)
     return path, original, key
+
+
+def chat_recovery(project: Path) -> None:
+    target = "chat-recovery"
+    configure(
+        project, target, overrides={target: {"event_types": ["chat.message.recorded"]}}
+    )
+    dispatcher = RuntimeHookDispatcher()
+    ref_path = ".pf/runtime/chat/transcripts/chat-recovery.ndjson"
+
+    def chat_event(
+        line: int,
+        observation_time: str,
+        *,
+        event_id: str = "evt_chat_recovery",
+        content_hash: str = "original",
+        path: str = ref_path,
+    ) -> dict[str, Any]:
+        return {
+            "source": "processforge.cli",
+            "event_type": "chat.message.recorded",
+            "event_id": event_id,
+            "time": observation_time,
+            "correlation_id": "chat-session",
+            "data": {
+                "message": {
+                    "content_hash": content_hash,
+                    "content_ref": {
+                        "path": path,
+                        "message_id": "message",
+                        "line": line,
+                    },
+                }
+            },
+        }
+
+    first_time = "2026-01-01T00:00:00Z"
+    retry_time = "2026-01-01T00:01:00Z"
+    (action,) = dispatcher.dispatch_hooks(project, chat_event(1, first_time))
+    outbox, receipt = (project / action[key] for key in ("outbox", "result"))
+    original_payload, original_receipt = outbox.read_bytes(), receipt.read_bytes()
+    replay = chat_event(0, retry_time)
+    assert dispatcher.dispatch_hooks(project, replay) == [action]
+    assert outbox.read_bytes() == original_payload
+    assert receipt.read_bytes() == original_receipt
+
+    outbox.unlink()
+    assert dispatcher.dispatch_hooks(project, replay) == [action]
+    assert outbox.read_bytes() == original_payload
+    assert receipt.read_bytes() == original_receipt
+    assert len(list(outbox.parent.glob(f"{action['delivery_id']}.*"))) == 1
+    verify(project, receipt, target)
+
+    for conflict in (
+        chat_event(2, retry_time),
+        chat_event(0, retry_time, content_hash="changed"),
+        chat_event(0, retry_time, path=ref_path + ".other"),
+        {**replay, "correlation_id": "different-session"},
+    ):
+        check_conflict(project, conflict, "outbox_delivery_conflict")
+    assert outbox.read_bytes() == original_payload
+    assert receipt.read_bytes() == original_receipt
+
+    outbox.unlink()
+    older_receipt = json.loads(original_receipt)
+    del older_receipt["runtime_observation"]
+    older_bytes = json.dumps(older_receipt).encode("utf-8")
+    receipt.write_bytes(older_bytes)
+    check_conflict(project, replay, "outbox_receipt_payload_mismatch")
+    assert not outbox.exists() and receipt.read_bytes() == older_bytes
+
+    legacy = chat_event(0, first_time, event_id="evt_legacy_chat_recovery")
+    legacy_path, legacy_bytes, legacy_id = v1_file(outbox.parent, target, legacy)
+    v1_receipt(project, legacy_path, legacy_id, target)
+    (recovered,) = dispatcher.dispatch_hooks(
+        project, chat_event(1, retry_time, event_id=legacy["event_id"])
+    )
+    assert project / recovered["outbox"] == legacy_path
+    assert legacy_path.read_bytes() == legacy_bytes
+    verify(project, project / recovered["result"], target)
 
 
 def replay_v1(workplace: Path, project: Path, event: dict[str, Any]) -> None:
@@ -652,11 +781,27 @@ def independent_pending_rows(
     assert journal.pending_dispatch(database) == []
 
 
+def read_during_windows_rename(root: Path) -> None:
+    if os.name != "nt":
+        return
+    import _winapi
+
+    path = root / "published.json"
+    path.write_bytes(b"first delivery")
+    # Hold DELETE access exactly as an overlapping Windows rename can do.
+    handle = _winapi.CreateFile(str(path), 0x10000, 7, 0, _winapi.OPEN_EXISTING, 0, 0)
+    try:
+        assert hook_outbox._read(path) == b"first delivery"
+    finally:
+        _winapi.CloseHandle(handle)
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(
         dir=os.environ.get("PF_TEST_SCRATCH_ROOT")
     ) as directory:
         root = Path(directory).resolve()
+        read_during_windows_rename(root)
         workplace, project = root / "workplace", root / "outbox"
         project.mkdir()
         pf("workplace-init", "--workplace", str(workplace), "--apply")
@@ -672,7 +817,9 @@ def main() -> None:
         )
         event = public_dispatch(project)
         replay_gap(workplace, project)
+        unavailable_first_target(workplace, project)
         runtime_correlations(project)
+        chat_recovery(project)
         interrupted_v1(workplace, project, event)
         separate_v1_targets(workplace, project, event)
         v1_platform_filename(workplace, project, event)

@@ -11,11 +11,12 @@ import threading
 import time
 from collections.abc import Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
-from contextlib import closing, contextmanager
+from contextlib import ExitStack, closing, contextmanager
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Any
 
+import pytest
 import smoke_long_lived_runtime as runtime
 import smoke_worker_run_shell as worker
 from pf_runtime.service import http_json
@@ -260,9 +261,11 @@ def assert_sibling_visible(
     summary = view["last_event"]
     assert isinstance(summary, dict), view
     event_id = summary["event_id"]
-    assert event_id.startswith("evt_live_append_"), summary
+    # A real supervisor tick may follow the stream's last acknowledged append.
+    assert summary["project_id"] == sibling.name, summary
     journal = ProcessEventRecorder().event_journal_for_project(sibling, workplace)
-    assert journal.get(sibling / EVENT_PATH, event_id) is not None
+    record = journal.get(sibling / EVENT_PATH, event_id)
+    assert record is not None and record["event_type"] == summary["event_type"], summary
 
 
 def onboard(project: Path, workplace: Path) -> None:
@@ -276,6 +279,166 @@ def onboard(project: Path, workplace: Path) -> None:
         "generic-software-project",
         "--apply",
     )
+
+
+@pytest.mark.parametrize("busy_resource", ["journal", "main"])
+def test_event_waits_for_project_reader_outside_workplace_admission(
+    tmp_path, monkeypatch, busy_resource
+):
+    from pf_runtime import host
+
+    from processforge_core.database import SQLiteDriver
+    from processforge_core.maintenance import project_event_maintenance
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    project, workplace = tmp_path / "fresh", tmp_path / "workplace"
+    project.mkdir()
+    runtime.pf("workplace-init", "--workplace", str(workplace), "--apply")
+    runtime.pf(
+        "config",
+        "update",
+        "--workplace",
+        str(workplace),
+        "--key",
+        "runtime.garage_hooks",
+        "--value",
+        "true",
+    )
+    onboard(project, workplace)
+    raw = {
+        "event_type": EVENT_TYPE,
+        "project_root": str(project),
+        "source": {"adapter": "generic"},
+    }
+    host.ingest_event(dict(raw, event_id="evt_warm"), workplace, runtime.processforge)
+    path = project / EVENT_PATH
+    journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
+    before_write, reading, contended = (
+        threading.Event(),
+        threading.Event(),
+        threading.Event(),
+    )
+    original_derive = host._ingest_derived_event
+    original_lock = project_event_maintenance.registry_file_lock
+    original_connect = SQLiteDriver._connect
+    main_path = project / ".pf/data/pf.sqlite3"
+
+    def observe_connect(driver, database, **kwargs):
+        if reading.is_set() and database == main_path.as_uri() + "?mode=ro":
+            contended.set()
+        return original_connect(driver, database, **kwargs)
+
+    def derive(*args, **kwargs):
+        before_write.set()
+        assert reading.wait(10)
+        return original_derive(*args, **kwargs)
+
+    def observe_lock(path, *, on_contention=None, **kwargs):
+        def observe():
+            contended.set()
+            if on_contention is not None:
+                on_contention()
+
+        return original_lock(path, on_contention=observe, **kwargs)
+
+    monkeypatch.setattr(host, "_ingest_derived_event", derive)
+    if busy_resource == "journal":
+        monkeypatch.setattr(
+            project_event_maintenance, "registry_file_lock", observe_lock
+        )
+    else:
+        monkeypatch.setattr(SQLiteDriver, "_connect", observe_connect)
+    pin = slot(project)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        result = pool.submit(
+            host.ingest_event,
+            dict(raw, event_id="evt_contended"),
+            workplace,
+            runtime.processforge,
+        )
+        assert before_write.wait(10)
+        with ExitStack() as held:
+            if busy_resource == "journal":
+                held.enter_context(
+                    journal.connection(
+                        path, driver=journal.driver, storage_host=journal.storage_host
+                    )
+                )
+            else:
+                db = held.enter_context(closing(sqlite3.connect(main_path)))
+                assert db.execute("PRAGMA locking_mode=EXCLUSIVE").fetchone() == (
+                    "exclusive",
+                )
+                db.execute("BEGIN EXCLUSIVE")
+            reading.set()
+            assert contended.wait(10)
+            with ExecutionAdmission().workplace(
+                workplace, deadline=time.monotonic() + 5
+            ):
+                assert not result.done()
+        assert result.result(timeout=10)["duplicate"] is False
+    assert slot(project) == pin
+    assert journal.get(path, "evt_contended") is not None
+    assert (
+        host.ingest_event(
+            dict(raw, event_id="evt_contended"), workplace, runtime.processforge
+        )["deduplicated"]
+        is True
+    )
+
+
+def test_event_admission_preserves_request_error_during_snapshot_cleanup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from processforge_core.database import DatabaseError
+    from processforge_core.maintenance import event_ingress
+    from processforge_core.maintenance.storage_migration import StorageMigrationHost
+
+    project, workplace = tmp_path / "fresh", tmp_path / "workplace"
+    project.mkdir()
+    runtime.pf("workplace-init", "--workplace", str(workplace), "--apply")
+    onboard(project, workplace)
+    journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
+    storage = journal.storage_host
+    assert storage is not None
+    snapshot = event_ingress.event_main_snapshot
+    denied = PermissionError("fixture_session_denied")
+    with (
+        pytest.raises(PermissionError) as normal_refusal,
+        event_ingress.event_ingress_admission(
+            project, workplace, storage, writing=True
+        ),
+    ):
+        raise denied
+    assert normal_refusal.value is denied
+    assert not getattr(normal_refusal.value, "__notes__", ())
+
+    @contextmanager
+    def failed_close(host: StorageMigrationHost) -> Iterator[None]:
+        with snapshot(host):
+            yield
+        raise DatabaseError("database_io_failed")
+
+    monkeypatch.setattr(event_ingress, "event_main_snapshot", failed_close)
+    with (
+        pytest.raises(PermissionError) as refusal,
+        event_ingress.event_ingress_admission(
+            project, workplace, storage, writing=True
+        ),
+    ):
+        raise denied
+    assert refusal.value is denied
+    assert refusal.value.__notes__ == [
+        "event_main_snapshot_close_failed: database_io_failed"
+    ]
+
+    with (
+        pytest.raises(DatabaseError, match="database_io_failed"),
+        event_ingress.event_ingress_admission(
+            project, workplace, storage, writing=True
+        ),
+    ):
+        pass
 
 
 def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: Path):

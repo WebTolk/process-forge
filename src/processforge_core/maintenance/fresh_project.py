@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from ..configuration import ConfigurationProvider
@@ -34,6 +34,9 @@ from .storage_migration import (
 )
 
 RECEIPT = "maintenance/project-initialization.json"
+
+if TYPE_CHECKING:
+    from .execution_migration import ExecutionMigrationService
 
 
 def _physical(flow: Path) -> list[int]:
@@ -262,10 +265,11 @@ def _initialize_domain(
                 add_store_identity(db, target, store_id)
 
 
-def _require_ready(host: StorageMigrationHost, document: dict[str, Any]) -> None:
-    """Read main SQL using the exact host-selected configuration and alias."""
+def _main_engine(
+    host: StorageMigrationHost, document: dict[str, Any]
+) -> ExecutionMigrationService:
+    """Resolve the receipt's ready main binding and exact configured target."""
     from ..executions.composition import _fresh_initialization
-    from ..executions.schema import EXECUTION_SCHEMA
 
     context = host.context
     if document["state"] != "ready" or context.project_root is None:
@@ -289,7 +293,32 @@ def _require_ready(host: StorageMigrationHost, document: dict[str, Any]) -> None
     factory = host.service.execution_factory
     if factory is None:
         raise MaintenanceError("execution_storage_not_ready")
-    engine = factory(context, main)
+    return factory(context, main)
+
+
+def event_main_snapshot(host: StorageMigrationHost) -> AbstractContextManager[object]:
+    """Try a read transaction so concurrent WAL close/recovery cannot race ingress."""
+    event_target = next(
+        (
+            t
+            for t in host.context.targets
+            if t.kind == "events" and t.scope == "project"
+        ),
+        None,
+    )
+    if event_target is None:
+        raise MaintenanceError("storage_target_invalid")
+    document = _selected(host, event_target)
+    if document is None:
+        return nullcontext()
+    database = _main_engine(host, document).database
+    return database.driver.open(database.target, mode="ro", timeout_ms=0)
+
+
+def _require_ready(host: StorageMigrationHost, document: dict[str, Any]) -> None:
+    from ..executions.schema import EXECUTION_SCHEMA
+
+    engine = _main_engine(host, document)
     if (
         SchemaManager().inspect(engine.database, (EXECUTION_SCHEMA,)).state != "ready"
         or not engine.repository.readiness().ready

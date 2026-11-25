@@ -140,6 +140,23 @@ def test_select_admissible_applies_policy_to_newer_releases(
     assert conflict == expected_conflict
 
 
+@pytest.mark.parametrize("installed", ["1.0.0", "v1.0.0-rc.1+build.1"])
+def test_major_policy_uses_the_same_prerelease_key_as_selection(installed: str) -> None:
+    major = {"version": "2.0.0-rc.1+build.7"}
+    minor = {"version": "1.1.0-rc.2+build.3"}
+    policy = UpdateVersionSelectionPolicy()
+    assert policy.select_admissible([major, minor], installed, allow_major=False) == (
+        minor,
+        [],
+        None,
+    )
+    assert policy.select_admissible([major], installed, allow_major=False) == (
+        None,
+        [],
+        "candidate 2.0.0-rc.1+build.7 blocked by allow_major=false",
+    )
+
+
 def test_select_admissible_reports_no_conflict_without_newer_releases() -> None:
     records = [{"version": "1.0.0+other"}, {"version": "0.9.0"}]
     assert UpdateVersionSelectionPolicy().select_admissible(
