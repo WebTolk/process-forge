@@ -94,6 +94,60 @@ def nonquiescent_worker(project, workplace, selectors):
         assert repository.load_latest(run_id, task_id) is None
 
 
+def check_unlaunched_stop(project, workplace, continuation, selectors, existing_id):
+    from smoke_worker_run_shell import driver_yaml_path
+
+    from processforge_core.executions.composition import select_execution_storage
+    from processforge_core.executions.projection import projected_payload
+
+    task_id = selectors["assignment_id"]
+    worker_args = ("--project-root", str(project), "--task", task_id)
+    driver = driver_yaml_path(project, "continuation-stop-fixture")
+    create = dict(continuation_id="resume-after-stop", apply=True, **selectors)
+
+    cli("worker-run", "prepare", *worker_args, "--driver", str(driver))
+    blocked = continuation.request("create", **create)
+    assert blocked.get("reason") == "worker_not_quiescent", blocked
+    cli("worker-run", "stop", *worker_args)
+
+    repository = select_execution_storage(project, workplace).repository
+    assert repository is not None
+    attempt = repository.load_latest(selectors["run_id"], task_id)
+    assert attempt is not None
+    assert attempt.phase == "prepared" and attempt.collection == "pending"
+    assert attempt.launch_token is None and attempt.process is None
+    assert projected_payload(attempt)["status"] == "cancelled"
+
+    created = continuation.request("create", **create)
+    assert created["action"] == "created" and created["schema_version"] == 2, created
+    for continuation_id in (create["continuation_id"], existing_id):
+        resumed = continuation.request("resume", continuation_id=continuation_id)
+        assert resumed["action"] == "continued", resumed
+        assert resumed["selectors"] == selectors, resumed
+
+    lease = {
+        "schema_version": 1,
+        "id": "unlaunched-stop-lease",
+        "status": "active",
+        "scope": {
+            "project_id": core.project_id(project),
+            "run_id": selectors["run_id"],
+            "task_id": task_id,
+        },
+    }
+    core.save_lease(workplace, lease)
+    try:
+        blocked_create = continuation.request(
+            "create", **{**create, "continuation_id": "lease-blocked"}
+        )
+        blocked_resume = continuation.request("resume", continuation_id=existing_id)
+        assert blocked_create.get("reason") == "active_lease", blocked_create
+        assert blocked_resume.get("reason") == "active_lease", blocked_resume
+    finally:
+        core.save_lease(workplace, {**lease, "status": "released"})
+    assert repository.load_latest(selectors["run_id"], task_id) == attempt
+
+
 def main():
     with fixture() as (workplace, project, empty):
         service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
@@ -103,7 +157,16 @@ def main():
         source = project / 'input.txt'; source.write_text('immutable input', encoding='utf-8')
         scope = {'schema_version': 1, 'assignment': {'allowed_files': ['product.txt', '.pf/artifacts/result/**'],
                  'allowed_read_files': ['input.txt', '.pf/**'], 'required_sources': ['input.txt']}}
-        started = service.start(objective='Continue the exact scoped work', scope_intent=scope)
+        executable_scope = {
+            **scope,
+            "assignment": {
+                **scope["assignment"],
+                "expected_report": {"artifact": ".pf/artifacts/result/worker-report.md"},
+            },
+        }
+        started = service.start(
+            objective="Continue the exact scoped work", scope_intent=executable_scope
+        )
         assert started['action'] == 'created_new', started
         selectors = {'run_id': started['run_id'], 'assignment_id': started['assignment_id'], 'context_id': started['context']['id']}
         create = dict(continuation_id='resume-exact', **selectors)
@@ -212,6 +275,7 @@ def main():
         core.save_lease(workplace,lease)
         assert continuation.request('cancel_work', **cancel, apply=True)['reason'] == 'active_lease'
         lease['status']='released'; core.save_lease(workplace,lease)
+        check_unlaunched_stop(project, workplace, continuation, selectors, "resume-exact")
         # Interrupt after assignment write, then recover exact journal; no fake completed stage.
         native_write = ProcessExecutionService._atomic_yaml
         def fail_assignment(self, path, value):
