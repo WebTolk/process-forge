@@ -278,6 +278,88 @@ def onboard(project: Path, workplace: Path) -> None:
     )
 
 
+def test_event_waits_for_project_reader_outside_workplace_admission(
+    tmp_path, monkeypatch
+):
+    from pf_runtime import host
+
+    from processforge_core.maintenance import project_event_maintenance
+    from processforge_core.runtime.execution_admission import ExecutionAdmission
+
+    project, workplace = tmp_path / "fresh", tmp_path / "workplace"
+    project.mkdir()
+    runtime.pf("workplace-init", "--workplace", str(workplace), "--apply")
+    runtime.pf(
+        "config",
+        "update",
+        "--workplace",
+        str(workplace),
+        "--key",
+        "runtime.garage_hooks",
+        "--value",
+        "true",
+    )
+    onboard(project, workplace)
+    raw = {
+        "event_type": EVENT_TYPE,
+        "project_root": str(project),
+        "source": {"adapter": "generic"},
+    }
+    host.ingest_event(dict(raw, event_id="evt_warm"), workplace, runtime.processforge)
+    path = project / EVENT_PATH
+    journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
+    before_write, reading, contended = (
+        threading.Event(),
+        threading.Event(),
+        threading.Event(),
+    )
+    original_derive = host._ingest_derived_event
+    original_lock = project_event_maintenance.registry_file_lock
+
+    def derive(*args, **kwargs):
+        before_write.set()
+        assert reading.wait(10)
+        return original_derive(*args, **kwargs)
+
+    def observe_lock(path, *, on_contention=None, **kwargs):
+        def observe():
+            contended.set()
+            if on_contention is not None:
+                on_contention()
+
+        return original_lock(path, on_contention=observe, **kwargs)
+
+    monkeypatch.setattr(host, "_ingest_derived_event", derive)
+    monkeypatch.setattr(project_event_maintenance, "registry_file_lock", observe_lock)
+    pin = slot(project)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        result = pool.submit(
+            host.ingest_event,
+            dict(raw, event_id="evt_contended"),
+            workplace,
+            runtime.processforge,
+        )
+        assert before_write.wait(10)
+        with journal.connection(
+            path, driver=journal.driver, storage_host=journal.storage_host
+        ):
+            reading.set()
+            assert contended.wait(10)
+            with ExecutionAdmission().workplace(
+                workplace, deadline=time.monotonic() + 5
+            ):
+                assert not result.done()
+        assert result.result(timeout=10)["duplicate"] is False
+    assert slot(project) == pin
+    assert journal.get(path, "evt_contended") is not None
+    assert (
+        host.ingest_event(
+            dict(raw, event_id="evt_contended"), workplace, runtime.processforge
+        )["deduplicated"]
+        is True
+    )
+
+
 def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: Path):
     project, sibling = tmp_path / "legacy-a", tmp_path / "fresh-b"
     workplace = tmp_path / "workplace"
