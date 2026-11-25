@@ -11,7 +11,8 @@ from processforge_core.resources.local_search import build_index, index_status, 
 
 def main():
     with tempfile.TemporaryDirectory(prefix="pf-multiple-roots-") as raw:
-        root = Path(raw)
+        # Match the canonical roots used by the index when injecting a failure.
+        root = Path(raw).resolve()
         roots = [root / "first", root / "second"]
         for folder, text in zip(roots, ["FirstRootMarker", "SecondRootMarker"]):
             folder.mkdir()
