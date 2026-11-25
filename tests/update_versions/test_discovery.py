@@ -192,7 +192,12 @@ class UpdateCandidateDiscoveryTests(unittest.TestCase):
         return candidate
 
     def test_uses_highest_release_allowed_by_policy(self) -> None:
-        scenarios = (
+        scenarios: tuple[
+            tuple[
+                str, Mapping[str, str | bool], tuple[str, ...], str | None, str | None
+            ],
+            ...,
+        ] = (
             ("major", {"allow_major": False}, ("1.1.0", "2.0.0"), "1.1.0", None),
             ("pin", {"pin_version": "1.1.0"}, ("1.1.0", "2.0.0"), "1.1.0", None),
             (
