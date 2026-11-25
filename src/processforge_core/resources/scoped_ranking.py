@@ -4,18 +4,51 @@ from __future__ import annotations
 
 import math
 import sqlite3
+from collections.abc import Iterator
 from typing import Any
 
+# An exact binary weight keeps even the largest SQLite document away from
+# BM25's saturation limit when reading its integer phrase frequency.
+_FREQUENCY_WEIGHT = 2.0**-32
 
-def _token_count(column_sizes: bytes) -> int:
-    """Sum the per-column SQLite varints in an FTS5 %_docsize record."""
-    total = value = 0
-    for byte in column_sizes:
+
+def _sizes(record: bytes) -> Iterator[int]:
+    """Read the FTS5 varints holding row counts or per-column token counts."""
+    value = 0
+    for byte in record:
         value = (value << 7) | (byte & 0x7F)
         if byte < 0x80:
-            total += value
+            yield value
             value = 0
-    return total
+
+
+def _token_count(record: bytes) -> int:
+    return sum(_sizes(record))
+
+
+def _idf(documents: int, matches: int) -> float:
+    if not 0 < matches <= documents:
+        raise sqlite3.DatabaseError("invalid FTS5 document count")
+    value = math.log((documents - matches + 0.5) / (matches + 0.5))
+    return value if value > 0 else 1e-6
+
+
+def _length_factor(length: int, average: float) -> float:
+    return 1.2 * (0.25 + 0.75 * length / average)
+
+
+def _index_sizes(db: sqlite3.Connection) -> tuple[int, int]:
+    # FTS5 publishes its averages record at commit. Read current per-document
+    # sizes instead when this connection has its own uncommitted changes.
+    if db.in_transaction and db.total_changes:
+        return db.execute(
+            "SELECT count(*), sum(pf_token_count(sz)) FROM documents_fts_docsize"
+        ).fetchone()
+    row = db.execute("SELECT block FROM documents_fts_data WHERE id=1").fetchone()
+    if row is None or not isinstance(row[0], bytes):
+        raise sqlite3.DatabaseError("missing FTS5 averages record")
+    counts = _sizes(row[0])
+    return next(counts, 0), sum(counts)
 
 
 def selected_fts_page(
@@ -44,51 +77,38 @@ def selected_fts_page(
         ).fetchall()
         return total, rows
 
-    # bm25() on the shared index would include other instances in its statistics.
-    # FTS5 already stores each document's length and its token positions.
     db.create_function("pf_token_count", 1, _token_count, deterministic=True)
     documents, tokens = db.execute(
         "SELECT count(*), sum(pf_token_count(s.sz)) FROM documents d "
         f"JOIN documents_fts_docsize s ON s.id = d.id WHERE {selection}",
         instance_keys,
     ).fetchone()
-    average_length = tokens / documents
-    idf = math.log((documents - total + 0.5) / (total + 0.5))
-    if idf <= 0:
-        idf = 1e-6
+    all_documents, all_tokens = _index_sizes(db)
+    if not tokens or not all_tokens:
+        raise sqlite3.DatabaseError("missing FTS5 token counts")
+    all_hits = db.execute(
+        "SELECT count(*) FROM documents_fts WHERE documents_fts MATCH ?", (phrase,)
+    ).fetchone()[0]
+    global_idf = _idf(all_documents, all_hits)
+    scoped_idf = _idf(documents, total)
+    global_average = all_tokens / all_documents
+    scoped_average = tokens / documents
 
-    def rank(frequency: int, sizes: bytes) -> float:
-        # FTS5 BM25 uses k1=1.2 and b=0.75 with unit weight for both columns.
-        denominator = frequency + 1.2 * (
-            0.25 + 0.75 * _token_count(sizes) / average_length
+    def scoped_rank(native_score: float, sizes: bytes) -> float:
+        length = _token_count(sizes)
+        # Native FTS5 counted exact phrase hits, including overlaps across
+        # both indexed columns. Invert r = wf / (wf + K) to recover that count.
+        ratio = -native_score / (2.2 * global_idf)
+        weighted_hits = _length_factor(length, global_average) * ratio / (1.0 - ratio)
+        hits = round(weighted_hits / _FREQUENCY_WEIGHT)
+        return -scoped_idf * (
+            (hits * 2.2) / (hits + _length_factor(length, scoped_average))
         )
-        return -idf * ((frequency * 2.2) / denominator)
 
-    db.create_function("pf_phrase_rank", 2, rank, deterministic=True)
-    # Tokenize only the query using the same SQLite tokenizer as documents_fts.
-    db.execute("CREATE VIRTUAL TABLE IF NOT EXISTS temp.query_text USING fts5(phrase)")
-    db.execute("DELETE FROM temp.query_text")
-    db.execute("INSERT INTO temp.query_text VALUES (?)", (query,))
-    db.execute(
-        "CREATE VIRTUAL TABLE IF NOT EXISTS temp.query_terms USING fts5vocab(temp,query_text,instance)"
-    )
-    db.execute(
-        "CREATE VIRTUAL TABLE IF NOT EXISTS temp.postings USING fts5vocab(main,documents_fts,instance)"
-    )
-    # A phrase starts at p when every query token occurs at p + its query offset
-    # in the same column. Grouping by that start also counts overlapping phrases.
+    db.create_function("pf_scoped_rank", 2, scoped_rank, deterministic=True)
     rows = db.execute(
-        f"WITH hits AS (SELECT d.id {matched}), "
-        "occurrences AS ("
-        "SELECT p.doc, p.col, p.offset - q.offset AS phrase_start "
-        "FROM temp.query_terms q CROSS JOIN temp.postings p ON p.term = q.term "
-        "WHERE p.doc IN (SELECT id FROM hits) AND p.offset >= q.offset "
-        "GROUP BY p.doc, p.col, p.offset - q.offset "
-        "HAVING count(*) = (SELECT count(*) FROM temp.query_terms)), "
-        "frequencies AS (SELECT doc, count(*) AS n FROM occurrences GROUP BY doc) "
-        f"SELECT {fields}, pf_phrase_rank(f.n, s.sz) AS score FROM frequencies f "
-        "JOIN documents d ON d.id = f.doc JOIN documents_fts_docsize s ON s.id = d.id "
-        + page,
-        [*args, limit, start],
+        f"SELECT {fields}, pf_scoped_rank(bm25(documents_fts, ?, ?), "
+        f"(SELECT sz FROM documents_fts_docsize WHERE id=d.id)) AS score {matched} {page}",
+        [_FREQUENCY_WEIGHT, _FREQUENCY_WEIGHT, *args, limit, start],
     ).fetchall()
     return total, rows

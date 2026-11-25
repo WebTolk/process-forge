@@ -12,7 +12,8 @@ from processforge_core.resources.scoped_ranking import selected_fts_page
     "query", ["a", "a a", "a a a", "a.b", "Café", 'a "b"', "absent"]
 )
 @pytest.mark.parametrize("roots", [["one"], ["one", "two"], ["one", "two", "other"]])
-def test_scoped_page_matches_native_fts5(query, roots):
+@pytest.mark.parametrize("committed", [False, True])
+def test_scoped_page_matches_native_fts5(query, roots, committed):
     records = [
         ("one", "a a a", "a a a a a café"),
         ("one", "a", "b a b café " + "z " * 129),
@@ -21,6 +22,7 @@ def test_scoped_page_matches_native_fts5(query, roots):
         ("two", "a", "b"),
         ("other", "a " * 47, "café " * 300),
         ("other", "other", "unselected"),
+        ("one", "a a", "a " * 32769),
     ]
     with closing(sqlite3.connect(":memory:")) as db:
         db.execute(
@@ -44,6 +46,8 @@ def test_scoped_page_matches_native_fts5(query, roots):
                     "INSERT INTO reference(rowid,title,content) VALUES(?,?,?)",
                     (doc, title, content),
                 )
+        if committed:
+            db.commit()
         phrase = '"' + query.replace('"', '""') + '"'
         expected = db.execute(
             "SELECT reference.rowid, bm25(reference) FROM reference JOIN documents d ON d.id=reference.rowid "
