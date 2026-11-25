@@ -142,23 +142,34 @@ def test_prepared_argv_preserves_guards_and_permissions(launch, git_marker):
     assert launch.payloads == ["prepared payload: Проверка".encode("utf8")]
 
 
+def test_prepared_argv_leaves_model_and_effort_to_codex_defaults(launch):
+    del launch.environment["PF_AGENT_MODEL"]
+    del launch.environment["PF_CODEX_REASONING_EFFORT"]
+
+    assert worker.main() == 0
+
+    assert len(launch.calls) == 1
+    argv, kwargs = launch.calls[0]
+    assert argv[3] == "exec"
+    assert "-m" not in argv
+    assert not any(arg.startswith("model_reasoning_effort=") for arg in argv)
+    assert kwargs["env"]["PF_PREPARED_INPUT_SHA256"] == "sha256:" + "a" * 64
+
+
 @pytest.mark.parametrize(
     "fault,expected",
     [
         ("capsule", "prepared_capsule_pointer_mismatch"),
         ("report", "prepared_report_pointer_mismatch"),
         ("prepared", "prepared_input_required"),
-        ("model", "Codex model is not configured"),
     ],
 )
 def test_invalid_prepared_launch_refuses_before_spawn(launch, fault, expected):
     if fault in {"capsule", "report"}:
         option = "--capsule" if fault == "capsule" else "--output"
         launch.argv[launch.argv.index(option) + 1] = str(launch.project / "foreign")
-    elif fault == "prepared":
-        del launch.environment["PF_PREPARED_INPUT_FILE"]
     else:
-        del launch.environment["PF_AGENT_MODEL"]
+        del launch.environment["PF_PREPARED_INPUT_FILE"]
     with pytest.raises(SystemExit, match=expected):
         worker.main()
     assert launch.calls == launch.payloads == []
