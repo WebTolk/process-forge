@@ -17,8 +17,8 @@
 - Bounded file-first supervisor MVP существует. Optional PF Runtime service
   существует как local loopback PoC/MVP, включая ручной background start и
   Windows Task Scheduler autostart. Watch-events service, public network API,
-  web UI и database-backed scheduler не реализованы. Поставляемый драйвер
-  `codex-exec` требует отдельно доступного Codex CLI и настройки host.
+  web UI и database-backed scheduler не реализованы. Для внешнего исполнителя
+  нужны программа и настройки, предусмотренные выбранным драйвером.
 - Для WTAICC ядро формирует локальные файлы outbox. Для доставки в удалённую службу нужен отдельный потребитель.
 - `--interactive` — marker первого запуска, а не terminal wizard.
 - External documentation mirroring является планом или stub, пока resources не
@@ -42,12 +42,11 @@
   требованием для default file-first CLI usage.
 - Windows autostart поддерживается только для PF Runtime через per-user Task
   Scheduler logon task; stdio MCP server не запускается через Task Scheduler.
-- Codex MCP registration является host-owned: Codex запускает stdio MCP process
-  из своей конфигурации для fresh host session.
+- При каждом соединении MCP-клиент запускает stdio-процесс из своей конфигурации.
 - Managed Linux `systemd --user` Runtime autostart не предоставляется.
-- При режиме workplace по умолчанию `organized` инициализация проверяет проектную
-  конфигурацию Codex. В Garage сбор необязателен. Запуском обработчиков управляет
-  клиент. [Настройка хуков](guides/forge-init-hooks.md)
+- В рабочем месте с режимом `organized` при инициализации проекта настраиваются
+  обработчики штатной интеграции. В Garage сбор событий необязателен. Активацией
+  управляет клиент. [Поддержка хуков](guides/forge-init-hooks.md)
 - Hosted MCP зависит от поддержки stdio MCP выбранным agent host.
 - TUF metadata и key management не реализованы; update trust основан на
   HTTPS, SHA-256, immutable release assets и Git provenance.
@@ -60,9 +59,9 @@
 - `release-test --trace-smokes` пишет per-smoke elapsed и timeout diagnostics в
   `.pf/runtime/release-test/`.
 - Long-running watcher остается future optional layer, не частью core runtime.
-- Runtime driver execution является opt-in. Built-in neutral drivers ограничены
-  `manual`, `generic-shell`, `codex-exec`, `test-echo-worker` и
-  `test-shell-agent`.
+- Внешних исполнителей запускают по выбору оператора. В штатном
+  [реестре драйверов](concepts/runtime-drivers.md) есть ручная подготовка,
+  запуск внешнего CLI и локальные исполнители для проверок.
 - Shell-launched proof workers пишут `heartbeat.json` как required live process
   artifact в `.pf/runtime/agent-runs/<run-id>/<task-id>/`; это не делает
   ProcessForge background daemon.
@@ -70,14 +69,13 @@
   host AI environment может запускать собственных subagents с ProcessForge
   assignment/capsule scope, но ProcessForge не устанавливает и не impersonates
   host agents.
-- Codex hook registration является environment-owned: shipped adapter не
-  доказывает, что все host hooks зарегистрированы.
-- Автоматический сбор переписки включает атрибутированные `UserPromptSubmit`,
-  финальные сообщения из `Stop`, `SubagentStop` или `SessionEnd` и записи
-  исполнителей PF. Он зависит от полей provider, например
-  `last_assistant_message`; промежуточный потоковый вывод не даёт полной переписки.
-- Session replay восстанавливает supported normalized Codex-derived project
-  events; он не реконструирует полный generic conversation transcript.
+- Хуки регистрируются и активируются в клиенте. Доступные события зависят от
+  клиента и его зарегистрированного адаптера.
+- Содержимое переписки зависит от полей зарегистрированного адаптера. Например,
+  хуки Codex могут передать запрос пользователя и финальный ответ. PF также
+  проверяет происхождение записей своих исполнителей. Повторная обработка
+  восстанавливает поддерживаемые события. Для полной переписки нужны исходные
+  сообщения. [Чтение данных сессии](concepts/session-reads.md)
 - Raw ingress отклоняет canonical payloads больше 1,048,576 bytes. Oversized
   payload blob spill или receipt пока нет.
 - Журналы проекта используют локальную SQLite с последовательной записью;

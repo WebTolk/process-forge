@@ -59,9 +59,8 @@ metadata only. `none` excludes the resource from local search.
 
 Large source trees, SDK mirrors, vendor trees, and multi-version platform
 snapshots should use `metadata` unless their manifest explicitly selects a
-small fulltext source. Search can return a navigation root, but Codex should use
-normal filesystem reads and `rg` inside the selected root when it needs source
-code detail.
+small fulltext source. If search returns a navigation root, resolve it and use
+the caller’s authorized file tools within the granted scope to inspect source.
 
 ## SQLite Model
 

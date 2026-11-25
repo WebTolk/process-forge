@@ -48,7 +48,7 @@ an arbitrary command executor, executable override or a new permission model.
 | `pf.actions.list` | Filter and page supported CLI/MCP metadata. No execution. |
 | `pf.actions.describe` | Describe an exact `action_id`. No execution. |
 | `pf.runtime_driver.list` | Registered driver IDs and status for the project/workplace. |
-| `pf.runtime_driver.describe` | Required registered `driver` ID; safe metadata without command/environment values. |
+| `pf.runtime_driver.describe` | Safe metadata for a registered `driver`. Add `catalog: true` to request its model catalog. |
 | `pf.worker.prepare` | Exact Work selectors, explicit registered `driver`, `apply: true`; native scope/input preparation. |
 | `pf.worker.start` | Same identity/driver requirements, `apply: true`; native launch always detaches and returns immediately. |
 | `pf.worker.status` | Exact Work selectors and `apply: true`; native observation may reconcile records and collect completed output. |
@@ -56,10 +56,12 @@ an arbitrary command executor, executable override or a new permission model.
 | `pf.session.heartbeat` | `apply: true`; renew the existing bound Ledger session. No `ttl` argument or registration. |
 | `pf.chat.record` | Required `content`, `apply: true`; assistant message attributed to the bound Ledger agent in its own session transcript. |
 
-Worker prepare/start optionally accept `model` and `reasoning_effort`
-(`minimal`, `low`, `medium`, `high`). Driver IDs must already be registered;
-manifest paths and executable overrides are outside this MCP subset. Existing
-native CLI options remain available through their own described CLI routes.
+Worker prepare/start accept optional `model` and `reasoning_effort` strings.
+Use values supported by the selected driver and model. To request available
+choices, call `pf.runtime_driver.describe` with `catalog: true` and inspect the
+catalog status. For example, `manual` returns `unsupported`. Select a registered
+driver ID. Manifest paths and executable
+overrides are available through the native CLI.
 There is no MCP `wait`, arbitrary participant/role or chat target override.
 The facade selects a manifest from the registry by exact ID and passes that
 selected reference to native commands, avoiding same-name file fallback. A
@@ -72,13 +74,13 @@ the same canonical project directory; matching project IDs alone are insufficien
   "run_id": "<returned-run-id>",
   "assignment_id": "<returned-assignment-id>",
   "context_id": "<returned-context-id>",
-  "driver": "codex-exec",
+  "driver": "test-echo-worker",
   "apply": true
 }
 ```
 
-This is an input example for `pf.worker.start`, not permission to launch.
-Use the identity returned by PF and the driver's configured model policy.
+This `pf.worker.start` example uses the bundled report-writing test driver.
+Use the selectors returned by PF for a worker-ready assignment.
 The facade rejects terminal governed Work before prepare/start/collect and
 delegates to the existing native CLI application, including invocation checks.
 Native implementations retain locks, prepared-input verification and collection

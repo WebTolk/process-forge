@@ -35,7 +35,7 @@ Heavy local documentation and source trees stay outside public package manifests
 
 ## Agent Environments
 
-Do not copy the whole ProcessForge repository into `.codex`, `.claude`, `.agents`, or similar agent configuration folders.
+Keep the distribution and agent configuration in separate directories.
 
 Install ProcessForge once as a tool, initialize a workplace, and point the
 agent configuration to that installation. Project entry uses root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project).

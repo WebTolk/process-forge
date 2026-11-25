@@ -12,10 +12,9 @@
 Уровни детализации, защиту данных и локальный экспорт описывает
 [контракт диагностики](diagnostics.md). Stdout MCP содержит только JSON-RPC.
 
-`tools/pf_runtime/mcp_server.py` — минимальный stdio MCP-сервер. Процессом
-владеет host: Codex запускает Python-процесс из своей MCP-конфигурации и владеет
-stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
-detached background service.
+`tools/pf_runtime/mcp_server.py` обслуживает MCP по stdio. Процессом
+владеет host (MCP-клиент), который запускает Python и управляет потоками ввода
+и вывода. Сервер не регистрируется как Windows scheduled task или фоновая служба.
 
 **pf-app-server** — служба Runtime для планирования и координации workplace.
 Контекст Garage и управляемая Work не требуют работающего app-server.
@@ -51,7 +50,7 @@ Forge. [Выбор Work](work-continuation.md)
 
 Инициализация использует ту же службу ядра, что и CLI. Если режим связанного
 workplace по умолчанию — `organized`, применение плана готовит проектную
-конфигурацию хуков Codex. [Настройка хуков Forge](../guides/forge-init-hooks.md)
+конфигурацию поддерживаемых хуков. [Настройка и поддерживаемые клиенты](../guides/forge-init-hooks.md)
 
 Доступные tools: `pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.project_initialization.initialize`,
@@ -136,13 +135,11 @@ technical projectors остаются declaration-driven.
 
 MCP не является API приёма хуков и не раскрывает их сырые данные.
 `pf.session_chat` показывает только trusted redacted private transcript для той
-же Ledger session. См. [Codex Session Read Layer](../../concepts/codex-session-read.md) и
+же сессии Ledger. См. [чтение данных сессии](session-reads.md) и
 [Hooks и события](hooks-events.md).
 
-Codex host registration можно проверить, установить или удалить командами
-`python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
-Install и remove по умолчанию dry-run и требуют `--apply` для изменения Codex
-configuration. После изменения регистрации перезапустите или reload Codex.
+Укажите команду Python и аргументы в настройках MCP-клиента. После
+переподключения проверьте список инструментов. [Подключение клиента](../getting-started/runtime-autostart.md#подключение-mcp-клиента-по-stdio)
 
 Для оператора доступны `pf server` и `python bin/pf-server.py`: start, run,
 status, stop, restart. Защищённая остановка требует свободных работников,

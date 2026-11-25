@@ -20,12 +20,17 @@
 `templates/registries/runtime-drivers.yaml`. Проект может добавить локальный
 реестр в `.pf/runtime/registries/runtime-drivers.local.yaml`.
 
-Команды из подключённого проекта:
+Основной агент может вести Work через CLI или MCP. Если задаче нужен отдельный
+исполнитель, выберите его драйвер из реестра. Команды ниже выполняются из
+подключённого проекта. Выбор модели необязателен. Для запроса каталога используйте
+`runtime-driver describe --project-root . --driver <driver-id> --catalog`.
+Статус `unsupported` означает, что у драйвера нет каталога, а `unknown` — что
+данные каталога получить не удалось.
 
 ```bash
 python .pf/runtime/bin/pf.py runtime-driver list --project-root .
 python .pf/runtime/bin/pf.py runtime-driver validate --project-root . --driver manual
-python .pf/runtime/bin/pf.py runtime-driver describe --project-root . --driver codex-exec
+python .pf/runtime/bin/pf.py runtime-driver describe --project-root . --driver test-echo-worker
 ```
 
 В шаблонах команд разрешены только факты текущего запуска:
@@ -114,6 +119,8 @@ ProcessForge всегда добавляет служебные переменн
 не выдаёт через этот файл доступ к целым каталогам. Ресурс с разрешением только
 на метаданные не даёт права читать его содержимое.
 
+## Доступ к инструментам MCP
+
 Фактические MCP-подключения и подтверждения вызовов инструментов определяются
 собственной конфигурацией каждого coding agent. Декларации PF в
 `workspace_access.mcp` — рекомендательные метаданные; они не предоставляют доступ
@@ -126,53 +133,27 @@ MCP-подключения, не проверяет их отзыв или до�
 файловой системы сохраняются. Это поведение совместимости не удаляет MCP-поля
 или каталоги; их удаление относится к отдельной будущей работе.
 
-Пример прямого запуска shell-агента с моделью `chatgpt-5.3-codex-spark` и
-уровнем `high`:
+## Запуск исполнителя
+
+Для первой проверки выберите назначение, в котором объявлен ожидаемый отчёт и
+разрешена запись по его пути. Возьмите идентификатор назначения из ответа PF.
+Штатный тестовый драйвер запишет отчёт локально. Учётная запись модели не нужна.
 
 ```bash
-python .pf/runtime/bin/pf.py task-create --project-root . --run docs-run --id docs-worker --title "Docs worker" --process task-batch-execution --allowed-file ".pf/artifacts/docs-worker.md" --required-output "id=report,path=.pf/artifacts/docs-worker.md" --expected-report-artifact ".pf/artifacts/docs-worker.md" --workspace-knowledge-resource <knowledge-resource-id> --reasoning-effort high --apply
-python .pf/runtime/bin/pf.py worker-run start --project-root . --task docs-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort high
+python .pf/runtime/bin/pf.py worker-run prepare --project-root . --task <assignment-id> --driver test-echo-worker
+python .pf/runtime/bin/pf.py worker-run start --project-root . --task <assignment-id> --driver test-echo-worker
+python .pf/runtime/bin/pf.py worker-run status --project-root . --task <assignment-id>
 ```
 
-Для другого уже объявленного и готового к запуску назначения с той же моделью
-можно выбрать уровень `medium`:
+Для внешнего CLI выберите зарегистрированный драйвер, настроенный на его
+исполняемый файл и аргументы. В плане можно задать `runtime.default_driver`,
+`runtime.model` и `runtime.reasoning_effort`, а для отдельного исполнителя
+переопределить модель и уровень мышления. `orchestrator-shell-plan-apply --model <model>`
+переопределяет модель плана. Указывайте модель и уровень, когда их поддерживает
+выбранный драйвер. [Сбор результатов и наблюдение за исполнителем](../getting-started/runtime-driver-supervisor.md)
 
-```bash
-python .pf/runtime/bin/pf.py worker-run start --project-root . --task test-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort medium
-```
-
-В оркестраторском плане можно задать общий уровень и переопределить его для
-отдельного исполнителя:
-
-```yaml
-runtime:
-  default_driver: codex-exec
-  model: chatgpt-5.3-codex-spark
-  reasoning_effort: medium
-workers:
-  - id: docs-worker
-    title: Docs worker
-    process: task-batch-execution
-    reasoning_effort: high
-    workspace_access:
-      knowledge_resources:
-        - docs.joomla
-```
-
-Применение плана:
-
-```bash
-python bin/pf.py orchestrator-shell-plan-apply --project-root . --run docs-run --apply
-```
-
-`orchestrator-shell-plan-apply --model <model>` может переопределить модель для
-всех shell-агентов плана. Уровень мышления сейчас задаётся в YAML-плане, в
-сгенерированном assignment или при `worker-run prepare/start` через
-`--reasoning-effort`.
-
-Shell-запуск выполняется с `shell=False`. Обычные shell-драйверы по умолчанию
-объявляют отсутствие сетевого доступа; `codex-exec` объявляет его для обращения
-к провайдеру модели. Эти декларации сами по себе не ограничивают сеть средствами ОС.
+Программы запускаются с `shell=False`. Каждый драйвер объявляет, нужен ли ему
+доступ к сети. Фактическую изоляцию обеспечивает ОС или песочница.
 
 ProcessForge не устанавливает агентов, не создаёт агентские папки и не требует
 фонового сервиса для работы реестра драйверов.

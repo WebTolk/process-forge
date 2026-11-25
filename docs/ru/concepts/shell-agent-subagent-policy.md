@@ -21,10 +21,9 @@ model arguments.
 `runtime.reasoning_effort`, а конкретный worker может переопределить его через
 `reasoning_effort` или `agent_reasoning_effort`. В generated assignments и
 capsules итоговое значение хранится как `agent_reasoning_effort`; worker runtime
-передаёт его как `PF_AGENT_REASONING_EFFORT`. Драйвер `codex-exec` перекладывает
-это значение в `PF_CODEX_REASONING_EFFORT`, а его обёртка добавляет
-`model_reasoning_effort="<value>"` для Codex только когда значение не пустое.
+передаёт его как `PF_AGENT_REASONING_EFFORT`. Выбранный драйвер преобразует
+значение в параметры, которые поддерживает программа. [Драйверы](runtime-drivers.md)
 
-Если отчеты обязательны, shell worker пишет их в `.pf/artifacts/subagents/<worker-id>/`. Workers с `allow_subagents=false` не обязаны создавать subagent reports. Public smoke использует нейтральные simulated reports и не зависит от Claude, Codex, Gemini, Cursor или OpenCode CLI.
+Когда нужны отчёты субагентов, исполнитель записывает их в `.pf/artifacts/subagents/<worker-id>/`. При `allow_subagents=false` такие отчёты не требуются. В публичных проверках их создают локальные тестовые исполнители.
 
 `orchestrator-shell-plan-apply` пишет `.pf/runs/<run-id>/config-resolution-report.yaml`, чтобы оператор видел, какие значения config применены к assignments, capsules, supervisor scheduling и collection checks.

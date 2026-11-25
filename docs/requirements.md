@@ -2,7 +2,7 @@
 
 Use this checklist before [installation](getting-started/installation.md).
 ProcessForge runs as a local Python CLI. Garage work does not require PF
-Runtime, MCP, Codex hooks, or a manually opened Agent Ledger session.
+Runtime, MCP, host event hooks, or a manually opened Agent Ledger session.
 
 ## Python and libraries
 

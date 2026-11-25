@@ -59,7 +59,7 @@ workplace; репозиторий хранит состояние процесс
 - [Этапы встроенных процессов](processes/built-in-processes.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Runtime driver and supervisor](getting-started/runtime-driver-supervisor.md)
-- [Автозапуск Runtime и запуск Codex MCP](getting-started/runtime-autostart.md)
+- [Автозапуск Runtime и подключение MCP-клиента](getting-started/runtime-autostart.md)
 
 ## Авторинг
 

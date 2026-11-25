@@ -90,9 +90,8 @@ Do not create ad hoc delivery process ids such as `joomla-plugin-delivery`,
 `package-delivery`.
 
 Platform-specific rules and commands come from platform contracts, project
-context, tool operations, or project-local delivery profiles. Do not hardcode
-Joomla, WordPress, Laravel, Cursor, IDE, or other platform behavior into this
-public core process.
+context, tool operations, or project-local delivery profiles. Keep the public
+core process independent of frameworks, agent clients and IDEs.
 
 ## Evidence
 

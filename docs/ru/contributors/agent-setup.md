@@ -210,12 +210,10 @@ Git, `gh` и `rg` через реестр инструментов, зареги
   [Установка](https://oraios.github.io/serena/02-usage/010_installation.html),
   [запуск](https://oraios.github.io/serena/02-usage/020_running.html).
   Существующую работающую установку сначала проверяйте, не заменяйте автоматически.
-- **PF MCP.** Необязательный транспорт для обязательного локального процесса PF;
-  допустим и штатный CLI. В Codex проверьте план командой `<PfPython> <Core>/bin/pf.py
-  codex-mcp install --workplace <Workplace> --distribution-root <Core> --python
-  <PfPython>`, затем примените настройку с `--apply`. Проверьте `codex-mcp status`,
-  перезагрузите настоящий хост и убедитесь в доступности инструментов PF и
-  `pf.actions.list`. [Порядок подключения](../../getting-started/runtime-autostart.md#codex-mcp-registration).
+- **PF MCP.** Для локальной работы PF доступны штатный CLI и MCP по stdio.
+  Укажите в настройках клиента Python, путь к серверу и рабочее место. Переподключите
+  клиент, проверьте список инструментов и вызовите `pf.actions.list`.
+  [Подключение клиента](../getting-started/runtime-autostart.md#подключение-mcp-клиента-по-stdio)
 - **Playwright MCP.** Подготовьте для проверок браузера, интерфейса и HTML-документации.
   Нужна поддерживаемая Node.js LTS. Установите `npm install --prefix
   <Tools>/browser-mcp --save-exact @playwright/mcp@0.0.85`, затем браузер:

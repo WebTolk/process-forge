@@ -62,7 +62,7 @@ specific product platform.
 Use this for normal work: one human operator, one primary agent session, one
 project, and one active process/run. The primary agent performs the work, runs
 checks, writes artifacts, and finishes with a summary or handoff.
-Garage mode does not require PF Runtime, Codex hooks, or a manually created
+Garage mode does not require PF Runtime, host hooks, or a manually created
 Ledger session.
 
 ### Forge / Factory Mode
@@ -70,9 +70,9 @@ Ledger session.
 Use this when work must be split into independent branches. An orchestrator can
 create bounded assignments and capsules, launch or coordinate worker sessions,
 collect their outputs, and integrate the result through handoffs and reviews.
-The Forge MCP connection uses the workplace Runtime. Project initialization on
-a workplace with an `organized` default prepares the project’s Codex hook
-configuration. The client controls activation. [Forge hook setup](docs/guides/forge-init-hooks.md)
+The Forge MCP connection uses the workplace Runtime. A compatible client can
+start the stdio connection. Event capture depends on the native hooks available
+for that client. [MCP setup](docs/getting-started/runtime-autostart.md) · [Hook support](docs/guides/forge-init-hooks.md)
 
 ## Quick Start
 
@@ -204,9 +204,8 @@ onboarding.
 The launch directory is not a ProcessForge role. During machine setup the agent
 must use explicit paths for the installed ProcessForge distribution, the
 workplace root, optional global agent/instruction roots, and real project roots.
-Folders named `.codex`, `.claude`, `.agents`, or any custom agent root can be
-knowledge or instruction sources; they do not become projects unless the
-operator explicitly targets them with `project-onboard`.
+An agent’s configuration directory can supply instructions or knowledge. It
+becomes a PF project only when the operator selects it with `project-onboard`.
 
 Use `first-run`, `workplace-init`, and direct create/register commands as the
 fully automatic path only when the operator explicitly requests automation and
@@ -403,8 +402,8 @@ Git unless the user wants version-control integration.
 
 ## Using ProcessForge With Agent Environments
 
-Do not copy the whole ProcessForge repository into `.codex`, `.claude`,
-`.agents`, or similar agent configuration folders.
+Keep the installed distribution separate from the configuration directory of
+each agent.
 
 Install ProcessForge once as a tool, initialize a workplace, and add a short
 instruction to the agent configuration telling it where ProcessForge is

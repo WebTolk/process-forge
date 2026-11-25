@@ -12,10 +12,9 @@ worker/session operations, see [supported action discovery](action-discovery.md)
 For bounded request logging, privacy, profiles and local exports, see
 [optional diagnostics](diagnostics.md). MCP stdout remains JSON-RPC only.
 
-`tools/pf_runtime/mcp_server.py` is a minimal stdio MCP server. It is
-host-owned: Codex starts the Python process from Codex MCP configuration and
-owns the stdin/stdout pipes. It is not registered as a Windows scheduled task or
-detached background service.
+`tools/pf_runtime/mcp_server.py` serves MCP over stdio. The connection is
+host-owned. The client launches Python and owns the input and output streams.
+The server is not registered as a Windows scheduled task or a detached service.
 
 The **pf-app-server** is the workplace Runtime service for scheduling and
 orchestration. Garage context and governed Work do not require a running
@@ -51,7 +50,7 @@ the request. [Work selection](work-continuation.md)
 
 Project initialization uses the same onboarding service as the CLI. When
 the linked workplace’s default project mode is `organized`, apply prepares
-the project-local Codex hook configuration. [Forge hook setup](../guides/forge-init-hooks.md)
+the supported project hook configuration. [Hook setup and client support](../guides/forge-init-hooks.md)
 
 Available tools are `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
 `pf.project_initialization.initialize`, `pf.project_initialization.repair`,
@@ -131,13 +130,11 @@ Process definition; technical projector facts remain declaration-driven.
 
 MCP is not a raw-ingress API and does not expose raw hook payloads. The
 session-chat view exposes only the trusted, redacted private transcript for the
-same Ledger session. See [Codex Session Read Layer](codex-session-read.md) and
+same Ledger session. See [Ledger session reads](session-reads.md) and
 [Hooks And Events](hooks-events.md) for registration and replay boundaries.
 
-Codex host registration can be inspected, installed, or removed with
-`python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
-Install and remove are dry-run by default and require `--apply` to change Codex
-configuration. Restart or reload Codex after registration changes.
+Configure the Python command and arguments in the MCP client, then reconnect
+and verify its tool list. [Client setup](../getting-started/runtime-autostart.md#connect-a-stdio-mcp-client)
 
 Local operator commands are also available as `pf server` or
 `python bin/pf-server.py`: start, run, status, stop and restart. Guarded stop

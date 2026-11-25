@@ -17,10 +17,9 @@ operator approves the proposal.
 
 Do not infer roles from the current working directory. The operator-provided
 `<processforge-root>` is the installed distribution, `<workplace-root>` is the
-stateful workplace, and any global agent configuration folder such as `.codex`,
-`.claude`, `.agents`, or a custom name is only an optional instruction or
-knowledge source. It must not become `--project-root` unless the operator
-explicitly asks to onboard that directory as a project.
+stateful workplace, and a global agent configuration directory can supply shared
+instructions or knowledge. Use that directory as `--project-root` only if the
+operator explicitly chooses to onboard it.
 
 Device discovery is optional in guided mode. Offer it when it helps, keep it
 read-only, and use the fallback scope from the process when broad disk access is

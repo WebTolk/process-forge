@@ -91,7 +91,7 @@ Default Runtime usage does not require PowerShell, Git, a daemon, or a
 background process. Git is only needed when the user wants version-control
 integration or when development/release checks are being run. Optional PF
 Runtime service startup is documented in
-[Runtime Autostart And Codex MCP Startup](../getting-started/runtime-autostart.md).
+[Runtime autostart and MCP client setup](../getting-started/runtime-autostart.md).
 
 ## Runtime, Ledger, and MCP interfaces
 
@@ -152,17 +152,15 @@ A routed session is recovered from the Ledger record's `project_id` and
 This keeps recovery after Runtime-cache removal and cross-project isolation
 independent of the daemon.
 
-Codex hooks are thin fact adapters. They normalize documented lifecycle or tool
-facts, append existing PF events, and delegate check-in, heartbeat, and
-checkout to Core. The MCP catalogue also includes governed Work start, state,
+Supported hook adapters normalize lifecycle and tool events received from the
+client. They append PF events and delegate check-in, heartbeat and checkout
+to Core. The MCP catalogue also includes governed Work start, state,
 transition and cancellation, continuation, worker prepare/start/collect,
 project initialization and repair. Each action declares its own selectors,
 permissions and apply requirements. [Action discovery](action-discovery.md)
 
-The stdio MCP process is owned by the MCP host, not by PF Runtime autostart.
-Codex starts it from host MCP configuration for each connected session. See
-[PF Runtime MCP facade](runtime-mcp.md) and
-[Runtime Autostart And Codex MCP Startup](../getting-started/runtime-autostart.md).
+The MCP client launches the stdio server from its own configuration for each
+connection. [PF Runtime MCP facade](runtime-mcp.md) · [Runtime autostart and MCP client setup](../getting-started/runtime-autostart.md)
 
 ## Declaration-driven technical projections
 

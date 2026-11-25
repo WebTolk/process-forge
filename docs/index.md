@@ -50,7 +50,7 @@ provides explicit paths and choices.
 - [Built-in process stages](processes/built-in-processes.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Runtime driver and supervisor quickstart](getting-started/runtime-driver-supervisor.md)
-- [Runtime autostart and Codex MCP startup](getting-started/runtime-autostart.md)
+- [Runtime autostart and MCP client setup](getting-started/runtime-autostart.md)
 - [Quick getting started path](getting-started.md)
 - [Russian documentation](ru/index.md)
 

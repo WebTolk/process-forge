@@ -14,7 +14,7 @@ the direct commands below are for operators with explicit paths and choices.
 | Runtime service | Optional for local CLI and Garage MCP | Required for the Forge MCP backend |
 | MCP | Host-owned stdio when selected | Host-owned stdio forwards requests to the workplace Runtime |
 | Ledger session | Project context and Work operations accept project/Work selectors | Session views require a bound Ledger session |
-| Codex hooks | Optional collection via `runtime.garage_hooks` | Onboarding on a workplace with an `organized` default prepares the handlers |
+| Host event hooks | Optional collection via `runtime.garage_hooks` | The installed adapter determines which hooks onboarding can prepare on an `organized` workplace. [Hook support](guides/forge-init-hooks.md) |
 | Director | No | Used for organized coordination |
 | Runtime autostart | Optional | Optional Windows facility for starting the service at logon |
 
