@@ -12,9 +12,11 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import yaml
 
 from processforge_core.executions.composition import ExecutionStorage
 from processforge_core.prepared import retry_publication
+from processforge_core.runtime.drivers import RuntimeDriverDefinitionPolicy
 from tests.executions.test_lifecycle import sql_cli_fixture as sql_cli_fixture
 from tests.executions.test_repository import isolated_path as isolated_path
 
@@ -48,7 +50,7 @@ with (profile / "requests.log").open("a", encoding="utf-8") as calls:
                 "nextCursor": str(index + 1) if index + 1 < len(pages) else None,
             }
         elif method == "config/read":
-            assert Path(params["cwd"]) == Path.cwd()
+            assert Path(params["cwd"]) == Path(os.environ.get("EXPECTED_CONFIG_CWD", Path.cwd()))
             result = {"config": data["config"]}
         else:
             raise AssertionError(method)
@@ -160,6 +162,40 @@ def test_live_describe_reads_pages_and_effective_configuration(configured_agent)
     assert "model: replacement" in updated
     assert "model: model-B" not in updated
     assert "- new-effort" in updated
+
+
+def test_static_subdirectory_uses_its_executable_and_project_configuration(
+    configured_agent,
+):
+    environment, profile = configured_agent
+    project = profile / "project"
+    wrapper_cwd = project / "subdir"
+    wrapper_cwd.mkdir(parents=True)
+    (project / ".pf").mkdir()
+    (project / ".pf/process-forge.yaml").write_text(
+        "schema_version: 1\nproject:\n  id: catalog-fixture\n", encoding="utf-8"
+    )
+    launcher = Path(environment["PF_CODEX_EXECUTABLE"])
+    environment["PF_CODEX_EXECUTABLE"] = os.path.relpath(launcher, wrapper_cwd)
+    environment["EXPECTED_CONFIG_CWD"] = str(project)
+    driver = RuntimeDriverDefinitionPolicy().default_documents()["codex-exec"]
+    driver["working_directory"] = "{project_root}/subdir"
+    manifest = project / "driver.yaml"
+    manifest.write_text(yaml.safe_dump(driver), encoding="utf-8")
+    catalog(profile, [[model("model-A", ["high"])]])
+
+    output = describe(
+        environment,
+        "runtime-driver",
+        "describe",
+        "--project-root",
+        str(project),
+        "--driver",
+        str(manifest),
+        "--catalog",
+    )
+    assert "status: ready" in output
+    assert "model: model-A" in output and "reasoning_effort: ultra-V2" in output
 
 
 def test_describe_without_catalog_and_other_drivers_do_not_spawn(configured_agent):
