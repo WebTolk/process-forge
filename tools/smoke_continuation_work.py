@@ -110,7 +110,9 @@ def check_stopped_preparation(
             "assignment": {
                 "allowed_files": [report],
                 "allowed_read_files": [".pf/**"],
-                "required_outputs": [{"id": "report", "path": report, "required": True}],
+                "required_outputs": [
+                    {"id": "report", "path": report, "required": True}
+                ],
                 "expected_report": {"artifact": report},
             },
         },
@@ -142,9 +144,13 @@ def check_stopped_preparation(
 
     created = continuation.request("create", **create)
     assert created["action"] == "created" and created["schema_version"] == 2, created
-    resume: dict[str, object] = {"project_root": str(project), "continuation_id": "after-stop"}
+    resume: dict[str, object] = {
+        "project_root": str(project),
+        "continuation_id": "after-stop",
+    }
     resumed = call_mcp(workplace, "pf.continuation.resume", resume)
-    assert resumed["action"] == "continued" and resumed["selectors"] == selectors, resumed
+    assert resumed["action"] == "continued", resumed
+    assert resumed["selectors"] == selectors, resumed
     cli("worker-run", "prepare", *worker, "--driver", str(driver))
     blocked = continuation.request("resume", continuation_id="after-stop")
     assert blocked["reason"] == "worker_not_quiescent", blocked
