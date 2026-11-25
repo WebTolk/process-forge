@@ -109,3 +109,78 @@ def test_channel_filter_still_precedes_version_selection() -> None:
     )
     assert selected is not None and selected["version"] == "1.3.0-alpha2"
     assert warnings == []
+
+
+@pytest.mark.parametrize(
+    ("pin_version", "allow_major", "expected_version", "expected_conflict"),
+    [
+        (None, True, "2.0.0", None),
+        (None, False, "1.1.0", None),
+        ("1.1.0", True, "1.1.0", None),
+        ("1.1.0", False, "1.1.0", None),
+        ("", True, "2.0.0", None),
+        (" \t ", True, "2.0.0", None),
+        (" 1.1.0 ", True, None, "candidate 2.0.0 blocked by pin_version  1.1.0 "),
+        ("2.0.0", False, None, "candidate 2.0.0 blocked by allow_major=false"),
+        ("1.9.0", False, None, "candidate 2.0.0 blocked by pin_version 1.9.0"),
+    ],
+)
+def test_select_admissible_applies_policy_to_newer_releases(
+    pin_version: str | None,
+    allow_major: bool,
+    expected_version: str | None,
+    expected_conflict: str | None,
+) -> None:
+    records = [{"version": "2.0.0"}, {"version": "1.1.0"}]
+    selected, warnings, conflict = UpdateVersionSelectionPolicy().select_admissible(
+        records, "1.0.0", pin_version=pin_version, allow_major=allow_major
+    )
+    assert (selected["version"] if selected is not None else None) == expected_version
+    assert warnings == []
+    assert conflict == expected_conflict
+
+
+def test_select_admissible_reports_no_conflict_without_newer_releases() -> None:
+    records = [{"version": "1.0.0+other"}, {"version": "0.9.0"}]
+    assert UpdateVersionSelectionPolicy().select_admissible(
+        records, "1.0.0", pin_version="2.0.0", allow_major=False
+    ) == (None, [], None)
+
+
+def test_select_admissible_allows_any_major_without_installed_version() -> None:
+    record = {"version": "2.0.0"}
+    assert UpdateVersionSelectionPolicy().select_admissible(
+        [record], None, allow_major=False
+    ) == (record, [], None)
+
+
+def test_select_admissible_preserves_lexical_comparison_and_warnings() -> None:
+    record = {"version": "release-b"}
+    policy = UpdateVersionSelectionPolicy()
+    assert policy.select_admissible([record], "release-a", allow_major=False) == (
+        record,
+        ["non-semver version compared lexically"],
+        None,
+    )
+    selected, warnings, conflict = policy.select_admissible(
+        [record], "release-a", pin_version="release-c"
+    )
+    assert selected is None
+    assert warnings == ["non-semver version compared lexically"]
+    assert conflict == "candidate release-b blocked by pin_version release-c"
+
+
+def test_select_admissible_keeps_last_record_with_equal_precedence() -> None:
+    first = {"version": "1.1.0+first", "download_url": "https://example.test/first"}
+    last = {"version": "1.1.0+last", "download_url": "https://example.test/last"}
+    records = [first, last]
+    policy = UpdateVersionSelectionPolicy()
+    selected, warnings, conflict = policy.select_admissible(
+        records, "1.0.0", allow_major=False
+    )
+    assert selected is last
+    assert warnings == []
+    assert conflict is None
+    unrestricted, warnings = policy.select(records, "1.0.0")
+    assert unrestricted is last
+    assert warnings == []
