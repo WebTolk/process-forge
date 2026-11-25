@@ -55,6 +55,7 @@ class ContinuationRecordReader:
         from ..database import DatabaseError
         from ..executions.composition import select_execution_storage
         from ..executions.model import ExecutionError
+        from ..executions.projection import projected_payload
 
         workplace = self.workplace()
         project_root = self.path_resolver()(".pf/process-forge.yaml").parent.parent
@@ -67,9 +68,22 @@ class ContinuationRecordReader:
                 if route.repository is not None
                 else None
             )
+            # Stopping before launch keeps the prepared phase and its original attempt.
+            cancelled_before_launch = (
+                record is not None
+                and record.phase == "prepared"
+                and record.launch_token is None
+                and record.process is None
+                and record.collection == "pending"
+                and projected_payload(record)["status"] == "cancelled"
+            )
         except (OSError, ValueError, DatabaseError, ExecutionError):
             raise self.error()("worker_not_quiescent") from None
-        if record is not None and record.phase != "absent":
+        if (
+            record is not None
+            and record.phase != "absent"
+            and not cancelled_before_launch
+        ):
             raise self.error()("worker_not_quiescent")
         status_path = self.path_resolver()(
             f".pf/runtime/agent-runs/{binding['run_id']}/{binding['assignment_id']}/status.json"

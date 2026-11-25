@@ -18,6 +18,8 @@ pf work-state --project-root . --run feature-run --assignment feature-task --con
 
 Creation never overwrites a different continuation intent. Resuming is idempotent. Invalid/terminal selected Work or an active worker/lease blocks without falling back to a newer task. A newer backlog entry cannot displace a session's explicit selection. A session selection receipt is committed before the derived `resumed` marker; repeating resume repairs an interrupted marker write after revalidation. The partial result is explicit: `selection_committed`, `marker_recovery_required: true`. It does not repeat a stage transition.
 
+A worker waiting to start blocks continuation. If you stop it before launch, you can create or resume a continuation for the same Work once any applicable active lease has been released.
+
 Version 1 records retain their wait-only behavior, explicitly reporting `work_resumed: false` and `legacy_binding_required`. They are not silently upgraded: create a new exact v2 reference. Merely marking a legacy wait resumed is not proof of Work resumption. No-scope legacy Work creation remains compatible, but `work_state.execution_readiness` reports missing effective permissions; such records cannot be resumed for execution. Explicit read-only Work is supported.
 
 ## Cancel one Work
