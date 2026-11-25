@@ -11,11 +11,14 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit
-from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 import yaml  # type: ignore[import-untyped]
 
+from pf_runtime.loopback_http import (
+    LoopbackHttpClient,
+    LoopbackTransportError,
+    loopback_endpoint_url,
+)
 from pf_runtime.mcp_transport import configure_utf8
 
 BACKEND_META = "processforge/backend"
@@ -48,13 +51,6 @@ def forge_workplace(workplace: str) -> bool:
     if not isinstance(coordination, dict):
         raise BackendUnavailable()
     return bool(coordination.get("director_enabled", False))
-
-
-class _NoRedirect(HTTPRedirectHandler):
-    def redirect_request(
-        self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
-    ) -> None:
-        return None
 
 
 def _runtime_exchange(
@@ -93,36 +89,25 @@ def _post_runtime(
         or not token.isascii()
     ):
         raise BackendUnavailable()
-    selected = urlsplit(endpoint)
-    if (
-        selected.scheme != "http"
-        or selected.hostname != "127.0.0.1"
-        or not selected.port
-        or selected.username is not None
-        or selected.password is not None
-        or selected.path not in {"", "/"}
-        or selected.query
-        or selected.fragment
-    ):
-        raise BackendUnavailable()
-    payload = json.dumps(
-        {**body, "expected_instance_id": instance}, ensure_ascii=True
-    ).encode("utf-8")
-    request = Request(
-        endpoint.rstrip("/") + path,
-        data=payload,
-        method="POST",
-        headers={
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json",
-        },
-    )
-    # Local credentials must not enter a proxy or follow a redirect.
-    with build_opener(ProxyHandler({}), _NoRedirect()).open(
-        request, timeout=timeout_seconds
-    ) as response:
-        raw = response.read(8 * 1024 * 1024 + 1)
-    if len(raw) > 8 * 1024 * 1024:
+    try:
+        url = loopback_endpoint_url(endpoint, path)
+        payload = json.dumps(
+            {**body, "expected_instance_id": instance}, ensure_ascii=True
+        ).encode("utf-8")
+        status, raw = LoopbackHttpClient().request(
+            "POST",
+            url,
+            headers={
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json",
+            },
+            body=payload,
+            timeout=timeout_seconds,
+            max_response_bytes=8 * 1024 * 1024,
+        )
+    except LoopbackTransportError:
+        raise BackendUnavailable() from None
+    if not 200 <= status < 300:
         raise BackendUnavailable()
     try:
         envelope = json.loads(raw)

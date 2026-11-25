@@ -210,6 +210,48 @@ class UpdateVersionSelectionPolicy:
     def select(
         self, versions: list[dict[str, Any]], installed: str | None
     ) -> tuple[dict[str, Any] | None, list[str]]:
+        newer, warnings = self._newer_versions(versions, installed)
+        return (newer[-1] if newer else None), warnings
+
+    def select_admissible(
+        self,
+        versions: list[dict[str, Any]],
+        installed: str | None,
+        *,
+        pin_version: str | None = None,
+        allow_major: bool = True,
+    ) -> tuple[dict[str, Any] | None, list[str], str | None]:
+        """Select the highest-priority newer release allowed by the policy."""
+        newer, warnings = self._newer_versions(versions, installed)
+        if not newer:
+            return None, warnings, None
+        if pin_version is not None and not pin_version.strip():
+            pin_version = None
+        installed_numbers = (
+            self._version_key(installed)[1]
+            if allow_major is False and installed
+            else ()
+        )
+
+        conflict = None
+        for item in reversed(newer):
+            available = str(item.get("version") or "")
+            reason = None
+            if pin_version is not None and available != pin_version:
+                reason = f"candidate {available} blocked by pin_version {pin_version}"
+            elif installed_numbers:
+                available_numbers = self._version_key(available)[1]
+                if available_numbers and available_numbers[0] != installed_numbers[0]:
+                    reason = f"candidate {available} blocked by allow_major=false"
+            if reason is None:
+                return item, warnings, None
+            if conflict is None:
+                conflict = reason
+        return None, warnings, conflict
+
+    def _newer_versions(
+        self, versions: list[dict[str, Any]], installed: str | None
+    ) -> tuple[list[dict[str, Any]], list[str]]:
         warnings: list[str] = []
         newer: list[dict[str, Any]] = []
         installed_key = self._version_key(installed) if installed else None
@@ -231,9 +273,9 @@ class UpdateVersionSelectionPolicy:
             if is_newer:
                 newer.append(item)
         if not newer:
-            return None, warnings
+            return newer, warnings
         newer.sort(key=lambda item: self._version_key(str(item.get("version") or "")))
-        return newer[-1], sorted(set(warnings))
+        return newer, sorted(set(warnings))
 
     def candidate_id(
         self, subject_type: str, subject_id: str, available_version: str, source_id: str

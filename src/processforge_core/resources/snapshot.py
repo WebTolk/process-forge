@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 from ..common.paths import rel
 from ..project.metadata import ProjectMetadataReader
 from ..work.context_documents import ContextContractInputs
+from .identity import search_root_id
 from .workplace_catalog import WorkplaceCatalogReader
 
 __all__ = ()
@@ -392,22 +394,63 @@ class WorkspacePathReferenceReader(WorkplaceCatalogReader):
         }
 
 
+def search_resource_records(snapshot: dict[str, Any]) -> Iterator[dict[str, Any]]:
+    """Iterate explicit search grants or selected records from older snapshots."""
+    resources = snapshot.get("local_search_resources")
+    if isinstance(resources, list):
+        yield from (resource for resource in resources if isinstance(resource, dict))
+        return
+    resolved = snapshot.get("resolved")
+    if isinstance(resolved, dict):
+        for name in ("knowledge_resources", "templates", "template_resources"):
+            resources = resolved.get(name)
+            if isinstance(resources, list):
+                yield from (
+                    resource for resource in resources if isinstance(resource, dict)
+                )
+
+
+def search_path_ref_denied(resolution: dict[str, Any]) -> bool:
+    return resolution.get("status") == "unresolved" and resolution.get("reason") in {
+        "invalid_path_ref: relative_path escapes declared package root",
+        "invalid_path_ref: registry path escapes workplace root",
+        "invalid_path_ref: relative_path escapes declared registry root",
+        "invalid_path_ref: relative_path escapes project flow root",
+    }
+
+
 def snapshot_with_resolved_search_roots(
     project_root: Path, snapshot: dict[str, Any], workplace_root: Path
 ) -> dict[str, Any]:
     runtime_snapshot = copy.deepcopy(snapshot)
-    resources_value = runtime_snapshot.get("local_search_resources")
-    resources = resources_value if isinstance(resources_value, list) else []
-    for resource in resources:
-        if not isinstance(resource, dict) or not isinstance(
-            resource.get("path_ref"), dict
-        ):
+    for resource in search_resource_records(runtime_snapshot):
+        resource.pop("_search_root_unavailable", None)
+        reference = resource.get("path_ref")
+        if not isinstance(reference, dict) or not reference:
             continue
-        resolution = resolve_garage_path_ref(
-            project_root, resource["path_ref"], workplace_root
-        )
+        try:
+            resolution = resolve_garage_path_ref(
+                project_root, reference, workplace_root
+            )
+        except (OSError, RuntimeError):
+            resource["_search_root_unavailable"] = True
+            continue
         if resolution.get("status") == "resolved" and resolution.get("path"):
             resource["content_roots"] = [str(resolution["path"])]
+        elif resolution.get("status") in {"missing", "unresolved"}:
+            # The reference owns these roots. Any previously resolved path
+            # is unusable when the current lookup is denied or missing.
+            for key in (
+                "content_roots",
+                "search_roots",
+                "paths",
+                "resolved_path",
+                "local_path",
+                "path",
+            ):
+                resource.pop(key, None)
+            if not search_path_ref_denied(resolution):
+                resource["_search_root_unavailable"] = True
     return runtime_snapshot
 
 
@@ -497,33 +540,45 @@ def resource_selection_summary(snapshot: dict[str, Any]) -> dict[str, Any]:
 def add_private_navigation(
     payload: dict[str, Any], runtime_snapshot: dict[str, Any]
 ) -> None:
-    resources_value = runtime_snapshot.get("local_search_resources")
-    resources = resources_value if isinstance(resources_value, list) else []
-    by_id = {
-        str(item.get("id") or item.get("resource_id") or ""): item
-        for item in resources
-        if isinstance(item, dict)
-    }
-    for match in payload.get("results", []):
-        if not isinstance(match, dict):
+    by_root: dict[tuple[str, str], Path] = {}
+    for resource in search_resource_records(runtime_snapshot):
+        if resource.get("_search_root_unavailable"):
             continue
-        resource = by_id.get(str(match.get("resource_id") or ""))
-        roots_value = (
-            resource.get("content_roots") if isinstance(resource, dict) else None
-        )
-        roots = roots_value if isinstance(roots_value, list) else []
+        resource_id = str(resource.get("id") or resource.get("resource_id") or "")
+        roots = resource.get("content_roots")
+        if not isinstance(roots, list):
+            continue
         for raw_root in roots:
-            root = Path(str(raw_root)).resolve()
-            candidate = (
-                (root / str(match.get("canonical_path") or "")).resolve()
-                if root.is_dir()
-                else root
-            )
             try:
-                candidate.relative_to(root if root.is_dir() else candidate)
-            except ValueError:
+                resolved_root = Path(str(raw_root)).resolve(strict=True)
+            except (OSError, RuntimeError, ValueError):
+                continue
+            by_root[resource_id, search_root_id(resolved_root)] = resolved_root
+    for match in payload.get("results", []):
+        if not isinstance(match, dict) or not isinstance(match.get("metadata"), dict):
+            continue
+        root = by_root.get(
+            (
+                str(match.get("resource_id") or ""),
+                str(match["metadata"].get("root_id") or ""),
+            )
+        )
+        if root is None:
+            continue
+        relative_path = str(match.get("canonical_path") or "")
+        try:
+            if root.is_dir():
+                candidate = (root / relative_path).resolve()
+                if not candidate.is_relative_to(root):
+                    continue
+            elif relative_path in {root.name, "."}:
+                candidate = root.resolve(strict=True)
+                if candidate != root:
+                    continue
+            else:
                 continue
             if candidate.is_file():
                 match["local_path"] = str(candidate)
                 match["navigation"] = "private_runtime_authorized"
-                break
+        except (OSError, RuntimeError, ValueError):
+            continue

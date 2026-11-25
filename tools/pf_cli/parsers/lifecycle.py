@@ -122,7 +122,7 @@ class TaskCommandParser:
         task_create.add_argument("--required-output", action="append", default=[], help="Required output id. Repeatable.")
         task_create.add_argument("--expected-report-language", help="Expected report language.")
         task_create.add_argument("--expected-report-artifact", help="Expected durable report artifact.")
-        task_create.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
+        task_create.add_argument("--reasoning-effort", help="Reasoning preference for the selected agent model.")
         task_create.add_argument("--force-with-handoff", action="store_true", help="Allow write-scope overlap and record the overlap check for orchestrator handoff.")
         task_create.add_argument("--apply", action="store_true", help="Write task files.")
         task_create.set_defaults(func=self._task_create)

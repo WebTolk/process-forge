@@ -329,7 +329,7 @@ def _tool_result(
         properties = runtime.properties
         dependencies = ActionToolDependencies(
             parser_factory=core.build_parser,
-            native_command=core.main,
+            native_command=core.native_action_result,
             registered_driver_ref=registered_driver_ref,
             work_state=lambda **selectors: build_process_execution_service(
                 bound_project, workplace, core

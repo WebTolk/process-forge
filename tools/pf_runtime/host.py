@@ -7,9 +7,7 @@ workplace runtime state. Durable project facts remain in existing `.pf` files.
 from __future__ import annotations
 
 import argparse
-import contextlib
 import hashlib
-import io
 import json
 import os
 import re
@@ -39,10 +37,12 @@ PENDING_CONVERSATION_CAPTURES: dict[
 ] = {}
 
 
-def event_journal(project_root: Path):
+def event_journal(project_root: Path, workplace_root: Path | None = None):
     from processforge_core.agents.process_events import ProcessEventRecorder
 
-    return ProcessEventRecorder().event_journal_for_project(project_root)
+    return ProcessEventRecorder().event_journal_for_project(
+        project_root, workplace_root
+    )
 
 
 def state_lock() -> threading.RLock:
@@ -664,8 +664,10 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def call_quiet(func: Any, args: argparse.Namespace) -> int:
-    with contextlib.redirect_stdout(io.StringIO()):
-        return int(func(args) or 0)
+    from processforge_core.operations.result import CommandOutput
+
+    args._command_output = CommandOutput(None)
+    return int(func(args) or 0)
 
 
 def load_state(workplace_root: Path) -> dict[str, Any]:
@@ -978,6 +980,12 @@ def normalize_event(
         data["task_id"] = task_id
     from processforge_core.agents.telemetry import TelemetryEventService
 
+    event_id = stable_event_id(raw)
+    correlation = raw.get("correlation_id") or session_id or run_id
+    if not correlation:
+        correlation = (
+            "corr-" + hashlib.sha256(event_id.encode("utf-8")).hexdigest()[:12]
+        )
     event = TelemetryEventService().processforge_event(
         project_root,
         event_type,
@@ -985,8 +993,8 @@ def normalize_event(
         assignment_id_value=task_id or None,
         subject=subject,
         data=data,
-        correlation_id=str(raw.get("correlation_id") or session_id or run_id or ""),
-        event_id=stable_event_id(raw),
+        correlation_id=str(correlation),
+        event_id=event_id,
         actor={
             "type": "agent",
             "id": core.safe_id(agent_id, "agent"),
@@ -1164,7 +1172,12 @@ def _ingest_derived_event(
     workplace_root = workplace_root or core.resolve_workplace_root(
         None, project_root=project_root
     )
-    with registration_admission(workplace_root, [project_root]):
+    from processforge_core.maintenance.event_ingress import event_ingress_admission
+
+    journal = event_journal(project_root, workplace_root)
+    with event_ingress_admission(
+        project_root, workplace_root, journal.storage_host, writing=True
+    ):
         handle = route_project(str(project_root), workplace_root, core)
         source = raw.get("source")
         if not isinstance(source, dict):
@@ -2102,12 +2115,12 @@ def _ingest_event(
     settings = configuration.config.logging
     # Take admission before the journal's identity gate, just as the derived
     # event writer does. Release both before starting the raw receipt.
+    from processforge_core.maintenance.event_ingress import event_ingress_admission
     from processforge_core.work.consistency import RunTaskInputReader
 
-    with registration_admission(workplace_root, [project_root]):
-        event_journal(project_root).count(
-            RunTaskInputReader().event_runtime_paths(project_root)[0]
-        )
+    journal = event_journal(project_root, workplace_root)
+    with event_ingress_admission(project_root, workplace_root, journal.storage_host):
+        journal.count(RunTaskInputReader().event_runtime_paths(project_root)[0])
     from processforge_core.configuration import ConfigurationProvider
 
     pinned = ConfigurationProvider.pinned(
@@ -2787,6 +2800,12 @@ def tick_payload(
 
     from pf_native_control import current_entry
 
+    from processforge_core.agents.process_events import PendingDispatchError
+    from processforge_core.maintenance.contracts import MaintenanceError
+    from processforge_core.maintenance.project_event_maintenance import (
+        PROJECT_EVENT_MAINTENANCE_BUSY,
+    )
+    from processforge_core.operations.result import CommandOutput
     from processforge_core.project.configuration_inputs import configuration_operation
 
     with ExitStack() as operation:
@@ -2806,33 +2825,33 @@ def tick_payload(
         status = 0
         scheduler_status = 0
         for project_root, handle in zip(project_roots, handles):
-            with configuration_operation(project_root, workplace_root):
-                item: dict[str, Any] = {
-                    "project_id": handle["project_id"],
-                    "effective_mode": handle["effective_mode"],
-                    "director": "skipped",
-                    "inspector": "skipped",
-                }
-                if director:
-                    if handle["effective_mode"] == "organized":
-                        rc = call_quiet(
-                            core.command_agent_director_tick,
-                            argparse.Namespace(
-                                workplace=str(workplace_root),
-                                project_root=str(project_root),
-                                project_id=handle["project_id"],
-                                wait_ttl=wait_ttl,
-                                lease_ttl=lease_ttl,
-                                _automatic_tick=True,
-                            ),
-                        )
-                        item["director"] = "tick"
-                        status = status or rc
-                        scheduler_status = scheduler_status or rc
-                    else:
-                        item["director"] = "skipped_simple"
-                if inspector:
-                    with contextlib.redirect_stdout(io.StringIO()):
+            item: dict[str, Any] = {
+                "project_id": handle["project_id"],
+                "effective_mode": handle["effective_mode"],
+                "director": "skipped",
+                "inspector": "skipped",
+            }
+            try:
+                with configuration_operation(project_root, workplace_root):
+                    if director:
+                        if handle["effective_mode"] == "organized":
+                            rc = call_quiet(
+                                core.command_agent_director_tick,
+                                argparse.Namespace(
+                                    workplace=str(workplace_root),
+                                    project_root=str(project_root),
+                                    project_id=handle["project_id"],
+                                    wait_ttl=wait_ttl,
+                                    lease_ttl=lease_ttl,
+                                    _automatic_tick=True,
+                                ),
+                            )
+                            item["director"] = "tick"
+                            status = status or rc
+                            scheduler_status = scheduler_status or rc
+                        else:
+                            item["director"] = "skipped_simple"
+                    if inspector:
                         observation = core.supervisor_tick_result(
                             argparse.Namespace(
                                 project_root=str(project_root),
@@ -2840,22 +2859,36 @@ def tick_payload(
                                 profile=profile,
                                 driver=driver,
                                 start_allowed=False,
+                                _command_output=CommandOutput(None),
                             )
                         )
-                    item["inspector"] = "tick"
-                    item["inspector_result"] = observation
-                    status = status or (1 if observation["failed"] else 0)
-                with registration_admission(workplace_root, [project_root]):
-                    # The snapshot cannot authorize a later mutation after a
-                    # concurrent stopping/enrollment change.
-                    route_project(str(project_root), workplace_root, core)
-                # Dispatch can scan journals and run hooks. Journal completion
-                # owns its readiness checks; the native operation remains live.
-                core.flush_pending_event_dispatches(project_root)
-                if projection:
-                    stage_projection = refresh_stage_obligations(project_root, core)
-                    item["projection"] = core.rel(stage_projection, project_root)
-                results.append(item)
+                        item["inspector"] = "tick"
+                        item["inspector_result"] = observation
+                        status = status or (1 if observation["failed"] else 0)
+                    with registration_admission(workplace_root, [project_root]):
+                        # The snapshot cannot authorize a later mutation after a
+                        # concurrent stopping/enrollment change.
+                        route_project(str(project_root), workplace_root, core)
+                    # Dispatch can scan journals and run hooks. Journal completion
+                    # owns its readiness checks; the native operation remains live.
+                    try:
+                        core.flush_pending_event_dispatches(project_root)
+                    except PendingDispatchError as error:
+                        item["dispatch_failures"] = error.failures
+                        status = status or 1
+                    if projection:
+                        stage_projection = refresh_stage_obligations(project_root, core)
+                        item["projection"] = core.rel(stage_projection, project_root)
+            except MaintenanceError as error:
+                if error.code not in {
+                    PROJECT_EVENT_MAINTENANCE_BUSY,
+                    "storage_resume_required",
+                }:
+                    raise
+                item["storage_error"] = {"code": error.code, "retryable": True}
+                status = status or 1
+                scheduler_status = scheduler_status or 1
+            results.append(item)
         # Refresh and merge only the routing delta under the short memory lock.
         # No interprocess/native/target gate is acquired while it is held.
         with registration_admission(workplace_root, project_roots):

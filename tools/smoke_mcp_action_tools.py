@@ -15,6 +15,7 @@ sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "src")]
 from pf_runtime import mcp_server
 from pf_runtime.action_tools import ActionToolDependencies, ActionToolError, ActionToolService
 from pf_runtime.session_read import SessionReadError
+from processforge_core.operations.result import NativeResult  # noqa: E402
 
 
 IDENTITY = {"run_id": "run-a", "assignment_id": "task-a", "context_id": "capsule-a"}
@@ -36,35 +37,47 @@ class Fixture:
         return deepcopy(self.state)
 
     def forbidden_parser(self):
-        raise AssertionError("Native dispatch must use the complete CLI application callable")
+        raise AssertionError("Native dispatch does not use the discovery parser")
 
-    def native(self, argv: list[str]) -> int:
+    def native(self, argv: list[str]) -> NativeResult:
         self.calls.append(list(argv))
         if argv[:2] == ["runtime-driver", "list"]:
-            print("codex-exec\tactive\tbuiltin")
-            print("manual\tactive\tbuiltin")
-        elif argv[:2] == ["runtime-driver", "describe"]:
-            print("diagnostic on stderr", file=sys.stderr)
-            print("id: codex-exec\nkind: shell\ncommand:\n  env:\n    PRIVATE_TOKEN: hidden-value")
-        elif argv[:2] == ["worker-run", "start"]:
+            return NativeResult(
+                0,
+                value=[
+                    {"id": "codex-exec", "status": "active"},
+                    {"id": "manual", "status": "active"},
+                ],
+            )
+        if argv[:2] == ["runtime-driver", "describe"]:
+            catalog = {"model_catalog": {"status": "ready", "models": []}} if "--catalog" in argv else {}
+            return NativeResult(
+                0,
+                stderr="diagnostic on stderr\n",
+                value={
+                    "id": "codex-exec",
+                    "kind": "shell",
+                    "command": {"env": {"PRIVATE_TOKEN": "hidden-value"}},
+                    **catalog,
+                },
+            )
+        if argv[:2] == ["worker-run", "start"]:
             assert "--detach" in argv
             assert "--driver=registered-driver.yaml" in argv
             assert not any(x.startswith("--executable") or x == "--wait" for x in argv)
-            print("RUNNING: task-a pid=123")
-        elif argv[:2] == ["worker-run", "status"]:
-            print("status: running\nattempt: 2")
-        elif argv[0] == "chat-record":
+            return NativeResult(0, "RUNNING: task-a pid=123\n")
+        if argv[:2] == ["worker-run", "status"]:
+            return NativeResult(0, value={"status": "running", "attempt": 2})
+        if argv[0] == "chat-record":
             assert "--participant=real-agent" in argv
             assert "--role=assistant" in argv
             assert "--content=--not-an-option" in argv
-            print("MESSAGE: msg-a")
-        elif argv[0] == "session-heartbeat":
+            return NativeResult(0, "MESSAGE: msg-a\n")
+        if argv[0] == "session-heartbeat":
             assert "--session=session-a" in argv
             assert "--agent=real-agent" in argv
-            print("STATUS: active")
-        else:
-            print("PREPARED: task-a")
-        return 0
+            return NativeResult(0, "STATUS: active\n")
+        return NativeResult(0, "PREPARED: task-a\n")
 
     def registered_driver_ref(self, driver):
         assert driver == "codex-exec"
@@ -126,14 +139,24 @@ def main() -> int:
         assert all(argv[:2] == ["runtime-driver", "list"] for argv in f.calls)
     f.calls.clear()
     f.allow_driver_id = True
-    result = service.execute("pf.worker.start", {**launch, "model": "--literal-model"})
+    result = service.execute(
+        "pf.worker.start",
+        {**launch, "model": "--literal-model", "reasoning_effort": "Ultra-V2"},
+    )
     assert result["status"] == "accepted" and "RUNNING" in result["native_summary"]
     assert f.calls[-1][:2] == ["worker-run", "start"] and "--model=--literal-model" in f.calls[-1]
+    assert "--reasoning-effort=Ultra-V2" in f.calls[-1]
     result = service.execute("pf.worker.status", {**IDENTITY, "apply": True})
     assert result["worker"]["status"] == "running"
     assert mcp_server.tool_annotations("pf.worker.status")["readOnlyHint"] is False
     description = service.execute("pf.runtime_driver.describe", {"driver": "codex-exec"})
     assert description["driver"]["id"] == "codex-exec" and "hidden-value" not in str(description)
+    assert "--catalog" not in f.calls[-1]
+    description = service.execute("pf.runtime_driver.describe", {"driver": "codex-exec", "catalog": True})
+    assert f.calls[-1][:2] == ["runtime-driver", "describe"] and "--catalog" in f.calls[-1]
+    assert description["driver"]["model_catalog"] == {"status": "ready", "models": []}
+    assert "hidden-value" not in str(description)
+    refused(service, "pf.runtime_driver.describe", {"driver": "codex-exec", "catalog": "true"}, "invalid_arguments")
     service.execute("pf.chat.record", {"content": "--not-an-option", "apply": True})
     service.execute("pf.session.heartbeat", {"apply": True})
 

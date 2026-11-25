@@ -19,8 +19,6 @@ import subprocess
 import sys
 import threading
 import time
-import urllib.error
-import urllib.request
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -57,6 +55,7 @@ else:
 from pf_native_control import NativeControlError, operation_lease  # noqa: E402
 
 from . import RUNTIME_PROTOCOL_VERSION, host  # noqa: E402
+from .loopback_http import LoopbackHttpClient, LoopbackTransportError  # noqa: E402
 
 
 def metrics_core():
@@ -184,8 +183,22 @@ def base_state(
     import processforge_core.common.clock as _core_common_clock
     from processforge_core.composition import build_core_properties
     from processforge_core.runtime.schedule import RuntimeSchedule
+    from processforge_core.runtime_service_state import (
+        PROJECT_EVENT_MAINTENANCE_CAPABILITY,
+        PROJECT_EVENT_RUNTIME_IDENTITY,
+        runtime_process_identity,
+    )
 
     properties = build_core_properties()
+    actual_pid = pid if pid is not None else os.getpid()
+    owner_identity = (
+        runtime_process_identity(actual_pid)
+        if instance_id and actual_pid == os.getpid()
+        else None
+    )
+    capabilities = {"guarded_shutdown": 1}
+    if owner_identity is not None:
+        capabilities[PROJECT_EVENT_MAINTENANCE_CAPABILITY] = 1
     identity: dict[str, Any] = dict(properties.report())
     identity["required_action"] = (
         "restart"
@@ -198,7 +211,7 @@ def base_state(
         "protocol_version": RUNTIME_PROTOCOL_VERSION,
         "processforge_core_version": properties.loaded.version,
         "core_identity": identity,
-        "pid": pid if pid is not None else os.getpid(),
+        "pid": actual_pid,
         "instance_id": instance_id,
         "started_at": _core_common_clock.now_utc(),
         "updated_at": _core_common_clock.now_utc(),
@@ -207,7 +220,8 @@ def base_state(
         "workplace_id": workplace_root.name,
         "status": status,
         "health": status,
-        "capabilities": {"guarded_shutdown": 1},
+        "capabilities": capabilities,
+        **({PROJECT_EVENT_RUNTIME_IDENTITY: owner_identity} if owner_identity else {}),
         "token_ref": str(token_path(workplace_root)),
         "scheduler": {
             "jobs": {
@@ -253,25 +267,26 @@ def http_json(
         if payload is None
         else json.dumps(payload, ensure_ascii=False).encode("utf-8")
     )
-    request = urllib.request.Request(url, data=data, method=method)
-    request.add_header("Accept", "application/json")
+    headers = {"Accept": "application/json"}
     if data is not None:
-        request.add_header("Content-Type", "application/json")
+        headers["Content-Type"] = "application/json"
     if token:
-        request.add_header("Authorization", f"Bearer {token}")
+        headers["Authorization"] = f"Bearer {token}"
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            text = response.read().decode("utf-8")
-            return response.status, json.loads(text) if text.strip() else {}
-    except urllib.error.HTTPError as exc:
-        text = exc.read().decode("utf-8", errors="replace")
-        try:
-            body = json.loads(text) if text.strip() else {}
-        except json.JSONDecodeError:
-            body = {"error": text}
-        return exc.code, body
-    except (urllib.error.URLError, OSError) as exc:
+        status, response_body = LoopbackHttpClient().request(
+            method, url, headers=headers, body=data, timeout=timeout
+        )
+    except LoopbackTransportError as exc:
         return 0, {"error": str(exc)}
+    if 200 <= status < 300:
+        text = response_body.decode("utf-8")
+        return status, json.loads(text) if text.strip() else {}
+    text = response_body.decode("utf-8", errors="replace")
+    try:
+        body = json.loads(text) if text.strip() else {}
+    except json.JSONDecodeError:
+        body = {"error": text}
+    return status, body
 
 
 def classify_lifecycle(
@@ -1529,6 +1544,22 @@ class RuntimeProcess:
                 except NativeControlError:
                     raise
                 except Exception as exc:  # noqa: BLE001 - return structured local IPC errors.
+                    from processforge_core.maintenance.contracts import MaintenanceError
+                    from processforge_core.maintenance.project_event_maintenance import (
+                        PROJECT_EVENT_MAINTENANCE_BUSY,
+                    )
+
+                    if (
+                        self.path == "/event"
+                        and isinstance(exc, MaintenanceError)
+                        and exc.code
+                        in {
+                            PROJECT_EVENT_MAINTENANCE_BUSY,
+                            "storage_resume_required",
+                        }
+                    ):
+                        self.send_json(409, {"error": exc.code, "retryable": True})
+                        return
                     if isinstance(exc, PermissionError):
                         with operation_lease():
                             append_operator_log(

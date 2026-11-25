@@ -39,6 +39,7 @@ class RuntimeDriverCommandParser:
         runtime_driver_describe.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
         runtime_driver_describe.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
         runtime_driver_describe.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+        runtime_driver_describe.add_argument("--catalog", action="store_true", help="Read the configured agent's live model catalog.")
         runtime_driver_describe.set_defaults(func=self._runtime_driver_describe)
 
         runtime_driver_list_alias = add_parser("runtime-driver-list", help="Flat alias for runtime-driver list.")
@@ -55,6 +56,7 @@ class RuntimeDriverCommandParser:
         runtime_driver_describe_alias.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
         runtime_driver_describe_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
         runtime_driver_describe_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+        runtime_driver_describe_alias.add_argument("--catalog", action="store_true", help="Read the configured agent's live model catalog.")
         runtime_driver_describe_alias.set_defaults(func=self._runtime_driver_describe)
 
 
@@ -87,7 +89,7 @@ class WorkerRunCommandParser:
         worker_run_prepare.add_argument("--driver", help="Runtime driver id or manifest path.")
         worker_run_prepare.add_argument("--executable", help="Executable override for generic shell drivers.")
         worker_run_prepare.add_argument("--model", help="Optional agent model for shell runtime drivers.")
-        worker_run_prepare.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
+        worker_run_prepare.add_argument("--reasoning-effort", help="Reasoning effort supported by the selected agent model.")
         worker_run_prepare.set_defaults(func=self._worker_run_prepare)
         worker_run_start = worker_run_sub.add_parser("start", help="Start a prepared worker command and wait for completion.")
         worker_run_start.add_argument("--project-root", required=True, help="Project root path.")
@@ -95,7 +97,7 @@ class WorkerRunCommandParser:
         worker_run_start.add_argument("--driver", help="Runtime driver id or manifest path.")
         worker_run_start.add_argument("--executable", help="Executable override for generic shell drivers.")
         worker_run_start.add_argument("--model", help="Optional agent model for shell runtime drivers.")
-        worker_run_start.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
+        worker_run_start.add_argument("--reasoning-effort", help="Reasoning effort supported by the selected agent model.")
         worker_run_start.add_argument("--detach", action="store_true", help="Start the worker process and return immediately.")
         worker_run_start.add_argument("--wait", action="store_true", help="Wait for completion. This is the default unless --detach is set.")
         worker_run_start.set_defaults(func=self._worker_run_start)
@@ -126,7 +128,7 @@ class WorkerRunCommandParser:
                 alias.add_argument("--driver", help="Runtime driver id or manifest path.")
                 alias.add_argument("--executable", help="Executable override for generic shell drivers.")
                 alias.add_argument("--model", help="Optional agent model for shell runtime drivers.")
-                alias.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
+                alias.add_argument("--reasoning-effort", help="Reasoning effort supported by the selected agent model.")
             alias.set_defaults(func=func)
 
 

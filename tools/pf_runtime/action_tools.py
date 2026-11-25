@@ -4,21 +4,20 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Callable, Mapping
-from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from dataclasses import dataclass
-import io
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import yaml
+if TYPE_CHECKING:
+    from processforge_core.operations.result import NativeResult
 
 
 TOOL_DESCRIPTIONS = {
     "pf.actions.list": "List supported CLI/MCP actions with bounded filtering and truthful native-validation requirements; discovery grants no permissions.",
     "pf.actions.describe": "Describe one exact supported action, its actual arguments/schema, effects and preconditions; never execute it.",
     "pf.runtime_driver.list": "List registered native runtime driver IDs and status for this project/workplace; never launch a worker.",
-    "pf.runtime_driver.describe": "Read safe metadata for one registered driver ID; no executable override, environment values or arbitrary manifest paths.",
+    "pf.runtime_driver.describe": "Read safe metadata for one registered driver ID and optionally query its live model catalog.",
     "pf.worker.prepare": "With apply true, prepare the exact active Work using an explicitly selected registered driver; preserve native scope/input checks.",
     "pf.worker.start": "With apply true, start the exact active Work through its native registered driver and return immediately; no shell/executable override.",
     "pf.worker.status": "With apply true, observe the exact Work's native worker status; observation may reconcile runtime records and collect completed output.",
@@ -68,10 +67,12 @@ def action_tool_schema(name: str) -> dict[str, Any]:
     if name in {"pf.runtime_driver.describe", "pf.worker.prepare", "pf.worker.start"}:
         properties["driver"] = {"type": "string", "minLength": 1, "maxLength": 128}
         required.append("driver")
+    if name == "pf.runtime_driver.describe":
+        properties["catalog"] = {"type": "boolean"}
     if name in {"pf.worker.prepare", "pf.worker.start"}:
         properties.update({
             "model": {"type": "string", "minLength": 1, "maxLength": 256},
-            "reasoning_effort": {"type": "string", "enum": ["minimal", "low", "medium", "high"]},
+            "reasoning_effort": {"type": "string", "minLength": 1, "maxLength": 128},
         })
     if name in MUTATING_TOOL_NAMES:
         properties["apply"] = {"type": "boolean"}
@@ -88,41 +89,12 @@ def action_tool_schema(name: str) -> dict[str, Any]:
 @dataclass(frozen=True)
 class ActionToolDependencies:
     parser_factory: Callable[[], argparse.ArgumentParser]
-    native_command: Callable[[list[str]], int]
+    native_command: Callable[[list[str]], NativeResult]
     registered_driver_ref: Callable[[str], str]
     work_state: Callable[..., dict[str, Any]]
     session_record: Callable[[], dict[str, Any]]
     version: str
     identity: Callable[[], dict[str, Any]] | None = None
-
-
-@dataclass(frozen=True)
-class NativeResult:
-    exit_code: int
-    stdout: str
-    stderr: str
-
-    @property
-    def output(self) -> str:
-        return self.stdout + self.stderr
-
-
-class NativeActionGateway:
-    """Invoke an explicitly composed native handler without a shell or subprocess CLI."""
-
-    def __init__(self, execute_command: Callable[[list[str]], int]):
-        self._execute_command = execute_command
-
-    def call(self, argv: list[str]) -> NativeResult:
-        output, errors = io.StringIO(), io.StringIO()
-        with redirect_stdout(output), redirect_stderr(errors):
-            try:
-                code = int(self._execute_command(list(argv)) or 0)
-            except SystemExit as exc:
-                code = exc.code if isinstance(exc.code, int) else 1
-                if isinstance(exc.code, str):
-                    errors.write(exc.code)
-        return NativeResult(code, output.getvalue(), errors.getvalue())
 
 
 class ActionToolService:
@@ -133,7 +105,6 @@ class ActionToolService:
         self._project = project_root
         self._workplace = workplace
         self._session_id = session_id
-        self._native = NativeActionGateway(dependencies.native_command)
 
     def _work(self, arguments: Mapping[str, Any], *, execution: bool) -> dict[str, Any]:
         keys = ("run_id", "assignment_id", "context_id")
@@ -161,7 +132,7 @@ class ActionToolService:
             elif value is not None and value is not False:
                 # Keep values beginning with '-' literal, including chat content.
                 argv.append("--" + key.replace("_", "-") + "=" + str(value))
-        return self._native.call(argv)
+        return self._dependencies.native_command(argv)
 
     @staticmethod
     def _failure(name: str, result: NativeResult) -> dict[str, Any]:
@@ -170,13 +141,11 @@ class ActionToolService:
 
     def _drivers(self) -> tuple[NativeResult, list[dict[str, str]]]:
         result = self._invoke(["runtime-driver", "list"], {}, workplace=True)
-        rows = []
-        if result.exit_code == 0:
-            for line in result.stdout.splitlines():
-                values = line.split("\t")
-                if len(values) >= 2:
-                    rows.append({"id": values[0], "status": values[1]})
-        return result, rows
+        if result.exit_code:
+            return result, []
+        if not isinstance(result.value, list):
+            raise ActionToolError("native_result_invalid")
+        return result, result.value
 
     def execute(self, name: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
         schema = action_tool_schema(name)
@@ -223,14 +192,24 @@ class ActionToolService:
             if arguments["driver"] not in {row["id"] for row in rows}:
                 raise ActionToolError("driver_not_registered")
             driver_ref = self._dependencies.registered_driver_ref(arguments["driver"])
-            result = self._invoke(["runtime-driver", "describe"], {"driver": driver_ref}, workplace=True)
+            catalog = arguments.get("catalog") is True
+            result = self._invoke(
+                ["runtime-driver", "describe"],
+                {"driver": driver_ref, "catalog": catalog},
+                workplace=True,
+            )
             if result.exit_code:
                 return self._failure(name, result)
-            document = yaml.safe_load(result.stdout)
+            document = result.value
             if not isinstance(document, dict):
                 raise ActionToolError("native_result_invalid")
             # Driver manifests may contain argv/environment values; return metadata only.
             metadata = {key: deepcopy(document[key]) for key in ("schema_version", "id", "name", "version", "status", "kind", "description") if key in document}
+            if catalog:
+                model_catalog = document.get("model_catalog")
+                if not isinstance(model_catalog, dict):
+                    raise ActionToolError("native_result_invalid")
+                metadata["model_catalog"] = model_catalog
             return {"schema_version": 1, "kind": name, "status": "ready", "driver": metadata, "native_validation_required": True}
         if name in WORK_TOOL_NAMES:
             self._work(arguments, execution=name != "pf.worker.status")
@@ -248,16 +227,16 @@ class ActionToolService:
                 values["detach"] = True
             result = self._invoke(["worker-run", operation], values)
             if result.exit_code:
-                if operation == "status" and result.stdout.startswith("STATUS: not-prepared "):
+                if operation == "status" and result.value == {"status": "not_prepared"}:
                     return {"schema_version": 1, "kind": name, "status": "not_prepared", "work": {key: arguments[key] for key in ("run_id", "assignment_id", "context_id")}}
                 return self._failure(name, result)
             payload: dict[str, Any] = {"schema_version": 1, "kind": name, "status": "accepted", "native_exit_code": 0,
                                        "work": {key: arguments[key] for key in ("run_id", "assignment_id", "context_id")}}
             if operation == "status":
-                state = yaml.safe_load(result.stdout)
-                if not isinstance(state, dict):
+                worker = result.value
+                if not isinstance(worker, dict):
                     raise ActionToolError("native_result_invalid")
-                payload["worker"] = state
+                payload["worker"] = worker
                 payload["status"] = "ready"
             else:
                 payload["native_summary"] = result.stdout[-2000:].strip()

@@ -60,6 +60,7 @@ def main() -> int:
                 raise AssertionError(listed)
         context = call_mcp(workplace, "pf.context", {"project_root": str(project)})
         project_id = context.get("project", {}).get("id")
+        profile_id = f"project.{project_id}:project-profile"
         search = call_mcp(
             workplace,
             "pf.search",
@@ -70,7 +71,7 @@ def main() -> int:
             "pf.resolve",
             {
                 "project_root": str(project),
-                "resource_id": f"project.{project_id}:project-profile",
+                "resource_id": profile_id,
             },
         )
         work = call_mcp(
@@ -84,24 +85,44 @@ def main() -> int:
             raise AssertionError(search)
         if (database.read_bytes() if database.exists() else None) != initial_index:
             raise AssertionError("Garage reads or Work start changed the index")
-        # Work was started with a nonfresh index. Explicit maintenance now
-        # establishes the empty corpus for the original first-run assertions.
+        # Workplace maintenance indexes the registered Workplace catalogue.
         cli("search-index-maintain", "--workplace", str(workplace), "--apply")
         search = call_mcp(
             workplace,
             "pf.search",
             {"project_root": str(project), "query": "project-profile"},
         )
-        # A new project selects its generated profile for context/resolve, but
-        # the one physical search index is built only from registered Workplace
-        # resources. An empty fresh corpus is therefore a valid first-run
-        # Garage state and must not block starting governed work.
+        # The generated project profile is selected but has yet to be indexed.
         if (
             context.get("mode") != "garage"
             or search.get("total") != 0
-            or search.get("search", {}).get("status") != "empty"
+            or search.get("search_status") != "stale"
+            or search.get("degraded_reason") != "resource_not_indexed"
         ):
             raise AssertionError({"context": context, "search": search})
+        cli(
+            "search-index",
+            "refresh",
+            "--project-root",
+            str(project),
+            "--workplace",
+            str(workplace),
+        )
+        search = call_mcp(
+            workplace,
+            "pf.search",
+            {"project_root": str(project), "query": "project-profile"},
+        )
+        items = search.get("items")
+        if (
+            search.get("search_status") != "fresh"
+            or not isinstance(items, list)
+            or not any(
+                isinstance(item, dict) and item.get("resource_id") == profile_id
+                for item in items
+            )
+        ):
+            raise AssertionError(search)
         if (
             resolved.get("resource", {}).get("status") != "available"
             or resolved.get("resource", {}).get("scope") != "project_context"

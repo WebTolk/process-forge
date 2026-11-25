@@ -7,7 +7,6 @@ import argparse
 import hashlib
 import json
 import os
-import shutil
 import subprocess
 import sys
 import time
@@ -79,12 +78,12 @@ def resolved_workspace_dirs(workspace_access: Path) -> list[Path]:
 
 
 def codex_executable() -> str:
-    explicit = os.environ.get("PF_CODEX_EXECUTABLE") or os.environ.get(
-        "CODEX_EXECUTABLE"
-    )
-    if explicit:
-        return explicit
-    found = shutil.which("codex") or shutil.which("codex.cmd")
+    source = str(_native_root / "src")
+    if source not in sys.path:
+        sys.path.insert(0, source)
+    from processforge_core.runtime.codex_catalog import resolve_codex_executable
+
+    found = resolve_codex_executable(os.environ, Path.cwd())
     if not found:
         raise SystemExit(
             "FAIL: codex executable not found; set PF_CODEX_EXECUTABLE or install Codex CLI"
@@ -96,7 +95,9 @@ def codex_config_args(*, effort: str, memories: str) -> list[str]:
     """Build non-interactive Codex overrides for a governed PF worker."""
     args: list[str] = []
     if effort:
-        args.extend(["-c", f'model_reasoning_effort="{effort}"'])
+        args.extend(
+            ["-c", f"model_reasoning_effort={json.dumps(effort, ensure_ascii=False)}"]
+        )
     if memories == "false":
         args.extend(["-c", "features.memories=false"])
     # ProcessForge is a local, assignment-scoped control plane. Without this
@@ -575,14 +576,12 @@ def _main_in_operation() -> int:
             else None
         )
 
-        model = (
-            os.environ.get("PF_AGENT_MODEL") or os.environ.get("PF_CODEX_MODEL") or ""
-        )
-        if not model:
-            raise SystemExit(
-                "FAIL: Codex model is not configured; set PF_AGENT_MODEL through the orchestrator or PF_CODEX_MODEL"
-            )
-        effort = os.environ.get("PF_CODEX_REASONING_EFFORT") or ""
+        source = str(_native_root / "src")
+        if source not in sys.path:
+            sys.path.insert(0, source)
+        from processforge_core.runtime.codex_catalog import codex_preferences
+
+        model, effort = codex_preferences(os.environ)
         sandbox = os.environ.get("PF_CODEX_SANDBOX") or "read-only"
         memories = (os.environ.get("PF_CODEX_MEMORIES") or "false").strip().lower()
         if memories not in {"true", "false"}:
@@ -644,16 +643,9 @@ def _main_in_operation() -> int:
         project_path = Path(project_root).expanduser().resolve()
         command = [codex_executable(), *managed_hook_trust_args(project_path), "exec"]
         command.append("--skip-git-repo-check")
-        command.extend(
-            [
-                "-m",
-                model,
-                "--sandbox",
-                sandbox,
-                "--cd",
-                project_root,
-            ]
-        )
+        if model:
+            command.extend(["-m", model])
+        command.extend(["--sandbox", sandbox, "--cd", project_root])
         config_args = codex_config_args(effort=effort, memories=memories)
         command.extend(config_args)
         for path in add_dirs:

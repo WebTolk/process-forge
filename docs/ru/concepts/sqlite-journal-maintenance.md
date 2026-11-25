@@ -236,15 +236,30 @@ exit 0 для plan/ready, 1 для отказа и argparse 2 для невер�
 `StorageMigrationService` выполняет явную операцию оператора/updater.
 `tools/migrate-storage.py` принимает `--project-root` и/или `--workplace-root`,
 необязательный `--device-config` и один из `--inspect` (по умолчанию),
-`--apply`, `--resume`. Apply/resume требуют `--offline-confirmed`: в Гараже
-оператор остановил PF и писателей, в Кузне updater управляет единственным
-исполнителем PF. Коды выхода: 0 planned/ready, 1 blocked/failed, argparse 2.
+`--apply`, `--resume`. Для общей миграции при apply/resume нужен
+`--offline-confirmed`. В Гараже оператор останавливает PF и писателей.
+В Кузне updater управляет единственным исполнителем PF. Код 0 означает
+planned/ready, 1 означает blocked/failed, 2 означает ошибку аргументов.
 
 Сначала импортируйте event/raw командой выше, затем выполните:
 
 ```text
 python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --apply --offline-confirmed --json
 ```
+
+При работающем совместимом Runtime используйте `--project-events`, чтобы
+мигрировать журнал зарегистрированного проекта на месте.
+
+```text
+python -B tools/migrate-storage.py --project-root PROJECT --workplace-root WORKPLACE --project-events --apply --json
+```
+
+Перед apply импортируйте исторические события этого проекта из NDJSON.
+После прерывания укажите те же корни и `--project-events --resume`. Проверенный
+план v1 сохраняет исходную контрольную сумму, UUID и проверенную резервную копию.
+Онлайн-операция требует подтверждённого Runtime и при указанном
+`--offline-confirmed`. Завершите начатое восстановление совместимым
+координатором перед тем, как открывать журнал проекта предыдущей версией.
 
 Обычные записи Work/worker проверяют готовность и отклоняют legacy storage с
 `storage_migration_required`; автоматического импорта при первой записи нет.

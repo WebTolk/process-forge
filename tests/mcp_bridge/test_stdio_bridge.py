@@ -415,7 +415,7 @@ class StdioBridgeTest(unittest.TestCase):
         )
         self.assertEqual(len({event_id for _, event_id in events}), len(events))
         transition_event = events[4][1]
-        transition_delivery = outbox / f"{transition_event}.work-journal-test.json"
+        (transition_delivery,) = set(outbox.glob("*.json")) - {delivery}
         self.assertEqual(
             json.loads(transition_delivery.read_bytes())["event"]["event_id"],
             transition_event,

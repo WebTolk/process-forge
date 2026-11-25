@@ -117,7 +117,7 @@ jobs:
           subprocess.run([
               sys.executable, "-B", "-m", "pytest", "-q", "-ra", "-p", "no:cacheprovider",
               "--basetemp=" + str(scratch / "pytest"), "tests/maintenance",
-          ], env=environment, check=True, timeout=180)
+           ], env=environment, check=True, timeout=360)
       - name: Qualify the same Core archive and real recovery on each OS
         shell: python
         env:

@@ -100,6 +100,12 @@ transport. It is not a second PF Core. Agent Ledger owns agent/session
 presence and the canonical session-to-project binding; Runtime's project and
 session maps are rebuildable caches only.
 
+Each native MCP action has its own result containing the exit status,
+operation data and command diagnostics. The driver catalogue and worker status
+pass their data directly to MCP. The CLI writes its presentation to the
+invocation's output stream. Director, Inspector and Ledger calls use the same
+explicit output dependency and keep the Runtime process streams stable.
+
 ## Implementation reference: health and recovery
 
 The following details explain diagnostics and recovery for maintainers; they

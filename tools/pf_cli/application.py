@@ -4,13 +4,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections.abc import Callable
 from contextlib import ExitStack
 from pathlib import Path
 
 from pf_cli.forge_work import ForgeWorkError
 from processforge_core import diagnostics
+from processforge_core.operations.result import CommandOutput
 from processforge_core.sqlite_storage import JournalError
+
+
+def command_output(args: argparse.Namespace) -> CommandOutput:
+    """Read the output supplied by the caller or use the CLI's stdout."""
+    output = getattr(args, "_command_output", None)
+    return output if isinstance(output, CommandOutput) else CommandOutput(sys.stdout)
 
 
 class CliApplication:
@@ -27,9 +35,13 @@ class CliApplication:
         self._project_id_resolver = project_id_resolver
         self._entry_file = entry_file
 
-    def run(self, argv: list[str] | None = None) -> int:
+    def run(
+        self, argv: list[str] | None = None, *, output: CommandOutput | None = None
+    ) -> int:
         parser = self._parser_factory()
         args = parser.parse_args(argv)
+        if output is not None:
+            args._command_output = output
         # Installation replacement must run after invocation/diagnostic scopes
         # have unwound. It owns its explicit updater boundary separately.
         if (
@@ -174,8 +186,9 @@ class CliApplication:
             try:
                 result = args.func(args)
             except ForgeWorkError as exc:
+                output = command_output(args)
                 if getattr(args, "json", False):
-                    print(
+                    output.write(
                         json.dumps(
                             {
                                 "action": "blocked",
@@ -185,7 +198,7 @@ class CliApplication:
                         )
                     )
                 else:
-                    print(f"FAIL: {exc}")
+                    output.write(f"FAIL: {exc}")
                 result = 1
             except JournalError as exc:
                 raise SystemExit("FAIL: " + str(exc)) from None
