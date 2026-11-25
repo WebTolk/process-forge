@@ -261,9 +261,11 @@ def assert_sibling_visible(
     summary = view["last_event"]
     assert isinstance(summary, dict), view
     event_id = summary["event_id"]
-    assert event_id.startswith("evt_live_append_"), summary
+    # A real supervisor tick may follow the stream's last acknowledged append.
+    assert summary["project_id"] == sibling.name, summary
     journal = ProcessEventRecorder().event_journal_for_project(sibling, workplace)
-    assert journal.get(sibling / EVENT_PATH, event_id) is not None
+    record = journal.get(sibling / EVENT_PATH, event_id)
+    assert record is not None and record["event_type"] == summary["event_type"], summary
 
 
 def onboard(project: Path, workplace: Path) -> None:
