@@ -50,6 +50,7 @@ class Fixture:
                 ],
             )
         if argv[:2] == ["runtime-driver", "describe"]:
+            catalog = {"model_catalog": {"status": "ready", "models": []}} if "--catalog" in argv else {}
             return NativeResult(
                 0,
                 stderr="diagnostic on stderr\n",
@@ -57,6 +58,7 @@ class Fixture:
                     "id": "codex-exec",
                     "kind": "shell",
                     "command": {"env": {"PRIVATE_TOKEN": "hidden-value"}},
+                    **catalog,
                 },
             )
         if argv[:2] == ["worker-run", "start"]:
@@ -137,14 +139,24 @@ def main() -> int:
         assert all(argv[:2] == ["runtime-driver", "list"] for argv in f.calls)
     f.calls.clear()
     f.allow_driver_id = True
-    result = service.execute("pf.worker.start", {**launch, "model": "--literal-model"})
+    result = service.execute(
+        "pf.worker.start",
+        {**launch, "model": "--literal-model", "reasoning_effort": "Ultra-V2"},
+    )
     assert result["status"] == "accepted" and "RUNNING" in result["native_summary"]
     assert f.calls[-1][:2] == ["worker-run", "start"] and "--model=--literal-model" in f.calls[-1]
+    assert "--reasoning-effort=Ultra-V2" in f.calls[-1]
     result = service.execute("pf.worker.status", {**IDENTITY, "apply": True})
     assert result["worker"]["status"] == "running"
     assert mcp_server.tool_annotations("pf.worker.status")["readOnlyHint"] is False
     description = service.execute("pf.runtime_driver.describe", {"driver": "codex-exec"})
     assert description["driver"]["id"] == "codex-exec" and "hidden-value" not in str(description)
+    assert "--catalog" not in f.calls[-1]
+    description = service.execute("pf.runtime_driver.describe", {"driver": "codex-exec", "catalog": True})
+    assert f.calls[-1][:2] == ["runtime-driver", "describe"] and "--catalog" in f.calls[-1]
+    assert description["driver"]["model_catalog"] == {"status": "ready", "models": []}
+    assert "hidden-value" not in str(description)
+    refused(service, "pf.runtime_driver.describe", {"driver": "codex-exec", "catalog": "true"}, "invalid_arguments")
     service.execute("pf.chat.record", {"content": "--not-an-option", "apply": True})
     service.execute("pf.session.heartbeat", {"apply": True})
 

@@ -17,6 +17,7 @@ import os
 import platform
 import re
 import shutil
+import signal
 import socket
 import stat
 import subprocess
@@ -27,6 +28,7 @@ import time
 import unicodedata
 import uuid
 import zipfile
+from collections.abc import Mapping
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -64,6 +66,7 @@ else:
 
 
 if TYPE_CHECKING:
+    from processforge_core.runtime.codex_catalog import CodexLaunchProfile
     from pf_cli.forge_work import ForgeWorkClient
 
     from processforge_core.configuration import ConfigService, ConfigurationProvider
@@ -9549,6 +9552,51 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
     return print_checks(_runtime_driver_definition_policy.validate(driver, getattr(args, "executable", None), include_start_readiness=True))
 
 
+@contextlib.contextmanager
+def _launch_codex_catalog(
+    argv: list[str], cwd: Path, environment: Mapping[str, str]
+) -> Iterator[subprocess.Popen[bytes]]:
+    from pf_native_control import NativeControlError, spawn_owned
+
+    from processforge_core.runtime.codex_catalog import CatalogError
+
+    options: dict[str, Any] = {
+        "cwd": cwd,
+        "env": environment,
+        "stdin": subprocess.PIPE,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.DEVNULL,
+    }
+    try:
+        if os.name == "nt":
+            process = spawn_owned(
+                argv, creationflags=subprocess.CREATE_NO_WINDOW, **options
+            )
+        else:
+            process = subprocess.Popen(argv, start_new_session=True, **options)
+    except NativeControlError as exc:
+        raise CatalogError("codex_catalog_unavailable") from exc
+    try:
+        yield process
+    finally:
+        try:
+            if os.name == "nt":
+                from prepared_executor import _terminate_and_wait
+
+                _terminate_and_wait(process)
+            else:
+                with contextlib.suppress(ProcessLookupError):
+                    os.killpg(process.pid, signal.SIGKILL)
+                process.wait(timeout=5)
+        except (NativeControlError, subprocess.TimeoutExpired) as exc:
+            raise CatalogError("codex_catalog_cleanup_failed") from exc
+        finally:
+            if process.stdin is not None:
+                process.stdin.close()
+            if process.stdout is not None:
+                process.stdout.close()
+
+
 def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     if project_root:
@@ -9556,6 +9604,12 @@ def command_runtime_driver_describe(args: argparse.Namespace) -> int:
     workplace_manifest = _workplace_registry_reader.normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (_ProjectMetadataReader(project_root).workplace_manifest() if project_root else None)
     driver = _runtime_driver_catalog_reader.resolve(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
     driver.pop("_source_path", None)
+    if getattr(args, "catalog", False):
+        from processforge_core.runtime.codex_catalog import describe_codex_driver
+
+        driver["model_catalog"] = describe_codex_driver(
+            driver, project_root or Path.cwd(), ROOT, _launch_codex_catalog
+        )
     output = command_output(args)
     output.value = driver
     output.write(dump_yaml(driver))
@@ -9611,7 +9665,8 @@ def _worker_commit_locks(
     *,
     start: bool = False,
     deadline: float | None = None,
-) -> Iterator[None]:
+    defer_start_registration: bool = False,
+) -> Iterator[Path | None]:
     from processforge_core.executions.model import ExecutionError
 
     stop = time.monotonic() + 30 if deadline is None else deadline
@@ -9637,9 +9692,9 @@ def _worker_commit_locks(
             else:
                 if time.monotonic() >= stop:
                     raise ExecutionError("execution_activity_unknown")
-                if start:
+                if start and not defer_start_registration:
                     _register_worker_start(project_root, selected_workplace)
-                yield
+                yield selected_workplace
                 return
         # A slow task-only planner may still own the lifecycle lock. Wait without
         # workplace admission, then recheck stopping/registration in the same budget.
@@ -10672,6 +10727,8 @@ def _retry_request(
     model_arg,
     reasoning_effort_arg,
 ):
+    from processforge_core.runtime.codex_catalog import is_codex_exec_driver
+
     driver = _runtime_driver_selection_service.for_task(project_root, task, driver_arg)
     return driver, {
         "driver": driver,
@@ -10683,9 +10740,148 @@ def _retry_request(
             reasoning_effort_arg
             or task.get("agent_reasoning_effort")
             or task.get("reasoning_effort")
-            or ""
+            or "",
+            legacy=not is_codex_exec_driver(driver, ROOT),
         ),
     }
+
+
+def _worker_launch_task(
+    task: dict[str, Any], model: str, reasoning_effort: str
+) -> dict[str, Any]:
+    return {
+        **task,
+        "agent_model": model,
+        "agent_reasoning_effort": reasoning_effort,
+    }
+
+
+_WorkerLaunchOptions = tuple[str | None, str | None, str | None, str | None]
+
+
+def _worker_launch_options(args: argparse.Namespace) -> _WorkerLaunchOptions:
+    return (
+        getattr(args, "driver", None),
+        getattr(args, "executable", None),
+        getattr(args, "model", None),
+        getattr(args, "reasoning_effort", None),
+    )
+
+
+@dataclass(frozen=True)
+class _CodexWorkerSnapshot:
+    run_id: str
+    source: dict[Path, bytes | None]
+    storage: tuple[Any, ...]
+    driver: dict[str, Any]
+    profile: CodexLaunchProfile
+
+
+def _codex_worker_snapshot(
+    project_root: Path, run_id: str, task_id: str, options: _WorkerLaunchOptions, *, start: bool
+) -> _CodexWorkerSnapshot | None:
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.executions.projection import projected_payload
+    from processforge_core.runtime.codex_catalog import (
+        CatalogError,
+        CodexLaunchProfile,
+        is_codex_exec_driver,
+    )
+
+    task = _worker_assignment_service.load(project_root, task_id)
+    if task["run_id"] != run_id:
+        raise ExecutionError("execution_identity_conflict")
+    repository = _execution_storage(project_root).repository
+    record = repository.load_latest(run_id, task_id) if repository is not None else None
+    state = projected_payload(record) if record is not None else {}
+    prepared = start and state.get("status") == "ready"
+    if start and record is not None and not (
+        prepared or record.phase == "absent" or state.get("status") == "cancelled"
+    ):
+        return None
+    try:
+        if prepared:
+            driver = _runtime_driver_selection_service.for_worker_state(
+                project_root, task, state
+            )
+            if not is_codex_exec_driver(driver, ROOT):
+                return None
+            paths = _work_paths.worker_run(project_root, run_id, task_id)
+            command = json_read(paths["command"])
+            if not isinstance(command.get("command"), dict):
+                raise ExecutionError("execution_identity_conflict")
+        else:
+            driver, request = _retry_request(project_root, task, *options)
+            if not is_codex_exec_driver(driver, ROOT):
+                return None
+            pending = _retry_pending(project_root, run_id, task_id)
+            if pending is None:
+                launch_task = _worker_launch_task(
+                    task, request["model"], request["reasoning_effort"]
+                )
+                command, _ = _worker_command_builder.build(
+                    project_root, launch_task, driver, options[1]
+                )
+                profile_inputs = str((driver.get("environment") or {}).get("variables", {}))
+                if any(
+                    "{" + name + "}" in profile_inputs
+                    for name in (
+                        "attempt", "prepared_input_path", "prepared_input_checksum",
+                        "stdout_path", "stderr_path", "heartbeat_path", "exit_path",
+                    )
+                ):
+                    raise CatalogError("codex_profile_unavailable")
+            else:
+                from processforge_core.prepared.retry_publication import strict_json
+
+                _retry_validate(project_root, task, pending, request)
+                command = strict_json(pending.new["command"])
+        profile = CodexLaunchProfile.from_command(project_root, command)
+    except CatalogError as error:
+        raise ExecutionError(str(error)) from error
+    storage = (
+        (repository.database.target, repository.readiness().generation, record)
+        if repository is not None
+        else ()
+    )
+    return _CodexWorkerSnapshot(
+        run_id, _worker_phase_snapshot(project_root, run_id, task_id), storage, driver, profile,
+    )
+
+
+def _probe_codex_worker(
+    project_root: Path, task: dict[str, Any], options: _WorkerLaunchOptions, *, start: bool
+) -> _CodexWorkerSnapshot | None:
+    from processforge_core.executions.model import ExecutionError
+    from processforge_core.runtime.codex_catalog import CatalogError
+
+    with _worker_commit_locks(project_root, task["run_id"], task["id"]):
+        before = _codex_worker_snapshot(
+            project_root, task["run_id"], task["id"], options, start=start
+        )
+    if before is not None:
+        try:
+            before.profile.validate(_launch_codex_catalog)
+        except CatalogError as error:
+            raise ExecutionError(str(error)) from error
+    return before
+
+
+def _check_codex_worker_snapshot(
+    project_root: Path, task_id: str, options: _WorkerLaunchOptions,
+    before: _CodexWorkerSnapshot, *, start: bool,
+) -> None:
+    from processforge_core.executions.model import ExecutionError
+
+    if _codex_worker_snapshot(project_root, before.run_id, task_id, options, start=start) != before:
+        raise ExecutionError("execution_identity_conflict")
+    if any(
+        not intent.with_suffix(".applied.json").is_file()
+        for intent in (locate_flow_root(project_root) / "runs" / before.run_id).glob(
+            "cancellation-*.yaml"
+        )
+    ):
+        raise ExecutionError("cancellation_recovery_pending")
 
 
 def _retry_projection_bytes(payload: dict[str, Any]) -> bytes:
@@ -10843,12 +11039,13 @@ def _retry_validate_inputs(
     ):
         raise ExecutionError("execution_identity_conflict")
     driver = request["driver"]
+    launch_task = _worker_launch_task(task, request["model"], request["reasoning_effort"])
     command = strict_json(publication.new["command"])
     # This builder is deterministic and performs no publication/allocation. It
     # checks the pinned command contract; replay uses only the sidecar bytes.
     expected_command, _ = _worker_command_builder.build(
         project_root,
-        task,
+        launch_task,
         driver,
         request["executable_override"] or None,
         attempt=intent["identity"]["attempt"],
@@ -10877,7 +11074,7 @@ def _retry_validate_inputs(
     paths = _retry_paths(project_root, task, command)
     expected_state = _agent_run_payload(
         project_root,
-        task,
+        launch_task,
         driver,
         "manual_required" if str(driver.get("kind")) == "manual" else "ready",
         paths,
@@ -11050,7 +11247,7 @@ def _retry_publish(
     _retry_old_safety(project_root, task, state, old_command, old)
     new_state = _agent_run_payload(
         project_root,
-        task,
+        _worker_launch_task(task, request["model"], request["reasoning_effort"]),
         driver,
         "manual_required" if str(driver.get("kind")) == "manual" else "ready",
         paths,
@@ -11196,6 +11393,7 @@ def prepare_worker_run(
     reasoning_effort_arg: str | None = None,
     *,
     output: CommandOutput | None = None,
+    _codex_admission: _CodexWorkerSnapshot | None = None,
     _publication: Callable[
         [dict[Path, bytes | None]], contextlib.AbstractContextManager[None]
     ]
@@ -11204,38 +11402,67 @@ def prepare_worker_run(
     output = output or CommandOutput(sys.stdout)
     task = _worker_assignment_service.load(project_root, task_id)
     from processforge_core.prepared.command import require_resolved_preparation
+    from processforge_core.runtime.codex_catalog import CodexLaunchProfile, is_codex_exec_driver
+    from processforge_core.executions.model import ExecutionError
 
     if _worker_observation_inputs.worker_run_work_is_terminal(project_root, task):
         raise SystemExit("FAIL: work_is_terminal")
     _retry_priority(project_root, task)
+    options = (driver_arg, executable_override, model_arg, reasoning_effort_arg)
+    driver, request = _retry_request(project_root, task, *options)
+    codex = is_codex_exec_driver(driver, ROOT)
+    locked = any(
+        lease.active and lease.key == _worker_lifecycle_key(project_root, task["run_id"], task_id)
+        for lease in _WORKER_LIFECYCLE_GATES.get()
+    )
     pending = _retry_pending(project_root, task["run_id"], task_id)
     if pending is not None:
-        _, request = _retry_request(project_root, task, driver_arg, executable_override, model_arg, reasoning_effort_arg)
+        if codex:
+            if _publication is not None or locked:
+                raise ExecutionError("execution_identity_conflict")
+            before = _probe_codex_worker(project_root, task, options, start=False)
+            if before is None:
+                raise ExecutionError("execution_identity_conflict")
+            with _worker_planning_phase(project_root, task["run_id"], task_id) as publish:
+                @contextlib.contextmanager
+                def guarded_publish(expected):
+                    with publish(expected):
+                        _check_codex_worker_snapshot(
+                            project_root, task_id, options, before, start=False
+                        )
+                        yield
+
+                return _retry_recover(project_root, task, pending, request, guarded_publish)
         if _publication is None:
-            if any(lease.active and lease.key == _worker_lifecycle_key(project_root, task["run_id"], task_id) for lease in _WORKER_LIFECYCLE_GATES.get()):
-                from processforge_core.executions.model import ExecutionError
+            if locked:
                 raise ExecutionError("execution_activity_unknown")
             with _worker_planning_phase(project_root, task["run_id"], task_id) as publish:
                 return _retry_recover(project_root, task, pending, request, publish)
         return _retry_recover(project_root, task, pending, request, _publication)
-    if _publication is None and not any(lease.active and lease.key == _worker_lifecycle_key(project_root, task["run_id"], task_id) for lease in _WORKER_LIFECYCLE_GATES.get()):
+    if codex and _codex_admission is None:
+        if locked or _publication is not None:
+            raise ExecutionError("execution_identity_conflict")
+        before = _probe_codex_worker(project_root, task, options, start=False)
+        if before is None:
+            raise ExecutionError("execution_identity_conflict")
+        with _worker_commit_locks(project_root, task["run_id"], task_id):
+            _check_codex_worker_snapshot(project_root, task_id, options, before, start=False)
+            return prepare_worker_run(
+                project_root, task_id, *options, output=output, _codex_admission=before
+            )
+    if _codex_admission is not None and (not codex or not locked):
+        raise ExecutionError("execution_identity_conflict")
+    if _publication is None and not locked:
         with _worker_planning_phase(project_root, task["run_id"], task_id) as publish:
             return prepare_worker_run(project_root, task_id, driver_arg, executable_override, model_arg, reasoning_effort_arg, output=output, _publication=publish)
     require_resolved_preparation(project_root, task, sys.modules[__name__])
-    agent_model = _context_contract_inputs.normalize_agent_model(
-        model_arg or task.get("agent_model") or task.get("model") or ""
-    )
-    agent_reasoning_effort = _context_contract_inputs.normalize_agent_reasoning_effort(
-        reasoning_effort_arg
-        or task.get("agent_reasoning_effort")
-        or task.get("reasoning_effort")
-        or ""
-    )
-    if agent_model and task.get("agent_model") != agent_model:
+    agent_model = request["model"]
+    agent_reasoning_effort = request["reasoning_effort"]
+    if not codex and agent_model and task.get("agent_model") != agent_model:
         task["agent_model"] = agent_model
         save_task(project_root, task)
     if (
-        agent_reasoning_effort
+        not codex and agent_reasoning_effort
         and task.get("agent_reasoning_effort") != agent_reasoning_effort
     ):
         task["agent_reasoning_effort"] = agent_reasoning_effort
@@ -11287,7 +11514,7 @@ def prepare_worker_run(
             + str(validation.get("reason") or "execution_contract_invalid")
             + "; create_successor_work"
         )
-    driver = _runtime_driver_selection_service.for_task(project_root, task, driver_arg)
+    launch_task = _worker_launch_task(task, agent_model, agent_reasoning_effort)
     start_failures = [
         item.message
         for item in _runtime_driver_definition_policy.validate(
@@ -11306,7 +11533,7 @@ def prepare_worker_run(
         from processforge_core.executions.projection import canonical_json
 
         readiness = repository.readiness()
-        template = _agent_run_payload(project_root, task, driver, "planned", paths, 1)
+        template = _agent_run_payload(project_root, launch_task, driver, "planned", paths, 1)
         allocated = repository.allocate_attempt(
             run_id, task_id, canonical_json(template), generation=readiness.generation
         )
@@ -11391,7 +11618,7 @@ def prepare_worker_run(
         }
         command, paths = _worker_command_builder.build(
             project_root,
-            task,
+            launch_task,
             driver,
             executable_override,
             attempt=attempt,
@@ -11407,6 +11634,11 @@ def prepare_worker_run(
                 "PF_CONFIGURATION_SNAPSHOT_SHA256": snapshot_checksum,
             }
         )
+        if (
+            _codex_admission is not None
+            and CodexLaunchProfile.from_command(project_root, command) != _codex_admission.profile
+        ):
+            raise ExecutionError("execution_identity_conflict")
         prepared_input.private_file(project_root, reference["path"])
         prepared_input.write_once(prepared_path, document)
     except (OSError, ValueError, RuntimeError) as exc:
@@ -11457,7 +11689,7 @@ def prepare_worker_run(
                 from processforge_core.executions.projection import canonical_json
 
                 payload = _agent_run_payload(
-                    project_root, task, driver, state_status, paths, attempt
+                    project_root, launch_task, driver, state_status, paths, attempt
                 )
                 payload["prepared_input"] = reference
                 _core_common_json_io.json_write(paths["command"], command)
@@ -11849,11 +12081,9 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
         return 1
     _storage_first_write(project_root)
     if _retry_pending(project_root, run_id, task_id) is not None:
-        with _worker_planning_phase(project_root, run_id, task_id) as publish:
-            task, driver, paths = prepare_worker_run(
-                project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None),
-                getattr(args, "model", None), getattr(args, "reasoning_effort", None), output=output, _publication=publish,
-            )
+        task, driver, paths = prepare_worker_run(
+            project_root, task_id, *_worker_launch_options(args), output=output
+        )
         output.write(f"PREPARED: {task_id} driver={driver.get('id')} status={load_agent_run_state(project_root, run_id, task_id).get('status')}")
         return 0
     if not _finalize_worker_scratch(project_root, task, trigger="before_retry", output=output):
@@ -11861,6 +12091,17 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     running = existing_running_worker_run(
         project_root, task, getattr(args, "driver", None)
     )
+    if running is None:
+        from processforge_core.runtime.codex_catalog import is_codex_exec_driver
+
+        options = _worker_launch_options(args)
+        selected = _runtime_driver_selection_service.for_task(project_root, task, options[0])
+        if is_codex_exec_driver(selected, ROOT):
+            task, driver, _ = prepare_worker_run(project_root, task_id, *options, output=output)
+            output.write(
+                f"PREPARED: {task_id} driver={driver.get('id')} status={load_agent_run_state(project_root, run_id, task_id).get('status')}"
+            )
+            return 0
     observed = (
         running[0] if running else load_agent_run_state(project_root, run_id, task_id)
     )
@@ -12441,6 +12682,10 @@ def _worker_start_admission(
         yield workplace
 
 
+class _CodexStartNeedsProbe(Exception):
+    """Observation changed the selected attempt to one that needs admission."""
+
+
 @_worker_storage_errors
 def command_worker_run_start(args: argparse.Namespace) -> int:
     """Reserve under admission before launching; never hold SQL across Popen."""
@@ -12477,28 +12722,46 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         ).repository
         if repository is None:
             raise MaintenanceError("execution_storage_not_ready")
-        return _sql_worker_run_start(args, project_root, repository)
+        for _ in range(2):
+            admission = _probe_codex_worker(
+                project_root, task, _worker_launch_options(args), start=True
+            )
+            try:
+                return _sql_worker_run_start(args, project_root, repository, admission)
+            except _CodexStartNeedsProbe:
+                continue
+        raise ExecutionError("execution_identity_conflict")
     except (ExecutionError, DatabaseError, ExecutorError, MaintenanceError) as exc:
         output.write("FAIL: " + exc.code)
         return 1
 
 
 def _sql_worker_run_start(
-    args: argparse.Namespace, project_root: Path, repository: SQLiteExecutionRepository
+    args: argparse.Namespace,
+    project_root: Path,
+    repository: SQLiteExecutionRepository,
+    admission: _CodexWorkerSnapshot | None = None,
 ) -> int:
     output = command_output(args)
     from uuid import uuid4
 
     from processforge_core.executions.projection import projected_payload
     from processforge_core.prepared import input as prepared_input
+    from processforge_core.runtime.codex_catalog import CodexLaunchProfile, is_codex_exec_driver
     from processforge_core.runtime.command import load_configuration_snapshot
 
     task_id = safe_id(args.task, "task")
     task = _worker_assignment_service.load(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    with _worker_commit_locks(project_root, run_id, task_id, start=True):
+    options = _worker_launch_options(args)
+
+    with _worker_commit_locks(
+        project_root, run_id, task_id, start=True, defer_start_registration=True
+    ) as workplace:
         from processforge_core.executions.model import ExecutionError
 
+        if admission is not None:
+            _check_codex_worker_snapshot(project_root, task_id, options, admission, start=True)
         selected = _execution_storage(project_root).repository
         if (
             selected is None
@@ -12537,14 +12800,17 @@ def _sql_worker_run_start(
             or record.phase == "absent"
             or projected_payload(record)["status"] == "cancelled"
         ):
+            selected_driver = _runtime_driver_selection_service.for_task(
+                project_root, task, options[0]
+            )
+            if admission is None and is_codex_exec_driver(selected_driver, ROOT):
+                raise _CodexStartNeedsProbe()
             task, driver, paths = prepare_worker_run(
                 project_root,
                 task_id,
-                getattr(args, "driver", None),
-                getattr(args, "executable", None),
-                getattr(args, "model", None),
-                getattr(args, "reasoning_effort", None),
+                *options,
                 output=output,
+                _codex_admission=admission,
             )
             record = repository.load_latest(run_id, task_id)
         assert record is not None
@@ -12589,6 +12855,11 @@ def _sql_worker_run_start(
         ) != str(record.key.attempt):
             output.write("FAIL: prepared command and state identity mismatch")
             return 1
+        if is_codex_exec_driver(driver, ROOT):
+            if admission is None:
+                raise _CodexStartNeedsProbe()
+            if CodexLaunchProfile.from_command(project_root, command) != admission.profile:
+                raise ExecutionError("execution_identity_conflict")
         for key, relative in command.get("paths", {}).items():
             if key in paths and key != "root":
                 paths[key] = project_root / relative
@@ -12614,6 +12885,7 @@ def _sql_worker_run_start(
             _publish_sql_locked(project_root, repository, run_id, task_id)
             output.write("FAIL: prepared launch blocked: " + str(exc))
             return 1
+        _register_worker_start(project_root, workplace)
         if str(driver.get("kind")) == "manual":
             output.write(
                 f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}"
