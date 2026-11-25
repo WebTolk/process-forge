@@ -1175,7 +1175,9 @@ def _ingest_derived_event(
     from processforge_core.maintenance.event_ingress import event_ingress_admission
 
     journal = event_journal(project_root, workplace_root)
-    with event_ingress_admission(project_root, workplace_root, journal.storage_host):
+    with event_ingress_admission(
+        project_root, workplace_root, journal.storage_host, writing=True
+    ):
         handle = route_project(str(project_root), workplace_root, core)
         source = raw.get("source")
         if not isinstance(source, dict):

@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import os
 import threading
+import time
 from collections.abc import Iterator
-from contextlib import AbstractContextManager, contextmanager, nullcontext
+from contextlib import AbstractContextManager, ExitStack, contextmanager, nullcontext
 from contextvars import ContextVar
 from pathlib import Path
 
+from ..database import DatabaseError
 from ..project.metadata import ProjectMetadataReader
 from ..runtime.execution_admission import ExecutionAdmission, _GateLease
 from .contracts import MaintenanceError
+from .fresh_project import event_main_snapshot
 from .project_event_maintenance import ordinary_storage_lock
 from .storage_migration import StorageMigrationHost, storage_identity_gate
 
@@ -33,7 +36,11 @@ def ordinary_journal_lock(
 
 @contextmanager
 def event_ingress_admission(
-    project: Path, workplace: Path, storage: StorageMigrationHost | None
+    project: Path,
+    workplace: Path,
+    storage: StorageMigrationHost | None,
+    *,
+    writing: bool = False,
 ) -> Iterator[None]:
     if storage is None:
         with ExecutionAdmission().start(project, workplace):
@@ -48,7 +55,31 @@ def event_ingress_admission(
     # The service releases workplace admission before waiting for a reader.
     # Retain this exact gate across the phase so each journal open can verify
     # its own target and UUID without racing to reacquire the same lock.
-    with storage.service._admitted_gate(context, root, None):
+    deadline = time.monotonic() + 30.0
+    inherited = ExecutionAdmission.held(project, None) or ExecutionAdmission.held(
+        None, workplace
+    )
+    with ExitStack() as acquired:
+        while True:
+            acquired.enter_context(
+                storage.service._admitted_gate(context, root, deadline)
+            )
+            try:
+                if writing:
+                    acquired.enter_context(event_main_snapshot(storage))
+            except DatabaseError as error:
+                if inherited or error.code != "database_busy" or not error.retryable:
+                    raise
+                # No part of the event phase has run. Wait outside every gate.
+                acquired.close()
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise
+                time.sleep(min(0.01, remaining))
+                if time.monotonic() >= deadline:
+                    raise
+            else:
+                break
         lease = _GateLease((os.getpid(), threading.get_ident(), gate))
         token = _JOURNAL_GATE.set(lease)
         try:

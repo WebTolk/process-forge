@@ -11,11 +11,12 @@ import threading
 import time
 from collections.abc import Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
-from contextlib import closing, contextmanager
+from contextlib import ExitStack, closing, contextmanager
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Any
 
+import pytest
 import smoke_long_lived_runtime as runtime
 import smoke_worker_run_shell as worker
 from pf_runtime.service import http_json
@@ -278,11 +279,13 @@ def onboard(project: Path, workplace: Path) -> None:
     )
 
 
+@pytest.mark.parametrize("busy_resource", ["journal", "main"])
 def test_event_waits_for_project_reader_outside_workplace_admission(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, busy_resource
 ):
     from pf_runtime import host
 
+    from processforge_core.database import SQLiteDriver
     from processforge_core.maintenance import project_event_maintenance
     from processforge_core.runtime.execution_admission import ExecutionAdmission
 
@@ -315,6 +318,13 @@ def test_event_waits_for_project_reader_outside_workplace_admission(
     )
     original_derive = host._ingest_derived_event
     original_lock = project_event_maintenance.registry_file_lock
+    original_connect = SQLiteDriver._connect
+    main_path = project / ".pf/data/pf.sqlite3"
+
+    def observe_connect(driver, database, **kwargs):
+        if reading.is_set() and database == main_path.as_uri() + "?mode=ro":
+            contended.set()
+        return original_connect(driver, database, **kwargs)
 
     def derive(*args, **kwargs):
         before_write.set()
@@ -330,7 +340,12 @@ def test_event_waits_for_project_reader_outside_workplace_admission(
         return original_lock(path, on_contention=observe, **kwargs)
 
     monkeypatch.setattr(host, "_ingest_derived_event", derive)
-    monkeypatch.setattr(project_event_maintenance, "registry_file_lock", observe_lock)
+    if busy_resource == "journal":
+        monkeypatch.setattr(
+            project_event_maintenance, "registry_file_lock", observe_lock
+        )
+    else:
+        monkeypatch.setattr(SQLiteDriver, "_connect", observe_connect)
     pin = slot(project)
     with ThreadPoolExecutor(max_workers=1) as pool:
         result = pool.submit(
@@ -340,9 +355,19 @@ def test_event_waits_for_project_reader_outside_workplace_admission(
             runtime.processforge,
         )
         assert before_write.wait(10)
-        with journal.connection(
-            path, driver=journal.driver, storage_host=journal.storage_host
-        ):
+        with ExitStack() as held:
+            if busy_resource == "journal":
+                held.enter_context(
+                    journal.connection(
+                        path, driver=journal.driver, storage_host=journal.storage_host
+                    )
+                )
+            else:
+                db = held.enter_context(closing(sqlite3.connect(main_path)))
+                assert db.execute("PRAGMA locking_mode=EXCLUSIVE").fetchone() == (
+                    "exclusive",
+                )
+                db.execute("BEGIN EXCLUSIVE")
             reading.set()
             assert contended.wait(10)
             with ExecutionAdmission().workplace(
