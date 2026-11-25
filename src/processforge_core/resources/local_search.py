@@ -30,6 +30,7 @@ from ..database import DatabaseFactory, SQLiteDriver
 from ..project.resource_snapshot import ResourceSnapshotRules
 from ..sqlite_storage import adapter_identity_access
 from .identity import search_root_id
+from .scoped_ranking import selected_fts_page
 from .snapshot import search_path_ref_denied, search_resource_records
 
 MAX_FILE_BYTES = 1_000_000
@@ -1913,47 +1914,6 @@ def _sqlite_busy(error: sqlite3.Error) -> bool:
     }
 
 
-def _selected_fts_page(
-    db: sqlite3.Connection,
-    query: str,
-    instance_keys: list[str],
-    limit: int,
-    start: int,
-) -> tuple[int, list[Any]]:
-    phrase = '"' + query.replace('"', '""') + '"'
-    marks = ",".join("?" for _ in instance_keys)
-    source = "FROM documents_fts JOIN documents d ON d.id = documents_fts.rowid"
-    selection = f"d.root_id IN ({marks})"
-    total = int(
-        db.execute(
-            f"SELECT count(*) {source} WHERE documents_fts MATCH ? AND {selection}",
-            [phrase, *instance_keys],
-        ).fetchone()[0]
-    )
-    if start >= total:
-        return total, []
-
-    # BM25 uses corpus-wide statistics. Keep a query-local in-memory corpus
-    # of authorized documents so another instance cannot change page order.
-    db.execute("CREATE VIRTUAL TABLE temp.selected_fts USING fts5(title, content)")
-    db.execute(
-        "INSERT INTO temp.selected_fts(rowid, title, content) "
-        f"SELECT d.id, documents_fts.title, documents_fts.content {source} "
-        f"WHERE {selection}",
-        instance_keys,
-    )
-    rows = db.execute(
-        "SELECT d.id, d.resource_id, d.package_id, d.kind, d.relative_path, "
-        "d.metadata, bm25(selected_fts) "
-        "FROM temp.selected_fts JOIN documents d ON d.id = selected_fts.rowid "
-        "WHERE selected_fts MATCH ? "
-        "ORDER BY bm25(selected_fts), d.resource_id, d.relative_path, d.root_id "
-        "LIMIT ? OFFSET ?",
-        (phrase, limit, start),
-    ).fetchall()
-    return total, rows
-
-
 def search(
     project_root: Path,
     snapshot: dict[str, Any],
@@ -2053,7 +2013,7 @@ def search(
                     start,
                     {**state, "status": "stale", "error": "resource_not_indexed"},
                 )
-            total, rows = _selected_fts_page(
+            total, rows = selected_fts_page(
                 db, query, list(instances), page_limit, start
             )
         except LocalSearchError as exc:
