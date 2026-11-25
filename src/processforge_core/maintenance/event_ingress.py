@@ -66,7 +66,11 @@ def event_ingress_admission(
             )
             try:
                 if writing:
-                    acquired.enter_context(event_main_snapshot(storage))
+                    # This read witnesses WAL availability. An ingress error
+                    # (e.g. PermissionError) belongs to the Runtime adapter.
+                    snapshot = ExitStack()
+                    acquired.callback(snapshot.close)
+                    snapshot.enter_context(event_main_snapshot(storage))
             except DatabaseError as error:
                 if inherited or error.code != "database_busy" or not error.retryable:
                     raise
