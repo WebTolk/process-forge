@@ -199,6 +199,55 @@ def replay_gap(workplace: Path, project: Path) -> None:
     assert payload.read_bytes() == captured
 
 
+def unavailable_first_target(workplace: Path, project: Path) -> None:
+    blocked = project / ".pf/blocked-route"
+    healthy = project / ".pf/healthy-route"
+    blocked.write_text("temporarily unavailable", encoding="utf-8")
+    configure(
+        project,
+        "first",
+        "second",
+        overrides={"first": {"path": blocked.name}, "second": {"path": healthy.name}},
+    )
+    pf(
+        "hooks-dispatch",
+        "--project-root",
+        str(project),
+        "--event-type",
+        "assignment.completed",
+        "--outbox",
+        expect=1,
+    )
+    (published,) = healthy.glob("*.json")
+    original = published.read_bytes()
+    event = json.loads(original)["event"]
+    results = project / ".pf/runtime/hooks/results"
+    second = results / (hook_outbox.delivery_key(event["event_id"], "second") + ".json")
+    proof = second.read_bytes()
+    assert verify(project, second, "second")["event"] == event
+    tick = (
+        "runtime-host",
+        "tick",
+        "--workplace",
+        str(workplace),
+        "--project-root",
+        str(project),
+        "--json",
+    )
+    outcome = json.loads(pf(*tick, expect=1))
+    assert [
+        failure["event_id"] for failure in outcome["projects"][0]["dispatch_failures"]
+    ] == [event["event_id"]]
+    blocked.unlink()
+    pf(*tick)
+    first = results / (hook_outbox.delivery_key(event["event_id"], "first") + ".json")
+    assert verify(project, first, "first")["event"] == event
+    assert list(healthy.glob("*.json")) == [published]
+    assert published.read_bytes() == original and second.read_bytes() == proof
+    journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
+    assert not journal.pending_dispatch(project / ".pf/runtime/events/events.sqlite3")
+
+
 def check_conflict(project: Path, event: dict[str, Any], reason: str) -> None:
     try:
         RuntimeHookDispatcher().dispatch_hooks(project, event)
@@ -752,6 +801,7 @@ def main() -> None:
         )
         event = public_dispatch(project)
         replay_gap(workplace, project)
+        unavailable_first_target(workplace, project)
         runtime_correlations(project)
         chat_recovery(project)
         interrupted_v1(workplace, project, event)
