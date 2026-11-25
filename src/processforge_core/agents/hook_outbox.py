@@ -27,6 +27,10 @@ def _encode(value: dict[str, Any]) -> bytes:
 
 def _read(path: Path) -> bytes | None:
     try:
+        if os.name == "nt":
+            from processforge_platforms.windows_shared_read import read_published_file
+
+            return read_published_file(path)
         return path.read_bytes()
     except FileNotFoundError:
         return None

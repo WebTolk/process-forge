@@ -781,11 +781,27 @@ def independent_pending_rows(
     assert journal.pending_dispatch(database) == []
 
 
+def read_during_windows_rename(root: Path) -> None:
+    if os.name != "nt":
+        return
+    import _winapi
+
+    path = root / "published.json"
+    path.write_bytes(b"first delivery")
+    # Hold DELETE access exactly as an overlapping Windows rename can do.
+    handle = _winapi.CreateFile(str(path), 0x10000, 7, 0, _winapi.OPEN_EXISTING, 0, 0)
+    try:
+        assert hook_outbox._read(path) == b"first delivery"
+    finally:
+        _winapi.CloseHandle(handle)
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(
         dir=os.environ.get("PF_TEST_SCRATCH_ROOT")
     ) as directory:
         root = Path(directory).resolve()
+        read_during_windows_rename(root)
         workplace, project = root / "workplace", root / "outbox"
         project.mkdir()
         pf("workplace-init", "--workplace", str(workplace), "--apply")
