@@ -387,6 +387,60 @@ def test_event_waits_for_project_reader_outside_workplace_admission(
     )
 
 
+def test_event_admission_preserves_request_error_during_snapshot_cleanup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from processforge_core.database import DatabaseError
+    from processforge_core.maintenance import event_ingress
+    from processforge_core.maintenance.storage_migration import StorageMigrationHost
+
+    project, workplace = tmp_path / "fresh", tmp_path / "workplace"
+    project.mkdir()
+    runtime.pf("workplace-init", "--workplace", str(workplace), "--apply")
+    onboard(project, workplace)
+    journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
+    storage = journal.storage_host
+    assert storage is not None
+    snapshot = event_ingress.event_main_snapshot
+    denied = PermissionError("fixture_session_denied")
+    with (
+        pytest.raises(PermissionError) as normal_refusal,
+        event_ingress.event_ingress_admission(
+            project, workplace, storage, writing=True
+        ),
+    ):
+        raise denied
+    assert normal_refusal.value is denied
+    assert not getattr(normal_refusal.value, "__notes__", ())
+
+    @contextmanager
+    def failed_close(host: StorageMigrationHost) -> Iterator[None]:
+        with snapshot(host):
+            yield
+        raise DatabaseError("database_io_failed")
+
+    monkeypatch.setattr(event_ingress, "event_main_snapshot", failed_close)
+    with (
+        pytest.raises(PermissionError) as refusal,
+        event_ingress.event_ingress_admission(
+            project, workplace, storage, writing=True
+        ),
+    ):
+        raise denied
+    assert refusal.value is denied
+    assert refusal.value.__notes__ == [
+        "event_main_snapshot_close_failed: database_io_failed"
+    ]
+
+    with (
+        pytest.raises(DatabaseError, match="database_io_failed"),
+        event_ingress.event_ingress_admission(
+            project, workplace, storage, writing=True
+        ),
+    ):
+        pass
+
+
 def test_project_migration_preserves_running_runtime_and_sibling_work(tmp_path: Path):
     project, sibling = tmp_path / "legacy-a", tmp_path / "fresh-b"
     workplace = tmp_path / "workplace"

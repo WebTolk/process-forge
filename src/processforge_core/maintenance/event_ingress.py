@@ -35,6 +35,26 @@ def ordinary_journal_lock(
 
 
 @contextmanager
+def _event_snapshot_scope(storage: StorageMigrationHost) -> Iterator[None]:
+    """Keep the SQLite read separate from errors raised by the Runtime adapter."""
+    with ExitStack() as snapshot:
+        snapshot.enter_context(event_main_snapshot(storage))
+        try:
+            yield
+        except BaseException as request_error:
+            try:
+                snapshot.close()
+            except Exception as close_error:
+                code = (
+                    close_error.code
+                    if isinstance(close_error, DatabaseError)
+                    else type(close_error).__name__
+                )
+                request_error.add_note(f"event_main_snapshot_close_failed: {code}")
+            raise
+
+
+@contextmanager
 def event_ingress_admission(
     project: Path,
     workplace: Path,
@@ -66,11 +86,8 @@ def event_ingress_admission(
             )
             try:
                 if writing:
-                    # This read witnesses WAL availability. An ingress error
-                    # (e.g. PermissionError) belongs to the Runtime adapter.
-                    snapshot = ExitStack()
-                    acquired.callback(snapshot.close)
-                    snapshot.enter_context(event_main_snapshot(storage))
+                    # This read witnesses WAL availability before event writes.
+                    acquired.enter_context(_event_snapshot_scope(storage))
             except DatabaseError as error:
                 if inherited or error.code != "database_busy" or not error.retryable:
                     raise
