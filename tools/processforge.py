@@ -15708,21 +15708,20 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
         versions = _update_version_selection_policy.normalize(raw_manifest, site, effective_channel)
         installed_subject = installed.get((str(subject.get("type")), str(subject.get("id"))), {})
         installed_version = str(subject.get("installed_version") or installed_subject.get("version") or "")
-        selected, compare_warnings = _update_version_selection_policy.select(versions, installed_version or None)
-        warnings.extend(compare_warnings)
-        if not selected:
-            continue
         source_policy = _update_site_policy.policy(source, installed_subject)
         pinned = source_policy.get("pin_version")
-        if isinstance(pinned, str) and pinned.strip() and str(selected.get("version")) != pinned:
-            conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by pin_version {pinned}"})
+        selected, compare_warnings, conflict_reason = _update_version_selection_policy.select_admissible(
+            versions,
+            installed_version or None,
+            pin_version=pinned if isinstance(pinned, str) else None,
+            allow_major=(source_policy.get("allow_major") is not False),
+        )
+        warnings.extend(compare_warnings)
+        if conflict_reason is not None:
+            conflicts.append({"site_id": site.get("site_id"), "reason": conflict_reason})
             continue
-        if source_policy.get("allow_major") is False and installed_version:
-            installed_major = _resource_version_policy.key(installed_version)[1]
-            selected_major = _resource_version_policy.key(str(selected.get("version")))[1]
-            if isinstance(installed_major, tuple) and isinstance(selected_major, tuple) and installed_major[0] != selected_major[0]:
-                conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by allow_major=false"})
-                continue
+        if not selected:
+            continue
         trust = source.get("trust") if isinstance(source.get("trust"), dict) else {}
         require_sha = bool(trust.get("require_sha256", trust.get("require_sha256_for_install", source_policy.get("require_sha256", True))))
         sha256 = str(selected.get("sha256") or "")
