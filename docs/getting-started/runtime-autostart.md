@@ -1,12 +1,12 @@
-# Runtime Autostart And Codex MCP Startup
+# Runtime autostart and MCP client setup
 
 ProcessForge has two different startup models:
 
 - **PF App Server (PF Runtime)** is a workplace-scoped loopback HTTP service.
   It can run as a foreground process, as an explicitly detached background
   process, or on Windows as an opt-in per-user scheduled task.
-- **PF MCP** is a stdio server for Codex. Codex owns this process and starts it
-  from Codex MCP configuration when a host session needs the server.
+- **PF MCP** runs over stdio. The MCP client launches the server on demand
+  and owns its input and output streams for the connection.
 
 Garage does not require PF Runtime. Install Runtime autostart only for a Forge
 workplace whose coordination model requires the long-lived service. On Linux,
@@ -175,10 +175,28 @@ If Python, its virtual environment or Core moves, reinstall the task with the
 new paths. Task Scheduler uses the interpreter in its command. Install the
 distribution’s `requirements.txt` into that interpreter.
 
+## Connect a stdio MCP client
+
+Create a local stdio server entry in your client. Use the absolute path to the
+Python interpreter that has the distribution’s dependencies. Supply these three
+arguments in order, replacing the paths with your installed locations.
+
+| Setting | Value |
+| --- | --- |
+| Command | Absolute path to the Python interpreter |
+| First argument | `<processforge-root>/tools/pf_runtime/mcp_server.py` |
+| Second argument | `--workplace` |
+| Third argument | Absolute path to the initialized workplace |
+
+Reconnect the client, inspect its advertised tools and call `pf.context` with
+`project_root` set to an onboarded project. Check that the returned project ID
+and mode match that project. The same project can also use the Python CLI.
+[Project commands](agent-prompts.md) · [MCP tool reference](../concepts/runtime-mcp.md)
+
 ## Codex MCP Registration
 
-Codex MCP registration is separate from Runtime autostart. ProcessForge manages
-Codex host configuration only when explicitly requested:
+For example, Codex provides an MCP registry which PF can manage on request.
+Preview the registration before applying it.
 
 ```powershell
 python bin/pf.py codex-mcp status --workplace <workplace>

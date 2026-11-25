@@ -105,8 +105,8 @@ contract. Core allocates an exclusive new directory only under one literal,
 immutable owned `.pf/tmp/?/**` write grant. Empty/read-only or ambiguous grants
 allocate nothing. The contract adds no resource group or public CLI option;
 native maintenance keeps its separate strict authority and material checks.
-The prepared executor and Codex worker use the directory for `TEMP`, `TMP`,
-`TMPDIR` and `PF_WORKER_SCRATCH`. Keep durable outputs, source and recovery data
+Prepared workers receive this directory through `TEMP`, `TMP`, `TMPDIR` and
+`PF_WORKER_SCRATCH`. Keep durable outputs, source and recovery data
 outside this disposable namespace. A bounded private creation record is pinned
 by the immutable prepared manifest; selected-attempt release/cleanup receipts
 record real end of use and residual errors. Old unmanaged directories are not

@@ -2,7 +2,7 @@
 
 Проверьте эти требования перед [установкой](getting-started/installation.md).
 ProcessForge работает как локальный Python CLI. Для режима Garage не нужны
-PF Runtime, MCP, хуки Codex или вручную открытая сессия Agent Ledger.
+PF Runtime, MCP, хуки клиента или вручную открытая сессия Agent Ledger.
 
 ## Python и библиотеки
 

@@ -1,9 +1,9 @@
 # Hooks And Webhooks
 
 The project dispatcher reads enabled targets from `.pf/hooks.yaml` and matches
-their `event_types` against the event name or `*`. The Codex handlers in
-`.codex/hooks.json` feed observations into PF. Each configuration has its own
-handler or target count. [Native hook setup](../guides/forge-init-hooks.md)
+their `event_types` against the event name or `*`. Native hook adapters receive
+observations from the client. The number of registered client handlers and the
+number of webhook targets are independent. [Native hook setup](../guides/forge-init-hooks.md)
 
 Default config:
 

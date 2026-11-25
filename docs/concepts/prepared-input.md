@@ -32,8 +32,7 @@ current registry record, including revocation and drift without a refresh.
 A file-backed tool retains the existing path containment and existence checks.
 A command-only tool may instead receive `resolution.status: descriptor` with its
 verified `entry`, including a nonempty command, only in the private prepared
-input. This descriptor grants no directory or file-body access and adds no broad
-Codex directory grant. Templates keep their existing file-backed form.
+input. The descriptor conveys metadata only. Templates retain their file-backed form.
 Missing references/digests, ambiguous or changed identities, changed definitions
 and revoked records fail closed. Existing immutable snapshots/capsules are not
 upgraded in place: new tool grants require a fresh governed context.
@@ -52,9 +51,9 @@ Every prepared driver receives the reserved `PF_PREPARED_INPUT_FILE` and `PF_PRE
 
 Manual preparation produces the same per-attempt manifest and prompt pointer but starts no process. The built-in generic-shell driver opts into `tools/prepared_executor.py`, which validates the manifest pointer, raw-byte digest, identity and size before starting the existing target argv with inherited stdin/stdout/stderr, working directory and environment. It records starting, periodic and final heartbeat state plus the durable exit contract. The wrapper does not bootstrap PF or MCP and makes no OS sandbox claim.
 
-Codex uses its existing `tools/codex_exec_worker.py` wrapper and consumes the same prepared manifest. The launch prompt directs it to verify the path and checksum, use only inline content and declared file references, avoid rebuilding context or starting another Work, and treat metadata-only grants as metadata only. For a prepared launch, Codex does not receive broad `--add-dir` grants from workspace-access paths. Generic prepared execution does not require an MCP connection or network access; this statement does not constrain what an executable can do unless its operating-system sandbox enforces it.
+The worker assignment must declare `expected_report.artifact` and grant write access to that path. Preparation returns `worker_report_undeclared` when a primary Work has no worker report.
 
-In prepared mode, Codex receives fixed instructions and the verified manifest only. It does not read the mutable worker prompt, capsule body, or workspace-access pointer. A worker assignment must declare `expected_report.artifact` and matching write scope before immutable context is created. An ordinary primary Work with no declared outputs is not worker-ready and fails with `worker_report_undeclared`; ProcessForge does not infer authority from a filename.
+For example, the `codex-exec` wrapper delivers fixed instructions and the verified manifest. It neither rereads mutable prompt or capsule files nor grants broad directory access through `--add-dir`. A local `generic-shell` worker can run without MCP or network access. Process isolation depends on the execution environment. [Runtime drivers](runtime-drivers.md)
 
 Immediately before launch, ProcessForge reloads and checks the attempt file and checksum, exact Work/assignment/context identity, capsule pins, input fingerprint, and current sources and authorization. A changed source, stale snapshot, revoked grant, or mismatched path blocks launch. The manifest is a delivery record, not a new authority source.
 

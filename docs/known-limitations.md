@@ -17,8 +17,8 @@ a workplace Runtime, a host-owned MCP connection and coordinated workers.
 - A bounded file-first supervisor MVP exists. The optional PF Runtime service
   exists as a local loopback PoC/MVP, including manual background start and
   Windows Task Scheduler autostart. A watch-events service, public network API,
-  web UI and database-backed scheduler are not implemented. The shipped
-  `codex-exec` driver requires a separately available Codex CLI and host setup.
+  web UI and database-backed scheduler are not implemented. External workers
+  need the executable and configuration declared by their selected driver.
 - WTAICC support produces local outbox payloads. Delivery to a remote service requires a separate consumer.
 - `--interactive` is a first-run UX marker, not a terminal wizard.
 - External documentation mirroring is a plan or stub unless resources are explicitly imported.
@@ -38,12 +38,11 @@ a workplace Runtime, a host-owned MCP connection and coordinated workers.
   a requirement for default file-first CLI usage.
 - Windows autostart is supported only for PF Runtime through a per-user Task
   Scheduler logon task; the stdio MCP server is not a Task Scheduler target.
-- Codex MCP registration is host-owned: Codex starts the connected stdio MCP
-  process from its configuration for each fresh host session.
+- The MCP client starts the stdio process from its configuration for each connection.
 - Managed Linux `systemd --user` Runtime autostart is not provided.
-- Project initialization checks the project-local Codex configuration when the
-  workplace default mode is `organized`. Garage collection is optional.
-  The client controls whether handlers run. [Hook setup](guides/forge-init-hooks.md)
+- On an `organized` workplace, project initialization configures handlers for the
+  bundled integration. Garage collection is optional. The client controls activation.
+  [Hook support by client](guides/forge-init-hooks.md)
 - Hosted MCP behavior depends on the selected agent host supporting stdio MCP.
 - TUF metadata and key management are not implemented; update trust is
   based on HTTPS, SHA-256, immutable release assets, and Git provenance.
@@ -55,9 +54,8 @@ a workplace Runtime, a host-owned MCP connection and coordinated workers.
   under `.pf/runtime/release-test/`.
 - A long-running watcher is a future optional layer, not part of the core
   runtime.
-- Runtime driver execution is opt-in. Built-in neutral drivers are limited to
-  `manual`, `generic-shell`, `codex-exec`, `test-echo-worker`, and
-  `test-shell-agent`.
+- External worker execution is opt-in. The built-in [driver registry](concepts/runtime-drivers.md)
+  includes manual preparation, external CLI execution and local test workers.
 - Shell-launched proof workers write `heartbeat.json` as a required live
   process artifact under `.pf/runtime/agent-runs/<run-id>/<task-id>/`; this
   does not make ProcessForge a background daemon.
@@ -65,14 +63,13 @@ a workplace Runtime, a host-owned MCP connection and coordinated workers.
   host AI environment may launch its own subagents with ProcessForge
   assignment/capsule scope, but ProcessForge does not install or impersonate
   those host agents.
-- Codex hook registration is environment-owned: the shipped adapter does not
-  prove that all host hooks are registered.
-- Current automatic conversation coverage includes attributed `UserPromptSubmit`
-  prompts, final messages supplied in `Stop`, `SubagentStop` or `SessionEnd`
-  payloads, and PF-owned worker records. It depends on provider fields such as
-  `last_assistant_message`; interim streaming output is not a complete transcript.
-- Session replay repairs supported normalized Codex-derived project events; it
-  does not reconstruct a complete generic conversation transcript.
+- Native hooks require client-side registration and activation. The available
+  events depend on the host and its registered adapter.
+- The stored conversation depends on fields delivered by a registered adapter.
+  For example, Codex hooks can supply attributed prompts and a final message.
+  PF also checks the provenance of managed worker records. Replay can restore
+  supported project events. A full streaming transcript requires source messages.
+  [Session reads and capture](concepts/session-reads.md)
 - Raw ingress rejects canonical payloads larger than 1,048,576 bytes. There is
   no oversized-payload blob spill or receipt yet.
 - Project raw/event journals use local SQLite with serialized writers; measured

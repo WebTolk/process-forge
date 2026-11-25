@@ -29,7 +29,7 @@ SQLite хранит уникальные квитанции, данные нез
 `logging.raw_hooks` и `logging.events` наследуются от глобального PFConfig с
 проектными переопределениями. См. [описание миграции](hook-journal-sqlite.md).
 
-## Codex adapter and registration
+## Пример регистрации адаптера Codex
 
 Адаптер Codex распознаёт события сессии, сжатия контекста и вызовов инструментов.
 При включённом сборе и действующей привязке `UserPromptSubmit` может записать
@@ -41,7 +41,7 @@ SQLite хранит уникальные квитанции, данные нез
 восемь обработчиков в `.codex/hooks.json`. В Garage оператор может добавить их
 через `tools/pf_runtime/codex_integration.py`. Активацию показывает `/hooks`
 в конкретном клиенте Codex. [Настройка хуков](../guides/forge-init-hooks.md) ·
-[Чтение данных сессии](../../concepts/codex-session-read.md)
+[Чтение данных сессии](session-reads.md)
 
 ## Project hooks
 

@@ -36,7 +36,7 @@ On a workplace with an `organized` default, project initialization prepares
 eight handlers in `.codex/hooks.json`. In Garage an operator can merge them
 with `tools/pf_runtime/codex_integration.py`. Check `/hooks` in the target
 Codex client for activation. [Hook setup](../guides/forge-init-hooks.md) ·
-[Session reads](codex-session-read.md)
+[Session reads](session-reads.md)
 
 ## Project hooks
 

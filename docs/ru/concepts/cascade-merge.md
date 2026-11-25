@@ -78,7 +78,7 @@ parameters:
   test_stands:
     - id: local-joomla
       url: http://joomla.local/administrator/
-      user: codex
+      user: workplace-user
       auth_ref: local.joomla.admin
 ```
 

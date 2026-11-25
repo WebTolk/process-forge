@@ -1,7 +1,7 @@
 # Global Agent Section
 
-ProcessForge does not own a workplace-level `AGENTS.md`, `CODEX.md`, or similar
-instruction file. It inserts or updates only a bounded navigation section:
+The operator owns the global agent instruction file. ProcessForge can insert
+or update the following bounded navigation section.
 
 ```markdown
 <!-- PROCESSFORGE:START -->

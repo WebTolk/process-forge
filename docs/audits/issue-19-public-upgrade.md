@@ -21,7 +21,7 @@ The component checks read-only planning, explicit confirmation, unchanged-releas
 
 ## Mandatory readiness remains separate
 
-A successful Core replacement creates no native enrollment or old-writer retirement proof. In the reproduced never-enrolled public 1.2.0 project, subsequent storage apply, context refresh, new Work and worker preparation refuse storage_activity_unknown; execution inspection reports execution_activity_unknown. The current qualified historical cold-to-managed deployment is not supplied by this file-only route. See [execution authority](../concepts/execution-storage.md#first-cold-transition) and [ST12](issue-17-storage-paths.md).
+A successful Core replacement creates no native enrollment or old-writer retirement proof. In the reproduced never-enrolled public 1.2.0 project, subsequent storage apply, context refresh, new Work and worker preparation refuse storage_activity_unknown; execution inspection reports execution_activity_unknown. The current qualified historical cold-to-managed deployment is not supplied by this file-only route. See [execution authority](https://github.com/WebTolk/process-forge/blob/033a2e791373c7cf46d5b1dc5b2b3be8acff91fd/docs/concepts/execution-storage.md) and [ST12](issue-17-storage-paths.md).
 
 The component receipt records project migration and worker-prepare results separately and explicitly sets full_t06_qualified to false. A green Core-files job cannot qualify SQL cutover, a native update route or successful worker start/status/collect. A configuration doctor and a readable old Work do not prove ordinary-write readiness. Missing/partial enrollment must continue to select or refuse its native route; file-only replacement cannot bypass it.
 

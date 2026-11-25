@@ -216,8 +216,8 @@ BOM и CRLF. При замене известного старого текст�
 
 ## Диагностика профиля без записи
 
-`agent-entry profiles` выводит версионируемый реестр. Команда
-`agent-entry diagnose --project-root <project-root> --profile P-CODEX --cwd subdir`
+`agent-entry profiles` выводит версионируемый реестр. Выберите профиль своего
+клиента. Команда `agent-entry diagnose --project-root <project-root> --profile <profile-id> --cwd subdir`
 проверяет существующие файлы. `--cwd` задаётся относительно корня проекта,
 по умолчанию `.`. Прежний `agent-entry check` сохраняет проверку плана миграции.
 Диагностика не меняет файлы, настройки клиентов или инфраструктуру.

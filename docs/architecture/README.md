@@ -65,8 +65,8 @@ records later changes and open findings against a fixed revision.
   be addressed explicitly during maintenance. See the
   [revised migration boundary](../audits/architecture-decisions-20261118.md).
 - **D22 — Managed egress.** Apply strict managed-egress guarantees to the
-  mediated, policy-bound protocol and its qualified providers. Generic shell and
-  native Codex retain their own declared isolation and capability boundaries.
+  mediated, policy-bound protocol and its qualified providers. Shell workers and
+  native agent CLIs retain their own declared isolation and capability boundaries.
   [Egress engine](../concepts/egress-engine.md)
 
 ## Storage and configuration
