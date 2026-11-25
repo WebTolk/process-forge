@@ -94,6 +94,62 @@ def nonquiescent_worker(project, workplace, selectors):
         assert repository.load_latest(run_id, task_id) is None
 
 
+def check_stopped_preparation(
+    project: Path,
+    workplace: Path,
+    service: ProcessExecutionService,
+    continuation: ContinuationService,
+) -> None:
+    from smoke_worker_run_shell import driver_yaml_path
+
+    report = ".pf/artifacts/stopped-worker/report.md"
+    started = service.start(
+        objective="Continue after stopping a prepared worker",
+        scope_intent={
+            "schema_version": 1,
+            "assignment": {
+                "allowed_files": [report],
+                "allowed_read_files": [".pf/**"],
+                "required_outputs": [{"id": "report", "path": report, "required": True}],
+                "expected_report": {"artifact": report},
+            },
+        },
+    )
+    assert started["action"] == "created_new", started
+    selectors = {
+        "run_id": started["run_id"],
+        "assignment_id": started["assignment_id"],
+        "context_id": started["context"]["id"],
+    }
+    driver = driver_yaml_path(project, "continuation-stop")
+    worker = ("--project-root", str(project), "--task", selectors["assignment_id"])
+    create = {**selectors, "continuation_id": "after-stop", "apply": True}
+
+    cli("worker-run", "prepare", *worker, "--driver", str(driver))
+    blocked = continuation.request("create", **create)
+    assert blocked["reason"] == "worker_not_quiescent", blocked
+    cli("worker-run", "stop", *worker)
+    lease = {
+        "schema_version": 1,
+        "id": "after-stop-lease",
+        "status": "active",
+        "scope": {"run_id": selectors["run_id"], "task_id": selectors["assignment_id"]},
+    }
+    core.save_lease(workplace, lease)
+    blocked = continuation.request("create", **create)
+    assert blocked["reason"] == "active_lease", blocked
+    core.save_lease(workplace, {**lease, "status": "released"})
+
+    created = continuation.request("create", **create)
+    assert created["action"] == "created" and created["schema_version"] == 2, created
+    resume: dict[str, object] = {"project_root": str(project), "continuation_id": "after-stop"}
+    resumed = call_mcp(workplace, "pf.continuation.resume", resume)
+    assert resumed["action"] == "continued" and resumed["selectors"] == selectors, resumed
+    cli("worker-run", "prepare", *worker, "--driver", str(driver))
+    blocked = continuation.request("resume", continuation_id="after-stop")
+    assert blocked["reason"] == "worker_not_quiescent", blocked
+
+
 def main():
     with fixture() as (workplace, project, empty):
         service = bind_work_summaries(bind_process_events(ProcessExecutionService(project, workplace, core), ProcessEventRecorder()), WorkSummaryRenderer())
@@ -291,6 +347,7 @@ def main():
         assert continuation.request('cancel_work', run_id=empty['run_id'], assignment_id=empty['assignment_id'], context_id=empty['context']['id'],
                                     capsule_checksum=empty['context']['checksum'], reason='End fixture', apply=True)['status'] == 'cancelled'
         assert continuation.request('status')['action'] == 'not_found'
+        check_stopped_preparation(project, workplace, service, continuation)
     print('PASS: continuation identity, wait readiness, sessions, CLI/MCP, permissions and cancellation recovery')
 
 
