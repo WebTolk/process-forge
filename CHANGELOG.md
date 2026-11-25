@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 1.3.1 - 2026-11-25
+
+See the [release notes](docs/releases/1.3.1.md) and
+[примечания к выпуску](docs/ru/releases/1.3.1.md).
+
+- Read available models and their reasoning levels from the configured Codex
+  CLI. Verify explicit choices during worker preparation and launch.
+- Migrate a registered project's event journal with a compatible Runtime
+  running, using the explicit `--project-events` mode.
+- Preserve explicit update selection across discovery and retain rollback after
+  candidate refresh or loss of the update source.
+- Preserve authorization scope in resource search and keep concurrent Runtime
+  and MCP results associated with their requests.
+- Track event delivery and retries per recipient. Repair the private scratch
+  directory and make global agent instructions work with UTF-8.
+- Align loopback transport handling, project binding checks and native
+  contract tests. Document the architecture and roadmap.
+
 ## 1.3.0 - 2026-11-20
 
 See the [release notes](release/1.3.0/notes.md) and
