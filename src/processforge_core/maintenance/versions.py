@@ -227,10 +227,10 @@ class UpdateVersionSelectionPolicy:
             return None, warnings, None
         if pin_version is not None and not pin_version.strip():
             pin_version = None
-        installed_key = (
-            self._resource_version_policy.key(installed)[1]
+        installed_numbers = (
+            self._version_key(installed)[1]
             if allow_major is False and installed
-            else None
+            else ()
         )
 
         conflict = None
@@ -239,12 +239,9 @@ class UpdateVersionSelectionPolicy:
             reason = None
             if pin_version is not None and available != pin_version:
                 reason = f"candidate {available} blocked by pin_version {pin_version}"
-            elif isinstance(installed_key, tuple):
-                available_key = self._resource_version_policy.key(available)[1]
-                if (
-                    isinstance(available_key, tuple)
-                    and available_key[0] != installed_key[0]
-                ):
+            elif installed_numbers:
+                available_numbers = self._version_key(available)[1]
+                if available_numbers and available_numbers[0] != installed_numbers[0]:
                     reason = f"candidate {available} blocked by allow_major=false"
             if reason is None:
                 return item, warnings, None
