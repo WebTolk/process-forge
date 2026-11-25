@@ -78,21 +78,64 @@ def write_receipt(path: Path, result: dict[str, Any], *, first: bool = False) ->
     return path
 
 
+def _is_chat_observation(event: dict[str, Any]) -> bool:
+    return (
+        event.get("source") == "processforge.cli"
+        and event.get("event_type") == "chat.message.recorded"
+    )
+
+
+def _chat_reference(event: dict[str, Any]) -> dict[str, Any] | None:
+    reference: Any = event
+    for key in ("data", "message", "content_ref"):
+        if not isinstance(reference, dict):
+            return None
+        reference = reference.get(key)
+    return reference if isinstance(reference, dict) else None
+
+
 def _original_observation(
     event: dict[str, Any], first: dict[str, Any]
 ) -> dict[str, Any]:
-    # Runtime observes a fresh time when reconstructing an admitted event.
-    # All other fields, including the correlation, describe the delivery.
+    # The clock and an unknown chat line can change when rebuilding an event.
+    # The serialized comparison still binds every other field of the delivery.
     source = event.get("source")
+    chat = _is_chat_observation(event) and _is_chat_observation(first)
     if (
         not isinstance(source, str)
-        or not source.startswith("processforge.runtime.")
         or first.get("source") != source
+        or not (source.startswith("processforge.runtime.") or chat)
     ):
         return event
     restored = dict(event)
     if isinstance(event.get("time"), str) and isinstance(first.get("time"), str):
         restored["time"] = first["time"]
+    if not chat:
+        return restored
+    published, replayed = _chat_reference(first), _chat_reference(event)
+    if published is None or replayed is None:
+        return restored
+    published_line, replayed_line = published.get("line"), replayed.get("line")
+    if (
+        type(published_line) is int
+        and type(replayed_line) is int
+        and min(published_line, replayed_line) == 0
+        and max(published_line, replayed_line) > 0
+        and all(
+            isinstance(published.get(key), str)
+            and published[key]
+            and published[key] == replayed.get(key)
+            for key in ("path", "message_id")
+        )
+    ):
+        data = event["data"]
+        restored["data"] = {
+            **data,
+            "message": {
+                **data["message"],
+                "content_ref": {**replayed, "line": published_line},
+            },
+        }
     return restored
 
 
@@ -294,7 +337,25 @@ def _written_receipt(
     if envelope["delivery_id"] != delivery_id:
         receipt["payload_delivery_id"] = envelope["delivery_id"]
     original = envelope["event"]
-    if isinstance(original.get("source"), str) and original["source"].startswith(
+    if _is_chat_observation(original) and "payload_sha256" not in previous:
+        observation = {
+            key: original[key]
+            for key in ("source", "time", "event_type")
+            if key in original
+        }
+        reference = _chat_reference(original)
+        if reference is not None:
+            observation["data"] = {
+                "message": {
+                    "content_ref": {
+                        key: reference[key]
+                        for key in ("path", "message_id", "line")
+                        if key in reference
+                    }
+                }
+            }
+        receipt["runtime_observation"] = observation
+    elif isinstance(original.get("source"), str) and original["source"].startswith(
         "processforge.runtime."
     ):
         receipt["runtime_observation"] = {

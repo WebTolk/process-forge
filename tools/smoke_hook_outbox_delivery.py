@@ -269,6 +269,86 @@ def v1_file(
     return path, original, key
 
 
+def chat_recovery(project: Path) -> None:
+    target = "chat-recovery"
+    configure(
+        project, target, overrides={target: {"event_types": ["chat.message.recorded"]}}
+    )
+    dispatcher = RuntimeHookDispatcher()
+    ref_path = ".pf/runtime/chat/transcripts/chat-recovery.ndjson"
+
+    def chat_event(
+        line: int,
+        observation_time: str,
+        *,
+        event_id: str = "evt_chat_recovery",
+        content_hash: str = "original",
+        path: str = ref_path,
+    ) -> dict[str, Any]:
+        return {
+            "source": "processforge.cli",
+            "event_type": "chat.message.recorded",
+            "event_id": event_id,
+            "time": observation_time,
+            "correlation_id": "chat-session",
+            "data": {
+                "message": {
+                    "content_hash": content_hash,
+                    "content_ref": {
+                        "path": path,
+                        "message_id": "message",
+                        "line": line,
+                    },
+                }
+            },
+        }
+
+    first_time = "2026-01-01T00:00:00Z"
+    retry_time = "2026-01-01T00:01:00Z"
+    (action,) = dispatcher.dispatch_hooks(project, chat_event(1, first_time))
+    outbox, receipt = (project / action[key] for key in ("outbox", "result"))
+    original_payload, original_receipt = outbox.read_bytes(), receipt.read_bytes()
+    replay = chat_event(0, retry_time)
+    assert dispatcher.dispatch_hooks(project, replay) == [action]
+    assert outbox.read_bytes() == original_payload
+    assert receipt.read_bytes() == original_receipt
+
+    outbox.unlink()
+    assert dispatcher.dispatch_hooks(project, replay) == [action]
+    assert outbox.read_bytes() == original_payload
+    assert receipt.read_bytes() == original_receipt
+    assert len(list(outbox.parent.glob(f"{action['delivery_id']}.*"))) == 1
+    verify(project, receipt, target)
+
+    for conflict in (
+        chat_event(2, retry_time),
+        chat_event(0, retry_time, content_hash="changed"),
+        chat_event(0, retry_time, path=ref_path + ".other"),
+        {**replay, "correlation_id": "different-session"},
+    ):
+        check_conflict(project, conflict, "outbox_delivery_conflict")
+    assert outbox.read_bytes() == original_payload
+    assert receipt.read_bytes() == original_receipt
+
+    outbox.unlink()
+    older_receipt = json.loads(original_receipt)
+    del older_receipt["runtime_observation"]
+    older_bytes = json.dumps(older_receipt).encode("utf-8")
+    receipt.write_bytes(older_bytes)
+    check_conflict(project, replay, "outbox_receipt_payload_mismatch")
+    assert not outbox.exists() and receipt.read_bytes() == older_bytes
+
+    legacy = chat_event(0, first_time, event_id="evt_legacy_chat_recovery")
+    legacy_path, legacy_bytes, legacy_id = v1_file(outbox.parent, target, legacy)
+    v1_receipt(project, legacy_path, legacy_id, target)
+    (recovered,) = dispatcher.dispatch_hooks(
+        project, chat_event(1, retry_time, event_id=legacy["event_id"])
+    )
+    assert project / recovered["outbox"] == legacy_path
+    assert legacy_path.read_bytes() == legacy_bytes
+    verify(project, project / recovered["result"], target)
+
+
 def replay_v1(workplace: Path, project: Path, event: dict[str, Any]) -> None:
     database = project / ".pf/runtime/events/events.sqlite3"
     journal = ProcessEventRecorder().event_journal_for_project(project, workplace)
@@ -673,6 +753,7 @@ def main() -> None:
         event = public_dispatch(project)
         replay_gap(workplace, project)
         runtime_correlations(project)
+        chat_recovery(project)
         interrupted_v1(workplace, project, event)
         separate_v1_targets(workplace, project, event)
         v1_platform_filename(workplace, project, event)
