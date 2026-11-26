@@ -196,9 +196,9 @@ Existing snapshots and capsules are never rewritten by preview or placement.
 
 ### Read-only profile diagnostics
 
-`agent-entry profiles` lists the versioned registry. `agent-entry diagnose
---project-root <project-root> --profile P-CODEX --cwd subdir` inspects actual
-files without planning replacements. `--cwd` is relative to the supplied root;
+`agent-entry profiles` lists the versioned registry. Choose the profile for your
+client. `agent-entry diagnose --project-root <project-root> --profile <profile-id> --cwd subdir`
+inspects existing files. `--cwd` is relative to the supplied root and
 the default is `.`. Existing `agent-entry check` retains its migration-plan
 semantics. Neither operation starts infrastructure or changes client settings.
 

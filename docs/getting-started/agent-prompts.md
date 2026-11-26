@@ -9,12 +9,9 @@ never substitute a placeholder for recorded provenance. Check
 
 ## Operating Rules
 
-- Treat ProcessForge as an installed tool, not as content to copy into
-  `.codex`, `.claude`, `.agents`, or similar agent configuration folders.
-- Do not infer ProcessForge roles from the current working directory or from
-  folder names such as `.codex`, `.claude`, `.agents`, or any custom agent
-  root. Use explicit paths for the distribution root, workplace root, global
-  agent/instruction root, and project roots.
+- Use the installed distribution. Identify the distribution, workplace, agent
+  instructions and project roots by their configured paths. Directory names and
+  the current working directory do not assign ProcessForge roles.
 - A global agent root can be registered as a knowledge root, but it is not a
   ProcessForge project unless the operator explicitly asks to onboard it and a
   project-local `.pf/process-forge.yaml` is created there intentionally.

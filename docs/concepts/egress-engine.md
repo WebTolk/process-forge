@@ -2,7 +2,7 @@
 
 T07 provides an explicit Windows HTTP/JSON broker for a remote recipient. It
 mediates the initial envelope, subsequent resource reads, trusted tool results
-and derivative exports. Native Codex CLI, generic shell and isolated-local
+and derivative exports. Direct agent CLIs, generic shell and isolated-local
 execution have **no strict capability**. They cannot silently substitute for
 `mediated_session`. This broker is a finite protocol, not an adapter for an
 arbitrary vendor's chat API or a sandbox for arbitrary local programs.

@@ -110,7 +110,7 @@ owned grant `.pf/tmp/…/**` с разрешённым `write_artifact` или `
 неоднозначные grants не дают выделения. Четыре группы ресурсов, общие limits и
 отдельный строгий native maintenance contract не меняются.
 
-Executor и Codex используют этот каталог через `TEMP`, `TMP`, `TMPDIR` и
+Подготовленные исполнители получают путь через `TEMP`, `TMP`, `TMPDIR` и
 `PF_WORKER_SCRATCH`. Durable outputs, source/Git и recovery остаются вне disposable
 namespace. Creation record проверяется по pin immutable prepared manifest;
 bounded private release/cleanup receipts относятся к точному выбранному attempt.

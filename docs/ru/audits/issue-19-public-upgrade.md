@@ -21,7 +21,7 @@ Workflow запускает tools/smoke_public_core_upgrade.py с явными p
 
 ## Обязательная готовность проверяется отдельно
 
-Успешная замена Core не создаёт native enrollment и не доказывает retirement старых writers. В воспроизведённом never-enrolled проекте публичной 1.2.0 последующие storage apply, context refresh, новая Work и worker prepare отказывают с storage_activity_unknown; execution inspect возвращает execution_activity_unknown. Этот file-only маршрут не предоставляет квалифицированный historical cold-to-managed deployment. См. [execution authority](../concepts/execution-storage.md) и [ST12](issue-17-storage-paths.md).
+Успешная замена Core не создаёт native enrollment и не доказывает retirement старых writers. В воспроизведённом never-enrolled проекте публичной 1.2.0 последующие storage apply, context refresh, новая Work и worker prepare отказывают с storage_activity_unknown; execution inspect возвращает execution_activity_unknown. Этот file-only маршрут не предоставляет квалифицированный historical cold-to-managed deployment. См. [execution authority](https://github.com/WebTolk/process-forge/blob/033a2e791373c7cf46d5b1dc5b2b3be8acff91fd/docs/ru/concepts/execution-storage.md) и [ST12](issue-17-storage-paths.md).
 
 Receipt компонента записывает результаты миграции и worker prepare отдельно и явно оставляет full_t06_qualified=false. Зелёный job Core files не доказывает SQL cutover, native update или успешные worker start/status/collect. Configuration doctor и читаемость старой Work не доказывают готовность обычной записи. Missing/partial enrollment сохраняет native route и его отказы; file-only замена не является обходом.
 

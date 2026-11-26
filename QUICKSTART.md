@@ -10,15 +10,12 @@ First follow the [installation guide](docs/getting-started/installation.md)
 and check the [requirements](docs/requirements.md). You can use the Python CLI
 without MCP or a background service.
 
-If you use Codex with MCP, register ProcessForge once for that host/user:
+If your agent supports stdio MCP, configure its client to launch the PF server
+with the installed Python interpreter and the workplace path. The client starts
+one process for each connection. The [MCP setup guide](docs/getting-started/runtime-autostart.md)
+gives the command and arguments. The CLI also works directly.
 
-```bash
-python <processforge-root>/bin/pf.py codex-mcp install --workplace <workplace-root> --apply
-```
-
-Codex then owns and starts one connected stdio MCP child for each host
-connection. Do not start MCP manually. If your Forge coordination needs the
-background service on Windows, install one Runtime task for the workplace:
+If your Forge workplace needs a background service on Windows, install its Runtime task.
 
 ```powershell
 python <processforge-root>/bin/pf.py runtime autostart install --workplace <workplace-root> --apply
@@ -33,7 +30,7 @@ See the [agent runbook](docs/getting-started/agent-prompts.md) for the full cycl
 | Runtime service | Optional for local CLI and Garage MCP | Required for the Forge MCP backend |
 | MCP | Host starts stdio when selected | Host starts stdio and connects to Runtime |
 | Ledger session | Project context and Work operations accept project/Work selectors | Session views require a bound Ledger session |
-| Codex hooks | Optional collection via `runtime.garage_hooks` | Project initialization prepares the handlers on a workplace with an `organized` default |
+| Host event hooks | Optional collection via `runtime.garage_hooks` | Setup on an `organized` workplace depends on the installed adapter and host. [Hook support](docs/guides/forge-init-hooks.md) |
 | Director | No | Yes when coordination requires it |
 | Runtime autostart | Not needed | Optional when using the service |
 
@@ -77,9 +74,8 @@ as a project unless I explicitly select it for project onboarding.
 
 In automatic mode, the agent first explains what is where and what role it has,
 proposes a setup scenario, gets approval, and only then applies changes.
-Agent configuration folders such as `.codex`, `.claude`, `.agents`, or custom
-names may become instruction or knowledge sources; they are not projects by
-name or by launch location.
+An agent configuration directory can supply shared instructions or knowledge.
+Choose project directories explicitly when onboarding.
 
 ## 4. Create Shared Resources
 
@@ -224,7 +220,6 @@ For update checks, start with `python bin/pf.py update candidates refresh
 --confirm`, or `rollback` as documented in
 `docs/getting-started/update-system.md`.
 
-Do not copy the whole ProcessForge repository into `.codex`, `.claude`,
-`.agents`, or similar agent configuration folders. Install ProcessForge once as
-a tool and tell the agent where it is installed; project-specific instructions
-use root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project). See [entry compatibility](docs/concepts/agent-entry.md); a pointer is not delivery proof.
+Install ProcessForge once and point each agent at the distribution. Use the
+project’s root `AGENTS.md` for instructions, with `.pf/AGENTS.md` as the explicit
+fallback in older projects. [Entry compatibility](docs/concepts/agent-entry.md)

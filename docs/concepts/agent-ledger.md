@@ -3,8 +3,8 @@
 ProcessForge is not the harness. It records the process state around harnesses, agents, and tools.
 
 The agent ledger is the workplace attendance/session layer. It is not a
-separate agent. In Forge/factory operation, supported Codex/Kimi hooks normally
-deliver lifecycle and activity automatically through Host to Ledger. Newly
+separate agent. In Forge, supported host hooks deliver lifecycle and activity
+events through the Host to Ledger. Newly
 admitted prompt, compaction and tool activity refresh the exact authorized
 session without periodic LLM calls. Explicit `agent-heartbeat` /
 `session-heartbeat` CLI and MCP operations remain manual compatibility APIs;

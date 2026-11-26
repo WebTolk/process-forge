@@ -94,12 +94,11 @@ python .pf/runtime/bin/pf.py project-context-check --project-root .
 ```
 
 Use `python bin/pf.py` from the distribution root, not from a normal project.
-Do not copy the full repository into `.codex`, `.claude`, `.agents`, or similar
-agent configuration folders. Project entry uses root `AGENTS.md`, with an
-explicit `.pf/AGENTS.md` fallback in an unmigrated project. Select the loader or
-adapter described in [agent entry](../concepts/agent-entry.md).
+Keep the distribution separate from agent configuration. In the project, read
+root `AGENTS.md`, or explicitly read `.pf/AGENTS.md` in an older project where
+the root file is absent. [Agent entry](../concepts/agent-entry.md)
 
-Garage does not require PF Runtime, MCP or Codex hooks. Connect them only when
+Garage does not require PF Runtime, MCP or host hooks. Connect them only when
 the operator chooses the relevant workflow; ordinary project work does not
 install, start, restart or repair infrastructure. See
 [Runtime and MCP startup](runtime-autostart.md).

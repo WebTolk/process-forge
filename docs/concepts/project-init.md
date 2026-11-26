@@ -88,6 +88,8 @@ so `.codex/hooks.json`, `.pf/process-forge.local.yaml`, `.pf/runtime/`,
 `.pf/private-notes/`, and `.pf/cache/` are ignored. Cache and private-notes are
 reserved/ignored project areas, not normal onboarding output payloads.
 
+### Example of native hook setup
+
 The linked workplace’s default project mode determines hook setup. With
 `organized`, a preview reports the planned Codex changes. Apply merges eight
 handlers into the project’s `.codex/hooks.json` and backs up an existing file

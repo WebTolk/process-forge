@@ -86,8 +86,7 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 
 Default Runtime usage не требует PowerShell, Git, daemon или background process.
 Git нужен только для version-control integration или development/release checks.
-Optional PF Runtime service startup описан в
-[Автозапуск Runtime и запуск Codex MCP](../getting-started/runtime-autostart.md).
+Запуск службы описан в [руководстве по автозапуску Runtime и подключению MCP-клиента](../getting-started/runtime-autostart.md).
 
 ## Runtime, Ledger и MCP interfaces
 
@@ -152,17 +151,15 @@ Routed session восстанавливается из Ledger record `project_id
 Request или event с другим project отклоняется. Это сохраняет recovery после
 удаления Runtime cache и cross-project isolation независимо от daemon.
 
-Codex hooks — тонкие fact adapters. Они нормализуют documented lifecycle или
-tool facts, добавляют existing PF events и делегируют check-in, heartbeat и
-checkout в Core. Через MCP также доступны создание Work, чтение состояния,
+Адаптеры хуков нормализуют полученные от клиента события сессии и инструментов.
+Они добавляют события PF и передают Core операции регистрации, подтверждения
+активности и завершения сессии. Через MCP также доступны создание Work, чтение состояния,
 переход, отмена и продолжение, подготовка, запуск и сбор результата исполнителя,
 инициализация и восстановление проекта. У каждого действия свои идентификаторы,
 права и требования к `apply`. [Каталог действий](action-discovery.md)
 
-Stdio MCP process принадлежит MCP host, а не PF Runtime autostart. Codex
-запускает его из host MCP configuration для каждой connected session. См.
-[PF Runtime MCP facade](runtime-mcp.md) и
-[Автозапуск Runtime и запуск Codex MCP](../getting-started/runtime-autostart.md).
+Для каждого соединения MCP-клиент запускает stdio-сервер из своей конфигурации.
+[Фасад PF Runtime MCP](runtime-mcp.md) · [Автозапуск Runtime и подключение MCP-клиента](../getting-started/runtime-autostart.md)
 
 ## Декларативные технические проекции
 

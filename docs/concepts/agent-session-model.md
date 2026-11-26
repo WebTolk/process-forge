@@ -55,8 +55,8 @@ Inspector is not a separate participant. It is the primary agent using CLI
 checks, process gates, and self-checks.
 
 Agent Ledger is the attendance/session layer, not a separate watchman agent.
-In Forge/factory operation, supported Codex/Kimi hooks deliver lifecycle and
-activity automatically through Host to Ledger. New admitted prompt, compaction
+In Forge, supported client hooks deliver lifecycle and activity events through
+the Host to Ledger. New admitted prompt, compaction
 and tool activity refresh exact session presence without periodic LLM calls.
 Rejected, unknown/raw-only, duplicate or replayed input cannot refresh presence
 or reopen a checked-out session. Presence does not extend leases or prove OS

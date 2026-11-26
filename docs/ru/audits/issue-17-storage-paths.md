@@ -250,8 +250,8 @@ relocation или Linux cold backend здесь не добавляется.
 [J]: ../../../src/processforge_core/maintenance/journals.py
 [U]: ../../../src/processforge_core/maintenance/update.py
 [FU]: ../../../src/processforge_core/maintenance/file_update.py
-[K]: ../../../tools/pf_cold_controller.py
-[L]: ../../../tools/pf_linux_cold_controller.py
+[K]: https://github.com/WebTolk/process-forge/blob/033a2e791373c7cf46d5b1dc5b2b3be8acff91fd/tools/pf_cold_controller.py
+[L]: https://github.com/WebTolk/process-forge/blob/033a2e791373c7cf46d5b1dc5b2b3be8acff91fd/tools/pf_linux_cold_controller.py
 [M]: ../../../tests/execution_migration/test_migration.py
 [ID]: ../../../tests/execution_migration/test_storage_uuid.py
 [A]: ../../../tests/execution_migration/test_automatic.py
@@ -263,7 +263,7 @@ relocation или Linux cold backend здесь не добавляется.
 [PH]: ../../../tests/execution_migration/test_physical_storage_paths.py
 [PI]: ../../../src/processforge_core/prepared/input.py
 [NT]: ../../../tests/execution_migration/test_native_control.py
-[CT]: ../../../tests/execution_migration/test_cold_handoff.py
+[CT]: https://github.com/WebTolk/process-forge/blob/033a2e791373c7cf46d5b1dc5b2b3be8acff91fd/tests/execution_migration/test_cold_handoff.py
 [BT]: ../../../tests/maintenance_backup/test_backup.py
 [IT]: ../../../tests/maintenance_integration/test_acceptance.py
 [JT]: ../../../tests/maintenance_service/test_journals.py

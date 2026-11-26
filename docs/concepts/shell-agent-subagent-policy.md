@@ -21,10 +21,9 @@ Reasoning effort is selected independently. A plan may set
 `runtime.reasoning_effort`, and a worker may override it with
 `reasoning_effort` or `agent_reasoning_effort`. Generated assignments and
 capsules store the resolved value as `agent_reasoning_effort`; worker runtime
-state exposes it as `PF_AGENT_REASONING_EFFORT`. The `codex-exec` driver maps
-that value to `PF_CODEX_REASONING_EFFORT`, and its wrapper passes
-`model_reasoning_effort="<value>"` to Codex only when the value is non-empty.
+state exposes it as `PF_AGENT_REASONING_EFFORT`. The selected driver maps
+that value to the external program’s supported options. [Runtime drivers](runtime-drivers.md)
 
-When reports are required, the shell worker must write them under `.pf/artifacts/subagents/<worker-id>/`. Workers with `allow_subagents=false` are not required to create subagent reports. Public smoke tests use neutral simulated reports and must not depend on real Claude, Codex, Gemini, Cursor, or OpenCode CLIs.
+When subagent reports are required, the shell worker writes them under `.pf/artifacts/subagents/<worker-id>/`. Workers with `allow_subagents=false` need no subagent reports. Public smoke tests use local fixtures that produce these reports.
 
 `orchestrator-shell-plan-apply` writes `.pf/runs/<run-id>/config-resolution-report.yaml` so operators can see which config values were applied to assignments, capsules, supervisor scheduling, and collection checks.

@@ -17,7 +17,12 @@ Driver manifests live under `templates/runtime-drivers/`. The built-in registry
 is `templates/registries/runtime-drivers.yaml`. A project may add local registry
 overrides under `.pf/runtime/registries/runtime-drivers.local.yaml`.
 
-Use the CLI from an onboarded project:
+Use the CLI from an onboarded project. A primary agent can work directly
+through the CLI or MCP. Select a runtime driver for an assignment that needs a
+separate worker. Model selection is optional. Request a catalog with
+`runtime-driver describe --project-root . --driver <driver-id> --catalog`.
+`unsupported` means the driver offers no catalog. A driver reporting `unknown`
+could not read its catalog.
 
 ```bash
 python .pf/runtime/bin/pf.py runtime-driver list --project-root .
@@ -119,6 +124,8 @@ attempt's prepared manifest. The legacy direct wrapper can read workspace
 access and use `--add-dir`; a prepared launch does not grant broad directories
 from that file. Metadata-only grants never authorize resource body reads.
 
+## Access to MCP tools
+
 Actual MCP connections and tool approvals belong to each coding agent's own
 configuration. PF's `workspace_access.mcp` declarations are advisory metadata;
 they neither grant host-tool access nor control connection availability.
@@ -131,51 +138,26 @@ validation, and file/action scope and filesystem checks remain in force.
 This compatibility behavior does not remove MCP fields or catalogs; that is
 separate future work.
 
-Prepare and start one Codex shell-agent directly:
+## Running a worker
+
+For a first execution check, choose an assignment that declares an expected
+report and grants write access to that path. Use its returned assignment ID.
+The bundled test driver writes the report locally and needs no model account.
 
 ```bash
-python .pf/runtime/bin/pf.py task-create --project-root . --run docs-run --id docs-worker --title "Docs worker" --process task-batch-execution --allowed-file ".pf/artifacts/docs-worker.md" --required-output "id=report,path=.pf/artifacts/docs-worker.md" --expected-report-artifact ".pf/artifacts/docs-worker.md" --workspace-knowledge-resource <knowledge-resource-id> --reasoning-effort high --apply
-python .pf/runtime/bin/pf.py worker-run start --project-root . --task docs-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort high
+python .pf/runtime/bin/pf.py worker-run prepare --project-root . --task <assignment-id> --driver test-echo-worker
+python .pf/runtime/bin/pf.py worker-run start --project-root . --task <assignment-id> --driver test-echo-worker
+python .pf/runtime/bin/pf.py worker-run status --project-root . --task <assignment-id>
 ```
 
-For another already declared, worker-ready task, use the same model and medium reasoning:
+For an external CLI, select a registered driver configured for its executable
+and arguments. A shell plan can set `runtime.default_driver`, `runtime.model`
+and `runtime.reasoning_effort`. Individual workers can override model and effort.
+`orchestrator-shell-plan-apply --model <model>` applies a model override to the
+plan. Supply model or effort only when supported by the driver. [Worker collection and supervision](../getting-started/runtime-driver-supervisor.md)
 
-```bash
-python .pf/runtime/bin/pf.py worker-run start --project-root . --task test-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort medium
-```
-
-For orchestrated shell-agent plans, set the default in the plan and override per
-worker only when needed:
-
-```yaml
-runtime:
-  default_driver: codex-exec
-  model: chatgpt-5.3-codex-spark
-  reasoning_effort: medium
-workers:
-  - id: docs-worker
-    title: Docs worker
-    process: task-batch-execution
-    reasoning_effort: high
-    workspace_access:
-      knowledge_resources:
-        - docs.joomla
-```
-
-Apply the plan:
-
-```bash
-python bin/pf.py orchestrator-shell-plan-apply --project-root . --run docs-run --apply
-```
-
-`orchestrator-shell-plan-apply --model <model>` can override the plan model for
-all generated shell workers. Reasoning effort is currently selected in the plan,
-in the generated assignment, or on `worker-run prepare/start` with
-`--reasoning-effort`.
-
-Shell execution uses `shell=False`. Generic shell drivers declare no network
-permission by default; `codex-exec` declares network access for its model provider.
-These declarations do not implement operating-system network isolation.
+Shell execution uses `shell=False`. Each driver declares its network needs.
+The operating system or sandbox enforces any network isolation.
 
 ProcessForge does not install agents, create agent folders, or require a daemon
 for driver registry use.
