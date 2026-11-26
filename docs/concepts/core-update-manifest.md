@@ -125,6 +125,14 @@ files to the qualified target release bytes, replacing local Core edits even
 when the official bytes did not change between releases. The manifest
 differences above therefore do not limit which Core files need replacement.
 
+On POSIX, when the updater replaces an existing regular payload file, it copies
+the installed file's owner, group and other read, write and execute bits to the
+staged file before publishing it atomically. A payload file whose destination
+is absent uses the normal file creation permissions subject to the process
+umask. The same rules apply to pending writes completed by the original
+external installer during supported `repair --resume` recovery. Windows uses
+its existing file replacement semantics.
+
 Existing public flags remain accepted. Force is not required solely for local
 Core edits and does not bypass authority, ownership, selection, path, collision
 or safety checks. Unknown non-owned files, configuration, project and Workplace
