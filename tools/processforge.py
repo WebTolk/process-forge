@@ -16267,7 +16267,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
     return 0 if verified else 1
 
 
-def command_update_verify(args: argparse.Namespace) -> int:
+def command_update_verify(args: argparse.Namespace, *, persist_record: bool = True) -> int:
     workplace_root = update_workplace_root(args.workplace)
     candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     record = _update_document_reader.staged_record(workplace_root, args.candidate)
@@ -16296,10 +16296,16 @@ def command_update_verify(args: argparse.Namespace) -> int:
         if str(manifest.get("version") or "") != str(candidate.get("available_version") or ""):
             print("FAIL: artifact version mismatch")
             return 1
-    record["status"] = "verified"
-    record["verified_at"] = _core_common_clock.now_utc()
-    record["verification"] = {"sha256": "pass", "subject_identity": "pass" if manifest else "not_applicable"}
-    _update_document_reader.staged_path(workplace_root, args.candidate).write_text(dump_yaml(record), encoding="utf-8")
+    if persist_record:
+        record["status"] = "verified"
+        record["verified_at"] = _core_common_clock.now_utc()
+        record["verification"] = {
+            "sha256": "pass",
+            "subject_identity": "pass" if manifest else "not_applicable",
+        }
+        _update_document_reader.staged_path(workplace_root, args.candidate).write_text(
+            dump_yaml(record), encoding="utf-8"
+        )
     print(f"VERIFIED: {args.candidate}")
     return 0
 
@@ -16397,7 +16403,8 @@ def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path)
         print(f"FAIL: staged candidate not found: {args.candidate}")
         return 1
     verify_status = command_update_verify(
-        argparse.Namespace(workplace=args.workplace, candidate=args.candidate)
+        argparse.Namespace(workplace=args.workplace, candidate=args.candidate),
+        persist_record=not args.dry_run,
     )
     if verify_status != 0:
         return verify_status
