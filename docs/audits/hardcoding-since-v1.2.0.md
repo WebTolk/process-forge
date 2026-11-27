@@ -30,7 +30,7 @@ intersecting 100,044 current-side changed lines. Two active files contain only
 line deletions. The complementary pass scanned 136,392 current-side changed
 lines across 398 paths. It parsed all 170 Python files in that scope and
 inspected changed lines in the other 228 files. The literal and text filters
-identified candidates in 260 paths.
+produced candidates for manual review.
 
 Focused source review followed ownership and call sites across Core, CLI, MCP,
 the updater, SQL migration, public packaging, tests and CI. The scans covered
@@ -44,7 +44,7 @@ the matching commit from `git blame` at the cutoff.
 ### P1 · Enforce the same-major policy for opaque versions
 
 - `src/processforge_core/maintenance/versions.py:184–208,230–247,252–277`.
-  The ordering comes from `815c0f9cdada`. The major check is attributed to
+  The ordering comes from `815c0f9cdad8`. The major check is attributed to
   `74fd641aa0b2`. The updater passes the configured `allow_major` from
   `tools/processforge.py:15901–15919`.
 - A direct call to `UpdateVersionSelectionPolicy.select_admissible` chose
@@ -158,14 +158,14 @@ the matching commit from `git blame` at the cutoff.
 
 | Contract | Representative attribution and evidence |
 |---|---|
-| Test fixture roots and version cases | `tests/execution_migration/test_compatibility.py:28–31` (`ca5109339195`) and `tests/work/test_compact_capsules.py:315–322` (`8b141d26298f`) require explicit fixture roots. `tests/update_versions/test_selection.py:20–32` (`815c0f9cdada`) uses sample versions to verify ordering. All 13 table cases passed a direct policy check. |
+| Test fixture roots and version cases | `tests/execution_migration/test_compatibility.py:28–31` (`ca5109339195`) and `tests/work/test_compact_capsules.py:315–322` (`8b141d26298f`) require explicit fixture roots. `tests/update_versions/test_selection.py:20–32` (`815c0f9cdad8`) uses sample versions to verify ordering. All 13 table cases passed a direct policy check. |
 | Runtime defaults and launchers | `templates/workplace-configuration.yaml:3–11` matches `PFConfig()`, the source used by `src/processforge_core/project/workplace_templates.py:308` (`811f3469dc43`). The existing smoke checks parity. `bin/pf.bat:2–9` and `bin/pf-server.bat:2–9` (`70c7e76ac7db`) choose an available interpreter and forward its exit code. |
 | Updater compatibility | `src/processforge_core/maintenance/file_update.py:32–53,84–114` (`07b859e87a5a`, `37c305684265`). The legacy asset is qualified by released template, preimage and binding evidence. [Core update contract](../concepts/core-update-manifest.md) |
 | Platform paths and permissions | `src/processforge_core/configuration/device.py:13–25` (`4c3e1272a11e`) resolves absolute platform bases. `src/processforge_core/maintenance/file_update.py:892,921` (`4ee7f44854ef`, `0ee3c165fae6`) bounds distinct update lock waits. Evaluate the combined budget if a caller promises an overall deadline. |
 | Authority and SQL storage | `src/processforge_core/maintenance/first_write.py:41–57` (`6edcf2c29c92`, `7a4dccb0b8f1`) distinguishes a proven fresh project from an existing project requiring migration. `src/processforge_core/maintenance/execution_migration.py:49,184–214,1111` (`ca5109339195`) uses fixed plan IDs and versions in its validation and authority transfer. |
 | Transport protocol | `tools/pf_runtime/loopback_http.py:11–53` (`30cdf249530b`) protects the loopback boundary. `tools/pf_runtime/mcp_bridge.py:186,252` (`f10dff1a152c`) fixes the JSON-RPC wire version. |
 | Execution status | `src/processforge_core/executions/projection.py:17–31,128–164` (`276ad5cd2cfa`) owns public execution statuses and projection. Work, Runtime and SQL transitions each have their own authority. |
-| Release fixtures | `tools/release_metadata_contract.py:11–17` fixes expected metadata for a specific release smoke check. `tools/install-contributor-knowledge.py:30–49,139–147` (`74121d7e1f1a) restricts sources to the approved publication namespace and verifies the pinned archive. |
+| Release fixtures | `tools/release_metadata_contract.py:11–17` fixes expected metadata for a specific release smoke check. `tools/install-contributor-knowledge.py:30–49,139–147` (`74121d7e1f1a`) restricts sources to the approved publication namespace and verifies the pinned archive. |
 
 The Garage operator or the Forge updater owns lifecycle control. The existing
 project first-write check returns `storage_migration_required` when its SQL
@@ -192,16 +192,48 @@ identity. Windows exercised recovery from a native launcher sharing violation.
 
 ## Reproduce the inventory
 
-Run the following from a checkout with both revisions. Use
-`git blame --line-porcelain -L <start>,<end> <head> -- <path>` for the cited
-lines. The changed-line scan uses the current-side intervals from `git diff
---unified=0`; Python counts `ast.Constant` nodes intersecting those intervals.
-Treat AST statistics as an index for source review.
+Run the following in PowerShell from a checkout with both revisions. The
+metadata pass counts deleted paths. The changed-line pass uses additions and
+modifications and excludes the private state directory. Python counts
+`ast.Constant` nodes that intersect the new-side intervals in the diff.
 
-```text
-git rev-parse v1.2.0^{commit}
+```powershell
+git rev-parse 'v1.2.0^{commit}'
 git merge-base --is-ancestor b70df739700f1559570f4b65481cd39616ccc1ea 03cd92913007df41a907bdd2d41fa6bc741c729a
-git diff --name-status --no-renames b70df739700f1559570f4b65481cd39616ccc1ea..03cd92913007df41a907bdd2d41fa6bc741c729a
-git diff --numstat --no-renames b70df739700f1559570f4b65481cd39616ccc1ea..03cd92913007df41a907bdd2d41fa6bc741c729a
-git diff --unified=0 --no-renames b70df739700f1559570f4b65481cd39616ccc1ea..03cd92913007df41a907bdd2d41fa6bc741c729a -- '*.py' ':(exclude,top)tests/**'
+@'
+from collections import Counter
+import subprocess
+
+base = "b70df739700f1559570f4b65481cd39616ccc1ea"
+head = "03cd92913007df41a907bdd2d41fa6bc741c729a"
+common = ["--no-renames", "-z", base, head]
+
+def diff(*options):
+    return subprocess.check_output(["git", "diff", *options, *common])
+
+fields = diff("--name-status").decode("utf-8").split("\0")
+rows = dict(zip(fields[1::2], fields[::2]))
+active = {path for path, status in rows.items() if status in {"A", "M"}}
+product = {path for path in active if path.endswith(".py")
+           and not path.startswith("tests/")}
+support = active - product
+changed = {}
+for row in diff("--numstat").decode("utf-8").split("\0"):
+    if row:
+        added, _, path = row.split("\t", 2)
+        if path in active and added != "-":
+            changed[path] = int(added)
+print(Counter(rows.values()))
+print("Python outside tests:", len(product), sum(changed[p] for p in product))
+print("Complementary paths:", len(support), sum(changed[p] for p in support))
+print("Python in complementary paths:", sum(p.endswith(".py") for p in support))
+'@ | python -B -
 ```
+
+For changed lines use `git diff --diff-filter=AM --no-renames --no-color -U0
+<baseline> <cutoff> -- . ':(exclude,top).pf/**'`. Apply the same lane selection
+as in the metadata pass. Use `git blame --line-porcelain -L <start>,<end>
+<cutoff> -- <path>` for an attribution. The text pass filters the
+complementary scope for version strings, paths, branch and repository names,
+permissions, fixed IDs and compatibility markers. Use matches as an index for
+source review.
