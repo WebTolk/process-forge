@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import importlib.util
 import json
@@ -543,6 +544,9 @@ def test_recovery_refusals_preserve_all_bytes(fixture: Harness, fault: str) -> N
 
 
 def test_recovery_accepts_write_before_journal_publication(fixture: Harness) -> None:
+    changed = fixture.target / "changed.txt"
+    if os.name == "posix":
+        changed.chmod(0o751)
     result = fixture.run("""
 original_replace=file_update.os.replace
 def interrupt(source,destination):
@@ -559,15 +563,79 @@ finally:
     file_update.os.replace=original_replace
 """)
     assert result["interrupted"]
-    progress = json.loads(
-        (fixture.target / "runtime/core-update/in-progress.json").read_bytes()
-    )
+    journal = fixture.target / "runtime/core-update/in-progress.json"
+    progress = json.loads(journal.read_bytes())
     assert {"op": "write", "path": "changed.txt"} in progress["pending_operations"]
-    assert (fixture.target / "changed.txt").read_bytes() == NEW["changed.txt"]
+    assert changed.read_bytes() == NEW["changed.txt"]
+    replaced = changed.stat()
+    if os.name == "posix":
+        assert stat.S_IMODE(replaced.st_mode) == 0o751
     code, result = recovery_cli(
         fixture, "--resume", "--archive", str(fixture.archive), "--confirm"
     )
     assert code == 0 and result["resumed"]
+    assert result["update_id"] == progress["update_id"]
+    assert not journal.exists()
+    assert changed.read_bytes() == NEW["changed.txt"]
+    if os.name == "posix":
+        resumed = changed.stat()
+        assert os.path.samestat(replaced, resumed)
+        assert stat.S_IMODE(resumed.st_mode) == 0o751
+
+
+@pytest.mark.skipif(
+    os.name != "posix", reason="requires POSIX staging mode preservation"
+)
+def test_unreadable_staged_payload_preserves_preimage_and_can_resume(
+    fixture: Harness,
+) -> None:
+    changed = fixture.target / "changed.txt"
+    changed.chmod(0o440)
+    manifest = fixture.target / "processforge-core.manifest.json"
+    original_manifest = manifest.read_bytes()
+    result = fixture.run("""
+import errno
+import stat
+
+# The owned fixture preimage stays readable. Simulate denial on its replacement.
+os.umask(0o077)
+changed = target / "changed.txt"
+preimage = changed.stat()
+physical_open = native._PHYSICAL_OPEN
+
+def deny_replacement_read(path, mode, *args, **kwargs):
+    if mode == "rb" and path.parent == changed.parent:
+        staged = path.match(".changed.txt.*.pf-update-tmp")
+        published = path == changed and not os.path.samestat(preimage, path.stat())
+        if staged or published:
+            assert stat.S_IMODE(path.stat().st_mode) == 0o440
+            raise PermissionError(errno.EACCES, "fixture cannot reopen replacement")
+    return physical_open(path, mode, *args, **kwargs)
+
+native._PHYSICAL_OPEN = deny_replacement_read
+try:
+    emit(invoke())
+finally:
+    native._PHYSICAL_OPEN = physical_open
+""")
+    assert changed.read_bytes() == OLD["changed.txt"]
+    assert manifest.read_bytes() == original_manifest
+    assert result["code"] == "file_operation_failed", result
+    journal = fixture.target / "runtime/core-update/in-progress.json"
+    progress = json.loads(journal.read_bytes())
+    assert progress["status"] == "failed"
+    assert progress["error"]["errno"] == errno.EACCES
+    assert {"op": "write", "path": "changed.txt"} in progress["pending_operations"]
+
+    code, resumed = recovery_cli(
+        fixture, "--resume", "--archive", str(fixture.archive), "--confirm"
+    )
+    assert code == 0 and resumed["status"] == "applied" and resumed["resumed"], resumed
+    assert resumed["update_id"] == progress["update_id"]
+    assert changed.read_bytes() == NEW["changed.txt"]
+    with zipfile.ZipFile(fixture.archive) as bundle:
+        assert manifest.read_bytes() == bundle.read(manifest.name)
+    assert not journal.exists()
 
 
 def test_recovery_failure_can_be_resumed_without_replacing_backups(
@@ -611,6 +679,10 @@ def test_actual_preimages_missing_owned_and_private_data_survive(
     }
     for name, raw in preimages.items():
         (fixture.target / name).write_bytes(raw)
+    modes = {"changed.txt": 0o751, "same.txt": 0o640}
+    if os.name == "posix":
+        for name, mode in modes.items():
+            (fixture.target / name).chmod(mode)
     (fixture.target / "missing.txt").unlink()
     original_manifest = (
         fixture.target / "processforge-core.manifest.json"
@@ -626,6 +698,9 @@ def test_actual_preimages_missing_owned_and_private_data_survive(
     assert receipt["counts"]["restored"] == 1
     for name, raw in {**NEW, **PRIVATE}.items():
         assert (fixture.target / name).read_bytes() == raw
+    if os.name == "posix":
+        for name, mode in modes.items():
+            assert stat.S_IMODE((fixture.target / name).stat().st_mode) == mode
 
 
 @pytest.mark.parametrize("stage", ["payload", "manifest", "last_record"])

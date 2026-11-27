@@ -11,6 +11,7 @@ import io
 import json
 import os
 import stat
+import sys
 import uuid
 from contextlib import ExitStack
 from pathlib import Path
@@ -208,7 +209,9 @@ def apply_file_update(
     root = require_update_target(core_root)
     offline_records: tuple[dict[str, Any], dict[str, Any], bool] | None = None
 
-    def atomic(path: Path, content: bytes) -> None:
+    def atomic(
+        path: Path, content: bytes, *, preserve_access_bits: bool = False
+    ) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         staging = path.with_name(f".{path.name}.{uuid.uuid4().hex}.pf-update-tmp")
         created = False
@@ -217,6 +220,13 @@ def apply_file_update(
                 created = True
                 stream.write(content)
                 stream.flush()
+                if sys.platform != "win32" and preserve_access_bits:
+                    mode = path.lstat().st_mode
+                    if stat.S_ISREG(mode):
+                        os.fchmod(stream.fileno(), mode & 0o777)
+                        # Ownership can change which mode bits apply to the updater.
+                        with _PHYSICAL_OPEN(staging, "rb"):
+                            pass
                 os.fsync(stream.fileno())
             os.replace(staging, path)
         finally:
@@ -802,7 +812,11 @@ def apply_file_update(
                         relative
                     ]:
                         refuse()
-                    atomic(_update_target(root, relative), frozen.payload[relative])
+                    atomic(
+                        _update_target(root, relative),
+                        frozen.payload[relative],
+                        preserve_access_bits=raw is not None,
+                    )
                 complete("write", relative)
             # Verify every new payload before publishing the new manifest.
             for relative, content in frozen.payload.items():
