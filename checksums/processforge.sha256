@@ -25,6 +25,7 @@ e4383fd01256f64e636fc8ca09790afd370965f4d4db09f31f6ad7a10abaf38c  bin/pf.py
 85549b6975d20990f1834264e595d345c2e31bf9eaa9f7dbd6b84dd2ffe6f350  docs/audits/canonical-work-selection-20261016.md
 53d247d3abd2c44eae9589831b087e84129e263b32069a0b66ef6bb77e15badb  docs/audits/core-measurements-20261120.md
 68c2e06dafd8913242fa257dea5406efbd87ed5ebf74dd0e524405e87eebefe8  docs/audits/diagnostics-admission-fairness-20261016.md
+f2f3197a64a2acb7abaabc35d8d0f459b36ce431c795ced8a2b538370030affb  docs/audits/hardcoding-since-v1.2.0.md
 f7483e36820d45b07a304ad98cc241c75494087b5b179dcecdc60e8e9b398bd5  docs/audits/issue-17-storage-paths.md
 e1b2b44a0c4e8ed81ecde175aedd1b6875fc74f0ee885a59946b84c6774625b3  docs/audits/issue-19-public-upgrade.md
 f53cd0d7f93f909b9cc25e218c80bab18ef92386dc6e620205710f1fb38f2881  docs/audits/journal-error-row-replay-20261016.md
