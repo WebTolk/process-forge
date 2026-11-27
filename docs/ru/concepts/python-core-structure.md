@@ -163,7 +163,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/permissions.py` | Общая чистая функция готовности прав Work. |
 | `src/processforge_core/project/reconciliation.py` | Прежняя проекция reconciliation контекста через обязательный отложенный типизированный checker, без Core. |
 | `src/processforge_core/project/context.py` | Пять существующих операций ProjectContextService и отдельные readers одного вызова через обязательные типизированные зависимости, без Core. |
-| `src/processforge_core/project/context_read.py` | Проверки свежести контекста выполнения и чтение manifest через явные зависимости, без Core. |
+| `src/processforge_core/project/context_read.py` | Проверка свежести контекста проекта и типизированный контракт вызова, чтение контекста выполнения и manifest через явные зависимости. |
 | `src/processforge_core/project/mode.py` | Прежний GarageModeService: модель координации через обязательный порт чтения snapshot, без Core. |
 | `src/processforge_core/project/reports.py` | Прежний DerivedReportLifecycleService и фиксированные пути отчётов через обязательные snapshot/flow-root зависимости, без Core. |
 | `src/processforge_core/process_catalog/summary.py` | Описание разрешённых процессов с конкретным каталогом по умолчанию и необязательным узким портом каталога для внедрения, без обратного вызова монолита. |
@@ -226,7 +226,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/resources/snapshot.py` | Прежние search roots, разрешённая selection, path resolution и private navigation ресурсов; чтение snapshot остаётся в project/snapshot.py. |
 | `src/processforge_core/resources/access.py` | ResourceSearchService и ResourceResolveService с узкими типизированными портами чтения: прежние readiness, разрешённые поиск/resolve, navigation и внедрение снимка. |
 | `src/processforge_core/ports.py` | Внутренние типизированные зависимости чтения текущей работы, записей Work и контекста. |
-| `src/processforge_core/composition.py` | Общие фабрики сервисов и оставшийся LegacyResourceSearchReadAdapter; перенесённые читатели текущей работы, контекста, определений процессов и разрешения ресурсов используют конкретных владельцев Core. |
+| `src/processforge_core/composition.py` | Общие фабрики сервисов и отложенные зависимости чтения. Обычный поиск использует проверку свежести из Core, а предварительный просмотр в контексте сохраняет свой callback проверки. |
 | `src/processforge_core/bootstrap.py` | Существующая сборка runtime-модулей и ленивый доступ к фабрикам сервисов. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade, транспортные адаптеры, host и provider policies. |
 
@@ -273,9 +273,32 @@ views; сохранены проверки размера, пути, checksum, �
 
 `ProjectContextService` находится в `project/context.py` и не имеет поля Core. Два пути проекта/workplace и обязательные именованные зависимости snapshot/чтения описывают пять прежних операций. `build_project_context_service(project_root, workplace_root, core, *, snapshots=None)` сохраняет сигнатуру потребителей и собирает зависимости без I/O; стандартный reader создаётся только при `None`, поэтому ложный в логическом контексте переданный reader сохраняет identity. Пути, документы и ошибки читаются актуальными, checksum для этих операций не требуется. В начале каждого `context()` четыре фабрики mode/report/process-summary/boundary захватываются до freshness check в отдельный `ProjectContextReaders`; прочие helpers разрешаются в прежних местах использования. Сохранены `scoped_request`, всегда явный workplace, check перед snapshot и отказ от основного чтения при broken check. Mode/Reports используют независимые стандартные readers, а не порт контекста. Runtime resolver получается до вычисления `self.snapshot()`. Все ключи, resource values, порядок вызовов и изменение рекомендации continuation сохранены. MCP вызывает прежнюю фабрику после ingress guards. Старый Garage class/import alias, совместимость конструктора, кеш и новые полномочия не вводятся.
 
-`ResourceSearchService` требует узкий `ResourceSearchReadPort` вместо общего объекта Core и сохраняет необязательное keyword-only внедрение `snapshots`. `LegacyResourceSearchReadAdapter` на границе composition выполняет прежние чтения Core и сохраняет позднее получение вызываемых функций. Явно переданный пустой snapshot исключает загрузку, а falsey внедрённый reader сохраняет свою identity. Freshness guard поиска предшествует чтению, а blocked readiness сохраняет существующее чтение для coverage. `build_resource_search_service` сохраняет опубликованную сигнатуру и собирает существующего MCP потребителя поиска без I/O после ingress guards. Проектный контекст сохраняет прежнюю заменяемую привязку сервиса и передаёт тот же read adapter. Index maintenance, аргументы запроса, navigation, coverage, payload и границы обработки ошибок сохраняют прежнее поведение.
+`ResourceSearchService` принимает узкий `ResourceSearchReadPort` и необязательный
+именованный аргумент `snapshots`. Порт отложенно предоставляет
+`ProjectContextCheck`, которому передаются корень выбранного проекта и
+именованный `explicit_workplace`. Обычный `pf.search` разрешает привязку проекта
+и сессии до сборки сервиса. Сборка не выполняет ввод-вывод и подключает к порту
+проверку свежести из `project/context_read.py`.
 
-`ResourceResolveService(project_root, workplace_root, reads=None, *, snapshots=None)` по умолчанию использует конкретный `ResourceResolveReadService`. ID проекта, живые снимки и переносимые ссылки на пути читаются через владельцев Core; `LegacyResourceResolveReadAdapter` удалён. Общая фабрика Host и MCP — `build_resource_resolve_service(project_root, workplace_root, *, snapshots=None)`. ID читается первым; пустой ID ресурса возвращает сведения о проекте без чтения снимка. Ложные в логическом контексте внедрённые читатели и снимки сохраняют identity; порядок вычисления resolver прежний. `WorkspacePathReferenceReader` владеет разрешением реестров, пакетов и констант путей; общие helpers поиска/Garage/Work вызывают его без объекта монолита. Selection, aliases, исходные поля, navigation, ошибки и порядок Host/MCP binding/freshness guards сохранены. Зависимости ResourceSearchService от контекста и Runtime требуют последующего переноса; независимость всей подсистемы ресурсов здесь не заявляется.
+При `stale` или `broken` метод `search()` возвращает прежнюю ошибку
+`snapshot_not_fresh` до разрешения корней поиска, чтения поискового снимка,
+наблюдения индекса и проверки запроса внутри сервиса. `fresh` и
+`fresh_with_updates` разрешают самостоятельное живое чтение поискового снимка.
+Сервис поиска отвечает за разрешённый scope, пустую выборку, готовность,
+сортировку, `total` и пагинацию, сохраняя схемы запроса и ответа. При блокировке
+`readiness()` по-прежнему вычисляет coverage по переданному снимку, в том числе
+пустому, или читает снимок при его отсутствии. Переданный читатель сохраняет
+свою идентичность, даже если он логически ложен.
+
+`pf.context` использует собственный callback проверки и передаёт её результат
+вместе со снимком в предварительный просмотр готовности через заменяемую привязку
+сервиса. Проверка предшествует основному чтению снимка, которое пропускается при
+`broken`. Для логически ложного результата сохраняется резервная проверка
+в preview. Диагностика и порядок исключений определяются маршрутом контекста.
+`pf.work.search` использует `WorkResourceService` с точными селекторами Work,
+закреплённой капсулой и закреплённым материалом ресурсов.
+
+`ResourceResolveService(project_root, workplace_root, reads=None, *, snapshots=None)` по умолчанию использует конкретный `ResourceResolveReadService`. ID проекта, живые снимки и переносимые ссылки на пути читаются через владельцев Core; `LegacyResourceResolveReadAdapter` удалён. Общая фабрика Host и MCP — `build_resource_resolve_service(project_root, workplace_root, *, snapshots=None)`. ID читается первым; пустой ID ресурса возвращает сведения о проекте без чтения снимка. Ложные в логическом контексте внедрённые читатели и снимки сохраняют identity; порядок вычисления resolver прежний. `WorkspacePathReferenceReader` владеет разрешением реестров, пакетов и констант путей; общие helpers поиска/Garage/Work вызывают его без объекта монолита. Selection, aliases, исходные поля, navigation, ошибки и порядок Host/MCP binding/freshness guards сохранены.
 
 `GarageModeService` находится в `project/mode.py` и принимает `(project_root, workplace_root, *, snapshots)` с обязательным `ProjectSnapshotReadPort`, без Core. Зависимость исключена из repr/equality. Прежний fallback `snapshot or ...` сохранён: пустой snapshot вызывает `snapshots.load()`, непустой исключает чтение. `build_garage_mode_service(project_root, workplace_root, core, *, snapshots=None)` создаёт стандартный reader только при `None`, сохраняя falsey reader, и не выполняет I/O. Context не передаёт собственный порт в mode fallback. Координация, session, blockers и политика mode прежние; одной session недостаточно для Forge. Старый конструктор и module alias не сохраняются.
 
@@ -463,10 +486,10 @@ Workplace/distribution и `YamlDocumentReader`. Он использует сущ
 Обслуживание индекса Workplace, поисковая проекция сессии и сборка ResourceSearch
 обращаются к конкретному каталогу напрямую. Авторизация по снимку проекта,
 проверки свежести, порядок запросов и ошибок, а также владение SQLite сохранены.
-`LegacyResourceSearchReadAdapter` пока передаёт отдельную легаси-зависимость
-`project_context_check_result`: перенос каталога не завершает миграцию всего
-ResourceSearch или монолита. Reader и общая проекция остаются предварительными
-внутренними интерфейсами.
+Чтение каталога используется при наблюдении индекса. Проверка свежести контекста
+отдельно сопоставляет записанный снимок выбранного проекта с текущими фактами.
+Reader каталога и общая проекция остаются предварительными внутренними
+интерфейсами.
 
 `project.snapshot_sources.ProjectSnapshotSourcesReader` владеет упорядоченными
 живыми fingerprints источников, которые используют сборка снимка проекта и
@@ -483,10 +506,9 @@ entries в других правилах каталога не меняется.
 Восемь совместимых функций источников, ссылок и пакетов в монолите делегируют
 Core. Две реальные точки сбора источников и Runtime consumer активных пакетов
 обращаются к конкретным readers напрямую. Эти readers не принимают монолитный
-Core или transport callbacks. Общая сборка snapshot, freshness policy/readiness
-и другие Runtime bindings ещё имеют легаси-зависимости: срез не завершает эти
-службы или какой-либо OOP-эпик. Новые readers — предварительные внутренние
-интерфейсы; форматы записей, ошибки и чтение текущего содержимого сохранены.
+Core или transport callbacks. Сборка снимка и другие привязки Runtime сохраняют
+легаси-зависимости. Readers остаются предварительными внутренними интерфейсами
+с прежними форматами записей, ошибками и живыми чтениями.
 
 ## Правила готовности проекта
 
@@ -496,9 +518,22 @@ execution и resource readiness. Построитель snapshot прямо вы
 запроса; его можно импортировать без CLI и Runtime. Порядок blockers, устранение
 повторов capabilities, ошибки и поверхностное копирование conflict values сохраняются.
 
-Полный freshness checker, classification и resource resolution, построение и
-публикация snapshot ещё содержат legacy обязанности и callbacks. Этот ограниченный
-перенос не завершает этих владельцев или какой-либо OOP эпик.
+## Свежесть контекста проекта
+
+Проверка в `processforge_core.project` используется фасадом CLI
+`project-context-check` и обычным проектным поиском. При каждом вызове она
+находит и читает записанный снимок выбранного проекта, проверяет обязательные
+поля и срок действия, читает маркер устаревания, сверяет источники, строит
+текущие факты и сравнивает снимки перед выбором статуса и действия политики.
+Отсутствие записанного снимка даёт прежний результат `broken` до последующих
+чтений. Приоритет статусов от высшего к низшему — `broken`, `stale`,
+`fresh_with_updates`, `fresh`. Сохраняются схемы снимка и результата проверки,
+включая дайджест записанных байтов в прежней ветви результата. Фасад CLI
+сохраняет диагностику и сводку о временных файлах.
+
+Построение текущих фактов остаётся отдельной операцией сборки снимка. Проверка
+вызывает существующие сравнения источников и разрешённых ресурсов, а также
+политику контекста в прежних местах последовательности чтения.
 
 
 `project.source_check.ProjectSnapshotSourceCheckService` владеет существующим
@@ -507,9 +542,8 @@ checker вызывает его напрямую на месте прежнег�
 конкретный `ProjectSnapshotSourcesReader`; конструктор не выполняет I/O, а каждое
 сравнение читает источники после нормализации записанных значений. Порядок причин,
 дубликаты, исключение package-источников и исходные ошибки сохранены. Построение
-snapshot сохраняет самостоятельное чтение источников. Общая координация и policy
-полного checker, определение classification, разрешение ресурсов, построение и
-публикация snapshot ещё сохраняют свои legacy bindings.
+snapshot сохраняет самостоятельное чтение источников. Определение classification,
+разрешение ресурсов, построение и публикация snapshot сохраняют прежних владельцев.
 
 
 `project.resolved_comparison.ProjectSnapshotResolvedComparison` владеет прежним
@@ -519,8 +553,7 @@ snapshot сохраняет самостоятельное чтение исто
 constraints и update candidates. Все найденные consumers используют этих
 владельцев; старые внутренние key/index/version helpers удалены. Конструкторы
 не выполняют I/O; порядок, дубликаты, warnings и исходные ошибки сохранены.
-Сбор источников, полный checker status/policy, построение и публикация snapshot
-ещё сохраняют существующих владельцев и legacy bindings.
+Сбор источников, построение и публикация snapshot сохраняют прежних владельцев.
 
 
 `project.context_sources.ProjectContextSourcesReader` владеет прежними записями
@@ -529,8 +562,8 @@ compilation и существующий startup smoke вызывают его н
 внутренних source helpers удалены. Reader использует конкретные metadata/YAML,
 digest и path owners; конструктор без I/O, parsed documents не удерживаются.
 Предпочтение root AGENTS, PF fallback, optional records, дедупликация по первому
-resolved path, порядок, живые hashes и исходные ошибки сохранены. Полный checker,
-построение и публикация snapshot сохраняют существующих владельцев.
+resolved path, порядок, живые hashes и исходные ошибки сохранены. Построение
+и публикация snapshot сохраняют прежних владельцев.
 
 
 Этот же reader владеет прежними проекциями `fingerprints` и `texts`. Построение
