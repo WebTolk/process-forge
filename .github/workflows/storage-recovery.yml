@@ -133,6 +133,11 @@ jobs:
           if os.name != 'nt':
               # These fault seams exercise the Windows tasklist branch only.
               selection += ['-k', 'not test_uncertain_or_active_windows_pid_refuses_before_apply']
+          else:
+              # Staging mode preservation is a POSIX operation.
+              selection += [
+                  '--deselect=tests/maintenance/test_file_update.py::test_unreadable_staged_payload_preserves_preimage_and_can_resume',
+              ]
           report = root / 'storage-update-results.xml'
           result = subprocess.run([
               sys.executable, '-B', '-m', 'pytest', '-q', '-ra',
