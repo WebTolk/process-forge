@@ -224,6 +224,9 @@ def apply_file_update(
                     mode = path.lstat().st_mode
                     if stat.S_ISREG(mode):
                         os.fchmod(stream.fileno(), mode & 0o777)
+                        # Ownership can change which mode bits apply to the updater.
+                        with _PHYSICAL_OPEN(staging, "rb"):
+                            pass
                 os.fsync(stream.fileno())
             os.replace(staging, path)
         finally:
