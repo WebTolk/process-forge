@@ -37,7 +37,10 @@ def snapshot(resource_id: str, content_root: Path) -> dict:
 
 
 def call_search_tools(
-    workplace: Path, calls: list[tuple[str, Path, dict[str, Any]]]
+    workplace: Path,
+    calls: list[tuple[str, Path, dict[str, Any]]],
+    *,
+    expected_error: str | None = None,
 ) -> list[dict[str, Any]]:
     requests = [{"jsonrpc": "2.0", "id": 0, "method": "initialize"}]
     for call_id, (name, project, arguments) in enumerate(calls, start=1):
@@ -74,11 +77,14 @@ def call_search_tools(
     payloads = []
     for call_id in range(1, len(requests)):
         response = replies[call_id]["result"]
-        assert not response.get("isError"), response
-        payloads.append(
+        assert bool(response.get("isError")) == (expected_error is not None), response
+        payload = (
             response.get("structuredContent")
             or json.loads(response["content"][0]["text"])
         )
+        if expected_error is not None:
+            assert payload["error"]["code"] == expected_error, payload
+        payloads.append(payload)
     return payloads
 
 
@@ -175,6 +181,56 @@ def check_version_search(
             assert (
                 path.read_text(encoding="utf-8") == f"sharedmatch uniquematch{number}"
             ), match
+
+
+def check_context_search_precedence(
+    workplace: Path, project: Path, *, ready_status: str
+) -> None:
+    """Compare the native CLI check with the stdio search guard."""
+    malformed = [("pf.search", project, {"query": " "})]
+
+    def assert_context(status: str, exit_code: int) -> None:
+        checked = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools/processforge.py"),
+                "project-context-check",
+                "--project-root",
+                str(project),
+                "--workplace",
+                str(workplace),
+                "--json",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=120,
+        )
+        assert checked.returncode == exit_code, (checked.stdout, checked.stderr)
+        payload = json.loads(checked.stdout)
+        assert payload["status"] == status, payload
+        assert isinstance(payload["temporary_files"], dict), payload
+
+    assert_context(ready_status, 0)
+    call_search_tools(workplace, malformed, expected_error="invalid_query")
+    marker_path = core.project_context_stale_marker_path(project)
+    snapshot_path = project / ".pf/contexts/project-context.snapshot.yaml"
+    original = snapshot_path.read_bytes()
+    try:
+        marker_path.parent.mkdir(parents=True, exist_ok=True)
+        marker_path.write_text(json.dumps({"reason": "search-fixture"}), encoding="utf-8")
+        assert_context("stale", 0)
+        call_search_tools(workplace, malformed, expected_error="snapshot_not_fresh")
+
+        marker_path.unlink()
+        snapshot_path.unlink()
+        assert_context("broken", 1)
+        call_search_tools(workplace, malformed, expected_error="snapshot_not_fresh")
+    finally:
+        marker_path.unlink(missing_ok=True)
+        snapshot_path.write_bytes(original)
+    assert_context(ready_status, 0)
 
 
 def check_project_search_grants(
@@ -297,6 +353,9 @@ def smoke_selected_versions(scratch_root: Path) -> None:
         maintain_workplace(workplace)
         check_version_search(workplace, projects, resource_id)
         project = projects[0][0]
+        check_context_search_precedence(
+            workplace, project, ready_status="fresh_with_updates"
+        )
         check_project_search_grants(workplace, project, projects[0][1], resource_id)
         check_rank_isolation(workplace, project, other_document)
         run_cli(

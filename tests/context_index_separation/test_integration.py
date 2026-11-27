@@ -24,14 +24,17 @@ from collections import Counter
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager, redirect_stdout
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from typing import Any, Literal
 from unittest.mock import patch
+
+from pf_runtime import host, mcp_server
 
 from processforge_core import composition
 from processforge_core.common.yaml_dump import dump_yaml
 from processforge_core.configuration.device import DeviceConfigurationSource
 from processforge_core.project.snapshot import load_snapshot
+from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
 from processforge_core.resources import (
     index_maintenance,
     index_observation,
@@ -226,6 +229,15 @@ class ContextIndexIntegrationTests(unittest.TestCase):
 
     def _snapshot(self, project: Path | None = None) -> dict[str, Any]:
         return load_snapshot(project or self.project)
+
+    def _record_snapshot(self, project: Path) -> tuple[Path, dict[str, Any]]:
+        """Record current fixture data for the search and pinned Work probes."""
+        path = project / ".pf/contexts/project-context.snapshot.yaml"
+        snapshot = self.main.build_project_context_snapshot(
+            project, explicit_workplace=str(self.workplace)
+        )
+        _write_yaml(path, snapshot)
+        return path, snapshot
 
     def _refresh(self, project: Path | None = None) -> tuple[int, str]:
         output = io.StringIO()
@@ -591,7 +603,7 @@ class ContextIndexIntegrationTests(unittest.TestCase):
     def test_project_query_filters_counts_and_live_snapshot_revocation(self) -> None:
         """A shared physical corpus must not widen results, totals or navigation."""
         self.assertEqual(self._service().run()["results"][0]["status"], "ok")
-        self.assertEqual(self._refresh()[0], 0)
+        self._record_snapshot(self.project)
         service = composition.build_resource_search_service(
             self.project, self.workplace, self.main
         )
@@ -618,9 +630,81 @@ class ContextIndexIntegrationTests(unittest.TestCase):
         self.assertEqual(reads["other_document"], 0)
         self.assertEqual(self._search_tree(), before)
 
+    def test_mcp_project_search_does_not_call_legacy_context_checkers(self) -> None:
+        """Use the real dispatch, selected project's context, and workplace index."""
+        selected = self._project("selected")
+        # The other project has no snapshot. The selected project has no local
+        # workplace binding, so its check must use the workplace from the call.
+        (selected / ".pf/process-forge.local.yaml").unlink()
+        snapshot_path, snapshot = self._record_snapshot(selected)
+        check = self.main.project_context_check_result(
+            selected, explicit_workplace=str(self.workplace)
+        )
+        self.assertEqual(check["status"], "fresh", check)
+        self.assertEqual(self._service().run()["results"][0]["status"], "ok")
+        runtime = SimpleNamespace(core=self.main, host=host)
+        arguments = {"project_root": str(selected), "query": "sharedneedle", "limit": 1}
+        with (
+            self._catalogue_configuration(),
+            self._no_maintenance(),
+            patch.object(
+                self.main,
+                "project_context_check_result",
+                create=True,
+                side_effect=AssertionError(
+                    "pf.search called the legacy public checker"
+                ),
+            ) as public_checker,
+            patch.object(
+                self.main,
+                "_project_context_check_result",
+                create=True,
+                side_effect=AssertionError(
+                    "pf.search called the legacy private checker"
+                ),
+            ) as private_checker,
+        ):
+            result = mcp_server.tool_result(
+                "pf.search", arguments, self.workplace, "", runtime
+            )
+            snapshot["local_search_resources"] = []
+            _write_yaml(snapshot_path, snapshot)
+            revoked = mcp_server.tool_result(
+                "pf.search", arguments, self.workplace, "", runtime
+            )
+            public_checker.assert_not_called()
+            private_checker.assert_not_called()
+        self.assertEqual((result["search_status"], result["total"]), ("fresh", 1))
+        self.assertEqual(
+            [match["resource_id"] for match in result["results"]], ["fixture:alpha"]
+        )
+        self.assertEqual((revoked["search_status"], revoked["total"]), ("fresh", 0))
+        self.assertEqual(revoked["results"], [])
+
+    def test_mcp_search_source_fault_precedes_current_snapshot_and_query(self) -> None:
+        """Propagate a source read failure before building current context facts."""
+        self._record_snapshot(self.project)
+        failure = OSError("source comparison failed")
+        with (
+            patch.object(
+                ProjectSnapshotSourceCheckService, "compare", side_effect=failure
+            ),
+            patch.object(self.main, "build_project_context_snapshot") as build_current,
+            self.assertRaises(OSError) as caught,
+        ):
+            mcp_server.tool_result(
+                "pf.search",
+                {"project_root": str(self.project), "query": " "},
+                self.workplace,
+                "",
+                SimpleNamespace(core=self.main, host=host),
+            )
+        self.assertIs(caught.exception, failure)
+        build_current.assert_not_called()
+
     def test_unavailable_index_preserves_query_and_pagination_errors(self) -> None:
         """Validate malformed inputs even while the workplace index is absent."""
-        self.assertEqual(self._refresh()[0], 0)
+        self._record_snapshot(self.project)
         service = composition.build_resource_search_service(
             self.project, self.workplace, self.main
         )
@@ -737,8 +821,8 @@ class ContextIndexIntegrationTests(unittest.TestCase):
 
     def test_work_material_access_stays_live_without_a_workplace_index(self) -> None:
         """Exercise real material verification with an already validated Work seam."""
-        self.assertEqual(self._refresh()[0], 0)
-        row = self._snapshot()["local_search_resources"][0]
+        _, snapshot = self._record_snapshot(self.project)
+        row = snapshot["local_search_resources"][0]
         reference = row["path_ref"]
         binding, _documents = capture_material(
             row,
@@ -801,8 +885,7 @@ class ContextIndexIntegrationTests(unittest.TestCase):
 
     def test_work_generation_and_same_stat_material_errors_remain_strict(self) -> None:
         """Verify current metadata and file bytes before serving pinned material."""
-        self.assertEqual(self._refresh()[0], 0)
-        snapshot = self._snapshot()
+        _, snapshot = self._record_snapshot(self.project)
         row = snapshot["local_search_resources"][0]
         binding, _documents = capture_material(
             row,
