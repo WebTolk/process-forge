@@ -204,7 +204,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/process_catalog/validation.py` | ProcessAuthoringValidationService for existing authoring logic, companion paths/file checks and canonical workflow/iteration constants. |
 | `src/processforge_core/common/json_io.py` | Canonical existing json_read primitive with current file reads and unchanged native failures. |
 | `src/processforge_core/common/checks.py`, `common/ids.py`, `common/values.py` | Shared mutable Check and factory, identifier/title, list/string-list and borrowed parameter-mapping primitives. |
-| `src/processforge_core/project/context_read.py` | Existing execution context freshness checks and manifest reads through explicit typed operation dependencies, without Core. |
+| `src/processforge_core/project/context_read.py` | Project context freshness check and typed callback contract, plus execution-context and manifest reads through explicit dependencies. |
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
 | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
 | `src/processforge_core/project/initialization.py` | Existing project onboarding, initialization status and deterministic repair, reusing guarded agent entry transactions. |
@@ -221,7 +221,7 @@ See [supported actions](action-discovery.md).
 | `src/processforge_core/resources/snapshot.py` | Existing resource snapshot roots, authorized selection, path resolution and private result navigation; snapshot loading remains in project/snapshot.py. |
 | `src/processforge_core/resources/access.py` | ResourceSearchService and ResourceResolveService with narrow typed read ports; existing readiness, authorized search/resolve, navigation and snapshot injection. |
 | `src/processforge_core/ports.py` | Internal structural current-work, raw Work-record, context-read and process-definition dependencies. |
-| `src/processforge_core/composition.py` | Explicit service factories and the remaining LegacyResourceSearchReadAdapter; migrated current-work, context, definition and resource-resolve readers use concrete Core owners. |
+| `src/processforge_core/composition.py` | Explicit service factories and deferred resource-search read dependencies. Ordinary project search uses the project freshness owner, and context preview retains its own check callback. |
 | `src/processforge_core/bootstrap.py` | Existing runtime module assembly and lazy access to the service factories. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade and transport/host/provider adapters. |
 
@@ -269,9 +269,32 @@ migration work; whole coordinator/bootstrap independence is not claimed.
 
 `ProjectContextService` belongs to `project/context.py` and has no Core field. Its two project/workplace paths and required keyword-only snapshot/read dependencies describe the existing five operations. `build_project_context_service(project_root, workplace_root, core, *, snapshots=None)` retains its consumer-facing signature and performs no I/O; it builds the existing default reader only for `None`, preserving falsey injected readers. Snapshot paths, raw documents and errors remain live; no checksum is required for these reads. Context imports/captures its four mode/report/process-summary/boundary factories once at dispatch entry, before the freshness check, in a context-specific `ProjectContextReaders` value. The other helpers are resolved at their original use sites. `scoped_request`, always-explicit workplace checking, check-before-snapshot and broken-check suppression of the primary read remain unchanged. Mode/report fallback receives independent default readers, rather than the injected context port. Runtime resolution captures the current resolver before evaluating `self.snapshot()`. All context keys, resource values, call order and continuation recommendation mutation retain their form. MCP consumers still use the factory after ingress guards; no old Garage class/import alias, constructor compatibility, cache or authority is introduced.
 
-`ResourceSearchService` requires a narrow `ResourceSearchReadPort` instead of the universal Core object and retains optional keyword-only `snapshots` injection. `LegacyResourceSearchReadAdapter` in composition owns the existing Core reads and preserves late callable lookup. An explicitly supplied empty snapshot still bypasses loading; a falsey injected reader retains its identity. The search freshness guard precedes reading, while blocked readiness retains its existing coverage read. `build_resource_search_service` keeps its released signature and assembles the existing MCP search consumer without I/O, after ingress guards. Project context retains its existing replaceable service binding and supplies the same read adapter. Index maintenance, query arguments, navigation, coverage, payloads and error boundaries retain their existing behavior.
+`ResourceSearchService` takes a narrow `ResourceSearchReadPort` and optional
+keyword-only `snapshots`. The port supplies the deferred `ProjectContextCheck`
+callable, which takes the selected project root and the keyword
+`explicit_workplace`. Ordinary `pf.search` resolves the project and session
+binding before assembling the service. Composition performs no I/O and connects
+the port to the freshness check in `project/context_read.py`.
 
-`ResourceResolveService(project_root, workplace_root, reads=None, *, snapshots=None)` uses the concrete `ResourceResolveReadService` by default. It reads project identity, live snapshots and portable path references through Core owners; `LegacyResourceResolveReadAdapter` is removed. `build_resource_resolve_service(project_root, workplace_root, *, snapshots=None)` is shared by Host and MCP. Project ID is read first; an empty resource ID returns project metadata without reading a snapshot. Falsey injected reader/snapshot identity and the existing resolver evaluation order are preserved. `WorkspacePathReferenceReader` owns registry/package/path-constant resolution, and shared search/Garage/Work resource helpers call it without a monolith object. Selection, aliases, raw fields, navigation, errors and Host/MCP binding/freshness guard order remain unchanged. ResourceSearchService still has context/runtime dependencies awaiting later migration; this slice does not claim independence of the entire resource subsystem.
+For `stale` and `broken` checks, `search()` returns the existing
+`snapshot_not_fresh` error before resolving search roots, reading the search
+snapshot, observing the index or validating the query inside the service.
+`fresh` and `fresh_with_updates` permit a separate live read of the search
+snapshot. The search service owns authorized scope, empty selection, readiness,
+ordering, `total` and pagination, with the existing request and response schemas.
+Blocked `readiness()` still computes coverage from the supplied snapshot,
+including an empty one, or reads a snapshot when none is supplied. A falsey
+injected snapshot reader retains its identity.
+
+`pf.context` uses its own check callback and passes the resulting check and
+snapshot into the readiness preview through the replaceable service binding.
+The check precedes the primary snapshot read, which a broken check suppresses.
+The preview retains its falsey-check fallback, and context diagnostics and
+exception order follow the context route. `pf.work.search` uses
+`WorkResourceService` with the exact Work selectors and pinned capsule and
+resource material.
+
+`ResourceResolveService(project_root, workplace_root, reads=None, *, snapshots=None)` uses the concrete `ResourceResolveReadService` by default. It reads project identity, live snapshots and portable path references through Core owners; `LegacyResourceResolveReadAdapter` is removed. `build_resource_resolve_service(project_root, workplace_root, *, snapshots=None)` is shared by Host and MCP. Project ID is read first; an empty resource ID returns project metadata without reading a snapshot. Falsey injected reader/snapshot identity and the existing resolver evaluation order are preserved. `WorkspacePathReferenceReader` owns registry/package/path-constant resolution, and shared search/Garage/Work resource helpers call it without a monolith object. Selection, aliases, raw fields, navigation, errors and Host/MCP binding/freshness guard order remain unchanged.
 
 `GarageModeService` belongs to `project/mode.py` and takes `(project_root, workplace_root, *, snapshots)` with a required `ProjectSnapshotReadPort`; it receives no Core. The dependency is excluded from repr/equality. Its existing `snapshot or ...` fallback is preserved: an empty supplied snapshot triggers `snapshots.load()`, while a nonempty one bypasses it. `build_garage_mode_service(project_root, workplace_root, core, *, snapshots=None)` performs no I/O and builds the existing default reader only when the dependency is `None`, preserving a falsey injected reader. Context does not forward its own optional reader into the mode fallback. Coordination, session representation, blockers and mode policy retain their behavior; a session alone does not promote Garage to Forge. No old constructor or module alias is retained.
 
@@ -455,10 +478,9 @@ The compatible monolithic catalogue/projection functions delegate to Core.
 Workplace maintenance, session search-status projection and ResourceSearch
 composition use the concrete catalogue directly. Project-snapshot authorization,
 freshness guards, query/error order and physical SQLite ownership are retained.
-`LegacyResourceSearchReadAdapter` still supplies the separate legacy
-`project_context_check_result` dependency; catalogue extraction does not make the
-whole ResourceSearch service or the remaining monolith independent of legacy.
-The reader and shared projection remain provisional internal interfaces.
+Catalogue reads serve index observation. The project freshness check separately
+compares the selected project's recorded snapshot with live project facts.
+The catalogue reader and shared projection are provisional internal interfaces.
 
 `project.snapshot_sources.ProjectSnapshotSourcesReader` owns the ordered live
 source fingerprints consumed by project snapshot assembly and freshness checks.
@@ -473,10 +495,9 @@ unchanged. Their constructors perform no filesystem reads or scans.
 The eight compatible monolithic source/reference/pack helpers delegate to Core.
 The two actual snapshot collection sites and Runtime active-pack consumer use
 the concrete readers directly. These readers accept no monolithic Core or
-transport callbacks. Overall snapshot assembly, freshness policy/readiness and
-other Runtime bindings still have legacy dependencies; this bounded extraction
-does not complete those services or any OOP epic. The new readers are provisional
-internal interfaces and preserve existing record formats, errors and live reads.
+transport callbacks. Snapshot assembly and other Runtime bindings still have
+legacy dependencies. The readers are provisional internal interfaces and
+preserve existing record formats, errors and live reads.
 
 ## Project readiness rules
 
@@ -486,9 +507,22 @@ resource readiness algorithms. Snapshot assembly calls its `execution` and
 state and can be imported without the CLI or Runtime. Ordered blockers, capability
 deduplication, errors and shallow conflict values keep their existing semantics.
 
-The full freshness checker, classification and resource resolution, snapshot
-assembly and publication still have legacy responsibilities and callbacks. This
-bounded migration does not complete those owners or any OOP epic.
+## Project context freshness
+
+The checker in `processforge_core.project` serves the `project-context-check`
+CLI facade and ordinary project search. On each call it locates and reads the
+selected project's recorded snapshot, checks the required fields and expiry,
+reads the stale marker, compares sources, builds current facts and compares the
+two snapshots before choosing the status and policy action. A missing recorded
+snapshot returns the existing broken result before those later reads. Status
+precedence is `broken`, `stale`, `fresh_with_updates`, then `fresh`. The snapshot
+and check response keep their existing schemas, including the digest of the
+recorded bytes on the existing result path. The CLI facade retains its
+diagnostics and temporary-files summary.
+
+Building current facts remains a separate snapshot assembly operation. The
+checker calls the existing source comparison, resolved comparison and context
+policy at their original points in the read sequence.
 
 
 `project.source_check.ProjectSnapshotSourceCheckService` owns the existing
@@ -497,9 +531,8 @@ checker calls it directly at the former inline comparison site. It reuses the
 concrete `ProjectSnapshotSourcesReader`; construction performs no I/O, and each
 comparison reads current sources after recorded normalization. Ordered reasons,
 duplicate handling, package exclusions and native errors are preserved. Snapshot
-assembly retains its separate source read. Full checker orchestration and policy,
-classification discovery, resource resolution, snapshot assembly and publication
-keep their existing legacy bindings.
+assembly retains its separate source read. Classification discovery, resource
+resolution, snapshot assembly and publication retain their existing owners.
 
 
 `project.resolved_comparison.ProjectSnapshotResolvedComparison` owns the existing
@@ -509,8 +542,7 @@ also owns the shared numeric/lexical version algorithm used by selection,
 constraints and update candidates. All known callers use these owners; obsolete
 internal key/index/version helpers are removed. Construction performs no I/O,
 and comparisons retain ordering, duplicates, warnings and native failures.
-Collection, full checker status/policy, snapshot assembly and publication remain
-with their existing owners and legacy bindings.
+Collection, snapshot assembly and publication retain their existing owners.
 
 
 `project.context_sources.ProjectContextSourcesReader` owns the existing broad
@@ -519,8 +551,8 @@ and the existing startup smoke use it directly; the two obsolete internal source
 helpers are removed. It reuses concrete project metadata, YAML, digest and path
 owners, with no constructor I/O or retained parsed documents. Root AGENTS preference,
 PF fallback, optional records, first-resolved-path deduplication, ordering, live
-checksums and native failures are preserved. Full checker, snapshot assembly
-and publication retain their existing owners.
+checksums and native failures are preserved. Snapshot assembly and publication
+retain their existing owners.
 
 
 The same reader owns the existing `fingerprints` and `texts` projections.

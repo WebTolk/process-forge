@@ -16,13 +16,15 @@ ROOT = Path(__file__).resolve().parents[1]
 PF = ROOT / "bin" / "pf.py"
 
 
-def run_pf(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def run_pf(
+    *args: str, cwd: Path | None = None, merge_stderr: bool = True
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(PF), *args],
         cwd=str(cwd or ROOT),
         text=True,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.STDOUT if merge_stderr else subprocess.PIPE,
         check=False,
     )
 

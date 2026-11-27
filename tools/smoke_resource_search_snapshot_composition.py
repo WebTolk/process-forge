@@ -12,10 +12,10 @@ import sys
 import tempfile
 import unittest
 from contextlib import ExitStack
-from dataclasses import fields
+from dataclasses import fields, replace
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -37,6 +37,12 @@ def outcome(call):
         return ("error", type(exc).__name__, getattr(exc, "code", None), str(exc))
 
 
+def with_context_checker(service, check):
+    reads = Mock(spec=service.reads, wraps=service.reads)
+    reads.context_checker.return_value = check
+    return replace(service, reads=reads)
+
+
 def scenario(
     service_type,
     kind="search",
@@ -48,7 +54,7 @@ def scenario(
     snapshots=None,
     namespace=None,
 ):
-    events = []
+    events: list[tuple[object, ...]] = []
     document = {"marker": "live", "unknown": ["kept"]}
 
     def paths(root):
@@ -61,8 +67,8 @@ def scenario(
             raise OSError("yaml-load-failure")
         return copy.deepcopy(document)
 
-    def check(*a, **kw):
-        events.append(("check", kw))
+    def check(project_root, *, explicit_workplace=None):
+        events.append(("check", project_root, explicit_workplace))
         return {"status": status}
 
     def runtime(root):
@@ -152,6 +158,7 @@ def scenario(
                 if snapshots is not None
                 else FixtureSnapshots(paths, load),
             )
+            service = with_context_checker(service, check)
         else:
             service = service_type(
                 Path("p"),
@@ -276,19 +283,61 @@ class SearchSnapshotTests(unittest.TestCase):
         self.assertFalse(memory.calls)
 
     def test_guard_and_blocked_readiness_keep_distinct_order(self):
-        memory = MemorySnapshots()
+        for status in ("stale", "broken"):
+            with self.subTest(status=status):
+                result, events = scenario(
+                    access.ResourceSearchService, status=status, error="load"
+                )
+                self.assertEqual(
+                    result[:3], ("error", "LocalSearchError", "snapshot_not_fresh")
+                )
+                self.assertEqual(events, [("check", Path("p"), "w")])
+                memory = MemorySnapshots()
+                result, events = scenario(
+                    access.ResourceSearchService,
+                    "readiness",
+                    status=status,
+                    snapshots=memory,
+                )
+                self.assertEqual(result[1]["reason"], "snapshot_not_fresh")
+                self.assertEqual(memory.calls, [None])
+                self.assertEqual([row[0] for row in events], ["check", "coverage"])
+
+    def test_fresh_search_snapshot_read_failure_precedes_the_index(self):
         result, events = scenario(
-            access.ResourceSearchService, status="stale", snapshots=memory
+            access.ResourceSearchService, error="load", index_status="missing"
         )
-        self.assertEqual(result[0], "error")
-        self.assertFalse(memory.calls)
-        self.assertEqual([row[0] for row in events], ["check"])
-        result, events = scenario(
-            access.ResourceSearchService, "readiness", status="stale", snapshots=memory
-        )
-        self.assertEqual(result[1]["reason"], "snapshot_not_fresh")
-        self.assertEqual(memory.calls, [None])
-        self.assertEqual([row[0] for row in events], ["check", "coverage"])
+        self.assertEqual(result, ("error", "OSError", None, "yaml-load-failure"))
+        self.assertEqual([row[0] for row in events], ["check", "path", "load"])
+
+    def test_preview_uses_supplied_snapshot_and_rechecks_a_falsey_check(self):
+        project, workplace = Path("p"), Path("w")
+        snapshot = {"marker": "preview"}
+        stale = {"status": "stale"}
+        for responses in ([stale], [{}, stale]):
+            with self.subTest(responses=responses):
+                checker = Mock(side_effect=responses)
+                memory = MemorySnapshots()
+                preview = composition.build_project_context_service(
+                    project,
+                    workplace,
+                    SimpleNamespace(project_context_check_result=checker),
+                    snapshots=memory,
+                )
+                with patch.object(
+                    access, "authorized_coverage", return_value={"marker": "preview"}
+                ) as coverage:
+                    result = preview.resource_readiness(
+                        snapshot=snapshot, check=preview.check()
+                    )
+                self.assertEqual(result["reason"], "snapshot_not_fresh")
+                self.assertEqual(result["authorized_coverage"], {"marker": "preview"})
+                self.assertIs(coverage.call_args.args[1], snapshot)
+                self.assertEqual(
+                    checker.call_args_list,
+                    [call(project, explicit_workplace=str(workplace))] * len(responses),
+                )
+                self.assertFalse(memory.calls)
 
     def test_constructor_factory_without_io(self):
         def fail(*a, **k):
@@ -300,10 +349,11 @@ class SearchSnapshotTests(unittest.TestCase):
             project_context_check_result=fail,
         )
         memory = MemorySnapshots()
-        old = composition.build_resource_search_service(Path("p"), Path("w"), core)
-        built = composition.build_resource_search_service(
-            Path("p"), Path("w"), core, snapshots=memory
-        )
+        with patch.object(Path, "open", fail), patch.object(Path, "is_file", fail):
+            old = composition.build_resource_search_service(Path("p"), Path("w"), core)
+            built = composition.build_resource_search_service(
+                Path("p"), Path("w"), core, snapshots=memory
+            )
         self.assertIs(built.snapshots, memory)
         self.assertEqual(old, built)
         self.assertEqual(repr(old), repr(built))
@@ -336,6 +386,7 @@ class SearchSnapshotTests(unittest.TestCase):
             service = composition.build_resource_search_service(
                 Path(directory), Path("w"), core
             )
+            service = with_context_checker(service, core.project_context_check_result)
             with (
                 patch.object(access, "IndexObservationService") as observer,
                 patch.object(
@@ -398,7 +449,7 @@ class SearchSnapshotTests(unittest.TestCase):
         calls = []
 
         def factory(root, workplace, given_core):
-            calls.append(root)
+            calls.append((root, workplace))
             return SimpleNamespace(search=lambda **kw: {"query_arguments": kw})
 
         with patch.object(
@@ -439,7 +490,7 @@ class SearchSnapshotTests(unittest.TestCase):
                 result["query_arguments"],
                 {"query": "needle", "limit": "2", "limitstart": None, "offset": 0},
             )
-        self.assertEqual(calls, [project_root])
+        self.assertEqual(calls, [(project_root, workplace_root)])
         denied = SimpleNamespace(
             search=lambda **kw: (_ for _ in ()).throw(
                 access.LocalSearchError("snapshot_not_fresh")

@@ -1244,7 +1244,9 @@ def build_project_context_service(
         resource_readiness=lambda *, snapshot, check: garage.ResourceSearchService(
             project_root,
             workplace_root,
-            LegacyResourceSearchReadAdapter(project_root, workplace_root, core),
+            _ResourceSearchReadAdapter(
+                project_root, workplace_root, lambda: core.project_context_check_result
+            ),
         ).readiness(snapshot=snapshot, check=check),
         work_summary=lambda: build_current_work_service(
             project_root, work_metadata=work_metadata
@@ -1272,10 +1274,10 @@ def build_context_reconciliation_service(
 
 
 @dataclass(frozen=True)
-class LegacyResourceSearchReadAdapter:
+class _ResourceSearchReadAdapter:
     project_root: Path
     workplace_root: Path
-    core: Any
+    context_checker: Callable[[], ProjectContextCheck]
 
     def read_snapshot(
         self, snapshots: ProjectSnapshotReadPort | None
@@ -1283,14 +1285,6 @@ class LegacyResourceSearchReadAdapter:
         from .project.snapshot import load_snapshot
 
         return load_snapshot(self.project_root, snapshots=snapshots)
-
-    def context_checker(self) -> ProjectContextCheck:
-        return self.core.project_context_check_result
-
-    def runtime_snapshot_reader(self) -> Callable[[Path], dict[str, Any]]:
-        from .resources.catalog_read import WorkplaceSearchCatalogReader
-
-        return lambda root: WorkplaceSearchCatalogReader(root).runtime_snapshot()
 
     def search_roots_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
         from .resources.snapshot import snapshot_with_resolved_search_roots
@@ -1309,10 +1303,18 @@ def build_resource_search_service(
 ) -> ResourceSearchService:
     from .resources.access import ResourceSearchService
 
+    def context_checker() -> ProjectContextCheck:
+        from .project.context_read import _build_project_context_check
+
+        return _build_project_context_check(
+            distribution_root=lambda: core.ROOT,
+            build_current_snapshot=lambda: core.build_project_context_snapshot,
+        )
+
     return ResourceSearchService(
         project_root,
         workplace_root,
-        LegacyResourceSearchReadAdapter(project_root, workplace_root, core),
+        _ResourceSearchReadAdapter(project_root, workplace_root, context_checker),
         snapshots=snapshots,
     )
 

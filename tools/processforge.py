@@ -145,13 +145,17 @@ from processforge_core.project.context_policy import ProjectContextPolicy as _Pr
 from processforge_core.project.resource_snapshot import ResourceSnapshotRules as _ResourceSnapshotRules
 from processforge_core.project.knowledge_selection import KnowledgeResourceSelector as _KnowledgeResourceSelector
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
-from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
+from processforge_core.project.context_read import (
+    _diagnose_project_context_check,
+    _parse_snapshot_timestamp,
+    _project_temporary_files_summary,
+    _read_project_context_freshness,
+    _stale_marker_path,
+)
 from processforge_core.project.context_rules import ProjectContextRules as _ProjectContextRules
 from processforge_core.project.snapshot_rendering import ProjectContextSnapshotRenderer as _ProjectContextSnapshotRenderer
 from processforge_core.project.capability_registry import CapabilityRegistryReader as _CapabilityRegistryReader
 from processforge_core.project.context_sources import ProjectContextSourcesReader
-from processforge_core.resources.versioning import ResourceVersionPolicy
-from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
 from processforge_core.process_catalog.artifacts import ProcessArtifactDeclarationPolicy
 from processforge_core.process_event_journal import ProcessEventJournal
@@ -372,8 +376,6 @@ _project_classifier_rule_policy = ProjectClassifierRulePolicy()
 _process_artifact_declaration_policy = ProcessArtifactDeclarationPolicy()
 _process_event_journal = ProcessEventJournal()
 _context_contract_inputs = ContextContractInputs()
-_resource_version_policy = ResourceVersionPolicy()
-_project_snapshot_resolved_comparison = ProjectSnapshotResolvedComparison(versions=_resource_version_policy)
 from processforge_core.process_catalog import (
     ProcessCatalogContext,
     ProcessDefinitionRef,
@@ -4978,7 +4980,7 @@ def project_context_snapshot_generations_dir(project_root: Path) -> Path:
 
 
 def project_context_stale_marker_path(project_root: Path) -> Path:
-    return locate_flow_root(project_root) / "runtime" / "context" / "project-context.stale.json"
+    return _stale_marker_path(locate_flow_root(project_root))
 
 
 def project_context_report_path(project_root: Path) -> Path:
@@ -4991,118 +4993,40 @@ def project_context_report_path(project_root: Path) -> Path:
 
 
 
-def project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
-    with diagnostics.span("context.check", component="context"):
-        result = _project_context_check_result(project_root, explicit_workplace=explicit_workplace)
-    result["temporary_files"] = project_temporary_files_summary(project_root, explicit_workplace=explicit_workplace)
-    diagnostics.annotate(snapshot_id=result.get("snapshot_id"))
-    diagnostics.emit("info" if result.get("fresh") else "warning", "context.freshness", lambda: {
-        key: result.get(key) for key in ("snapshot_id", "status", "policy_action", "recommended_action", "reasons", "stale_resources", "broken_refs")
-    }, component="context")
-    return result
+def project_context_check_result(
+    project_root: Path, *, explicit_workplace: str | None = None
+) -> dict[str, Any]:
+    return _diagnose_project_context_check(
+        lambda: _project_context_check_result(
+            project_root, explicit_workplace=explicit_workplace
+        ),
+        lambda: project_temporary_files_summary(
+            project_root, explicit_workplace=explicit_workplace
+        ),
+    )
 
 
-def project_temporary_files_summary(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
-    from processforge_core.configuration import ConfigurationError
-    from processforge_core.maintenance.temporary_files import last_summary
-
-    try:
-        workplace = Path(explicit_workplace).expanduser().resolve() if explicit_workplace else None
-        resolved = _core_project_configuration_inputs.project_configuration_reader.project_configuration(project_root, workplace)
-        if resolved.errors:
-            return {"status": "unknown", "notification": False, "reason": "configuration_invalid"}
-        return last_summary(project_root, resolved.config.runtime.temporary_files)
-    except (ConfigurationError, OSError, RuntimeError, ValueError):
-        return {"status": "unknown", "notification": False, "reason": "configuration_unavailable"}
+def project_temporary_files_summary(
+    project_root: Path, *, explicit_workplace: str | None = None
+) -> dict[str, Any]:
+    return _project_temporary_files_summary(
+        project_root, explicit_workplace=explicit_workplace
+    )
 
 
-def _project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
-    snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
-    if not snapshot_yaml.is_file():
-        return {
-            "snapshot_id": None,
-            "status": "broken",
-            "fresh": False,
-            "stale": False,
-            "broken": True,
-            "updates_available": [],
-            "stale_resources": [],
-            "broken_refs": [{"reason": "project context snapshot missing"}],
-            "recommended_action": "project-context-refresh",
-            "policy_action": "block",
-        }
-    snapshot = load_yaml_document(snapshot_yaml)
-    reasons: list[str] = []
-    stale_resources: list[dict[str, Any]] = []
-    updates_available: list[dict[str, Any]] = []
-    broken_refs: list[dict[str, Any]] = []
-    for key in ["schema_version", "snapshot", "project", "flow", "sources", "capabilities", "session"]:
-        if key not in snapshot:
-            broken_refs.append({"reason": f"snapshot schema invalid: missing {key}"})
-    meta = snapshot.get("snapshot", {}) if isinstance(snapshot.get("snapshot"), dict) else {}
-    snapshot_id = str(meta.get("id") or snapshot.get("id") or "project-context")
-    valid_until = parse_snapshot_timestamp(meta.get("valid_until"))
-    if valid_until is None:
-        reasons.append("valid_until missing or invalid")
-    elif valid_until < datetime.now(timezone.utc):
-        reasons.append("valid_until expired")
-    marker_path = project_context_stale_marker_path(project_root)
-    if marker_path.is_file():
-        try:
-            marker = json.loads(marker_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            marker = {"reason": "stale marker invalid"}
-        stale_resources.append({"id": marker.get("subject") or "project-context", "reason": marker.get("reason") or "snapshot stale marker exists"})
-    reasons.extend(ProjectSnapshotSourceCheckService(project_root, distribution_root=ROOT).compare(snapshot))
-
-    current = build_project_context_snapshot(project_root, explicit_workplace=explicit_workplace)
-    execution_readiness = current.get("execution_readiness") if isinstance(current.get("execution_readiness"), dict) else {}
-    resource_readiness = current.get("resource_readiness") if isinstance(current.get("resource_readiness"), dict) else {}
-    readiness = current.get("readiness") if isinstance(current.get("readiness"), dict) else {}
-    health = current.get("snapshot", {}).get("health") if isinstance(current.get("snapshot"), dict) and isinstance(current.get("snapshot", {}).get("health"), dict) else {}
-    if str(resource_readiness.get("status") or "") == "blocked":
-        for item in resource_readiness.get("blockers", []) if isinstance(resource_readiness.get("blockers"), list) else []:
-            if isinstance(item, dict):
-                broken_refs.append(
-                    {
-                        "id": item.get("id") or item.get("target") or "resource_readiness",
-                        "reason": item.get("reason") or item.get("type") or "resource readiness blocked",
-                        "type": item.get("type") or "resource_readiness_blocked",
-                    }
-                )
-    comparison_reasons, comparison_stale, comparison_updates, comparison_broken = _project_snapshot_resolved_comparison.compare(snapshot, current)
-    reasons.extend(comparison_reasons)
-    stale_resources.extend(comparison_stale)
-    updates_available.extend(comparison_updates)
-    broken_refs.extend(comparison_broken)
-    if broken_refs:
-        status = "broken"
-    elif stale_resources or reasons:
-        status = "stale"
-    elif updates_available:
-        status = "fresh_with_updates"
-    else:
-        status = "fresh"
-    policy = snapshot.get("context_policy") if isinstance(snapshot.get("context_policy"), dict) else _ProjectContextPolicy().build({})
-    policy_action = _ProjectContextPolicy().action(status, policy)
-    return {
-        "snapshot_id": snapshot_id,
-        "snapshot_sha256": "sha256:" + sha256_file(snapshot_yaml),
-        "status": status,
-        "fresh": status in {"fresh", "fresh_with_updates"},
-        "stale": status == "stale",
-        "broken": status == "broken",
-        "updates_available": updates_available,
-        "stale_resources": stale_resources + [{"reason": reason} for reason in reasons],
-        "broken_refs": broken_refs,
-        "recommended_action": "project-context-refresh" if status in {"stale", "broken"} else "continue",
-        "policy_action": policy_action,
-        "policy": {"action": policy_action},
-        "health": health,
-        "readiness": readiness,
-        "resource_readiness": resource_readiness,
-        "execution_readiness": execution_readiness,
-    }
+def _project_context_check_result(
+    project_root: Path, *, explicit_workplace: str | None = None
+) -> dict[str, Any]:
+    return _read_project_context_freshness(
+        project_root,
+        explicit_workplace=explicit_workplace,
+        distribution_root=lambda: ROOT,
+        build_current_snapshot=lambda: build_project_context_snapshot,
+        snapshot_path=lambda: project_context_snapshot_paths(project_root)[0],
+        load_snapshot=lambda path: load_yaml_document(path),
+        stale_marker_path=lambda: project_context_stale_marker_path(project_root),
+        snapshot_digest=lambda path: sha256_file(path),
+    )
 
 
 def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7, explicit_workplace: str | None = None) -> dict[str, Any]:
@@ -5516,12 +5440,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
 
 
 def parse_snapshot_timestamp(value: Any) -> datetime | None:
-    if not isinstance(value, str):
-        return None
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
+    return _parse_snapshot_timestamp(value)
 
 
 def project_context_freshness(project_root: Path, *, explicit_workplace: str | None = None) -> tuple[str, list[str], dict[str, Any]]:
@@ -16267,7 +16186,7 @@ def command_update_stage(args: argparse.Namespace) -> int:
     return 0 if verified else 1
 
 
-def command_update_verify(args: argparse.Namespace) -> int:
+def command_update_verify(args: argparse.Namespace, *, persist_record: bool = True) -> int:
     workplace_root = update_workplace_root(args.workplace)
     candidate = _update_candidate_reader.find(workplace_root, args.candidate)
     record = _update_document_reader.staged_record(workplace_root, args.candidate)
@@ -16296,10 +16215,16 @@ def command_update_verify(args: argparse.Namespace) -> int:
         if str(manifest.get("version") or "") != str(candidate.get("available_version") or ""):
             print("FAIL: artifact version mismatch")
             return 1
-    record["status"] = "verified"
-    record["verified_at"] = _core_common_clock.now_utc()
-    record["verification"] = {"sha256": "pass", "subject_identity": "pass" if manifest else "not_applicable"}
-    _update_document_reader.staged_path(workplace_root, args.candidate).write_text(dump_yaml(record), encoding="utf-8")
+    if persist_record:
+        record["status"] = "verified"
+        record["verified_at"] = _core_common_clock.now_utc()
+        record["verification"] = {
+            "sha256": "pass",
+            "subject_identity": "pass" if manifest else "not_applicable",
+        }
+        _update_document_reader.staged_path(workplace_root, args.candidate).write_text(
+            dump_yaml(record), encoding="utf-8"
+        )
     print(f"VERIFIED: {args.candidate}")
     return 0
 
@@ -16397,7 +16322,8 @@ def _command_update_apply_locked(args: argparse.Namespace, workplace_root: Path)
         print(f"FAIL: staged candidate not found: {args.candidate}")
         return 1
     verify_status = command_update_verify(
-        argparse.Namespace(workplace=args.workplace, candidate=args.candidate)
+        argparse.Namespace(workplace=args.workplace, candidate=args.candidate),
+        persist_record=not args.dry_run,
     )
     if verify_status != 0:
         return verify_status
